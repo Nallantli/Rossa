@@ -4,7 +4,7 @@
 
 Ruota::Ruota() {}
 
-std::unique_ptr<DataManager> Ruota::manager = std::make_unique<DataManager>();
+//std::unique_ptr<DataManager> Ruota::manager = std::make_unique<DataManager>();
 
 const std::map<std::string, signed int> Ruota::bOperators = {
 	{"*", 12},
@@ -38,7 +38,7 @@ const std::map<std::string, signed int> Ruota::uOperators = {
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-DatumID Ruota::parseCode(const std::string &code)
+SYM Ruota::parseCode(const std::string &code)
 {
 	auto tokens = lexer.lexString(code);
 	NodeParser testnp(tokens, bOperators, uOperators);
@@ -48,10 +48,10 @@ DatumID Ruota::parseCode(const std::string &code)
 		auto g = NodeParser::genParser(std::move(n));
 		std::cout << g->toString() << "\n";
 		auto res = g->evaluate(main);
-		std::cout << manager->toString(res) << "\n";
+		std::cout << manager::toString(res) << "\n";
 		delete g;
 
 		return res;
 	}
-	return DatumID();
+	return manager::newValue();
 }

@@ -35,6 +35,8 @@ int main()
 
 	Ruota wrapper;
 
+	wrapper.parseCode(test_code);
+
 	while (true)
 	{
 		std::cout << "?> ";

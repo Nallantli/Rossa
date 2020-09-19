@@ -1,13 +1,13 @@
 #include <boost/config.hpp>
 #include <iostream>
 #include <stdexcept>
-#include "../ruota/RuotaPlugin.hpp"
+#include "../ruota/RuotaTypes.hpp"
 
 namespace libsystem
 {
-	extern "C" BOOST_SYMBOL_EXPORT pDatum _puts(std::vector<pDatum> args)
+	RUOTA_EXT_SYM(_puts, args)
 	{
-		std::cout << args[0].getString();
-		return pDatum();
+		std::cout << manager::toString(args[0]);
+		return manager::newValue(true);
 	}
 } // namespace libsystem

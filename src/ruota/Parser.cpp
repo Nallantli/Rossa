@@ -60,16 +60,16 @@ BinaryI::~BinaryI()
 /*class Container                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(const DatumID &d) : Instruction(CONTAINER), d(d) {}
+Container::Container(const SYM &d) : Instruction(CONTAINER), d(d) {}
 
-DatumID Container::evaluate(Scope &) const
+SYM Container::evaluate(Scope &) const
 {
 	return d;
 }
 
 const std::string Container::toString() const
 {
-	return Ruota::manager->toString(d);
+	return manager::toString(d);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -78,17 +78,17 @@ const std::string Container::toString() const
 
 DefineI::DefineI(const std::string &key, std::vector<std::string> fargs, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), fargs(fargs), body(body) {}
 
-DatumID DefineI::evaluate(Scope &scope) const
+SYM DefineI::evaluate(Scope &scope) const
 {
 	auto f = std::make_shared<Function>(scope, fargs, body);
 	if (key != "")
 	{
-		auto d = Ruota::manager->newDatum(false, f);
+		auto d = manager::newValue(f);
 		scope.createVariable(key, d);
 		return d;
 	}
 
-	return Ruota::manager->newDatum(true, f);
+	return manager::newValue(f);
 }
 
 const std::string DefineI::toString() const
@@ -105,7 +105,7 @@ const std::string DefineI::toString() const
 
 Sequence::Sequence(bool scoped, std::vector<Instruction *> children) : scoped(scoped), Instruction(SEQUENCE), children(children) {}
 
-DatumID Sequence::evaluate(Scope &scope) const
+SYM Sequence::evaluate(Scope &scope) const
 {
 	if (scoped)
 	{
@@ -116,15 +116,15 @@ DatumID Sequence::evaluate(Scope &scope) const
 			if (temp.type == ID_RETURN)
 				return temp;
 		}
-		return DatumID();
+		return manager::newValue();
 	}
 
-	std::vector<DatumID> evals;
+	std::vector<SYM> evals;
 	for (auto &e : children)
 	{
 		evals.push_back(e->evaluate(scope));
 	}
-	return Ruota::manager->newDatum(true, evals);
+	return manager::newValue(evals);
 }
 
 void Sequence::setScoped(bool scoped)
@@ -163,11 +163,11 @@ Sequence::~Sequence()
 
 IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses) : Instruction(IFELSE), ifs(ifs), body(body), elses(elses) {}
 
-DatumID IfElseI::evaluate(Scope &scope) const
+SYM IfElseI::evaluate(Scope &scope) const
 {
 	Scope newScope(scope);
 	auto evalIf = ifs->evaluate(newScope);
-	if (Ruota::manager->getBool(evalIf))
+	if (manager::getBool(evalIf))
 	{
 		auto temp = body->evaluate(newScope);
 		if (temp.type == ID_RETURN || temp.type == ID_BREAK)
@@ -179,7 +179,7 @@ DatumID IfElseI::evaluate(Scope &scope) const
 		if (temp.type == ID_RETURN || temp.type == ID_BREAK)
 			return temp;
 	}
-	return DatumID();
+	return manager::newValue();
 }
 
 const std::string IfElseI::toString() const
@@ -205,9 +205,9 @@ IfElseI::~IfElseI()
 
 WhileI::WhileI(Instruction *whiles, Instruction *body) : Instruction(WHILE), whiles(whiles), body(body) {}
 
-DatumID WhileI::evaluate(Scope &scope) const
+SYM WhileI::evaluate(Scope &scope) const
 {
-	while (Ruota::manager->getBool(whiles->evaluate(scope)))
+	while (manager::getBool(whiles->evaluate(scope)))
 	{
 		Scope newScope(scope);
 		auto temp = body->evaluate(newScope);
@@ -216,7 +216,7 @@ DatumID WhileI::evaluate(Scope &scope) const
 		if (temp.type == ID_BREAK)
 			break;
 	}
-	return DatumID();
+	return manager::newValue();
 }
 
 const std::string WhileI::toString() const
@@ -238,20 +238,20 @@ WhileI::~WhileI()
 
 ForI::ForI(const std::string &id, Instruction *fors, Instruction *body) : Instruction(FOR), id(id), fors(fors), body(body) {}
 
-DatumID ForI::evaluate(Scope &scope) const
+SYM ForI::evaluate(Scope &scope) const
 {
 	auto evalFor = fors->evaluate(scope);
-	for (int i = 0; i < Ruota::manager->vectorSize(evalFor); i++)
+	for (int i = 0; i < manager::vectorSize(evalFor); i++)
 	{
 		Scope newScope(scope);
-		newScope.createVariable(id, Ruota::manager->indexVector(evalFor, i));
+		newScope.createVariable(id, manager::indexVector(evalFor, i));
 		auto temp = body->evaluate(newScope);
 		if (temp.type == ID_RETURN)
 			return temp;
 		if (temp.type == ID_BREAK)
 			break;
 	}
-	return DatumID();
+	return manager::newValue();
 }
 
 const std::string ForI::toString() const
@@ -273,7 +273,7 @@ ForI::~ForI()
 
 VariableI::VariableI(const std::string &key) : CastingI(VARIABLE, key) {}
 
-DatumID VariableI::evaluate(Scope &scope) const
+SYM VariableI::evaluate(Scope &scope) const
 {
 	auto d = scope.getVariable(key);
 	return d;
@@ -290,7 +290,7 @@ const std::string VariableI::toString() const
 
 DeclareI::DeclareI(const std::string &key) : CastingI(DECLARE, key) {}
 
-DatumID DeclareI::evaluate(Scope &scope) const
+SYM DeclareI::evaluate(Scope &scope) const
 {
 	auto d = scope.createVariable(key);
 	return d;
@@ -307,11 +307,11 @@ const std::string DeclareI::toString() const
 
 IndexI::IndexI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-DatumID IndexI::evaluate(Scope &scope) const
+SYM IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->indexVector(evalA, Ruota::manager->getNumber(evalB));
+	return manager::indexVector(evalA, manager::getNumber(evalB));
 }
 
 const std::string IndexI::toString() const
@@ -325,17 +325,17 @@ const std::string IndexI::toString() const
 
 InnerI::InnerI(Instruction *a, Instruction *b) : BinaryI(INNER, a, b) {}
 
-DatumID InnerI::evaluate(Scope &scope) const
+SYM InnerI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (Ruota::manager->getType(evalA))
+	switch (manager::getType(evalA))
 	{
 	case DICTIONARY:
 		//TODO
-		return DatumID();
+		return manager::newValue();
 	case OBJECT:
 		//TODO
-		return DatumID();
+		return manager::newValue();
 	default:
 		throw std::runtime_error("Cannot enter value");
 	}
@@ -352,24 +352,24 @@ const std::string InnerI::toString() const
 
 CallI::CallI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-DatumID CallI::evaluate(Scope &scope) const
+SYM CallI::evaluate(Scope &scope) const
 {
-	auto args = Ruota::manager->getVector(b->evaluate(scope));
+	auto args = manager::getVector(b->evaluate(scope));
 	switch (a->getType())
 	{
 	case INNER:
 	{
 		auto evalA = ((InnerI *)a)->getA()->evaluate(scope);
 		auto evalB = ((InnerI *)a)->getB()->evaluate(scope);
-		std::vector<DatumID> params = {evalA};
+		std::vector<SYM> params = {evalA};
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-		return Ruota::manager->call(evalB, params);
+		return manager::call(evalB, params);
 	}
 	default:
 	{
 		auto evalA = a->evaluate(scope);
-		return Ruota::manager->call(evalA, args);
+		return manager::call(evalA, args);
 	}
 	}
 }
@@ -385,11 +385,11 @@ const std::string CallI::toString() const
 
 AddI::AddI(Instruction *a, Instruction *b) : BinaryI(ADD, a, b) {}
 
-DatumID AddI::evaluate(Scope &scope) const
+SYM AddI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->add(evalA, evalB);
+	return manager::add(evalA, evalB);
 }
 
 const std::string AddI::toString() const
@@ -403,11 +403,11 @@ const std::string AddI::toString() const
 
 SubI::SubI(Instruction *a, Instruction *b) : BinaryI(SUB, a, b) {}
 
-DatumID SubI::evaluate(Scope &scope) const
+SYM SubI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->sub(evalA, evalB);
+	return manager::sub(evalA, evalB);
 }
 
 const std::string SubI::toString() const
@@ -421,11 +421,11 @@ const std::string SubI::toString() const
 
 MulI::MulI(Instruction *a, Instruction *b) : BinaryI(MUL, a, b) {}
 
-DatumID MulI::evaluate(Scope &scope) const
+SYM MulI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->mul(evalA, evalB);
+	return manager::mul(evalA, evalB);
 }
 
 const std::string MulI::toString() const
@@ -439,11 +439,11 @@ const std::string MulI::toString() const
 
 DivI::DivI(Instruction *a, Instruction *b) : BinaryI(DIV, a, b) {}
 
-DatumID DivI::evaluate(Scope &scope) const
+SYM DivI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->mul(evalA, evalB);
+	return manager::mul(evalA, evalB);
 }
 
 const std::string DivI::toString() const
@@ -457,11 +457,11 @@ const std::string DivI::toString() const
 
 ModI::ModI(Instruction *a, Instruction *b) : BinaryI(MOD, a, b) {}
 
-DatumID ModI::evaluate(Scope &scope) const
+SYM ModI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->mod(evalA, evalB);
+	return manager::mod(evalA, evalB);
 }
 
 const std::string ModI::toString() const
@@ -475,11 +475,11 @@ const std::string ModI::toString() const
 
 LessI::LessI(Instruction *a, Instruction *b) : BinaryI(LESS, a, b) {}
 
-DatumID LessI::evaluate(Scope &scope) const
+SYM LessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->less(evalA, evalB);
+	return manager::less(evalA, evalB);
 }
 
 const std::string LessI::toString() const
@@ -493,11 +493,11 @@ const std::string LessI::toString() const
 
 MoreI::MoreI(Instruction *a, Instruction *b) : BinaryI(MORE, a, b) {}
 
-DatumID MoreI::evaluate(Scope &scope) const
+SYM MoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->more(evalA, evalB);
+	return manager::more(evalA, evalB);
 }
 
 const std::string MoreI::toString() const
@@ -511,11 +511,11 @@ const std::string MoreI::toString() const
 
 ELessI::ELessI(Instruction *a, Instruction *b) : BinaryI(ELESS, a, b) {}
 
-DatumID ELessI::evaluate(Scope &scope) const
+SYM ELessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->eless(evalA, evalB);
+	return manager::eless(evalA, evalB);
 }
 
 const std::string ELessI::toString() const
@@ -529,11 +529,11 @@ const std::string ELessI::toString() const
 
 EMoreI::EMoreI(Instruction *a, Instruction *b) : BinaryI(EMORE, a, b) {}
 
-DatumID EMoreI::evaluate(Scope &scope) const
+SYM EMoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->emore(evalA, evalB);
+	return manager::emore(evalA, evalB);
 }
 
 const std::string EMoreI::toString() const
@@ -547,11 +547,11 @@ const std::string EMoreI::toString() const
 
 Equals::Equals(Instruction *a, Instruction *b) : BinaryI(EQUALS, a, b) {}
 
-DatumID Equals::evaluate(Scope &scope) const
+SYM Equals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->newDatum(true, Ruota::manager->equals(evalA, evalB));
+	return manager::newValue(manager::equals(evalA, evalB));
 }
 
 const std::string Equals::toString() const
@@ -565,11 +565,11 @@ const std::string Equals::toString() const
 
 NEquals::NEquals(Instruction *a, Instruction *b) : BinaryI(NEQUALS, a, b) {}
 
-DatumID NEquals::evaluate(Scope &scope) const
+SYM NEquals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->newDatum(true, Ruota::manager->nequals(evalA, evalB));
+	return manager::newValue(manager::nequals(evalA, evalB));
 }
 
 const std::string NEquals::toString() const
@@ -583,11 +583,11 @@ const std::string NEquals::toString() const
 
 AndI::AndI(Instruction *a, Instruction *b) : BinaryI(AND, a, b) {}
 
-DatumID AndI::evaluate(Scope &scope) const
+SYM AndI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->newDatum(true, Ruota::manager->dand(evalA, evalB));
+	return manager::newValue(manager::dand(evalA, evalB));
 }
 
 const std::string AndI::toString() const
@@ -601,11 +601,11 @@ const std::string AndI::toString() const
 
 OrI::OrI(Instruction *a, Instruction *b) : BinaryI(OR, a, b) {}
 
-DatumID OrI::evaluate(Scope &scope) const
+SYM OrI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Ruota::manager->newDatum(true, Ruota::manager->dor(evalA, evalB));
+	return manager::newValue(manager::dor(evalA, evalB));
 }
 
 const std::string OrI::toString() const
@@ -619,11 +619,11 @@ const std::string OrI::toString() const
 
 SetI::SetI(Instruction *a, Instruction *b) : BinaryI(SET, a, b) {}
 
-DatumID SetI::evaluate(Scope &scope) const
+SYM SetI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	Ruota::manager->set(evalA, evalB);
+	manager::set(evalA, evalB);
 	return evalA;
 }
 
@@ -638,7 +638,7 @@ const std::string SetI::toString() const
 
 ReturnI::ReturnI(Instruction *a) : UnaryI(RETURN, a) {}
 
-DatumID ReturnI::evaluate(Scope &scope) const
+SYM ReturnI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	evalA.type = ID_RETURN;
@@ -654,11 +654,11 @@ const std::string ReturnI::toString() const
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(boost::function<pDatum(std::vector<pDatum>)> f, Instruction *a) : UnaryI(EXTERN, a), f(f) {}
+ExternI::ExternI(boost::function<SYM(std::vector<SYM>)> f, Instruction *a) : UnaryI(EXTERN, a), f(f) {}
 
-DatumID ExternI::evaluate(Scope &scope) const
+SYM ExternI::evaluate(Scope &scope) const
 {
-	return rlib::convertFromPDatum(f(rlib::convertToPDatum(a->evaluate(scope)).getVector()));
+	return f(manager::getVector(a->evaluate(scope)));
 }
 
 const std::string ExternI::toString() const

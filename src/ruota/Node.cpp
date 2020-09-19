@@ -668,22 +668,22 @@ Instruction *VectorNode::genParser() const
 
 Instruction *NumNode::genParser() const
 {
-	return new Container(Ruota::manager->newDatum(true, numberValue));
+	return new Container(manager::newValue(numberValue));
 }
 
 Instruction *NilNode::genParser() const
 {
-	return new Container(DatumID());
+	return new Container(manager::newValue());
 }
 
 Instruction *StringNode::genParser() const
 {
-	return new Container(Ruota::manager->newDatum(true, stringValue));
+	return new Container(manager::newValue(stringValue));
 }
 
 Instruction *BoolNode::genParser() const
 {
-	return new Container(Ruota::manager->newDatum(true, boolValue));
+	return new Container(manager::newValue(boolValue));
 }
 
 Instruction *IDNode::genParser() const

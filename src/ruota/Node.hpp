@@ -146,11 +146,11 @@ public:
 class ExternCallNode : public Node
 {
 private:
-	boost::function<pDatum(std::vector<pDatum>)> f;
+	boost::function<SYM(std::vector<SYM>)> f;
 	std::vector<std::unique_ptr<Node>> args;
 
 public:
-	ExternCallNode(boost::function<pDatum(std::vector<pDatum>)> f, std::vector<std::unique_ptr<Node>> args) : f(f), args(std::move(args)) {}
+	ExternCallNode(boost::function<SYM(std::vector<SYM>)> f, std::vector<std::unique_ptr<Node>> args) : f(f), args(std::move(args)) {}
 	Instruction *genParser() const override;
 };
 

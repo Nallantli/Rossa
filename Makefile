@@ -18,17 +18,14 @@ plugins: bin/lib/libsystem.dll
 bin/lib/libsystem.dll: src/ext/libsystem.cpp
 	$(CC) -o bin/lib/libsystem.dll src/ext/libsystem.cpp $(LFLAGS_WIN)
 
-bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Datum.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Manager.o
-	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Datum.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Manager.o $(CFLAGS_WIN)
+bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o
+	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o $(CFLAGS_WIN)
 
 build/win/Main.o: src/Main.cpp
 	$(CC) src/Main.cpp -o build/win/Main.o -c $(CFLAGS_WIN)
 
 build/win/Ruota.o: src/ruota/Ruota.cpp
 	$(CC) src/ruota/Ruota.cpp -o build/win/Ruota.o -c $(CFLAGS_WIN)
-
-build/win/Datum.o: src/ruota/Datum.cpp
-	$(CC) src/ruota/Datum.cpp -o build/win/Datum.o -c $(CFLAGS_WIN)
 
 build/win/Node.o: src/ruota/Node.cpp
 	$(CC) src/ruota/Node.cpp -o build/win/Node.o -c $(CFLAGS_WIN)
@@ -44,6 +41,3 @@ build/win/Scope.o: src/ruota/Scope.cpp
 
 build/win/Function.o: src/ruota/Function.cpp
 	$(CC) src/ruota/Function.cpp -o build/win/Function.o -c $(CFLAGS_WIN)
-
-build/win/Manager.o: src/ruota/Manager.cpp
-	$(CC) src/ruota/Manager.cpp -o build/win/Manager.o -c $(CFLAGS_WIN)
