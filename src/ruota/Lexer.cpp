@@ -1,6 +1,6 @@
-#include "Lexer.hpp"
+#include "Lexer.h"
 
-Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, double valueNumber, int type)
+Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, long_double_t valueNumber, int type)
 {
 	this->line = line;
 	this->distance = distance;
@@ -82,10 +82,36 @@ const int Lexer::getToken()
 			return TOK_VECTOR;
 		else if (ID_STRING == "Boolean")
 			return TOK_BOOLEAN;
+		else if (ID_STRING == "Dictionary")
+			return TOK_DICTIONARY;
+		else if (ID_STRING == "Object")
+			return TOK_OBJECT;
+		else if (ID_STRING == "Function")
+			return TOK_FUNCTION;
 		else if (ID_STRING == "extern")
 			return TOK_EXTERN;
 		else if (ID_STRING == "extern_call")
 			return TOK_EXTERN_CALL;
+		else if (ID_STRING == "size")
+			return TOK_SIZE;
+		else if (ID_STRING == "length")
+			return TOK_LENGTH;
+		else if (ID_STRING == "struct")
+			return TOK_STRUCT;
+		else if (ID_STRING == "static")
+			return TOK_STATIC;
+		else if (ID_STRING == "class")
+			return TOK_CLASS;
+		else if (ID_STRING == "new")
+			return TOK_NEW;
+		else if (ID_STRING == "type")
+			return TOK_TYPE;
+		else if (ID_STRING == "load")
+			return TOK_LOAD;
+		else if (ID_STRING == "alloc")
+			return TOK_ALLOC;
+		else if (ID_STRING == "until")
+			return TOK_UNTIL;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -126,6 +152,8 @@ const int Lexer::getToken()
 		}
 
 		ID_STRING = opStr;
+		if (ID_STRING == "->")
+			return TOK_CAST;
 		return TOK_OPR;
 	}
 	else if (uOperators.find(std::string(1, last)) != uOperators.end())

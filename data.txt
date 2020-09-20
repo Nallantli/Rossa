@@ -17,7 +17,8 @@ UnitNode :=
 |	'(' EquNode ')'
 |	'[' EquNode [',' EquNode]* ']'
 |	'@' SigNode '{' ExprNode* '}'
-|	'extern_call' ID '.' ID '(' [EquNode [',' EquNode]*] ')'
+|	'extern_call' String '.' String '(' [EquNode [',' EquNode]*] ')'
+|	'new' BaseNode '(' [EquNode [',' EquNode]*] ')'
 |	BaseNode
 |	UnitNode '(' [EquNode [',' EquNode]*] ')'
 |	UnitNode '[' EquNode ']'
@@ -29,10 +30,12 @@ EquNode :=
 |	UnitNode BOP UnitNode [BOP UnitNode]*
 
 ExprNode :=
+|	'load' String ';'
 |	'extern' Type ID '(' Type* ')' 'in' String ';'
 |	'def' ID SigNode '{' ExprNode* '}'
 |	'for' ID 'in' EquNode 'do' '{' ExprNode* '}'
 |	'while' EquNode 'do' '{' ExprNode* '}'
+|	ClassType String 'class' '{' ExprNode* '}'
 |	'if' EquNode 'then' '{' ExprNode* '}' ['elseif' EquNode 'then' '{' ExprNode* '}']* ['else' '{' ExprNode* '}']
 |	'return' EquNode ';'
 |	EquNode ';'

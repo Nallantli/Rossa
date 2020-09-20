@@ -4,9 +4,9 @@ BOOST_PATH_WIN=C:/Program Files/boost
 BOOST_VERSION_WIN=1_73
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
-CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
+CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17 -Wall
 CFLAGS=-O3
-LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
+LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17 -Wall
 LFLAGS=-fPIC -shared -O3
 
 all: win
@@ -18,8 +18,8 @@ plugins: bin/lib/libsystem.dll
 bin/lib/libsystem.dll: src/ext/libsystem.cpp
 	$(CC) -o bin/lib/libsystem.dll src/ext/libsystem.cpp $(LFLAGS_WIN)
 
-bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o
-	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o $(CFLAGS_WIN)
+bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o
+	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o $(CFLAGS_WIN)
 
 build/win/Main.o: src/Main.cpp
 	$(CC) src/Main.cpp -o build/win/Main.o -c $(CFLAGS_WIN)
@@ -41,3 +41,6 @@ build/win/Scope.o: src/ruota/Scope.cpp
 
 build/win/Function.o: src/ruota/Function.cpp
 	$(CC) src/ruota/Function.cpp -o build/win/Function.o -c $(CFLAGS_WIN)
+
+build/win/Object.o: src/ruota/Object.cpp
+	$(CC) src/ruota/Object.cpp -o build/win/Object.o -c $(CFLAGS_WIN)

@@ -1,4 +1,4 @@
-#include "Ruota.hpp"
+#include "Ruota.h"
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Instruction                                                                                      */
@@ -109,7 +109,7 @@ SYM Sequence::evaluate(Scope &scope) const
 {
 	if (scoped)
 	{
-		Scope newScope(scope);
+		Scope newScope(scope, "");
 		for (auto &e : children)
 		{
 			auto temp = e->evaluate(newScope);
@@ -122,7 +122,17 @@ SYM Sequence::evaluate(Scope &scope) const
 	std::vector<SYM> evals;
 	for (auto &e : children)
 	{
-		evals.push_back(e->evaluate(scope));
+		if (e->getType() == UNTIL_I)
+		{
+			auto eval = e->evaluate(scope);
+			auto v = manager::getVector(eval);
+			evals.insert(evals.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
+		}
+		else
+		{
+			auto eval = e->evaluate(scope);
+			evals.push_back(eval);
+		}
 	}
 	return manager::newValue(evals);
 }
@@ -165,7 +175,7 @@ IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses) : Inst
 
 SYM IfElseI::evaluate(Scope &scope) const
 {
-	Scope newScope(scope);
+	Scope newScope(scope, "");
 	auto evalIf = ifs->evaluate(newScope);
 	if (manager::getBool(evalIf))
 	{
@@ -209,7 +219,7 @@ SYM WhileI::evaluate(Scope &scope) const
 {
 	while (manager::getBool(whiles->evaluate(scope)))
 	{
-		Scope newScope(scope);
+		Scope newScope(scope, "");
 		auto temp = body->evaluate(newScope);
 		if (temp.type == ID_RETURN)
 			return temp;
@@ -241,9 +251,9 @@ ForI::ForI(const std::string &id, Instruction *fors, Instruction *body) : Instru
 SYM ForI::evaluate(Scope &scope) const
 {
 	auto evalFor = fors->evaluate(scope);
-	for (int i = 0; i < manager::vectorSize(evalFor); i++)
+	for (size_t i = 0; i < manager::vectorSize(evalFor); i++)
 	{
-		Scope newScope(scope);
+		Scope newScope(scope, "");
 		newScope.createVariable(id, manager::indexVector(evalFor, i));
 		auto temp = body->evaluate(newScope);
 		if (temp.type == ID_RETURN)
@@ -311,7 +321,7 @@ SYM IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::indexVector(evalA, manager::getNumber(evalB));
+	return manager::indexVector(evalA, (unsigned long)manager::getNumber(evalB));
 }
 
 const std::string IndexI::toString() const
@@ -334,8 +344,12 @@ SYM InnerI::evaluate(Scope &scope) const
 		//TODO
 		return manager::newValue();
 	case OBJECT:
-		//TODO
-		return manager::newValue();
+	{
+		auto o = manager::getObject(evalA);
+		if (o->getType() != STATIC_O)
+			throw std::runtime_error("Cannot index a non-static, non-instantiated Object");
+		return b->evaluate(*o->getScope());
+	}
 	default:
 		throw std::runtime_error("Cannot enter value");
 	}
@@ -360,6 +374,16 @@ SYM CallI::evaluate(Scope &scope) const
 	case INNER:
 	{
 		auto evalA = ((InnerI *)a)->getA()->evaluate(scope);
+		if (manager::getType(evalA) == OBJECT)
+		{
+			auto bb = ((InnerI *)a)->getB();
+			if (bb->getType() == VARIABLE && manager::getObject(evalA)->hasValue(((VariableI *)bb)->getKey()))
+			{
+				auto evalB = ((InnerI *)a)->getB()->evaluate(*manager::getObject(evalA)->getScope());
+				return manager::call(evalB, args, evalA);
+			}
+		}
+
 		auto evalB = ((InnerI *)a)->getB()->evaluate(scope);
 		std::vector<SYM> params = {evalA};
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
@@ -443,7 +467,7 @@ SYM DivI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::mul(evalA, evalB);
+	return manager::div(evalA, evalB);
 }
 
 const std::string DivI::toString() const
@@ -467,6 +491,24 @@ SYM ModI::evaluate(Scope &scope) const
 const std::string ModI::toString() const
 {
 	return "mod(" + a->toString() + ", " + b->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class PowI                                                                                             */
+/*-------------------------------------------------------------------------------------------------------*/
+
+PowI::PowI(Instruction *a, Instruction *b) : BinaryI(POW_I, a, b) {}
+
+SYM PowI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return manager::pow(evalA, evalB);
+}
+
+const std::string PowI::toString() const
+{
+	return "pow(" + a->toString() + ", " + b->toString() + ")";
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -664,4 +706,275 @@ SYM ExternI::evaluate(Scope &scope) const
 const std::string ExternI::toString() const
 {
 	return "extern_call()";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class LengthI                                                                                          */
+/*-------------------------------------------------------------------------------------------------------*/
+
+LengthI::LengthI(Instruction *a) : UnaryI(LENGTH, a) {}
+
+SYM LengthI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	switch (manager::getType(evalA))
+	{
+	case STRING:
+	{
+		std::string str = manager::getString(evalA);
+		int c, i, ix, q;
+		for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
+		{
+			c = (unsigned char)str[i];
+			if (c >= 0 && c <= 127)
+				i += 0;
+			else if ((c & 0xE0) == 0xC0)
+				i += 1;
+			else if ((c & 0xF0) == 0xE0)
+				i += 2;
+			else if ((c & 0xF8) == 0xF0)
+				i += 3;
+			else
+				return manager::newValue((long_double_t)manager::getString(evalA).size());
+		}
+		return manager::newValue((long_double_t)q);
+	}
+	case VECTOR:
+		return manager::newValue((long_double_t)manager::getVector(evalA).size());
+	default:
+		throw std::runtime_error("Cannot get length of value");
+	}
+}
+
+const std::string LengthI::toString() const
+{
+	return "length(" + a->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class LengthI                                                                                          */
+/*-------------------------------------------------------------------------------------------------------*/
+
+SizeI::SizeI(Instruction *a) : UnaryI(SIZE_I, a) {}
+
+SYM SizeI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	switch (manager::getType(evalA))
+	{
+	case STRING:
+		return manager::newValue((long_double_t)manager::getString(evalA).size());
+	case VECTOR:
+		return manager::newValue((long_double_t)manager::getVector(evalA).size());
+	default:
+		throw std::runtime_error("Cannot get length of value");
+	}
+}
+
+const std::string SizeI::toString() const
+{
+	return "size(" + a->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ClassI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ClassI::ClassI(const std::string &key, OBJECT_TYPE type, std::shared_ptr<Instruction> body) : Instruction(CLASS_I), key(key), type(type), body(body) {}
+
+SYM ClassI::evaluate(Scope &scope) const
+{
+	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, body, key);
+	if (type == STATIC_O)
+		body->evaluate(*o->getScope());
+	auto d = manager::newValue(o);
+	scope.createVariable(key, d);
+	return d;
+}
+
+const std::string ClassI::toString() const
+{
+	return "object(" + key + ", " + body->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class NewI                                                                                             */
+/*-------------------------------------------------------------------------------------------------------*/
+
+NewI::NewI(Instruction *a, Instruction *b) : BinaryI(NEW_I, a, b) {}
+
+SYM NewI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	auto base = manager::getObject(evalA);
+	return base->instantiate(manager::getVector(evalB));
+}
+
+const std::string NewI::toString() const
+{
+	return "new(" + a->toString() + ", " + b->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class TypeI                                                                                            */
+/*-------------------------------------------------------------------------------------------------------*/
+
+TypeI::TypeI(Instruction *a) : UnaryI(TYPE_I, a) {}
+
+SYM TypeI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	return manager::newValue(manager::getTypeString(evalA));
+}
+
+const std::string TypeI::toString() const
+{
+	return "type(" + a->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class CastToI                                                                                          */
+/*-------------------------------------------------------------------------------------------------------*/
+
+CastToI::CastToI(Instruction *a, D_TYPE convert) : UnaryI(CAST_TO_I, a), convert(convert) {}
+
+SYM CastToI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	switch (convert)
+	{
+	case STRING:
+		switch (manager::getType(evalA))
+		{
+		case STRING:
+			return evalA;
+		default:
+			return manager::newValue(manager::toString(evalA));
+		}
+	case NUMBER:
+		switch (manager::getType(evalA))
+		{
+		case NUMBER:
+			return evalA;
+		case NIL:
+			return manager::newValue((long_double_t)0.0);
+		case STRING:
+			return manager::newValue(std::stold(manager::getString(evalA)));
+		default:
+			break;
+		}
+	case BOOLEAN_D:
+		switch (manager::getType(evalA))
+		{
+		case BOOLEAN_D:
+			return evalA;
+		case NIL:
+			return manager::newValue(false);
+		case NUMBER:
+			return manager::newValue(manager::getNumber(evalA) != 0);
+		case STRING:
+			return manager::newValue(manager::getString(evalA) == "true");
+		default:
+			break;
+		}
+	case VECTOR:
+		switch (manager::getType(evalA))
+		{
+		case VECTOR:
+			return evalA;
+		case STRING:
+		{
+			std::string str = manager::getString(evalA);
+			std::vector<SYM> nv;
+			int last = 0;
+			int c, i, ix, q, s;
+			for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
+			{
+				c = (unsigned char)str[i];
+				if (c >= 0 && c <= 127)
+				{
+					i += 0;
+					s = 1;
+				}
+				else if ((c & 0xE0) == 0xC0)
+				{
+					i += 1;
+					s = 2;
+				}
+				else if ((c & 0xF0) == 0xE0)
+				{
+					i += 2;
+					s = 3;
+				}
+				else if ((c & 0xF8) == 0xF0)
+				{
+					i += 3;
+					s = 4;
+				}
+				else
+				{
+					nv.clear();
+					for (size_t i = 0; i < str.size(); i++)
+						nv.push_back(manager::newValue(std::string(1, str[i])));
+					return manager::newValue(nv);
+				}
+				nv.push_back(manager::newValue(str.substr(last, s)));
+				last = i + 1;
+			}
+			return manager::newValue(nv);
+		}
+		default:
+			break;
+		}
+	case NIL:
+		return manager::newValue();
+	default:
+		break;
+	}
+	throw std::runtime_error("Cannot convert between given types");
+}
+
+const std::string CastToI::toString() const
+{
+	return "cast(" + a->toString() + ", " + std::to_string(convert) + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class AllocI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+AllocI::AllocI(Instruction *a) : UnaryI(ALLOC_I, a) {}
+
+SYM AllocI::evaluate(Scope &scope) const
+{
+	auto evalA = manager::getNumber(a->evaluate(scope));
+	std::vector<SYM> v(evalA);
+	return manager::newValue(v);
+}
+
+const std::string AllocI::toString() const
+{
+	return "alloc(" + a->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class UntilI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+UntilI::UntilI(Instruction *a, Instruction *b) : BinaryI(UNTIL_I, a, b) {}
+
+SYM UntilI::evaluate(Scope &scope) const
+{
+	auto evalA = manager::getNumber(a->evaluate(scope));
+	auto evalB = manager::getNumber(b->evaluate(scope));
+	std::vector<SYM> nv;
+	for (auto i = evalA; i < evalB; i++)
+		nv.push_back(manager::newValue(i));
+	return manager::newValue(nv);
+}
+
+const std::string UntilI::toString() const
+{
+	return "until(" + a->toString() + ", " + b->toString() + ")";
 }

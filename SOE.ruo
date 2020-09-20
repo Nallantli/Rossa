@@ -1,0 +1,42 @@
+load "system.ruo";
+
+def SOE(MAX) {
+	var a = alloc(MAX);
+	for e in a do {
+		e = true;
+	}
+
+    var c = MAX - 2;
+	for i in [2 until (MAX ** 0.5)] do {
+		if a[i] then {
+			var n = i ** 2;
+			while n < MAX do {
+			    if a[n] then {
+			        c -= 1;
+					a[n] = false;
+			    }
+				n += i;
+			}
+		}
+	}
+
+	var b = alloc(c);
+	var j = 0;
+	for i in [2 until MAX] do {
+		if a[i] then {
+			b[j] = i;
+			j += 1;
+		}
+	}
+
+	return b;
+}
+
+var MAX = 10 ** 6;
+
+var start = timeMS();
+var result = SOE(MAX);
+var time = timeMS() - start;
+
+printl((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
+printl("Time: " + (time -> String) + "ms");

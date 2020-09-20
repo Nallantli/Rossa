@@ -1,8 +1,16 @@
-#include "Ruota.hpp"
+#include "Ruota.h"
 
-Scope::Scope() : parent(NULL) {}
+Scope::Scope() : parent(NULL), name("") {}
 
-Scope::Scope(Scope &parent) : parent(&parent) {}
+Scope::Scope(Scope &parent, const std::string &name) : parent(&parent)
+{
+	this->name = parent.getName() != "" ? parent.getName() + "." + name : name;
+}
+
+const std::string &Scope::getName() const
+{
+	return this->name;
+}
 
 SYM Scope::getVariable(const std::string &key)
 {
@@ -16,7 +24,7 @@ SYM Scope::getVariable(const std::string &key)
 
 SYM Scope::createVariable(const std::string &key)
 {
-	values[key] = manager::newValue(false);
+	values[key] = manager::newValue();
 	return getVariable(key);
 }
 
@@ -27,6 +35,15 @@ SYM Scope::createVariable(const std::string &key, const SYM &d)
 	else
 		values[key] = d;
 	return getVariable(key);
+}
+Scope *Scope::getParent()
+{
+	return this->parent;
+}
+
+bool Scope::hasValue(const std::string &key) const
+{
+	return values.find(key) != values.end();
 }
 
 Scope::~Scope() {}

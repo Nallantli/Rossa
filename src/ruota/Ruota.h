@@ -1,19 +1,8 @@
 #ifndef RUOTA_H
 #define RUOTA_H
 
-#include "RuotaTypes.hpp"
-#include "Lexer.hpp"
-
-#include <iostream>
-#include <string>
-#include <vector>
-#include <deque>
-#include <stdexcept>
-#include <memory>
-#include <map>
-#include <boost/dll.hpp>
-#include <boost/function.hpp>
-#include <boost/filesystem.hpp>
+#include "RuotaTypes.h"
+#include "Lexer.h"
 
 class Ruota;
 
@@ -35,6 +24,7 @@ class SubI;
 class MulI;
 class DivI;
 class ModI;
+class PowI;
 class LessI;
 class MoreI;
 class ELessI;
@@ -46,6 +36,14 @@ class OrI;
 class SetI;
 class ReturnI;
 class ExternI;
+class LengthI;
+class SizeI;
+class ClassI;
+class NewI;
+class TypeI;
+class CastToI;
+class AllocI;
+class UntilI;
 
 class UnaryI : public Instruction
 {
@@ -238,6 +236,14 @@ public:
 	const std::string toString() const override;
 };
 
+class PowI : public BinaryI
+{
+public:
+	PowI(Instruction *, Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
 class LessI : public BinaryI
 {
 public:
@@ -329,15 +335,87 @@ public:
 	const std::string toString() const override;
 };
 
+class LengthI : public UnaryI
+{
+public:
+	LengthI(Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class SizeI : public UnaryI
+{
+public:
+	SizeI(Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class ClassI : public Instruction
+{
+protected:
+	std::string key;
+	OBJECT_TYPE type;
+	std::shared_ptr<Instruction> body;
+
+public:
+	ClassI(const std::string &, OBJECT_TYPE, std::shared_ptr<Instruction>);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class NewI : public BinaryI
+{
+public:
+	NewI(Instruction *, Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class TypeI : public UnaryI
+{
+public:
+	TypeI(Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class CastToI : public UnaryI
+{
+protected:
+	D_TYPE convert;
+
+public:
+	CastToI(Instruction *, D_TYPE);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class AllocI : public UnaryI
+{
+public:
+	AllocI(Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
+class UntilI : public BinaryI
+{
+public:
+	UntilI(Instruction *, Instruction *);
+	SYM evaluate(Scope &) const override;
+	const std::string toString() const override;
+};
+
 class Ruota
 {
 private:
 	static const std::map<std::string, signed int> bOperators;
 	static const std::map<std::string, signed int> uOperators;
-	static Lexer lexer;
 	Scope main;
 
 public:
+	static Lexer lexer;
 	//static std::unique_ptr<DataManager> manager;
 	Ruota();
 	SYM parseCode(const std::string &code);
@@ -345,9 +423,11 @@ public:
 
 namespace rdir
 {
-	static inline boost::filesystem::path findFile(const std::string &filename)
+	static std::vector<boost::filesystem::path> loaded;
+
+	static inline boost::filesystem::path findFile(boost::filesystem::path currentDir, const std::string &filename)
 	{
-		auto currentDirCheck = boost::filesystem::current_path() / filename;
+		auto currentDirCheck = currentDir / filename;
 		if (boost::filesystem::exists(currentDirCheck))
 			return currentDirCheck;
 		auto libDirCheck = boost::dll::program_location().parent_path() / "lib" / filename;
@@ -361,7 +441,7 @@ namespace rlib
 {
 	static std::map<std::string, boost::function<SYM(std::vector<SYM>)>> loaded;
 
-	static inline void loadFunction(const std::string &rawlibname, const std::string &fname)
+	static inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname)
 	{
 		std::string libname = rawlibname;
 
@@ -375,7 +455,7 @@ namespace rlib
 		if (loaded.find(search) != loaded.end())
 			return;
 
-		loaded[search] = boost::dll::import<SYM(std::vector<SYM>)>(rdir::findFile(libname), fname);
+		loaded[search] = boost::dll::import<SYM(std::vector<SYM>)>(rdir::findFile(currentDir, libname), fname);
 	}
 } // namespace rlib
 

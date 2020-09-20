@@ -1,12 +1,13 @@
-#include "Ruota.hpp"
-#include "Lexer.hpp"
-#include "Node.hpp"
+#include "Ruota.h"
+#include "Lexer.h"
+#include "Node.h"
 
 Ruota::Ruota() {}
 
 //std::unique_ptr<DataManager> Ruota::manager = std::make_unique<DataManager>();
 
 const std::map<std::string, signed int> Ruota::bOperators = {
+	{"**", 13},
 	{"*", 12},
 	{"/", 12},
 	{"%", 12},
@@ -24,12 +25,13 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"&&", 3},
 	{"||", 2},
 	{"=", 1},
+	{"->", 1},
+	{"**=", 1},
 	{"*=", 1},
 	{"/=", 1},
 	{"%=", 1},
 	{"+=", 1},
-	{"-=", 1},
-	{"until", 2}};
+	{"-=", 1}};
 
 const std::map<std::string, signed int> Ruota::uOperators = {
 	{"-", 5},
@@ -41,7 +43,7 @@ Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 SYM Ruota::parseCode(const std::string &code)
 {
 	auto tokens = lexer.lexString(code);
-	NodeParser testnp(tokens, bOperators, uOperators);
+	NodeParser testnp(tokens, bOperators, uOperators, boost::filesystem::current_path());
 	auto n = testnp.parse();
 	if (n)
 	{

@@ -8,7 +8,9 @@
 #include <iostream>
 #include <sstream>
 
-enum TokenType
+#include "RuotaTypes.h"
+
+enum LEX_TOKEN_TYPE
 {
 	TOK_EOF = -1,
 
@@ -37,7 +39,23 @@ enum TokenType
 	TOK_STRING = -22,
 	TOK_VECTOR = -23,
 	TOK_BOOLEAN = -24,
-	TOK_EXTERN_CALL = -25
+	TOK_EXTERN_CALL = -25,
+
+	TOK_LENGTH = -26,
+	TOK_SIZE = -27,
+	TOK_CLASS = -28,
+	TOK_STRUCT = -29,
+	TOK_STATIC = -30,
+	TOK_NEW = -31,
+	TOK_TYPE = -32,
+	TOK_DICTIONARY = -33,
+	TOK_OBJECT = -34,
+	TOK_FUNCTION = -35,
+	TOK_CAST = -36,
+
+	TOK_LOAD = -37,
+	TOK_ALLOC = -38,
+	TOK_UNTIL = -39
 };
 
 class Token
@@ -45,17 +63,17 @@ class Token
 private:
 	std::string valueString;
 	std::string line;
-	double valueNumber;
+	long_double_t valueNumber;
 	int type;
 	unsigned long distance;
 
 public:
 	Token() : line(""), distance(0), valueString(""), valueNumber(0), type(0) {}
-	Token(const std::string &line, unsigned long distance, const std::string &, double, int);
+	Token(const std::string &line, unsigned long distance, const std::string &, long_double_t, int);
 	const std::string getLine() const { return this->line; };
 	const int getType() const { return this->type; }
 	const unsigned long getDist() const { return this->distance; }
-	const double getValueNumber() const { return this->valueNumber; }
+	const long_double_t getValueNumber() const { return this->valueNumber; }
 	const std::string getValueString() const { return this->valueString; }
 };
 
@@ -64,7 +82,7 @@ class Lexer
 private:
 	std::string ID_STRING;
 	unsigned long LINE_INDEX;
-	double NUM_VALUE;
+	long_double_t NUM_VALUE;
 	std::string INPUT;
 	unsigned long INPUT_INDEX;
 	unsigned long TOKEN_DIST;
