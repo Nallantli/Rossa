@@ -32,13 +32,13 @@ enum NODE_TYPE
 	NEW_NODE,
 	NIL_NODE,
 	CAST_TO_NODE,
-	UNTIL_NODE
+	UNTIL_NODE,
+	MAP_NODE
 };
 
 class NodeParser;
 
 class Node;
-class EntryNode;
 class CallNode;
 class CallBuiltNode;
 class IndexNode;
@@ -63,6 +63,7 @@ class ExternCallNode;
 class NewNode;
 class CastToNode;
 class UntilNode;
+class MapNode;
 
 class Node
 {
@@ -73,17 +74,6 @@ public:
 	Node(NODE_TYPE type) : type(type) {}
 	virtual Instruction *genParser() const = 0;
 	NODE_TYPE getType() const { return type; }
-};
-
-class EntryNode : public Node
-{
-private:
-	std::vector<std::unique_ptr<Node>> children;
-
-public:
-	EntryNode() : Node(ENTRY_NODE) {}
-	void addNode(std::unique_ptr<Node> node) { children.push_back(std::move(node)); }
-	Instruction *genParser() const override;
 };
 
 class VectorNode : public Node
@@ -100,10 +90,10 @@ public:
 class NumNode : public Node
 {
 private:
-	long_double_t numberValue;
+	Number numberValue;
 
 public:
-	NumNode(long_double_t numberValue) : Node(NUM_NODE), numberValue(numberValue) {}
+	NumNode(Number numberValue) : Node(NUM_NODE), numberValue(numberValue) {}
 	Instruction *genParser() const override;
 };
 
@@ -152,11 +142,12 @@ class DefineNode : public Node
 {
 private:
 	std::string key;
-	std::unique_ptr<Node> params;
-	std::unique_ptr<Node> body;
+	D_TYPE ftype;
+	std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params;
+	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	DefineNode(const std::string &key, std::unique_ptr<Node> params, std::unique_ptr<Node> body) : Node(DEFINE_NODE), key(key), params(std::move(params)), body(std::move(body)) {}
+	DefineNode(const std::string &key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params, std::vector<std::unique_ptr<Node>> body) : Node(DEFINE_NODE), key(key), ftype(ftype), params(params), body(std::move(body)) {}
 	Instruction *genParser() const override;
 };
 
@@ -176,10 +167,10 @@ class ClassNode : public Node
 private:
 	std::string key;
 	int type;
-	std::unique_ptr<Node> body;
+	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	ClassNode(const std::string &key, int type, std::unique_ptr<Node> body) : Node(CLASS_NODE), key(key), type(type), body(std::move(body)) {}
+	ClassNode(const std::string &key, int type, std::vector<std::unique_ptr<Node>> body) : Node(CLASS_NODE), key(key), type(type), body(std::move(body)) {}
 	Instruction *genParser() const override;
 };
 
@@ -209,11 +200,11 @@ public:
 class ExternCallNode : public Node
 {
 private:
-	boost::function<SYM(std::vector<SYM>)> f;
+	boost::function<Symbol(std::vector<Symbol>)> f;
 	std::vector<std::unique_ptr<Node>> args;
 
 public:
-	ExternCallNode(boost::function<SYM(std::vector<SYM>)> f, std::vector<std::unique_ptr<Node>> args) : Node(EXTERN_CALL_NODE), f(f), args(std::move(args)) {}
+	ExternCallNode(boost::function<Symbol(std::vector<Symbol>)> f, std::vector<std::unique_ptr<Node>> args) : Node(EXTERN_CALL_NODE), f(f), args(std::move(args)) {}
 	Instruction *genParser() const override;
 };
 
@@ -303,11 +294,11 @@ class IfElseNode : public Node
 {
 private:
 	std::unique_ptr<Node> ifs;
-	std::unique_ptr<Node> body;
+	std::vector<std::unique_ptr<Node>> body;
 	std::unique_ptr<Node> elses = nullptr;
 
 public:
-	IfElseNode(std::unique_ptr<Node> ifs, std::unique_ptr<Node> body) : Node(IF_ELSE_NODE), ifs(std::move(ifs)), body(std::move(body)) {}
+	IfElseNode(std::unique_ptr<Node> ifs, std::vector<std::unique_ptr<Node>> body) : Node(IF_ELSE_NODE), ifs(std::move(ifs)), body(std::move(body)) {}
 	void setElse(std::unique_ptr<Node> elses) { this->elses = std::move(elses); }
 	Instruction *genParser() const override;
 };
@@ -316,10 +307,10 @@ class WhileNode : public Node
 {
 private:
 	std::unique_ptr<Node> whiles;
-	std::unique_ptr<Node> body;
+	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	WhileNode(std::unique_ptr<Node> whiles, std::unique_ptr<Node> body) : Node(WHILE_NODE), whiles(std::move(whiles)), body(std::move(body)) {}
+	WhileNode(std::unique_ptr<Node> whiles, std::vector<std::unique_ptr<Node>> body) : Node(WHILE_NODE), whiles(std::move(whiles)), body(std::move(body)) {}
 	Instruction *genParser() const override;
 };
 
@@ -328,10 +319,10 @@ class ForNode : public Node
 private:
 	std::string id;
 	std::unique_ptr<Node> fors;
-	std::unique_ptr<Node> body;
+	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	ForNode(const std::string &id, std::unique_ptr<Node> fors, std::unique_ptr<Node> body) : Node(FOR_NODE), id(id), fors(std::move(fors)), body(std::move(body)) {}
+	ForNode(const std::string &id, std::unique_ptr<Node> fors, std::vector<std::unique_ptr<Node>> body) : Node(FOR_NODE), id(id), fors(std::move(fors)), body(std::move(body)) {}
 	Instruction *genParser() const override;
 };
 
@@ -343,6 +334,16 @@ private:
 
 public:
 	UntilNode(std::unique_ptr<Node> a, std::unique_ptr<Node> b) : Node(UNTIL_NODE), a(std::move(a)), b(std::move(b)) {}
+	Instruction *genParser() const override;
+};
+
+class MapNode : public Node
+{
+private:
+	std::vector<std::pair<std::string, std::unique_ptr<Node>>> args;
+
+public:
+	MapNode(std::vector<std::pair<std::string, std::unique_ptr<Node>>> args) : Node(MAP_NODE), args(std::move(args)) {}
 	Instruction *genParser() const override;
 };
 
@@ -366,11 +367,11 @@ private:
 	std::unique_ptr<Node> parseUnitNode();
 	std::unique_ptr<Node> parseBaseNode();
 	std::unique_ptr<Node> parseUnOpNode();
+	std::unique_ptr<Node> parseMapNode();
 	std::unique_ptr<Node> parseIfElseNode();
 	std::unique_ptr<Node> parseWhileNode();
 	std::unique_ptr<Node> parseForNode();
-	std::unique_ptr<Node> parseSigNode();
-	std::unique_ptr<Node> parseInsNode(std::unique_ptr<Node>);
+	std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> parseSigNode();
 	std::unique_ptr<Node> parseDefineNode();
 	std::unique_ptr<Node> parseLambdaNode();
 	std::unique_ptr<Node> parseExternNode();
@@ -380,12 +381,15 @@ private:
 	std::unique_ptr<Node> parseNewNode();
 	std::unique_ptr<Node> parseLoadNode();
 	std::unique_ptr<Node> parseTrailingNode(std::unique_ptr<Node>, bool);
+	std::unique_ptr<Node> parseInsNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseUntilNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseCastToNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseBinOpNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseCallNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseIndexNode(std::unique_ptr<Node>);
+
 	std::unique_ptr<Node> logErrorN(const std::string &, Token);
+	std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> logErrorSN(const std::string &, Token);
 
 public:
 	NodeParser(std::vector<Token> tokens, std::map<std::string, signed int> bOperators, std::map<std::string, signed int> uOperators, boost::filesystem::path currentDir) : tokens(tokens), bOperators(bOperators), uOperators(uOperators), currentDir(currentDir) {}

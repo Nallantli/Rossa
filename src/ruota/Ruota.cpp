@@ -19,9 +19,9 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"<=", 8},
 	{"==", 7},
 	{"!=", 7},
-	{"!", 999}, //undef
-	{"&", 6},	//undef
-	{"|", 4},	//undef
+	{"!", -1}, //undef
+	{"&", 6},  //undef
+	{"|", 4},  //undef
 	{"&&", 3},
 	{"||", 2},
 	{"=", 1},
@@ -31,16 +31,18 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"/=", 1},
 	{"%=", 1},
 	{"+=", 1},
-	{"-=", 1}};
+	{"-=", 1},
+	{":", -1},
+	{"::", -1}};
 
 const std::map<std::string, signed int> Ruota::uOperators = {
-	{"-", 5},
-	{"+", 5},
-	{"!", 5}};
+	{"-", -1},
+	{"+", -1},
+	{"!", -1}};
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-SYM Ruota::parseCode(const std::string &code)
+Symbol Ruota::parseCode(const std::string &code)
 {
 	auto tokens = lexer.lexString(code);
 	NodeParser testnp(tokens, bOperators, uOperators, boost::filesystem::current_path());
@@ -48,12 +50,9 @@ SYM Ruota::parseCode(const std::string &code)
 	if (n)
 	{
 		auto g = NodeParser::genParser(std::move(n));
-		std::cout << g->toString() << "\n";
 		auto res = g->evaluate(main);
-		std::cout << manager::toString(res) << "\n";
 		delete g;
-
 		return res;
 	}
-	return manager::newValue();
+	return Symbol();
 }

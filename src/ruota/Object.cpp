@@ -10,17 +10,17 @@ std::shared_ptr<Scope> Object::getScope()
 	return this->internal;
 }
 
-SYM Object::instantiate(std::vector<SYM> params) const
+Symbol Object::instantiate(std::vector<Symbol> params) const
 {
 	if (type != STRUCT_O)
 		throw std::runtime_error("Cannot instantiate a non-struct Object");
 
 	auto o = std::make_shared<Object>(*internal->getParent(), STATIC_O, body, key);
 	o->body->evaluate(*o->getScope());
-	auto f = manager::getFunction(o->getScope()->getVariable("init"), params.size());
-	auto d = manager::newValue(o);
+	auto f = o->getScope()->getVariable("init").getFunction(NIL, params.size());
+	auto d = Symbol(o);
 
-	f->evaluate(params, d);
+	f->evaluate(params, &d);
 	return d;
 }
 

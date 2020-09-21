@@ -1,6 +1,6 @@
 #include "Lexer.h"
 
-Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, long_double_t valueNumber, int type)
+Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, Number valueNumber, int type)
 {
 	this->line = line;
 	this->distance = distance;
@@ -112,6 +112,10 @@ const int Lexer::getToken()
 			return TOK_ALLOC;
 		else if (ID_STRING == "until")
 			return TOK_UNTIL;
+		else if (ID_STRING == "final")
+			return TOK_FINAL;
+		else if (ID_STRING == "ref")
+			return TOK_REF;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -120,25 +124,32 @@ const int Lexer::getToken()
 	else if (isdigit(last) || (last == '.' && isdigit(peekChar())))
 	{
 		std::string numStr = std::string(1, last);
+		bool flag = false;
 		while (isdigit(peekChar()) || peekChar() == '.')
 		{
+			flag = last == '.';
 			last = nextChar();
 			numStr += last;
 		}
 
 		ID_STRING = numStr;
-		NUM_VALUE = strtod(numStr.c_str(), 0);
+		if (flag)
+			NUM_VALUE = Number(strtold(numStr.c_str(), 0));
+		else
+			NUM_VALUE = Number(strtoll(numStr.c_str(), 0, 0));
 		return TOK_NUM;
 	}
 	else if (last == '#')
 	{
+		std::string commentStr = "";
 		do
 		{
 			last = nextChar();
+			commentStr += last;
 		} while (last != EOF && last != '\n' && last != '\r');
 
-		if (last != EOF)
-			return TOK_EOF;
+		ID_STRING = commentStr;
+		return '#';
 	}
 	else if (last == EOF || last == 0)
 		return TOK_EOF;
@@ -154,6 +165,10 @@ const int Lexer::getToken()
 		ID_STRING = opStr;
 		if (ID_STRING == "->")
 			return TOK_CAST;
+		if (ID_STRING == "::")
+			return TOK_DEF_TYPE;
+		if (ID_STRING == ":")
+			return ':';
 		return TOK_OPR;
 	}
 	else if (uOperators.find(std::string(1, last)) != uOperators.end())
@@ -233,9 +248,6 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 		LINES.push_back(item);
 	}
 
-	for (auto &l : LINES)
-		std::cout << "LINE\t" << l << "\n";
-
 	std::vector<Token> tokens;
 	this->INPUT = INPUT;
 	this->INPUT_INDEX = 0;
@@ -247,6 +259,8 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 		int token = this->getToken();
 		if (token == TOK_EOF)
 			break;
+		if (token == '#')
+			continue;
 		Token t(LINES[LINE_INDEX], this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token);
 		tokens.push_back(t);
 	}

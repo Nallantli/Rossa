@@ -12,7 +12,7 @@ const std::string &Scope::getName() const
 	return this->name;
 }
 
-SYM Scope::getVariable(const std::string &key)
+Symbol Scope::getVariable(const std::string &key)
 {
 	if (values.find(key) != values.end())
 		return values[key];
@@ -22,16 +22,16 @@ SYM Scope::getVariable(const std::string &key)
 	throw std::runtime_error("Variable `" + key + "` is not declared within scope");
 }
 
-SYM Scope::createVariable(const std::string &key)
+Symbol Scope::createVariable(const std::string &key)
 {
-	values[key] = manager::newValue();
+	values[key] = Symbol();
 	return getVariable(key);
 }
 
-SYM Scope::createVariable(const std::string &key, const SYM &d)
+Symbol Scope::createVariable(const std::string &key, Symbol d)
 {
-	if (values.find(key) != values.end() && manager::getType(values[key]) == FUNCTION)
-		manager::addFunctions(values[key], d);
+	if (values.find(key) != values.end() && values[key].getType() == FUNCTION)
+		values[key].addFunctions(d);
 	else
 		values[key] = d;
 	return getVariable(key);

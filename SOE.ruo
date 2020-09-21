@@ -1,4 +1,4 @@
-load "system.ruo";
+load "std.ruo";
 
 def SOE(MAX) {
 	var a = alloc(MAX);
@@ -34,9 +34,9 @@ def SOE(MAX) {
 
 var MAX = 10 ** 6;
 
-var start = timeMS();
+var start = clock.milliseconds();
 var result = SOE(MAX);
-var time = timeMS() - start;
+var time = clock.milliseconds() - start;
 
 printl((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
 printl("Time: " + (time -> String) + "ms");

@@ -1,16 +1,20 @@
 EntryNode := ExprNode*
 
+MapElement :=
+|	(ID|String) ':' EquNode
+
 BaseNode :=
 |	Number
 |	String
 |	Boolean
 |	ID
 |	'[' ']'
+|	'{' MapElement* '}'
 |	BaseNode '.' BaseNode
 |	'var' ID
 
 SigNode :=
-|	'(' ID [',' ID]* ')'
+|	'(' ('final'|'ref') String [',' ('final'|'ref') String]* ')'
 
 UnitNode :=
 |	UOP EquNode
@@ -32,7 +36,8 @@ EquNode :=
 ExprNode :=
 |	'load' String ';'
 |	'extern' Type ID '(' Type* ')' 'in' String ';'
-|	'def' ID SigNode '{' ExprNode* '}'
+|	'def' String SigNode '{' ExprNode* '}'
+|	'def' Type :: String SigNode '{' ExprNode* '}'
 |	'for' ID 'in' EquNode 'do' '{' ExprNode* '}'
 |	'while' EquNode 'do' '{' ExprNode* '}'
 |	ClassType String 'class' '{' ExprNode* '}'

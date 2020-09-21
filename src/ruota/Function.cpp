@@ -1,40 +1,50 @@
 #include "Ruota.h"
 
-Function::Function(Scope &parent, std::vector<std::string> paramNames, std::shared_ptr<Instruction> body) : parent(&parent), paramNames(paramNames), body(body) {}
+Function::Function(Scope &parent, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params, std::shared_ptr<Instruction> body) : parent(&parent), params(params), body(body) {}
 
-SYM Function::evaluate(std::vector<SYM> paramValues)
+Symbol Function::evaluate(std::vector<Symbol> paramValues)
 {
-	Scope newScope(*parent, "");
-
-	for (size_t i = 0; i < paramNames.size(); i++)
-	{
-		auto temp = newScope.createVariable(paramNames[i]);
-		manager::set(temp, paramValues[i]);
-	}
-
-	auto ret = manager::newValue(true);
-	manager::set(ret, body->evaluate(newScope));
-	return ret;
+	return evaluate(paramValues, NULL);
 }
 
-SYM Function::evaluate(std::vector<SYM> paramValues, SYM thisSym)
+Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym)
 {
 	Scope newScope(*parent, "");
 
-	for (size_t i = 0; i < paramNames.size(); i++)
+	for (size_t i = 0; i < params.size(); i++)
 	{
-		auto temp = newScope.createVariable(paramNames[i]);
-		manager::set(temp, paramValues[i]);
+		switch (params[i].first)
+		{
+		case TOK_FINAL:
+		{
+			auto temp = newScope.createVariable(params[i].second);
+			temp.set(paramValues[i]);
+			temp.setMutable(false);
+			break;
+		}
+		case TOK_REF:
+		{
+			newScope.createVariable(params[i].second, paramValues[i]);
+			break;
+		}
+		default:
+		{
+			auto temp = newScope.createVariable(params[i].second);
+			temp.set(paramValues[i]);
+			break;
+		}
+		}
 	}
 
-	newScope.createVariable("this", thisSym);
+	if (thisSym != NULL)
+		newScope.createVariable("this", *thisSym);
 
-	auto ret = manager::newValue(true);
-	manager::set(ret, body->evaluate(newScope));
+	auto ret = Symbol(true);
+	ret.set(body->evaluate(newScope));
 	return ret;
 }
 
 const unsigned long Function::getArgSize() const
 {
-	return paramNames.size();
+	return params.size();
 }

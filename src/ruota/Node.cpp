@@ -36,13 +36,9 @@ std::unique_ptr<Node> NodeParser::parseEntryNode()
 	while (currentToken.getType() != 0)
 	{
 		if (auto n = parseExprNode())
-		{
 			v.push_back(std::move(n));
-		}
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected interior code for global entry", currentToken);
 	}
 	return std::make_unique<VectorNode>(std::move(v));
 }
@@ -101,7 +97,7 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 		if (auto b = parseEquNode())
 			args.push_back(std::move(b));
 		else
-			return nullptr;
+			return logErrorN("Expected Function parameter", currentToken);
 		if (currentToken.getType() == 0)
 			return logErrorN("Expected `)`", currentToken);
 	}
@@ -139,7 +135,7 @@ std::unique_ptr<Node> NodeParser::parseExternCallNode()
 		if (auto b = parseEquNode())
 			args.push_back(std::move(b));
 		else
-			return nullptr;
+			return logErrorN("Expected Function parameter", currentToken);
 		if (currentToken.getType() == 0)
 			return logErrorN("Expected `)`", currentToken);
 	}
@@ -150,64 +146,112 @@ std::unique_ptr<Node> NodeParser::parseExternCallNode()
 	return std::make_unique<ExternCallNode>(f, std::move(args));
 }
 
-std::unique_ptr<Node> NodeParser::parseSigNode()
+std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> NodeParser::parseSigNode()
 {
 	if (currentToken.getType() != '(')
-		return logErrorN("Expected `(`", currentToken);
+		return logErrorSN("Expected `(`", currentToken);
 	nextToken();
 
-	std::vector<std::unique_ptr<Node>> args;
+	std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> args;
 	int i = 0;
 	while (currentToken.getType() != ')')
 	{
 		if (i > 0)
 		{
 			if (currentToken.getType() != ',')
-				return logErrorN("Expected `,`", currentToken);
+				return logErrorSN("Expected `,`", currentToken);
 			nextToken();
 		}
 		i++;
-		if (auto b = parseIDNode())
-			args.push_back(std::move(b));
+
+		int type = currentToken.getType();
+		if (!(type == TOK_FINAL || type == TOK_REF))
+			type = TOK_NIL;
 		else
-			return nullptr;
+			nextToken();
+
+		std::string arg;
+
+		if (currentToken.getType() == TOK_IDF)
+			arg = currentToken.getValueString();
+		else
+			return logErrorSN("Expected variable identifier", currentToken);
+		nextToken();
+
+		args.push_back({(LEX_TOKEN_TYPE)type, arg});
+
 		if (currentToken.getType() == 0)
-			return logErrorN("Expected `)`", currentToken);
+			return logErrorSN("Expected `)`", currentToken);
 	}
 	nextToken();
-	return std::make_unique<VectorNode>(std::move(args));
+	return args;
 }
 
 std::unique_ptr<Node> NodeParser::parseDefineNode()
 {
 	nextToken();
-	auto keyNode = parseIDNode();
-	if (!keyNode)
-		logErrorN("Expected identifier", currentToken);
+	D_TYPE ftype = NIL;
+	if (currentToken.getType() != TOK_IDF && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_TYPE && currentToken.getType() != TOK_ALLOC)
+	{
+		switch (currentToken.getType())
+		{
+		case TOK_BOOLEAN:
+			ftype = BOOLEAN_D;
+			break;
+		case TOK_NUMBER:
+			ftype = NUMBER;
+			break;
+		case TOK_VECTOR:
+			ftype = VECTOR;
+			break;
+		case TOK_STRING:
+			ftype = STRING;
+			break;
+		case TOK_DICTIONARY:
+			ftype = DICTIONARY;
+			break;
+		case TOK_OBJECT:
+			ftype = OBJECT;
+			break;
+		case TOK_FUNCTION:
+			ftype = FUNCTION;
+			break;
+		default:
+			return logErrorN("Expected base type for prototypic Function declaration", currentToken);
+		}
+		nextToken();
+		if (currentToken.getType() != TOK_DEF_TYPE)
+			return logErrorN("Expected `::`", currentToken);
+		nextToken();
+	}
+	if (currentToken.getType() != TOK_IDF && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_TYPE && currentToken.getType() != TOK_ALLOC)
+		return logErrorN("Expected Function name", currentToken);
+	auto key = currentToken.getValueString();
+	nextToken();
 
 	auto args = parseSigNode();
+	if (!args.empty() && args[0].first == 0)
+		return logErrorN("Expected Function signature", currentToken);
 
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected Function body", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>(((IDNode *)(keyNode.get()))->getKey(), std::move(args), std::move(body));
+	return std::make_unique<DefineNode>(key, ftype, args, std::move(body));
 }
 
 std::unique_ptr<Node> NodeParser::parseNewNode()
@@ -216,7 +260,7 @@ std::unique_ptr<Node> NodeParser::parseNewNode()
 
 	auto body = parseUnitNode();
 	if (body->getType() != CALL_NODE)
-		return logErrorN("Expected object declaration", currentToken);
+		return logErrorN("Expected Object declaration", currentToken);
 	auto object = ((CallNode *)body.get())->getCallee();
 	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()));
 
@@ -228,28 +272,28 @@ std::unique_ptr<Node> NodeParser::parseLambdaNode()
 	nextToken();
 
 	auto args = parseSigNode();
+	if (!args.empty() && args[0].first == 0)
+		return logErrorN("Expected Function signature", currentToken);
 
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected Function body", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>("", std::move(args), std::move(body));
+	return std::make_unique<DefineNode>("", NIL, args, std::move(body));
 }
 
 std::unique_ptr<Node> NodeParser::parseIndexNode(std::unique_ptr<Node> a)
@@ -310,6 +354,9 @@ std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a)
 	nextToken();
 
 	auto b = parseEquNode();
+	if (!b)
+		return logErrorN("Expected expression", currentToken);
+
 	return std::make_unique<UntilNode>(std::move(a), std::move(b));
 }
 
@@ -324,25 +371,32 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 		int prec = bOperators[opStr];
 		nextToken();
 
-		if (prec < pastPrec)
+		if (auto b = parseUnitNode())
 		{
-			current = std::make_unique<BinOpNode>(
-				opStr,
-				std::move(current),
-				parseUnitNode());
+			if (prec < pastPrec)
+			{
+				current = std::make_unique<BinOpNode>(
+					opStr,
+					std::move(current),
+					std::move(b));
+			}
+			else
+			{
+				auto oldOp = ((BinOpNode *)current.get())->getOp();
+				auto current_a = ((BinOpNode *)current.get())->getA();
+				auto current_b = ((BinOpNode *)current.get())->getB();
+				current = std::make_unique<BinOpNode>(
+					oldOp,
+					std::move(current_a),
+					std::make_unique<BinOpNode>(
+						opStr,
+						std::move(current_b),
+						std::move(b)));
+			}
 		}
 		else
 		{
-			auto oldOp = ((BinOpNode *)current.get())->getOp();
-			auto current_a = ((BinOpNode *)current.get())->getA();
-			auto current_b = ((BinOpNode *)current.get())->getB();
-			current = std::make_unique<BinOpNode>(
-				oldOp,
-				std::move(current_a),
-				std::make_unique<BinOpNode>(
-					opStr,
-					std::move(current_b),
-					parseUnitNode()));
+			return logErrorN("Expected right-hand expression", currentToken);
 		}
 		pastPrec = prec;
 	}
@@ -379,6 +433,8 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 		return parseLambdaNode();
 	case '[':
 		return parseVectorNode();
+	case '{':
+		return parseMapNode();
 	default:
 		return nullptr;
 	}
@@ -427,11 +483,49 @@ std::unique_ptr<Node> NodeParser::parseVectorNode()
 	return std::make_unique<VectorNode>(std::move(args));
 }
 
+std::unique_ptr<Node> NodeParser::parseMapNode()
+{
+	nextToken();
+	std::vector<std::pair<std::string, std::unique_ptr<Node>>> args;
+	int i = 0;
+	while (currentToken.getType() != '}')
+	{
+		if (i > 0)
+		{
+			if (currentToken.getType() != ',')
+				return logErrorN("Expected `,`", currentToken);
+			nextToken();
+		}
+		i++;
+		if (!(currentToken.getType() == TOK_STR_LIT || currentToken.getType() == TOK_IDF || currentToken.getType() == TOK_NUM || currentToken.getType() == TOK_TRUE || currentToken.getType() == TOK_FALSE))
+			return logErrorN("Value cannot be used to generate key-value pair", currentToken);
+		auto key = currentToken.getValueString();
+		nextToken();
+		if (currentToken.getType() != ':')
+			return logErrorN("Expected `:`", currentToken);
+		nextToken();
+		if (auto b = parseEquNode())
+		{
+			std::pair<std::string, std::unique_ptr<Node>> p = {key, std::move(b)};
+			args.push_back(std::move(p));
+		}
+		else
+			return nullptr;
+		if (currentToken.getType() == 0)
+			return logErrorN("Expected `}`", currentToken);
+	}
+	nextToken();
+	return std::make_unique<MapNode>(std::move(args));
+}
+
 std::unique_ptr<Node> NodeParser::parseUnitNode()
 {
 	std::unique_ptr<Node> ret = nullptr;
 	switch (currentToken.getType())
 	{
+	case ';':
+	case 0:
+		return nullptr;
 	case TOK_NUM:
 	case TOK_IDF:
 	case TOK_VAR:
@@ -441,6 +535,7 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 	case TOK_STR_LIT:
 	case '@':
 	case '[':
+	case '{':
 		ret = parseBaseNode();
 		return parseTrailingNode(std::move(ret), true);
 	case TOK_EXTERN_CALL:
@@ -463,13 +558,13 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 			nextToken();
 			return parseTrailingNode(std::move(ret), true);
 		}
-		else
-		{
-			return logErrorN("Expected interior code", currentToken);
-		}
+		return logErrorN("Expected interior code", currentToken);
 	default:
-		ret = parseEquNode();
-		return parseTrailingNode(std::move(ret), false);
+		if (ret = parseEquNode())
+		{
+			return parseTrailingNode(std::move(ret), false);
+		}
+		return logErrorN("Expected expression", currentToken);
 	}
 }
 
@@ -486,15 +581,17 @@ std::unique_ptr<Node> NodeParser::parseInsNode(std::unique_ptr<Node> ret)
 
 std::unique_ptr<Node> NodeParser::parseEquNode()
 {
-	auto ret = parseUnitNode();
-
-	switch (currentToken.getType())
+	if (auto ret = parseUnitNode())
 	{
-	case TOK_OPR:
-		return parseBinOpNode(std::move(ret));
-	default:
-		return ret;
+		switch (currentToken.getType())
+		{
+		case TOK_OPR:
+			return parseBinOpNode(std::move(ret));
+		default:
+			return ret;
+		}
 	}
+	return logErrorN("Expected expression", currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseIfElseNode()
@@ -509,19 +606,16 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected interior code for `then` statement", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
@@ -537,24 +631,21 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		if (currentToken.getType() != '{')
 			return logErrorN("Expected `{`", currentToken);
 		nextToken();
-		auto elses = std::make_unique<EntryNode>();
+		std::vector<std::unique_ptr<Node>> elses;
 		while (currentToken.getType() != 0)
 		{
 			if (currentToken.getType() == '}')
 				break;
+
 			if (auto e = parseExprNode())
-			{
-				elses->addNode(std::move(e));
-			}
+				elses.push_back(std::move(e));
 			else
-			{
-				return nullptr;
-			}
+				return logErrorN("Expected interior code for `else` statement", currentToken);
 		}
 		if (currentToken.getType() != '}')
 			return logErrorN("Expected `}`", currentToken);
 		nextToken();
-		ret->setElse(std::move(elses));
+		ret->setElse(std::make_unique<VectorNode>(std::move(elses)));
 		return ret;
 	}
 	case TOK_ELSEIF:
@@ -579,19 +670,16 @@ std::unique_ptr<Node> NodeParser::parseWhileNode()
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected interior code for `do` statement", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
@@ -615,19 +703,16 @@ std::unique_ptr<Node> NodeParser::parseForNode()
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected interior code for `do` statement", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
@@ -669,19 +754,16 @@ std::unique_ptr<Node> NodeParser::parseClassNode()
 	if (currentToken.getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
-	auto body = std::make_unique<EntryNode>();
+	std::vector<std::unique_ptr<Node>> body;
 	while (currentToken.getType() != 0)
 	{
 		if (currentToken.getType() == '}')
 			break;
+
 		if (auto e = parseExprNode())
-		{
-			body->addNode(std::move(e));
-		}
+			body.push_back(std::move(e));
 		else
-		{
-			return nullptr;
-		}
+			return logErrorN("Expected interior code for class declaration", currentToken);
 	}
 	if (currentToken.getType() != '}')
 		return logErrorN("Expected `}`", currentToken);
@@ -695,9 +777,9 @@ std::unique_ptr<Node> NodeParser::parseLoadNode()
 	nextToken();
 	if (currentToken.getType() != TOK_STR_LIT)
 		return logErrorN("Expected filepath after `load`", currentToken);
-
 	std::string filename = currentToken.getValueString();
 	nextToken();
+
 	auto path = rdir::findFile(currentDir, filename);
 
 	if (std::find(rdir::loaded.begin(), rdir::loaded.end(), path) != rdir::loaded.end())
@@ -776,40 +858,32 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 	}
 }
 
-Instruction *EntryNode::genParser() const
-{
-	std::vector<Instruction *> ins;
-	for (auto &n : children)
-		ins.push_back(n->genParser());
-	return new Sequence(true, ins);
-}
-
 Instruction *VectorNode::genParser() const
 {
 	std::vector<Instruction *> ins;
 	for (auto &n : args)
 		ins.push_back(n->genParser());
-	return new Sequence(false, ins);
+	return new Sequence(ins);
 }
 
 Instruction *NumNode::genParser() const
 {
-	return new Container(manager::newValue(numberValue));
+	return new Container(Symbol(numberValue));
 }
 
 Instruction *NilNode::genParser() const
 {
-	return new Container(manager::newValue());
+	return new Container(Symbol());
 }
 
 Instruction *StringNode::genParser() const
 {
-	return new Container(manager::newValue(stringValue));
+	return new Container(Symbol(stringValue));
 }
 
 Instruction *BoolNode::genParser() const
 {
-	return new Container(manager::newValue(boolValue));
+	return new Container(Symbol(boolValue));
 }
 
 Instruction *IDNode::genParser() const
@@ -824,11 +898,11 @@ Instruction *VarNode::genParser() const
 
 Instruction *DefineNode::genParser() const
 {
-	std::shared_ptr<Instruction> fbody(this->body->genParser());
-	std::vector<std::string> args;
-	for (auto &e : ((VectorNode *)params.get())->getChildren())
-		args.push_back(((IDNode *)e.get())->getKey());
-	return new DefineI(key, args, fbody);
+	std::vector<Instruction *> is;
+	for (auto &e : this->body)
+		is.push_back(e->genParser());
+	auto fbody = std::make_shared<ScopeI>(is);
+	return new DefineI(key, ftype, params, fbody);
 }
 
 Instruction *CallNode::genParser() const
@@ -837,7 +911,7 @@ Instruction *CallNode::genParser() const
 	std::vector<Instruction *> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return new CallI(fcallee, new Sequence(false, fargs));
+	return new CallI(fcallee, new Sequence(fargs));
 }
 
 Instruction *IndexNode::genParser() const
@@ -901,7 +975,7 @@ Instruction *UnOpNode::genParser() const
 	if (op == "+")
 		return a->genParser();
 	if (op == "-")
-		return new SubI(std::make_unique<NumNode>(0)->genParser(), a->genParser());
+		return new SubI(std::make_unique<NumNode>((long_int_t)0)->genParser(), a->genParser());
 	if (op == "!")
 		return new Equals(std::make_unique<BoolNode>(false)->genParser(), a->genParser());
 
@@ -920,6 +994,8 @@ Instruction *CallBuiltNode::genParser() const
 		return new TypeI(arg->genParser());
 	case TOK_ALLOC:
 		return new AllocI(arg->genParser());
+	default:
+		break;
 	}
 
 	throw std::runtime_error("Unknown built in function: " + std::to_string(t));
@@ -932,24 +1008,38 @@ Instruction *InsNode::genParser() const
 
 Instruction *IfElseNode::genParser() const
 {
-	auto bodyI = (Sequence *)body->genParser();
-	bodyI->setScoped(false);
+	std::vector<Instruction *> is;
+	for (auto &e : this->body)
+		is.push_back(e->genParser());
+	auto bodyI = new ScopeI(is);
 	if (elses)
 		return new IfElseI(ifs->genParser(), bodyI, elses->genParser());
 	return new IfElseI(ifs->genParser(), bodyI, NULL);
 }
 
+Instruction *MapNode::genParser() const
+{
+	std::map<std::string, Instruction *> is;
+	for (auto &e : this->args)
+	{
+		is[e.first] = e.second->genParser();
+	}
+	return new MapI(is);
+}
+
 Instruction *NewNode::genParser() const
 {
-	auto paramsI = (Sequence *)params->genParser();
-	paramsI->setScoped(false);
+	auto paramsI = params->genParser();
 	return new NewI(object->genParser(), paramsI);
 }
 
 Instruction *ClassNode::genParser() const
 {
-	auto bodyI = std::shared_ptr<Instruction>(body->genParser());
-	((Sequence *)bodyI.get())->setScoped(false);
+	std::vector<Instruction *> is;
+	for (auto &e : this->body)
+		is.push_back(e->genParser());
+	auto bodyI = std::make_shared<ScopeI>(is);
+
 	OBJECT_TYPE ot;
 	switch (type)
 	{
@@ -959,14 +1049,19 @@ Instruction *ClassNode::genParser() const
 	case TOK_STATIC:
 		ot = STATIC_O;
 		break;
+	default:
+		throw std::runtime_error("Invalid Object type");
 	}
 	return new ClassI(key, ot, bodyI);
 }
 
 Instruction *WhileNode::genParser() const
 {
-	auto bodyI = (Sequence *)body->genParser();
-	bodyI->setScoped(false);
+	std::vector<Instruction *> is;
+	for (auto &e : this->body)
+		is.push_back(e->genParser());
+	auto bodyI = new ScopeI(is);
+
 	return new WhileI(whiles->genParser(), bodyI);
 }
 
@@ -975,12 +1070,17 @@ Instruction *ExternCallNode::genParser() const
 	std::vector<Instruction *> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return new ExternI(this->f, new Sequence(false, fargs));
+	return new ExternI(this->f, new Sequence(fargs));
 }
 
 Instruction *ForNode::genParser() const
 {
-	return new ForI(id, fors->genParser(), body->genParser());
+	std::vector<Instruction *> is;
+	for (auto &e : this->body)
+		is.push_back(e->genParser());
+	auto bodyI = new ScopeI(is);
+
+	return new ForI(id, fors->genParser(), bodyI);
 }
 
 std::unique_ptr<Node> NodeParser::parse()
@@ -991,10 +1091,7 @@ std::unique_ptr<Node> NodeParser::parse()
 
 Instruction *NodeParser::genParser(std::unique_ptr<Node> n)
 {
-	auto g = n->genParser();
-	if (g->getType() == SEQUENCE)
-		((Sequence *)g)->setScoped(false);
-	return g;
+	return n->genParser();
 }
 
 Instruction *ReturnNode::genParser() const
@@ -1014,9 +1111,21 @@ Instruction *UntilNode::genParser() const
 
 std::unique_ptr<Node> NodeParser::logErrorN(const std::string &s, Token t)
 {
+	//std::string o = s + "\n\t" + t.getLine() + "\n\t";
 	std::cout << s << "\n"
-			  << t.getLine() << "\n"
-			  << t.getValueString() << "\n"
-			  << t.getDist() << "\n";
+			  << t.getLine() << "\n";
+	for (size_t i = 0; i < t.getDist() - t.getValueString().size(); i++)
+		std::cout << " ";
+	std::cout << "^";
+	if (t.getValueString().size() > 0)
+		for (size_t i = 0; i < t.getValueString().size() - 1; i++)
+			std::cout << "~";
+	std::cout << "\n";
 	return nullptr;
+}
+
+std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> NodeParser::logErrorSN(const std::string &s, Token t)
+{
+	logErrorN(s, t);
+	return {{(LEX_TOKEN_TYPE)0, ""}};
 }

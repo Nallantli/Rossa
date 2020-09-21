@@ -60,72 +60,60 @@ BinaryI::~BinaryI()
 /*class Container                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(const SYM &d) : Instruction(CONTAINER), d(d) {}
+Container::Container(const Symbol &d) : Instruction(CONTAINER), d(d) {}
 
-SYM Container::evaluate(Scope &) const
+Symbol Container::evaluate(Scope &) const
 {
 	return d;
 }
 
 const std::string Container::toString() const
 {
-	return manager::toString(d);
+	return d.toString();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const std::string &key, std::vector<std::string> fargs, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), fargs(fargs), body(body) {}
+DefineI::DefineI(const std::string &key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), ftype(ftype), params(params), body(body) {}
 
-SYM DefineI::evaluate(Scope &scope) const
+Symbol DefineI::evaluate(Scope &scope) const
 {
-	auto f = std::make_shared<Function>(scope, fargs, body);
+	auto f = std::make_shared<Function>(scope, params, body);
 	if (key != "")
 	{
-		auto d = manager::newValue(f);
+		auto d = Symbol(ftype, f);
 		scope.createVariable(key, d);
 		return d;
 	}
 
-	return manager::newValue(f);
+	return Symbol(NIL, f);
 }
 
 const std::string DefineI::toString() const
 {
 	if (key != "")
-		return "define(" + key + ", " + std::to_string(fargs.size()) + ", " + body->toString() + ")";
+		return "define(" + key + ", " + std::to_string(params.size()) + ", " + body->toString() + ")";
 	else
-		return "lambda(" + std::to_string(fargs.size()) + ", " + body->toString() + ")";
+		return "lambda(" + std::to_string(params.size()) + ", " + body->toString() + ")";
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Sequence                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Sequence::Sequence(bool scoped, std::vector<Instruction *> children) : scoped(scoped), Instruction(SEQUENCE), children(children) {}
+Sequence::Sequence(std::vector<Instruction *> children) : Instruction(SEQUENCE), children(children) {}
 
-SYM Sequence::evaluate(Scope &scope) const
+Symbol Sequence::evaluate(Scope &scope) const
 {
-	if (scoped)
-	{
-		Scope newScope(scope, "");
-		for (auto &e : children)
-		{
-			auto temp = e->evaluate(newScope);
-			if (temp.type == ID_RETURN)
-				return temp;
-		}
-		return manager::newValue();
-	}
-
-	std::vector<SYM> evals;
+	std::vector<Symbol> evals;
 	for (auto &e : children)
 	{
 		if (e->getType() == UNTIL_I)
 		{
 			auto eval = e->evaluate(scope);
-			auto v = manager::getVector(eval);
+			auto v = eval.getVector();
 			evals.insert(evals.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
 		}
 		else
@@ -134,21 +122,12 @@ SYM Sequence::evaluate(Scope &scope) const
 			evals.push_back(eval);
 		}
 	}
-	return manager::newValue(evals);
-}
-
-void Sequence::setScoped(bool scoped)
-{
-	this->scoped = scoped;
+	return Symbol(evals);
 }
 
 const std::string Sequence::toString() const
 {
-	std::string ret;
-	if (scoped)
-		ret = "scope(";
-	else
-		ret = "seq(";
+	std::string ret = "seq(";
 
 	unsigned long i = 0;
 	for (auto &e : children)
@@ -173,23 +152,23 @@ Sequence::~Sequence()
 
 IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses) : Instruction(IFELSE), ifs(ifs), body(body), elses(elses) {}
 
-SYM IfElseI::evaluate(Scope &scope) const
+Symbol IfElseI::evaluate(Scope &scope) const
 {
 	Scope newScope(scope, "");
 	auto evalIf = ifs->evaluate(newScope);
-	if (manager::getBool(evalIf))
+	if (evalIf.getBool())
 	{
 		auto temp = body->evaluate(newScope);
-		if (temp.type == ID_RETURN || temp.type == ID_BREAK)
+		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_BREAK)
 			return temp;
 	}
 	else if (elses)
 	{
 		auto temp = elses->evaluate(newScope);
-		if (temp.type == ID_RETURN || temp.type == ID_BREAK)
+		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_BREAK)
 			return temp;
 	}
-	return manager::newValue();
+	return Symbol();
 }
 
 const std::string IfElseI::toString() const
@@ -215,18 +194,18 @@ IfElseI::~IfElseI()
 
 WhileI::WhileI(Instruction *whiles, Instruction *body) : Instruction(WHILE), whiles(whiles), body(body) {}
 
-SYM WhileI::evaluate(Scope &scope) const
+Symbol WhileI::evaluate(Scope &scope) const
 {
-	while (manager::getBool(whiles->evaluate(scope)))
+	while (whiles->evaluate(scope).getBool())
 	{
 		Scope newScope(scope, "");
 		auto temp = body->evaluate(newScope);
-		if (temp.type == ID_RETURN)
+		if (temp.getSymbolType() == ID_RETURN)
 			return temp;
-		if (temp.type == ID_BREAK)
+		if (temp.getSymbolType() == ID_BREAK)
 			break;
 	}
-	return manager::newValue();
+	return Symbol();
 }
 
 const std::string WhileI::toString() const
@@ -248,20 +227,20 @@ WhileI::~WhileI()
 
 ForI::ForI(const std::string &id, Instruction *fors, Instruction *body) : Instruction(FOR), id(id), fors(fors), body(body) {}
 
-SYM ForI::evaluate(Scope &scope) const
+Symbol ForI::evaluate(Scope &scope) const
 {
 	auto evalFor = fors->evaluate(scope);
-	for (size_t i = 0; i < manager::vectorSize(evalFor); i++)
+	for (size_t i = 0; i < evalFor.vectorSize(); i++)
 	{
 		Scope newScope(scope, "");
-		newScope.createVariable(id, manager::indexVector(evalFor, i));
+		newScope.createVariable(id, evalFor.indexVector(i));
 		auto temp = body->evaluate(newScope);
-		if (temp.type == ID_RETURN)
+		if (temp.getSymbolType() == ID_RETURN)
 			return temp;
-		if (temp.type == ID_BREAK)
+		if (temp.getSymbolType() == ID_BREAK)
 			break;
 	}
-	return manager::newValue();
+	return Symbol();
 }
 
 const std::string ForI::toString() const
@@ -283,7 +262,7 @@ ForI::~ForI()
 
 VariableI::VariableI(const std::string &key) : CastingI(VARIABLE, key) {}
 
-SYM VariableI::evaluate(Scope &scope) const
+Symbol VariableI::evaluate(Scope &scope) const
 {
 	auto d = scope.getVariable(key);
 	return d;
@@ -300,7 +279,7 @@ const std::string VariableI::toString() const
 
 DeclareI::DeclareI(const std::string &key) : CastingI(DECLARE, key) {}
 
-SYM DeclareI::evaluate(Scope &scope) const
+Symbol DeclareI::evaluate(Scope &scope) const
 {
 	auto d = scope.createVariable(key);
 	return d;
@@ -317,11 +296,21 @@ const std::string DeclareI::toString() const
 
 IndexI::IndexI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-SYM IndexI::evaluate(Scope &scope) const
+Symbol IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::indexVector(evalA, (unsigned long)manager::getNumber(evalB));
+	switch (evalA.getType())
+	{
+	case VECTOR:
+		return evalA.indexVector(evalB.getNumber().getLong());
+		break;
+	case DICTIONARY:
+		return evalA.indexDictionary(evalB.getString());
+		break;
+	default:
+		throw std::runtime_error("Cannot index value");
+	}
 }
 
 const std::string IndexI::toString() const
@@ -335,17 +324,18 @@ const std::string IndexI::toString() const
 
 InnerI::InnerI(Instruction *a, Instruction *b) : BinaryI(INNER, a, b) {}
 
-SYM InnerI::evaluate(Scope &scope) const
+Symbol InnerI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (manager::getType(evalA))
+	switch (evalA.getType())
 	{
 	case DICTIONARY:
-		//TODO
-		return manager::newValue();
+		if (b->getType() == VARIABLE)
+			return evalA.indexDictionary(((VariableI *)b)->getKey());
+		throw std::runtime_error("Cannot enter Dictionary with given value");
 	case OBJECT:
 	{
-		auto o = manager::getObject(evalA);
+		auto o = evalA.getObject();
 		if (o->getType() != STATIC_O)
 			throw std::runtime_error("Cannot index a non-static, non-instantiated Object");
 		return b->evaluate(*o->getScope());
@@ -366,34 +356,50 @@ const std::string InnerI::toString() const
 
 CallI::CallI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-SYM CallI::evaluate(Scope &scope) const
+Symbol CallI::evaluate(Scope &scope) const
 {
-	auto args = manager::getVector(b->evaluate(scope));
+	auto args = b->evaluate(scope).getVector();
 	switch (a->getType())
 	{
 	case INNER:
 	{
 		auto evalA = ((InnerI *)a)->getA()->evaluate(scope);
-		if (manager::getType(evalA) == OBJECT)
+		switch (evalA.getType())
+		{
+		case OBJECT:
 		{
 			auto bb = ((InnerI *)a)->getB();
-			if (bb->getType() == VARIABLE && manager::getObject(evalA)->hasValue(((VariableI *)bb)->getKey()))
+			if (bb->getType() == VARIABLE && evalA.getObject()->hasValue(((VariableI *)bb)->getKey()))
 			{
-				auto evalB = ((InnerI *)a)->getB()->evaluate(*manager::getObject(evalA)->getScope());
-				return manager::call(evalB, args, evalA);
+				auto evalB = ((InnerI *)a)->getB()->evaluate(*evalA.getObject()->getScope());
+				return evalB.call(NIL, args, evalA);
 			}
+		}
+		case DICTIONARY:
+		{
+			auto bb = ((InnerI *)a)->getB();
+			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(((VariableI *)bb)->getKey()))
+			{
+				auto evalB = a->evaluate(scope);
+				return evalB.call(NIL, args, evalA);
+			}
+		}
 		}
 
 		auto evalB = ((InnerI *)a)->getB()->evaluate(scope);
-		std::vector<SYM> params = {evalA};
+		std::vector<Symbol> params;
+		params.push_back(evalA);
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-		return manager::call(evalB, params);
+		return evalB.call(evalA.getType(), params);
 	}
 	default:
 	{
 		auto evalA = a->evaluate(scope);
-		return manager::call(evalA, args);
+		if (args.size() > 0)
+			return evalA.call(args[0].getType(), args);
+		else
+			return evalA.call(NIL, args);
 	}
 	}
 }
@@ -409,11 +415,11 @@ const std::string CallI::toString() const
 
 AddI::AddI(Instruction *a, Instruction *b) : BinaryI(ADD, a, b) {}
 
-SYM AddI::evaluate(Scope &scope) const
+Symbol AddI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::add(evalA, evalB);
+	return evalA + evalB;
 }
 
 const std::string AddI::toString() const
@@ -427,11 +433,11 @@ const std::string AddI::toString() const
 
 SubI::SubI(Instruction *a, Instruction *b) : BinaryI(SUB, a, b) {}
 
-SYM SubI::evaluate(Scope &scope) const
+Symbol SubI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::sub(evalA, evalB);
+	return evalA - evalB;
 }
 
 const std::string SubI::toString() const
@@ -445,11 +451,11 @@ const std::string SubI::toString() const
 
 MulI::MulI(Instruction *a, Instruction *b) : BinaryI(MUL, a, b) {}
 
-SYM MulI::evaluate(Scope &scope) const
+Symbol MulI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::mul(evalA, evalB);
+	return evalA * evalB;
 }
 
 const std::string MulI::toString() const
@@ -463,11 +469,11 @@ const std::string MulI::toString() const
 
 DivI::DivI(Instruction *a, Instruction *b) : BinaryI(DIV, a, b) {}
 
-SYM DivI::evaluate(Scope &scope) const
+Symbol DivI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::div(evalA, evalB);
+	return evalA / evalB;
 }
 
 const std::string DivI::toString() const
@@ -481,11 +487,11 @@ const std::string DivI::toString() const
 
 ModI::ModI(Instruction *a, Instruction *b) : BinaryI(MOD, a, b) {}
 
-SYM ModI::evaluate(Scope &scope) const
+Symbol ModI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::mod(evalA, evalB);
+	return evalA % evalB;
 }
 
 const std::string ModI::toString() const
@@ -499,11 +505,11 @@ const std::string ModI::toString() const
 
 PowI::PowI(Instruction *a, Instruction *b) : BinaryI(POW_I, a, b) {}
 
-SYM PowI::evaluate(Scope &scope) const
+Symbol PowI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::pow(evalA, evalB);
+	return evalA.pow(evalB);
 }
 
 const std::string PowI::toString() const
@@ -517,11 +523,11 @@ const std::string PowI::toString() const
 
 LessI::LessI(Instruction *a, Instruction *b) : BinaryI(LESS, a, b) {}
 
-SYM LessI::evaluate(Scope &scope) const
+Symbol LessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::less(evalA, evalB);
+	return evalA < evalB;
 }
 
 const std::string LessI::toString() const
@@ -535,11 +541,11 @@ const std::string LessI::toString() const
 
 MoreI::MoreI(Instruction *a, Instruction *b) : BinaryI(MORE, a, b) {}
 
-SYM MoreI::evaluate(Scope &scope) const
+Symbol MoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::more(evalA, evalB);
+	return evalA > evalB;
 }
 
 const std::string MoreI::toString() const
@@ -553,11 +559,11 @@ const std::string MoreI::toString() const
 
 ELessI::ELessI(Instruction *a, Instruction *b) : BinaryI(ELESS, a, b) {}
 
-SYM ELessI::evaluate(Scope &scope) const
+Symbol ELessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::eless(evalA, evalB);
+	return evalA <= evalB;
 }
 
 const std::string ELessI::toString() const
@@ -571,11 +577,11 @@ const std::string ELessI::toString() const
 
 EMoreI::EMoreI(Instruction *a, Instruction *b) : BinaryI(EMORE, a, b) {}
 
-SYM EMoreI::evaluate(Scope &scope) const
+Symbol EMoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::emore(evalA, evalB);
+	return evalA >= evalB;
 }
 
 const std::string EMoreI::toString() const
@@ -589,11 +595,11 @@ const std::string EMoreI::toString() const
 
 Equals::Equals(Instruction *a, Instruction *b) : BinaryI(EQUALS, a, b) {}
 
-SYM Equals::evaluate(Scope &scope) const
+Symbol Equals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::newValue(manager::equals(evalA, evalB));
+	return Symbol(evalA == evalB);
 }
 
 const std::string Equals::toString() const
@@ -607,11 +613,11 @@ const std::string Equals::toString() const
 
 NEquals::NEquals(Instruction *a, Instruction *b) : BinaryI(NEQUALS, a, b) {}
 
-SYM NEquals::evaluate(Scope &scope) const
+Symbol NEquals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::newValue(manager::nequals(evalA, evalB));
+	return Symbol(evalA != evalB);
 }
 
 const std::string NEquals::toString() const
@@ -625,11 +631,11 @@ const std::string NEquals::toString() const
 
 AndI::AndI(Instruction *a, Instruction *b) : BinaryI(AND, a, b) {}
 
-SYM AndI::evaluate(Scope &scope) const
+Symbol AndI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::newValue(manager::dand(evalA, evalB));
+	return Symbol(evalA && evalB);
 }
 
 const std::string AndI::toString() const
@@ -643,11 +649,11 @@ const std::string AndI::toString() const
 
 OrI::OrI(Instruction *a, Instruction *b) : BinaryI(OR, a, b) {}
 
-SYM OrI::evaluate(Scope &scope) const
+Symbol OrI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return manager::newValue(manager::dor(evalA, evalB));
+	return Symbol(evalA || evalB);
 }
 
 const std::string OrI::toString() const
@@ -661,11 +667,11 @@ const std::string OrI::toString() const
 
 SetI::SetI(Instruction *a, Instruction *b) : BinaryI(SET, a, b) {}
 
-SYM SetI::evaluate(Scope &scope) const
+Symbol SetI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	manager::set(evalA, evalB);
+	evalA.set(evalB);
 	return evalA;
 }
 
@@ -680,10 +686,10 @@ const std::string SetI::toString() const
 
 ReturnI::ReturnI(Instruction *a) : UnaryI(RETURN, a) {}
 
-SYM ReturnI::evaluate(Scope &scope) const
+Symbol ReturnI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	evalA.type = ID_RETURN;
+	evalA.setSymbolType(ID_RETURN);
 	return evalA;
 }
 
@@ -696,11 +702,11 @@ const std::string ReturnI::toString() const
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(boost::function<SYM(std::vector<SYM>)> f, Instruction *a) : UnaryI(EXTERN, a), f(f) {}
+ExternI::ExternI(boost::function<Symbol(std::vector<Symbol>)> f, Instruction *a) : UnaryI(EXTERN, a), f(f) {}
 
-SYM ExternI::evaluate(Scope &scope) const
+Symbol ExternI::evaluate(Scope &scope) const
 {
-	return f(manager::getVector(a->evaluate(scope)));
+	return f(a->evaluate(scope).getVector());
 }
 
 const std::string ExternI::toString() const
@@ -714,14 +720,14 @@ const std::string ExternI::toString() const
 
 LengthI::LengthI(Instruction *a) : UnaryI(LENGTH, a) {}
 
-SYM LengthI::evaluate(Scope &scope) const
+Symbol LengthI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (manager::getType(evalA))
+	switch (evalA.getType())
 	{
 	case STRING:
 	{
-		std::string str = manager::getString(evalA);
+		std::string str = evalA.getString();
 		int c, i, ix, q;
 		for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
 		{
@@ -735,12 +741,14 @@ SYM LengthI::evaluate(Scope &scope) const
 			else if ((c & 0xF8) == 0xF0)
 				i += 3;
 			else
-				return manager::newValue((long_double_t)manager::getString(evalA).size());
+				return Symbol((long_double_t)evalA.getString().size());
 		}
-		return manager::newValue((long_double_t)q);
+		return Symbol((long_double_t)q);
 	}
+	case DICTIONARY:
+		return Symbol((long_double_t)evalA.dictionarySize());
 	case VECTOR:
-		return manager::newValue((long_double_t)manager::getVector(evalA).size());
+		return Symbol((long_double_t)evalA.vectorSize());
 	default:
 		throw std::runtime_error("Cannot get length of value");
 	}
@@ -757,15 +765,17 @@ const std::string LengthI::toString() const
 
 SizeI::SizeI(Instruction *a) : UnaryI(SIZE_I, a) {}
 
-SYM SizeI::evaluate(Scope &scope) const
+Symbol SizeI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (manager::getType(evalA))
+	switch (evalA.getType())
 	{
 	case STRING:
-		return manager::newValue((long_double_t)manager::getString(evalA).size());
+		return Symbol((long_double_t)evalA.getString().size());
+	case DICTIONARY:
+		return Symbol((long_double_t)evalA.dictionarySize());
 	case VECTOR:
-		return manager::newValue((long_double_t)manager::getVector(evalA).size());
+		return Symbol((long_double_t)evalA.vectorSize());
 	default:
 		throw std::runtime_error("Cannot get length of value");
 	}
@@ -782,12 +792,12 @@ const std::string SizeI::toString() const
 
 ClassI::ClassI(const std::string &key, OBJECT_TYPE type, std::shared_ptr<Instruction> body) : Instruction(CLASS_I), key(key), type(type), body(body) {}
 
-SYM ClassI::evaluate(Scope &scope) const
+Symbol ClassI::evaluate(Scope &scope) const
 {
 	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, body, key);
 	if (type == STATIC_O)
 		body->evaluate(*o->getScope());
-	auto d = manager::newValue(o);
+	auto d = Symbol(o);
 	scope.createVariable(key, d);
 	return d;
 }
@@ -803,12 +813,12 @@ const std::string ClassI::toString() const
 
 NewI::NewI(Instruction *a, Instruction *b) : BinaryI(NEW_I, a, b) {}
 
-SYM NewI::evaluate(Scope &scope) const
+Symbol NewI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	auto base = manager::getObject(evalA);
-	return base->instantiate(manager::getVector(evalB));
+	auto base = evalA.getObject();
+	return base->instantiate(evalB.getVector());
 }
 
 const std::string NewI::toString() const
@@ -822,10 +832,10 @@ const std::string NewI::toString() const
 
 TypeI::TypeI(Instruction *a) : UnaryI(TYPE_I, a) {}
 
-SYM TypeI::evaluate(Scope &scope) const
+Symbol TypeI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	return manager::newValue(manager::getTypeString(evalA));
+	return Symbol(evalA.getTypeString());
 }
 
 const std::string TypeI::toString() const
@@ -839,54 +849,89 @@ const std::string TypeI::toString() const
 
 CastToI::CastToI(Instruction *a, D_TYPE convert) : UnaryI(CAST_TO_I, a), convert(convert) {}
 
-SYM CastToI::evaluate(Scope &scope) const
+Symbol CastToI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (convert)
 	{
 	case STRING:
-		switch (manager::getType(evalA))
+		switch (evalA.getType())
 		{
 		case STRING:
 			return evalA;
 		default:
-			return manager::newValue(manager::toString(evalA));
+			return Symbol(evalA.toString());
 		}
 	case NUMBER:
-		switch (manager::getType(evalA))
+		switch (evalA.getType())
 		{
 		case NUMBER:
 			return evalA;
 		case NIL:
-			return manager::newValue((long_double_t)0.0);
+			return Symbol((long_double_t)0.0);
 		case STRING:
-			return manager::newValue(std::stold(manager::getString(evalA)));
+			try
+			{
+				return Symbol(std::stold(evalA.getString()));
+			}
+			catch (const std::invalid_argument &e)
+			{
+				throw std::runtime_error("String `" + evalA.getString() + "` cannot be converted to Number");
+			}
 		default:
 			break;
 		}
 	case BOOLEAN_D:
-		switch (manager::getType(evalA))
+		switch (evalA.getType())
 		{
 		case BOOLEAN_D:
 			return evalA;
 		case NIL:
-			return manager::newValue(false);
+			return Symbol(false);
 		case NUMBER:
-			return manager::newValue(manager::getNumber(evalA) != 0);
+			return Symbol(evalA.getNumber().getLong() != 0);
 		case STRING:
-			return manager::newValue(manager::getString(evalA) == "true");
+			return Symbol(evalA.getString() == "true");
+		default:
+			break;
+		}
+	case DICTIONARY:
+		switch (evalA.getType())
+		{
+		case DICTIONARY:
+			return evalA;
+		case VECTOR:
+		{
+			auto v = evalA.getVector();
+			std::map<std::string, Symbol> nd;
+			for (size_t i = 0; i < v.size(); i++)
+			{
+				nd[std::to_string(i)] = v[i];
+			}
+			return Symbol(nd);
+		}
 		default:
 			break;
 		}
 	case VECTOR:
-		switch (manager::getType(evalA))
+		switch (evalA.getType())
 		{
 		case VECTOR:
 			return evalA;
+		case DICTIONARY:
+		{
+			auto dict = evalA.getDictionary();
+			std::vector<Symbol> nv;
+			for (auto &e : dict)
+			{
+				nv.push_back(Symbol({{"key", Symbol(e.first)}, {"value", e.second}}));
+			}
+			return Symbol(nv);
+		}
 		case STRING:
 		{
-			std::string str = manager::getString(evalA);
-			std::vector<SYM> nv;
+			std::string str = evalA.getString();
+			std::vector<Symbol> nv;
 			int last = 0;
 			int c, i, ix, q, s;
 			for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
@@ -916,19 +961,19 @@ SYM CastToI::evaluate(Scope &scope) const
 				{
 					nv.clear();
 					for (size_t i = 0; i < str.size(); i++)
-						nv.push_back(manager::newValue(std::string(1, str[i])));
-					return manager::newValue(nv);
+						nv.push_back(Symbol(std::string(1, str[i])));
+					return Symbol(nv);
 				}
-				nv.push_back(manager::newValue(str.substr(last, s)));
+				nv.push_back(Symbol(str.substr(last, s)));
 				last = i + 1;
 			}
-			return manager::newValue(nv);
+			return Symbol(nv);
 		}
 		default:
 			break;
 		}
 	case NIL:
-		return manager::newValue();
+		return Symbol();
 	default:
 		break;
 	}
@@ -946,11 +991,11 @@ const std::string CastToI::toString() const
 
 AllocI::AllocI(Instruction *a) : UnaryI(ALLOC_I, a) {}
 
-SYM AllocI::evaluate(Scope &scope) const
+Symbol AllocI::evaluate(Scope &scope) const
 {
-	auto evalA = manager::getNumber(a->evaluate(scope));
-	std::vector<SYM> v(evalA);
-	return manager::newValue(v);
+	auto evalA = a->evaluate(scope).getNumber();
+	std::vector<Symbol> v(evalA.getLong());
+	return Symbol(v);
 }
 
 const std::string AllocI::toString() const
@@ -964,17 +1009,95 @@ const std::string AllocI::toString() const
 
 UntilI::UntilI(Instruction *a, Instruction *b) : BinaryI(UNTIL_I, a, b) {}
 
-SYM UntilI::evaluate(Scope &scope) const
+Symbol UntilI::evaluate(Scope &scope) const
 {
-	auto evalA = manager::getNumber(a->evaluate(scope));
-	auto evalB = manager::getNumber(b->evaluate(scope));
-	std::vector<SYM> nv;
-	for (auto i = evalA; i < evalB; i++)
-		nv.push_back(manager::newValue(i));
-	return manager::newValue(nv);
+	auto evalA = a->evaluate(scope).getNumber();
+	auto evalB = b->evaluate(scope).getNumber();
+	std::vector<Symbol> nv;
+	for (auto i = evalA; i < evalB; i += 1)
+		nv.push_back(Symbol(i));
+	return Symbol(nv);
 }
 
 const std::string UntilI::toString() const
 {
 	return "until(" + a->toString() + ", " + b->toString() + ")";
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ScopeI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ScopeI::ScopeI(std::vector<Instruction *> children) : Instruction(SCOPE_I), children(children) {}
+
+Symbol ScopeI::evaluate(Scope &scope) const
+{
+	for (auto &e : children)
+	{
+		auto eval = e->evaluate(scope);
+		if (eval.getSymbolType() == ID_RETURN || eval.getSymbolType() == ID_BREAK)
+			return eval;
+	}
+	return Symbol();
+}
+
+const std::string ScopeI::toString() const
+{
+	std::string ret = "scope(";
+
+	unsigned long i = 0;
+	for (auto &e : children)
+	{
+		if (i > 0)
+			ret += ", ";
+		ret += e->toString();
+		i++;
+	}
+	return ret + ")";
+}
+
+ScopeI::~ScopeI()
+{
+	for (auto &e : children)
+		delete e;
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class MapI                                                                                             */
+/*-------------------------------------------------------------------------------------------------------*/
+
+MapI::MapI(std::map<std::string, Instruction *> children) : Instruction(MAP_I), children(children) {}
+
+Symbol MapI::evaluate(Scope &scope) const
+{
+	std::map<std::string, Symbol> evals;
+	for (auto &e : children)
+	{
+		auto eval = e.second->evaluate(scope);
+		if (eval.getType() == NIL)
+			continue;
+		evals[e.first] = eval;
+	}
+	return Symbol(evals);
+}
+
+const std::string MapI::toString() const
+{
+	std::string ret = "dict(";
+
+	unsigned long i = 0;
+	for (auto &e : children)
+	{
+		if (i > 0)
+			ret += ", ";
+		ret += e.first + " : " + e.second->toString();
+		i++;
+	}
+	return ret + ")";
+}
+
+MapI::~MapI()
+{
+	for (auto &e : children)
+		delete e.second;
 }

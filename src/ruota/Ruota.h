@@ -44,6 +44,8 @@ class TypeI;
 class CastToI;
 class AllocI;
 class UntilI;
+class ScopeI;
+class MapI;
 
 class UnaryI : public Instruction
 {
@@ -80,11 +82,11 @@ public:
 class Container : public Instruction
 {
 protected:
-	SYM d;
+	Symbol d;
 
 public:
-	Container(const SYM &d);
-	SYM evaluate(Scope &) const override;
+	Container(const Symbol &d);
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -92,12 +94,13 @@ class DefineI : public Instruction
 {
 protected:
 	std::string key;
-	std::vector<std::string> fargs;
+	D_TYPE ftype;
+	std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params;
 	std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(const std::string &, std::vector<std::string>, std::shared_ptr<Instruction>);
-	SYM evaluate(Scope &) const override;
+	DefineI(const std::string &, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>>, std::shared_ptr<Instruction>);
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -105,13 +108,11 @@ class Sequence : public Instruction
 {
 protected:
 	std::vector<Instruction *> children;
-	bool scoped;
 
 public:
-	Sequence(bool, std::vector<Instruction *>);
-	SYM evaluate(Scope &) const override;
+	Sequence(std::vector<Instruction *>);
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
-	void setScoped(bool);
 	virtual ~Sequence();
 };
 
@@ -124,7 +125,7 @@ protected:
 
 public:
 	IfElseI(Instruction *, Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 	virtual ~IfElseI();
 };
@@ -137,7 +138,7 @@ protected:
 
 public:
 	WhileI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 	virtual ~WhileI();
 };
@@ -151,7 +152,7 @@ protected:
 
 public:
 	ForI(const std::string &, Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 	virtual ~ForI();
 };
@@ -160,7 +161,7 @@ class VariableI : public CastingI
 {
 public:
 	VariableI(const std::string &);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -168,7 +169,7 @@ class DeclareI : public CastingI
 {
 public:
 	DeclareI(const std::string &);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -176,7 +177,7 @@ class IndexI : public BinaryI
 {
 public:
 	IndexI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -184,7 +185,7 @@ class InnerI : public BinaryI
 {
 public:
 	InnerI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -192,7 +193,7 @@ class CallI : public BinaryI
 {
 public:
 	CallI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -200,7 +201,7 @@ class AddI : public BinaryI
 {
 public:
 	AddI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -208,7 +209,7 @@ class SubI : public BinaryI
 {
 public:
 	SubI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -216,7 +217,7 @@ class MulI : public BinaryI
 {
 public:
 	MulI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -224,7 +225,7 @@ class DivI : public BinaryI
 {
 public:
 	DivI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -232,7 +233,7 @@ class ModI : public BinaryI
 {
 public:
 	ModI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -240,7 +241,7 @@ class PowI : public BinaryI
 {
 public:
 	PowI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -248,7 +249,7 @@ class LessI : public BinaryI
 {
 public:
 	LessI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -256,7 +257,7 @@ class MoreI : public BinaryI
 {
 public:
 	MoreI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -264,7 +265,7 @@ class ELessI : public BinaryI
 {
 public:
 	ELessI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -272,7 +273,7 @@ class EMoreI : public BinaryI
 {
 public:
 	EMoreI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -280,7 +281,7 @@ class Equals : public BinaryI
 {
 public:
 	Equals(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -288,7 +289,7 @@ class NEquals : public BinaryI
 {
 public:
 	NEquals(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -296,7 +297,7 @@ class AndI : public BinaryI
 {
 public:
 	AndI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -304,7 +305,7 @@ class OrI : public BinaryI
 {
 public:
 	OrI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -312,7 +313,7 @@ class SetI : public BinaryI
 {
 public:
 	SetI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -320,18 +321,18 @@ class ReturnI : public UnaryI
 {
 public:
 	ReturnI(Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
 class ExternI : public UnaryI
 {
 protected:
-	boost::function<SYM(std::vector<SYM>)> f;
+	boost::function<Symbol(std::vector<Symbol>)> f;
 
 public:
-	ExternI(boost::function<SYM(std::vector<SYM>)>, Instruction *a);
-	SYM evaluate(Scope &) const override;
+	ExternI(boost::function<Symbol(std::vector<Symbol>)>, Instruction *a);
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -339,7 +340,7 @@ class LengthI : public UnaryI
 {
 public:
 	LengthI(Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -347,7 +348,7 @@ class SizeI : public UnaryI
 {
 public:
 	SizeI(Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -360,7 +361,7 @@ protected:
 
 public:
 	ClassI(const std::string &, OBJECT_TYPE, std::shared_ptr<Instruction>);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -368,7 +369,7 @@ class NewI : public BinaryI
 {
 public:
 	NewI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -376,7 +377,7 @@ class TypeI : public UnaryI
 {
 public:
 	TypeI(Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -387,7 +388,7 @@ protected:
 
 public:
 	CastToI(Instruction *, D_TYPE);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -395,7 +396,7 @@ class AllocI : public UnaryI
 {
 public:
 	AllocI(Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
 };
 
@@ -403,8 +404,32 @@ class UntilI : public BinaryI
 {
 public:
 	UntilI(Instruction *, Instruction *);
-	SYM evaluate(Scope &) const override;
+	Symbol evaluate(Scope &) const override;
 	const std::string toString() const override;
+};
+
+class ScopeI : public Instruction
+{
+protected:
+	std::vector<Instruction *> children;
+
+public:
+	ScopeI(std::vector<Instruction *>);
+	Symbol evaluate(Scope &) const override;
+	const std::string toString() const override;
+	virtual ~ScopeI();
+};
+
+class MapI : public Instruction
+{
+protected:
+	std::map<std::string, Instruction *> children;
+
+public:
+	MapI(std::map<std::string, Instruction *>);
+	Symbol evaluate(Scope &) const override;
+	const std::string toString() const override;
+	virtual ~MapI();
 };
 
 class Ruota
@@ -418,7 +443,7 @@ public:
 	static Lexer lexer;
 	//static std::unique_ptr<DataManager> manager;
 	Ruota();
-	SYM parseCode(const std::string &code);
+	Symbol parseCode(const std::string &code);
 };
 
 namespace rdir
@@ -439,7 +464,7 @@ namespace rdir
 
 namespace rlib
 {
-	static std::map<std::string, boost::function<SYM(std::vector<SYM>)>> loaded;
+	static std::map<std::string, boost::function<Symbol(std::vector<Symbol>)>> loaded;
 
 	static inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname)
 	{
@@ -455,7 +480,7 @@ namespace rlib
 		if (loaded.find(search) != loaded.end())
 			return;
 
-		loaded[search] = boost::dll::import<SYM(std::vector<SYM>)>(rdir::findFile(currentDir, libname), fname);
+		loaded[search] = boost::dll::import<Symbol(std::vector<Symbol>)>(rdir::findFile(currentDir, libname), fname);
 	}
 } // namespace rlib
 
