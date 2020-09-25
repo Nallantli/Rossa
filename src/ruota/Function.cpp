@@ -1,6 +1,6 @@
 #include "Ruota.h"
 
-Function::Function(Scope &parent, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params, std::shared_ptr<Instruction> body) : parent(&parent), params(params), body(body) {}
+Function::Function(Scope &parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : parent(&parent), params(params), body(body) {}
 
 Symbol Function::evaluate(std::vector<Symbol> paramValues)
 {
@@ -37,10 +37,17 @@ Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym)
 	}
 
 	if (thisSym != NULL)
-		newScope.createVariable("this", *thisSym);
+		newScope.createVariable(Ruota::HASH_THIS, *thisSym);
 
-	auto ret = Symbol(true);
-	ret.set(body->evaluate(newScope));
+	auto temp = body->evaluate(newScope);
+	if (!temp.canSet() || temp.getSymbolType() == ID_REFER)
+	{
+		temp.setSymbolType(ID_CASUAL);
+		return temp;
+	}
+
+	auto ret = Symbol();
+	ret.set(temp);
 	return ret;
 }
 

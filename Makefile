@@ -4,10 +4,10 @@ BOOST_PATH_WIN=C:/Program Files/boost
 BOOST_VERSION_WIN=1_73
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
-CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17 -Wall
-CFLAGS=-O3 -lboost_filesystem --std=gnu++17 -Wall -ldl
-LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17 -Wall
-LFLAGS=-fPIC -shared -O3 -lboost_filesystem --std=gnu++17 -Wall -ldl
+CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
+CFLAGS=-O3 -lboost_filesystem --std=gnu++17 -ldl
+LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
+LFLAGS=-fPIC -shared -O3 -lboost_filesystem --std=gnu++17 -ldl
 
 win: bin/ruota.exe plugins-win
 

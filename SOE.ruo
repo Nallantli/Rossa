@@ -1,11 +1,14 @@
 load "std.ruo";
 
-def SOE(MAX) {
+SOE(MAX) => {
+	var start = clock.milliseconds();
 	var a = alloc(MAX);
 	for e in a do {
 		e = true;
 	}
+	printl("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
+	start = clock.milliseconds();
     var c = MAX - 2;
 	for i in [2 until (MAX ** 0.5)] do {
 		if a[i] then {
@@ -19,7 +22,9 @@ def SOE(MAX) {
 			}
 		}
 	}
+	printl("Algo Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
+	start = clock.milliseconds();
 	var b = alloc(c);
 	var j = 0;
 	for i in [2 until MAX] do {
@@ -28,15 +33,16 @@ def SOE(MAX) {
 			j += 1;
 		}
 	}
+	printl("Final Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	return b;
 }
 
-var MAX = 10 ** 6;
+test(MAX) => {
+	var start = clock.milliseconds();
+	var result = SOE(MAX);
+	var time = clock.milliseconds() - start;
 
-var start = clock.milliseconds();
-var result = SOE(MAX);
-var time = clock.milliseconds() - start;
-
-printl((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
-printl("Time: " + (time -> String) + "ms");
+	printl((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
+	printl("Total Time: " + (time -> String) + "ms");
+}

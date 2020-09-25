@@ -17,7 +17,7 @@ Symbol Object::instantiate(std::vector<Symbol> params) const
 
 	auto o = std::make_shared<Object>(*internal->getParent(), STATIC_O, body, key);
 	o->body->evaluate(*o->getScope());
-	auto f = o->getScope()->getVariable("init").getFunction(NIL, params.size());
+	auto f = o->getScope()->getVariable(Ruota::HASH_INIT).getFunction(NIL, params.size());
 	auto d = Symbol(o);
 
 	f->evaluate(params, &d);
@@ -34,7 +34,12 @@ const std::string &Object::getName() const
 	return this->internal->getName();
 }
 
-bool Object::hasValue(const std::string &key) const
+bool Object::hasValue(hashcode_t key) const
 {
 	return internal->hasValue(key);
+}
+
+std::shared_ptr<Instruction> Object::getBody() const
+{
+	return body;
 }

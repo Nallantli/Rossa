@@ -33,9 +33,9 @@ UnaryI::~UnaryI()
 /*class CastingI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastingI::CastingI(I_TYPE type, const std::string &key) : Instruction(type), key(key) {}
+CastingI::CastingI(I_TYPE type, hashcode_t key) : Instruction(type), key(key) {}
 
-const std::string CastingI::getKey()
+const hashcode_t CastingI::getKey()
 {
 	return key;
 }
@@ -60,28 +60,30 @@ BinaryI::~BinaryI()
 /*class Container                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(const Symbol &d) : Instruction(CONTAINER), d(d) {}
+Container::Container(Symbol d) : Instruction(CONTAINER), d(d) {}
 
 Symbol Container::evaluate(Scope &) const
 {
 	return d;
 }
 
-const std::string Container::toString() const
+const std::string Container::toString(bool shared) const
 {
-	return d.toString();
+	if (shared)
+		return "std::shared_ptr<Container>(new Container(" + d.toCodeString() + "))";
+	return "new Container(" + d.toCodeString() + ")";
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const std::string &key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, std::string>> params, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), ftype(ftype), params(params), body(body) {}
+DefineI::DefineI(hashcode_t key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), ftype(ftype), params(params), body(body) {}
 
 Symbol DefineI::evaluate(Scope &scope) const
 {
 	auto f = std::make_shared<Function>(scope, params, body);
-	if (key != "")
+	if (key > 0)
 	{
 		auto d = Symbol(ftype, f);
 		scope.createVariable(key, d);
@@ -91,12 +93,24 @@ Symbol DefineI::evaluate(Scope &scope) const
 	return Symbol(NIL, f);
 }
 
-const std::string DefineI::toString() const
+const std::string DefineI::toString(bool shared) const
 {
-	if (key != "")
-		return "define(" + key + ", " + std::to_string(params.size()) + ", " + body->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<DefineI>(new DefineI(";
 	else
-		return "lambda(" + std::to_string(params.size()) + ", " + body->toString() + ")";
+		ret = "new DefineI(";
+	ret += std::to_string(key) + ", static_cast<D_TYPE>(" + std::to_string(ftype) + "), {";
+	unsigned long i = 0;
+	for (auto &e : params)
+	{
+		if (i > 0)
+			ret += ", ";
+		ret += "{static_cast<LEX_TOKEN_TYPE>(" + std::to_string(e.first) + "), " + std::to_string(e.second) + "}";
+	}
+	ret += "}, ";
+	ret += body->toString(true);
+	return ret + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -125,19 +139,23 @@ Symbol Sequence::evaluate(Scope &scope) const
 	return Symbol(evals);
 }
 
-const std::string Sequence::toString() const
+const std::string Sequence::toString(bool shared) const
 {
-	std::string ret = "seq(";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<Sequence>(new Sequence({";
+	else
+		ret = "new Sequence({";
 
 	unsigned long i = 0;
 	for (auto &e : children)
 	{
 		if (i > 0)
 			ret += ", ";
-		ret += e->toString();
+		ret += e->toString(false);
 		i++;
 	}
-	return ret + ")";
+	return ret + "})" + (shared ? ")" : "");
 }
 
 Sequence::~Sequence()
@@ -147,7 +165,7 @@ Sequence::~Sequence()
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class IFElseI                                                                                      */
+/*class IFElseI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
 IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses) : Instruction(IFELSE), ifs(ifs), body(body), elses(elses) {}
@@ -158,26 +176,26 @@ Symbol IfElseI::evaluate(Scope &scope) const
 	auto evalIf = ifs->evaluate(newScope);
 	if (evalIf.getBool())
 	{
-		auto temp = body->evaluate(newScope);
-		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_BREAK)
-			return temp;
+		return body->evaluate(newScope);
 	}
 	else if (elses)
 	{
-		auto temp = elses->evaluate(newScope);
-		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_BREAK)
-			return temp;
+		return elses->evaluate(newScope);
 	}
 	return Symbol();
 }
 
-const std::string IfElseI::toString() const
+const std::string IfElseI::toString(bool shared) const
 {
-	std::string ret = "ifelse(";
-	ret += ifs->toString() + ", " + body->toString();
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<IfElseI>(new IfElseI(";
+	else
+		ret = "new IfElseI(";
+	ret += ifs->toString(false) + ", " + body->toString(false);
 	if (elses)
-		ret += ", " + elses->toString();
-	return ret + ")";
+		ret += ", " + elses->toString(false);
+	return ret + ")" + (shared ? ")" : "");
 }
 
 IfElseI::~IfElseI()
@@ -200,7 +218,7 @@ Symbol WhileI::evaluate(Scope &scope) const
 	{
 		Scope newScope(scope, "");
 		auto temp = body->evaluate(newScope);
-		if (temp.getSymbolType() == ID_RETURN)
+		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_REFER)
 			return temp;
 		if (temp.getSymbolType() == ID_BREAK)
 			break;
@@ -208,11 +226,15 @@ Symbol WhileI::evaluate(Scope &scope) const
 	return Symbol();
 }
 
-const std::string WhileI::toString() const
+const std::string WhileI::toString(bool shared) const
 {
-	std::string ret = "while(";
-	ret += whiles->toString() + ", " + body->toString();
-	return ret + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<WhileI>(new WhileI(";
+	else
+		ret = "new WhileI(";
+	ret += whiles->toString(false) + ", " + body->toString(false);
+	return ret + ")" + (shared ? ")" : "");
 }
 
 WhileI::~WhileI()
@@ -225,7 +247,7 @@ WhileI::~WhileI()
 /*class ForI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ForI::ForI(const std::string &id, Instruction *fors, Instruction *body) : Instruction(FOR), id(id), fors(fors), body(body) {}
+ForI::ForI(hashcode_t id, Instruction *fors, Instruction *body) : Instruction(FOR), id(id), fors(fors), body(body) {}
 
 Symbol ForI::evaluate(Scope &scope) const
 {
@@ -235,7 +257,7 @@ Symbol ForI::evaluate(Scope &scope) const
 		Scope newScope(scope, "");
 		newScope.createVariable(id, evalFor.indexVector(i));
 		auto temp = body->evaluate(newScope);
-		if (temp.getSymbolType() == ID_RETURN)
+		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_REFER)
 			return temp;
 		if (temp.getSymbolType() == ID_BREAK)
 			break;
@@ -243,11 +265,16 @@ Symbol ForI::evaluate(Scope &scope) const
 	return Symbol();
 }
 
-const std::string ForI::toString() const
+const std::string ForI::toString(bool shared) const
 {
-	std::string ret = "for(" + id;
-	ret += fors->toString() + ", " + body->toString();
-	return ret + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ForI>(new ForI(";
+	else
+		ret = "new ForI(";
+	ret += std::to_string(id) + ", ";
+	ret += fors->toString(false) + ", " + body->toString(false);
+	return ret + ")" + (shared ? ")" : "");
 }
 
 ForI::~ForI()
@@ -260,7 +287,7 @@ ForI::~ForI()
 /*class VariableI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-VariableI::VariableI(const std::string &key) : CastingI(VARIABLE, key) {}
+VariableI::VariableI(hashcode_t key) : CastingI(VARIABLE, key) {}
 
 Symbol VariableI::evaluate(Scope &scope) const
 {
@@ -268,16 +295,21 @@ Symbol VariableI::evaluate(Scope &scope) const
 	return d;
 }
 
-const std::string VariableI::toString() const
+const std::string VariableI::toString(bool shared) const
 {
-	return "fetch(\"" + key + "\")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<VariableI>(new VariableI(";
+	else
+		ret = "new VariableI(";
+	return ret + std::to_string(key) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DeclareI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeclareI::DeclareI(const std::string &key) : CastingI(DECLARE, key) {}
+DeclareI::DeclareI(hashcode_t key) : CastingI(DECLARE, key) {}
 
 Symbol DeclareI::evaluate(Scope &scope) const
 {
@@ -285,9 +317,14 @@ Symbol DeclareI::evaluate(Scope &scope) const
 	return d;
 }
 
-const std::string DeclareI::toString() const
+const std::string DeclareI::toString(bool shared) const
 {
-	return "var(\"" + key + "\")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<DeclareI>(new DeclareI(";
+	else
+		ret = "new DeclareI(";
+	return ret + std::to_string(key) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -300,22 +337,27 @@ Symbol IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	switch (evalA.getType())
+	switch (evalA.getValueType())
 	{
 	case VECTOR:
-		return evalA.indexVector(evalB.getNumber().getLong());
+		return evalA.indexVector(NUMBER_GET_LONG(evalB.getNumber()));
 		break;
 	case DICTIONARY:
-		return evalA.indexDictionary(evalB.getString());
+		return evalA.indexDictionary(hash.hashString(evalB.getString()));
 		break;
 	default:
 		throw std::runtime_error("Cannot index value");
 	}
 }
 
-const std::string IndexI::toString() const
+const std::string IndexI::toString(bool shared) const
 {
-	return "index(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<IndexI>(new IndexI(";
+	else
+		ret = "new IndexI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -327,7 +369,7 @@ InnerI::InnerI(Instruction *a, Instruction *b) : BinaryI(INNER, a, b) {}
 Symbol InnerI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (evalA.getType())
+	switch (evalA.getValueType())
 	{
 	case DICTIONARY:
 		if (b->getType() == VARIABLE)
@@ -345,9 +387,15 @@ Symbol InnerI::evaluate(Scope &scope) const
 	}
 }
 
-const std::string InnerI::toString() const
+const std::string InnerI::toString(bool shared) const
 {
-	return "inner(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<InnerI>(new InnerI(";
+	else
+		ret = "new InnerI(";
+
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -364,7 +412,7 @@ Symbol CallI::evaluate(Scope &scope) const
 	case INNER:
 	{
 		auto evalA = ((InnerI *)a)->getA()->evaluate(scope);
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case OBJECT:
 		{
@@ -391,22 +439,27 @@ Symbol CallI::evaluate(Scope &scope) const
 		params.push_back(evalA);
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-		return evalB.call(evalA.getType(), params);
+		return evalB.call(evalA.getValueType(), params);
 	}
 	default:
 	{
 		auto evalA = a->evaluate(scope);
 		if (args.size() > 0)
-			return evalA.call(args[0].getType(), args);
+			return evalA.call(args[0].getValueType(), args);
 		else
 			return evalA.call(NIL, args);
 	}
 	}
 }
 
-const std::string CallI::toString() const
+const std::string CallI::toString(bool shared) const
 {
-	return "call(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<CallI>(new CallI(";
+	else
+		ret = "new CallI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -422,9 +475,14 @@ Symbol AddI::evaluate(Scope &scope) const
 	return evalA + evalB;
 }
 
-const std::string AddI::toString() const
+const std::string AddI::toString(bool shared) const
 {
-	return "add(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<AddI>(new AddI(";
+	else
+		ret = "new AddI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -440,9 +498,14 @@ Symbol SubI::evaluate(Scope &scope) const
 	return evalA - evalB;
 }
 
-const std::string SubI::toString() const
+const std::string SubI::toString(bool shared) const
 {
-	return "sub(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<SubI>(new SubI(";
+	else
+		ret = "new SubI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -458,9 +521,14 @@ Symbol MulI::evaluate(Scope &scope) const
 	return evalA * evalB;
 }
 
-const std::string MulI::toString() const
+const std::string MulI::toString(bool shared) const
 {
-	return "mul(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<MulI>(new MulI(";
+	else
+		ret = "new MulI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -476,9 +544,14 @@ Symbol DivI::evaluate(Scope &scope) const
 	return evalA / evalB;
 }
 
-const std::string DivI::toString() const
+const std::string DivI::toString(bool shared) const
 {
-	return "div(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<DivI>(new DivI(";
+	else
+		ret = "new DivI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -494,9 +567,14 @@ Symbol ModI::evaluate(Scope &scope) const
 	return evalA % evalB;
 }
 
-const std::string ModI::toString() const
+const std::string ModI::toString(bool shared) const
 {
-	return "mod(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ModI>(new ModI(";
+	else
+		ret = "new ModI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -509,12 +587,17 @@ Symbol PowI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA.pow(evalB);
+	return evalA ^ evalB;
 }
 
-const std::string PowI::toString() const
+const std::string PowI::toString(bool shared) const
 {
-	return "pow(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<PowI>(new PowI(";
+	else
+		ret = "new PowI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -530,9 +613,14 @@ Symbol LessI::evaluate(Scope &scope) const
 	return evalA < evalB;
 }
 
-const std::string LessI::toString() const
+const std::string LessI::toString(bool shared) const
 {
-	return "less(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<LessI>(new LessI(";
+	else
+		ret = "new LessI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -548,9 +636,14 @@ Symbol MoreI::evaluate(Scope &scope) const
 	return evalA > evalB;
 }
 
-const std::string MoreI::toString() const
+const std::string MoreI::toString(bool shared) const
 {
-	return "more(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<MoreI>(new MoreI(";
+	else
+		ret = "new MoreI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -566,9 +659,14 @@ Symbol ELessI::evaluate(Scope &scope) const
 	return evalA <= evalB;
 }
 
-const std::string ELessI::toString() const
+const std::string ELessI::toString(bool shared) const
 {
-	return "eless(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ELessI>(new ELessI(";
+	else
+		ret = "new ELessI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -584,9 +682,14 @@ Symbol EMoreI::evaluate(Scope &scope) const
 	return evalA >= evalB;
 }
 
-const std::string EMoreI::toString() const
+const std::string EMoreI::toString(bool shared) const
 {
-	return "emore(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<EMoreI>(new EMoreI(";
+	else
+		ret = "new EMoreI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -599,12 +702,17 @@ Symbol Equals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA == evalB);
+	return evalA.equals(evalB);
 }
 
-const std::string Equals::toString() const
+const std::string Equals::toString(bool shared) const
 {
-	return "equals(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<Equals>(new Equals(";
+	else
+		ret = "new Equals(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -617,12 +725,17 @@ Symbol NEquals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA != evalB);
+	return evalA.nequals(evalB);
 }
 
-const std::string NEquals::toString() const
+const std::string NEquals::toString(bool shared) const
 {
-	return "nequals(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<NEquals>(new NEquals(";
+	else
+		ret = "new NEquals(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -634,13 +747,22 @@ AndI::AndI(Instruction *a, Instruction *b) : BinaryI(AND, a, b) {}
 Symbol AndI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
+	if (!evalA.getBool())
+		return Symbol(false);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA && evalB);
+	if (evalB.getBool())
+		return Symbol(true);
+	return Symbol(false);
 }
 
-const std::string AndI::toString() const
+const std::string AndI::toString(bool shared) const
 {
-	return "and(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<AndI>(new AndI(";
+	else
+		ret = "new AndI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -652,13 +774,22 @@ OrI::OrI(Instruction *a, Instruction *b) : BinaryI(OR, a, b) {}
 Symbol OrI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
+	if (evalA.getBool())
+		return Symbol(true);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA || evalB);
+	if (evalB.getBool())
+		return Symbol(true);
+	return Symbol(false);
 }
 
-const std::string OrI::toString() const
+const std::string OrI::toString(bool shared) const
 {
-	return "or(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<OrI>(new OrI(";
+	else
+		ret = "new OrI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -675,9 +806,14 @@ Symbol SetI::evaluate(Scope &scope) const
 	return evalA;
 }
 
-const std::string SetI::toString() const
+const std::string SetI::toString(bool shared) const
 {
-	return "set(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<SetI>(new SetI(";
+	else
+		ret = "new SetI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -693,25 +829,43 @@ Symbol ReturnI::evaluate(Scope &scope) const
 	return evalA;
 }
 
-const std::string ReturnI::toString() const
+const std::string ReturnI::toString(bool shared) const
 {
-	return "return(" + a->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<Returni>(new Returni(";
+	else
+		ret = "new ReturnI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(boost::function<Symbol(std::vector<Symbol>)> f, Instruction *a) : UnaryI(EXTERN, a), f(f) {}
+ExternI::ExternI(const std::string &id, Instruction *a) : UnaryI(EXTERN, a), id(id)
+{
+	if (rlib::loaded.find(id) != rlib::loaded.end())
+		this->f = rlib::loaded.at(id);
+	else
+		throw std::runtime_error("External function `" + id + "` is not defined");
+}
 
 Symbol ExternI::evaluate(Scope &scope) const
 {
 	return f(a->evaluate(scope).getVector());
 }
 
-const std::string ExternI::toString() const
+const std::string ExternI::toString(bool shared) const
 {
-	return "extern_call()";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ExternI>(new ExternI(";
+	else
+		ret = "new ExternI(";
+	ret += "\"" + id + "\", " + a->toString(false);
+
+	return ret + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -723,7 +877,7 @@ LengthI::LengthI(Instruction *a) : UnaryI(LENGTH, a) {}
 Symbol LengthI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (evalA.getType())
+	switch (evalA.getValueType())
 	{
 	case STRING:
 	{
@@ -741,22 +895,27 @@ Symbol LengthI::evaluate(Scope &scope) const
 			else if ((c & 0xF8) == 0xF0)
 				i += 3;
 			else
-				return Symbol((long_double_t)evalA.getString().size());
+				return Symbol(NUMBER_NEW_LONG(evalA.getString().size()));
 		}
-		return Symbol((long_double_t)q);
+		return Symbol(NUMBER_NEW_LONG(q));
 	}
 	case DICTIONARY:
-		return Symbol((long_double_t)evalA.dictionarySize());
+		return Symbol(NUMBER_NEW_LONG(evalA.dictionarySize()));
 	case VECTOR:
-		return Symbol((long_double_t)evalA.vectorSize());
+		return Symbol(NUMBER_NEW_LONG(evalA.vectorSize()));
 	default:
 		throw std::runtime_error("Cannot get length of value");
 	}
 }
 
-const std::string LengthI::toString() const
+const std::string LengthI::toString(bool shared) const
 {
-	return "length(" + a->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<LengthI>(new LengthI(";
+	else
+		ret = "new LengthI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -768,33 +927,49 @@ SizeI::SizeI(Instruction *a) : UnaryI(SIZE_I, a) {}
 Symbol SizeI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
-	switch (evalA.getType())
+	switch (evalA.getValueType())
 	{
 	case STRING:
-		return Symbol((long_double_t)evalA.getString().size());
+		return Symbol(NUMBER_NEW_LONG(evalA.getString().size()));
 	case DICTIONARY:
-		return Symbol((long_double_t)evalA.dictionarySize());
+		return Symbol(NUMBER_NEW_LONG(evalA.dictionarySize()));
 	case VECTOR:
-		return Symbol((long_double_t)evalA.vectorSize());
+		return Symbol(NUMBER_NEW_LONG(evalA.vectorSize()));
 	default:
 		throw std::runtime_error("Cannot get length of value");
 	}
 }
 
-const std::string SizeI::toString() const
+const std::string SizeI::toString(bool shared) const
 {
-	return "size(" + a->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<SizeI>(new SizeI(";
+	else
+		ret = "new SizeI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ClassI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ClassI::ClassI(const std::string &key, OBJECT_TYPE type, std::shared_ptr<Instruction> body) : Instruction(CLASS_I), key(key), type(type), body(body) {}
+ClassI::ClassI(hashcode_t key, OBJECT_TYPE type, std::shared_ptr<Instruction> body, Instruction *extends) : Instruction(CLASS_I), key(key), type(type), body(body), extends(extends) {}
 
 Symbol ClassI::evaluate(Scope &scope) const
 {
-	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, body, key);
+	std::shared_ptr<Instruction> nbody = body;
+	if (extends != NULL)
+	{
+		auto e = extends->evaluate(scope);
+		auto eo = e.getObject();
+		if (eo->getType() == STATIC_O)
+			throw std::runtime_error("Cannot extend a statically declared Object");
+		auto eb = eo->getBody().get();
+		std::vector<Instruction *> temp = {body.get(), eb};
+		nbody = std::make_shared<ScopeI>(temp);
+	}
+	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, nbody, hash.deHash(key));
 	if (type == STATIC_O)
 		body->evaluate(*o->getScope());
 	auto d = Symbol(o);
@@ -802,9 +977,21 @@ Symbol ClassI::evaluate(Scope &scope) const
 	return d;
 }
 
-const std::string ClassI::toString() const
+const std::string ClassI::toString(bool shared) const
 {
-	return "object(" + key + ", " + body->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ClassI>(new ClassI(";
+	else
+		ret = "new ClassI(";
+	ret += std::to_string(key) + ", static_cast<OBJECT_TYPE>(" + std::to_string(type) + "), " + body->toString(true) + ", " + extends->toString(false);
+	return ret + ")" + (shared ? ")" : "");
+}
+
+ClassI::~ClassI()
+{
+	if (extends != NULL)
+		delete extends;
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -821,26 +1008,14 @@ Symbol NewI::evaluate(Scope &scope) const
 	return base->instantiate(evalB.getVector());
 }
 
-const std::string NewI::toString() const
+const std::string NewI::toString(bool shared) const
 {
-	return "new(" + a->toString() + ", " + b->toString() + ")";
-}
-
-/*-------------------------------------------------------------------------------------------------------*/
-/*class TypeI                                                                                            */
-/*-------------------------------------------------------------------------------------------------------*/
-
-TypeI::TypeI(Instruction *a) : UnaryI(TYPE_I, a) {}
-
-Symbol TypeI::evaluate(Scope &scope) const
-{
-	auto evalA = a->evaluate(scope);
-	return Symbol(evalA.getTypeString());
-}
-
-const std::string TypeI::toString() const
-{
-	return "type(" + a->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<NewI>(new NewI(";
+	else
+		ret = "new NewI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -855,7 +1030,7 @@ Symbol CastToI::evaluate(Scope &scope) const
 	switch (convert)
 	{
 	case STRING:
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case STRING:
 			return evalA;
@@ -863,16 +1038,16 @@ Symbol CastToI::evaluate(Scope &scope) const
 			return Symbol(evalA.toString());
 		}
 	case NUMBER:
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case NUMBER:
 			return evalA;
 		case NIL:
-			return Symbol((long_double_t)0.0);
+			return Symbol(NUMBER_NEW_LONG(0));
 		case STRING:
 			try
 			{
-				return Symbol(std::stold(evalA.getString()));
+				return Symbol(NUMBER_NEW_DOUBLE(std::stold(evalA.getString())));
 			}
 			catch (const std::invalid_argument &e)
 			{
@@ -882,31 +1057,31 @@ Symbol CastToI::evaluate(Scope &scope) const
 			break;
 		}
 	case BOOLEAN_D:
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case BOOLEAN_D:
 			return evalA;
 		case NIL:
 			return Symbol(false);
 		case NUMBER:
-			return Symbol(evalA.getNumber().getLong() != 0);
+			return Symbol(NUMBER_GET_LONG(evalA.getNumber()) != 0);
 		case STRING:
 			return Symbol(evalA.getString() == "true");
 		default:
 			break;
 		}
 	case DICTIONARY:
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case DICTIONARY:
 			return evalA;
 		case VECTOR:
 		{
 			auto v = evalA.getVector();
-			std::map<std::string, Symbol> nd;
+			std::map<hashcode_t, Symbol> nd;
 			for (size_t i = 0; i < v.size(); i++)
 			{
-				nd[std::to_string(i)] = v[i];
+				nd[hash.hashString(std::to_string(i))] = v[i];
 			}
 			return Symbol(nd);
 		}
@@ -914,7 +1089,7 @@ Symbol CastToI::evaluate(Scope &scope) const
 			break;
 		}
 	case VECTOR:
-		switch (evalA.getType())
+		switch (evalA.getValueType())
 		{
 		case VECTOR:
 			return evalA;
@@ -924,7 +1099,7 @@ Symbol CastToI::evaluate(Scope &scope) const
 			std::vector<Symbol> nv;
 			for (auto &e : dict)
 			{
-				nv.push_back(Symbol({{"key", Symbol(e.first)}, {"value", e.second}}));
+				nv.push_back(Symbol({{Ruota::HASH_KEY, Symbol(hash.deHash(e.first))}, {Ruota::HASH_VALUE, e.second}}));
 			}
 			return Symbol(nv);
 		}
@@ -972,6 +1147,14 @@ Symbol CastToI::evaluate(Scope &scope) const
 		default:
 			break;
 		}
+	case TYPE_NAME:
+	{
+		auto a = evalA.getValueType();
+		if (a != OBJECT)
+			return Symbol(static_cast<signed long long>(a));
+		else
+			return Symbol(static_cast<signed long long>(hash.hashString(evalA.getObject()->getName())));
+	}
 	case NIL:
 		return Symbol();
 	default:
@@ -980,9 +1163,14 @@ Symbol CastToI::evaluate(Scope &scope) const
 	throw std::runtime_error("Cannot convert between given types");
 }
 
-const std::string CastToI::toString() const
+const std::string CastToI::toString(bool shared) const
 {
-	return "cast(" + a->toString() + ", " + std::to_string(convert) + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<CastToI>(new CastToI(";
+	else
+		ret = "new CastToI(";
+	return ret + a->toString(false) + ", static_cast<D_TYPE>(" + std::to_string(convert) + "))" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -993,14 +1181,21 @@ AllocI::AllocI(Instruction *a) : UnaryI(ALLOC_I, a) {}
 
 Symbol AllocI::evaluate(Scope &scope) const
 {
-	auto evalA = a->evaluate(scope).getNumber();
-	std::vector<Symbol> v(evalA.getLong());
+	auto evalA = NUMBER_GET_LONG(a->evaluate(scope).getNumber());
+	if (evalA < 0)
+		throw std::runtime_error("Cannot initialize a Vector with size 0");
+	std::vector<Symbol> v(evalA);
 	return Symbol(v);
 }
 
-const std::string AllocI::toString() const
+const std::string AllocI::toString(bool shared) const
 {
-	return "alloc(" + a->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<AllocI>(new AllocI(";
+	else
+		ret = "new AllocI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1019,9 +1214,14 @@ Symbol UntilI::evaluate(Scope &scope) const
 	return Symbol(nv);
 }
 
-const std::string UntilI::toString() const
+const std::string UntilI::toString(bool shared) const
 {
-	return "until(" + a->toString() + ", " + b->toString() + ")";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<UntilI>(new UntilI(";
+	else
+		ret = "new UntilI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1035,25 +1235,29 @@ Symbol ScopeI::evaluate(Scope &scope) const
 	for (auto &e : children)
 	{
 		auto eval = e->evaluate(scope);
-		if (eval.getSymbolType() == ID_RETURN || eval.getSymbolType() == ID_BREAK)
+		if (eval.getSymbolType() != ID_CASUAL)
 			return eval;
 	}
 	return Symbol();
 }
 
-const std::string ScopeI::toString() const
+const std::string ScopeI::toString(bool shared) const
 {
-	std::string ret = "scope(";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ScopeI>(new ScopeI({";
+	else
+		ret = "new ScopeI({";
 
 	unsigned long i = 0;
 	for (auto &e : children)
 	{
 		if (i > 0)
 			ret += ", ";
-		ret += e->toString();
+		ret += e->toString(false);
 		i++;
 	}
-	return ret + ")";
+	return ret + "})" + (shared ? ")" : "");
 }
 
 ScopeI::~ScopeI()
@@ -1066,38 +1270,65 @@ ScopeI::~ScopeI()
 /*class MapI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MapI::MapI(std::map<std::string, Instruction *> children) : Instruction(MAP_I), children(children) {}
+MapI::MapI(std::map<hashcode_t, Instruction *> children) : Instruction(MAP_I), children(children) {}
 
 Symbol MapI::evaluate(Scope &scope) const
 {
-	std::map<std::string, Symbol> evals;
+	std::map<hashcode_t, Symbol> evals;
 	for (auto &e : children)
 	{
 		auto eval = e.second->evaluate(scope);
-		if (eval.getType() == NIL)
+		if (eval.getValueType() == NIL)
 			continue;
 		evals[e.first] = eval;
 	}
 	return Symbol(evals);
 }
 
-const std::string MapI::toString() const
+const std::string MapI::toString(bool shared) const
 {
-	std::string ret = "dict(";
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<MapI>(new MapI({";
+	else
+		ret = "new MapI({";
 
 	unsigned long i = 0;
 	for (auto &e : children)
 	{
 		if (i > 0)
 			ret += ", ";
-		ret += e.first + " : " + e.second->toString();
+		ret += "{" + std::to_string(e.first) + ", " + e.second->toString(false) + "}";
 		i++;
 	}
-	return ret + ")";
+	return ret + "})" + (shared ? ")" : "");
 }
 
 MapI::~MapI()
 {
 	for (auto &e : children)
 		delete e.second;
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ReferI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ReferI::ReferI(Instruction *a) : UnaryI(REFER_I, a) {}
+
+Symbol ReferI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	evalA.setSymbolType(ID_REFER);
+	return evalA;
+}
+
+const std::string ReferI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<ReferI>(new ReferI(";
+	else
+		ret = "new ReferI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }

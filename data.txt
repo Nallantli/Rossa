@@ -36,8 +36,8 @@ EquNode :=
 ExprNode :=
 |	'load' String ';'
 |	'extern' Type ID '(' Type* ')' 'in' String ';'
-|	'def' String SigNode '{' ExprNode* '}'
-|	'def' Type :: String SigNode '{' ExprNode* '}'
+|	String SigNode => '{' ExprNode* '}'
+|	Type :: String SigNode => '{' ExprNode* '}'
 |	'for' ID 'in' EquNode 'do' '{' ExprNode* '}'
 |	'while' EquNode 'do' '{' ExprNode* '}'
 |	ClassType String 'class' '{' ExprNode* '}'

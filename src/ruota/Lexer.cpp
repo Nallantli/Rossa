@@ -1,6 +1,6 @@
-#include "Lexer.h"
+#include "RuotaTypes.h"
 
-Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, Number valueNumber, int type)
+Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, NUMBER_TYPE valueNumber, int type)
 {
 	this->line = line;
 	this->distance = distance;
@@ -62,8 +62,6 @@ const int Lexer::getToken()
 			return TOK_VAR;
 		else if (ID_STRING == "elseif")
 			return TOK_ELSEIF;
-		else if (ID_STRING == "def")
-			return TOK_DEF;
 		else if (ID_STRING == "for")
 			return TOK_FOR;
 		else if (ID_STRING == "true")
@@ -88,6 +86,8 @@ const int Lexer::getToken()
 			return TOK_OBJECT;
 		else if (ID_STRING == "Function")
 			return TOK_FUNCTION;
+		else if (ID_STRING == "Type")
+			return TOK_TYPE_NAME;
 		else if (ID_STRING == "extern")
 			return TOK_EXTERN;
 		else if (ID_STRING == "extern_call")
@@ -104,8 +104,6 @@ const int Lexer::getToken()
 			return TOK_CLASS;
 		else if (ID_STRING == "new")
 			return TOK_NEW;
-		else if (ID_STRING == "type")
-			return TOK_TYPE;
 		else if (ID_STRING == "load")
 			return TOK_LOAD;
 		else if (ID_STRING == "alloc")
@@ -116,6 +114,16 @@ const int Lexer::getToken()
 			return TOK_FINAL;
 		else if (ID_STRING == "ref")
 			return TOK_REF;
+		else if (ID_STRING == "break")
+			return TOK_BREAK;
+		else if (ID_STRING == "refer")
+			return TOK_REFER;
+		else if (ID_STRING == "Nil")
+			return TOK_NIL_NAME;
+		else if (ID_STRING == "Pointer")
+			return TOK_POINTER;
+		else if (ID_STRING == "virtual")
+			return TOK_VIRTUAL;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -127,16 +135,17 @@ const int Lexer::getToken()
 		bool flag = false;
 		while (isdigit(peekChar()) || peekChar() == '.')
 		{
-			flag = last == '.';
+			if (!flag)
+				flag = last == '.';
 			last = nextChar();
 			numStr += last;
 		}
 
 		ID_STRING = numStr;
 		if (flag)
-			NUM_VALUE = Number(strtold(numStr.c_str(), 0));
+			NUM_VALUE = NUMBER_NEW_DOUBLE(strtold(numStr.c_str(), 0));
 		else
-			NUM_VALUE = Number(strtoll(numStr.c_str(), 0, 0));
+			NUM_VALUE = NUMBER_NEW_LONG(strtoll(numStr.c_str(), 0, 0));
 		return TOK_NUM;
 	}
 	else if (last == '#')
@@ -165,6 +174,8 @@ const int Lexer::getToken()
 		ID_STRING = opStr;
 		if (ID_STRING == "->")
 			return TOK_CAST;
+		if (ID_STRING == "=>")
+			return TOK_DEF;
 		if (ID_STRING == "::")
 			return TOK_DEF_TYPE;
 		if (ID_STRING == ":")
@@ -225,6 +236,20 @@ const int Lexer::getToken()
 				case '0':
 					last = '\0';
 					break;
+				case 'x':
+				{
+					std::string code = std::string({nextChar(), nextChar()});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
+				case 'u':
+				{
+					std::string code = std::string({nextChar(), nextChar(), nextChar(), nextChar()});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
 				}
 			}
 			value += last;
@@ -262,7 +287,44 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 		if (token == '#')
 			continue;
 		Token t(LINES[LINE_INDEX], this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token);
-		tokens.push_back(t);
+
+		if (t.getType() == TOK_DEF)
+		{
+			std::vector<Token> temp;
+			while (tokens.back().getType() != '(')
+			{
+				temp.push_back(tokens.back());
+				tokens.pop_back();
+			}
+			temp.push_back(tokens.back());
+			tokens.pop_back();
+			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC))
+			{
+				temp.push_back(tokens.back());
+				tokens.pop_back();
+				if (tokens.back().getType() == TOK_DEF_TYPE)
+				{
+					temp.push_back(tokens.back());
+					tokens.pop_back();
+					temp.push_back(tokens.back());
+					tokens.pop_back();
+				}
+				tokens.push_back(t);
+			}
+			else
+			{
+				tokens.push_back(Token(LINES[LINE_INDEX], this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, '@'));
+			}
+			while (!temp.empty())
+			{
+				tokens.push_back(temp.back());
+				temp.pop_back();
+			}
+		}
+		else
+		{
+			tokens.push_back(t);
+		}
 	}
 
 	return tokens;
