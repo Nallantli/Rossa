@@ -16,7 +16,6 @@
 #include <stdexcept>
 #include <fstream>
 #include <memory>
-#include <map>
 #include <sstream>
 #include <typeinfo>
 #include <cmath>
@@ -35,7 +34,8 @@ struct Hash
 {
 	std::vector<std::string> variable_hash;
 
-	Hash() {
+	Hash()
+	{
 		variable_hash.push_back("<LAMBDA>");
 	}
 
@@ -173,7 +173,8 @@ enum LEX_TOKEN_TYPE
 	TOK_REFER = -44,
 	TOK_NIL_NAME = -45,
 	TOK_POINTER = -46,
-	TOK_VIRTUAL = -47
+	TOK_VIRTUAL = -47,
+	TOK_SWITCH = -48
 };
 
 enum DID_TYPE
@@ -222,6 +223,7 @@ enum I_TYPE
 	SCOPE_I,
 	REFER_I,
 	MAP_I,
+	SWITCH_I,
 	FOR,
 	SET,
 	ADD,
@@ -255,9 +257,9 @@ private:
 
 public:
 	Function(Scope &, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>);
-	Symbol evaluate(std::vector<Symbol>);
-	Symbol evaluate(std::vector<Symbol>, Symbol *thisSymbol);
-	const unsigned long getArgSize() const;
+	Symbol evaluate(std::vector<Symbol>) const;
+	Symbol evaluate(std::vector<Symbol>, Symbol *thisSymbol) const;
+	size_t getArgSize() const;
 };
 
 class Scope
@@ -270,8 +272,8 @@ private:
 public:
 	Scope();
 	Scope(Scope &, const std::string &);
-	Scope *getParent();
-	Symbol getVariable(hashcode_t);
+	Scope *getParent() const;
+	Symbol getVariable(hashcode_t) const;
 	Symbol createVariable(hashcode_t);
 	Symbol createVariable(hashcode_t, Symbol);
 	const std::string &getName() const;
@@ -290,7 +292,7 @@ private:
 
 public:
 	Object(Scope &, OBJECT_TYPE, std::shared_ptr<Instruction>, const std::string &);
-	std::shared_ptr<Scope> getScope();
+	std::shared_ptr<Scope> getScope() const;
 	Symbol instantiate(std::vector<Symbol> params) const;
 	OBJECT_TYPE getType() const;
 	std::shared_ptr<Instruction> getBody() const;
@@ -307,7 +309,7 @@ public:
 	Instruction(I_TYPE);
 	virtual Symbol evaluate(Scope &) const = 0;
 	virtual const std::string toString(bool) const = 0;
-	const I_TYPE getType();
+	I_TYPE getType() const;
 	virtual ~Instruction();
 };
 
@@ -343,7 +345,7 @@ struct SmartNumber
 	SmartNumber(long_double_t valueDouble) : valueDouble(valueDouble), valueLong(0), type(DOUBLE_NUM) { validate(); }
 	SmartNumber(long_int_t valueLong) : valueLong(valueLong), valueDouble(0), type(LONG_NUM) {}
 
-	inline const SmartNumber operator+(const SmartNumber &n) const
+	inline SmartNumber operator+(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -386,7 +388,7 @@ struct SmartNumber
 		}
 	}
 
-	inline const SmartNumber operator-(const SmartNumber &n) const
+	inline SmartNumber operator-(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -416,7 +418,7 @@ struct SmartNumber
 		throw std::runtime_error("Invalid conversion - not a user error");
 	}
 
-	inline const SmartNumber operator*(const SmartNumber &n) const
+	inline SmartNumber operator*(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -446,7 +448,7 @@ struct SmartNumber
 		throw std::runtime_error("Invalid conversion - not a user error");
 	}
 
-	inline const SmartNumber operator/(const SmartNumber &n) const
+	inline SmartNumber operator/(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -476,7 +478,7 @@ struct SmartNumber
 		throw std::runtime_error("Invalid conversion - not a user error");
 	}
 
-	inline const SmartNumber operator^(const SmartNumber &n) const
+	inline SmartNumber operator^(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -506,7 +508,7 @@ struct SmartNumber
 		throw std::runtime_error("Invalid conversion - not a user error");
 	}
 
-	inline const SmartNumber operator%(const SmartNumber &n) const
+	inline SmartNumber operator%(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -631,12 +633,12 @@ struct SmartNumber
 		throw std::runtime_error("Invalid conversion - not a user error");
 	}
 
-	inline const bool operator<=(const SmartNumber &n) const
+	inline bool operator<=(const SmartNumber &n) const
 	{
 		return !(*this > n);
 	}
 
-	inline const bool operator>=(const SmartNumber &n) const
+	inline bool operator>=(const SmartNumber &n) const
 	{
 		return !(*this < n);
 	}
@@ -911,7 +913,7 @@ public:
 		return d->valueType;
 	}
 
-	inline std::shared_ptr<Function> getFunction(D_TYPE ftype, size_t argSize)
+	inline std::shared_ptr<Function> getFunction(D_TYPE ftype, size_t argSize) const
 	{
 		if (d->type != FUNCTION)
 			throw std::runtime_error("Value is not of type `Function`");
@@ -922,15 +924,15 @@ public:
 		std::map<size_t, std::shared_ptr<Function>> foftype;
 
 		if (ftype != NIL && d->valueFunction.find(ftype) != d->valueFunction.end())
-			foftype = d->valueFunction[ftype];
+			foftype = d->valueFunction.at(ftype);
 		else if (d->valueFunction.find(NIL) != d->valueFunction.end())
-			foftype = d->valueFunction[NIL];
+			foftype = d->valueFunction.at(NIL);
 		else
-			throw std::runtime_error("Function does not exist");
+			throw std::runtime_error("Function does not exist for given value");
 		if (foftype.find(argSize) == foftype.end())
-			throw std::runtime_error("Function does not exist");
+			throw std::runtime_error("Function override for parameter size " + std::to_string(argSize) + " does not exist");
 
-		return foftype[argSize];
+		return foftype.at(argSize);
 	}
 
 	inline std::map<D_TYPE, std::map<size_t, std::shared_ptr<Function>>> getFunctions() const
@@ -990,7 +992,7 @@ public:
 		case NUMBER:
 			return NUMBER_STRING(d->valueNumber);
 		case STRING:
-			return d->valueString;
+			return "\"" + d->valueString + "\"";
 		case FUNCTION:
 			return "<Function>";
 		case OBJECT:
@@ -1134,14 +1136,14 @@ public:
 		d->valueObject = nullptr;
 	}
 
-	inline Symbol call(D_TYPE ftype, std::vector<Symbol> params)
+	inline Symbol call(D_TYPE ftype, std::vector<Symbol> params) const
 	{
 		auto f = getFunction(ftype, params.size());
 
 		return f->evaluate(params);
 	}
 
-	inline Symbol call(D_TYPE ftype, std::vector<Symbol> params, Symbol b)
+	inline Symbol call(D_TYPE ftype, std::vector<Symbol> params, Symbol b) const
 	{
 		auto f = getFunction(ftype, params.size());
 
@@ -1274,72 +1276,116 @@ public:
 		return Symbol(NUMBER_POW(d->valueNumber, valB));
 	}
 
-	inline Symbol operator<(const Symbol &b) const
+	inline bool operator<(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber < valB);
-	}
-
-	inline Symbol operator>(const Symbol &b) const
-	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber > valB);
-	}
-
-	inline Symbol operator<=(const Symbol &b) const
-	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber <= valB);
-	}
-
-	inline Symbol operator>=(const Symbol &b) const
-	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber >= valB);
-	}
-
-	inline Symbol equals(const Symbol &b) const
-	{
-		if (d->type != b.getValueType())
-			return Symbol(false);
 		switch (d->type)
 		{
-		case NIL:
-			return Symbol(true);
 		case NUMBER:
-			return Symbol(d->valueNumber == b.getNumber());
-		case BOOLEAN_D:
-			return Symbol(d->valueBool == b.getBool());
+			return d->valueNumber < b.getNumber();
 		case STRING:
-			return Symbol(d->valueString == b.getString());
-		case OBJECT:
-			return Symbol(d->valueObject == b.getObject());
-		case VECTOR:
-			if (d->valueVector.size() != b.vectorSize())
-				return Symbol(false);
-			for (unsigned long i = 0; i < d->valueVector.size(); i++)
-			{
-				if (!d->valueVector[i].equals(b.indexVector(i)).getBool())
-					return Symbol(false);
-			}
-			return Symbol(true);
-		case DICTIONARY:
-			for (auto &e : d->valueDictionary)
-			{
-				if (!e.second.equals(b.indexDictionary(e.first)).getBool())
-					return Symbol(false);
-			}
-			return Symbol(true);
+			return d->valueString < b.getString();
 		case TYPE_NAME:
-			return Symbol(d->valueType == b.getTypeName());
+			return d->valueType < b.getTypeName();
+		case BOOLEAN_D:
+			return d->valueBool < b.getBool();
 		default:
-			return Symbol(false);
+			return toString() < b.toString();
 		}
 	}
 
-	inline Symbol nequals(const Symbol &b) const
+	inline bool operator>(const Symbol &b) const
 	{
-		return Symbol(!(this->equals(b).getBool()));
+		switch (d->type)
+		{
+		case NUMBER:
+			return d->valueNumber > b.getNumber();
+		case STRING:
+			return d->valueString > b.getString();
+		case TYPE_NAME:
+			return d->valueType > b.getTypeName();
+		case BOOLEAN_D:
+			return d->valueBool > b.getBool();
+		default:
+			return toString() > b.toString();
+		}
+	}
+
+	inline bool operator<=(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return d->valueNumber <= b.getNumber();
+		case STRING:
+			return d->valueString <= b.getString();
+		case TYPE_NAME:
+			return d->valueType <= b.getTypeName();
+		case BOOLEAN_D:
+			return d->valueBool <= b.getBool();
+		default:
+			return toString() <= b.toString();
+		}
+	}
+
+	inline bool operator>=(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return d->valueNumber >= b.getNumber();
+		case STRING:
+			return d->valueString >= b.getString();
+		case TYPE_NAME:
+			return d->valueType >= b.getTypeName();
+		case BOOLEAN_D:
+			return d->valueBool >= b.getBool();
+		default:
+			return toString() >= b.toString();
+		}
+	}
+
+	inline bool operator==(const Symbol &b) const
+	{
+		if (d->type != b.getValueType())
+			return false;
+		switch (d->type)
+		{
+		case NIL:
+			return true;
+		case NUMBER:
+			return d->valueNumber == b.getNumber();
+		case BOOLEAN_D:
+			return d->valueBool == b.getBool();
+		case STRING:
+			return d->valueString == b.getString();
+		case OBJECT:
+			return d->valueObject == b.getObject();
+		case VECTOR:
+			if (d->valueVector.size() != b.vectorSize())
+				return false;
+			for (unsigned long i = 0; i < d->valueVector.size(); i++)
+			{
+				if (!(d->valueVector[i] == b.indexVector(i)))
+					return false;
+			}
+			return true;
+		case DICTIONARY:
+			for (auto &e : d->valueDictionary)
+			{
+				if (!(e.second == b.indexDictionary(e.first)))
+					return false;
+			}
+			return true;
+		case TYPE_NAME:
+			return d->valueType == b.getTypeName();
+		default:
+			return false;
+		}
+	}
+
+	inline bool operator!=(const Symbol &b) const
+	{
+		return !(*this == b);
 	}
 };
 

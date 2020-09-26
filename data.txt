@@ -33,6 +33,9 @@ EquNode :=
 |	UnitNode
 |	UnitNode BOP UnitNode [BOP UnitNode]*
 
+CaseStatement :=
+|	BaseNode 'do' '{' ExprNode* '}'
+
 ExprNode :=
 |	'load' String ';'
 |	'extern' Type ID '(' Type* ')' 'in' String ';'
@@ -44,5 +47,6 @@ ExprNode :=
 |	'if' EquNode 'then' '{' ExprNode* '}' ['elseif' EquNode 'then' '{' ExprNode* '}']* ['else' '{' ExprNode* '}']
 |	'return' EquNode ';'
 |	EquNode ';'
+|	'switch' EquNode 'in' '{' CaseStatement '}' 'else' { ExprNode* }
 
 ID := [a-zA-Z][a-zA-Z0-9]*

@@ -61,7 +61,7 @@ Symbol Ruota::parseCode(const std::string &code)
 	{
 		//n->printTree("", true);
 		auto folded = n->fold();
-		folded->printTree("", true);
+		//folded->printTree("", true);
 
 		auto g = NodeParser::genParser(std::move(folded));
 		auto res = g->evaluate(main);

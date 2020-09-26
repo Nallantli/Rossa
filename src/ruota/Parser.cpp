@@ -6,7 +6,7 @@
 
 Instruction::Instruction(I_TYPE type) : type(type) {}
 
-const I_TYPE Instruction::getType()
+I_TYPE Instruction::getType() const
 {
 	return type;
 }
@@ -19,7 +19,7 @@ Instruction::~Instruction() {}
 
 UnaryI::UnaryI(I_TYPE type, Instruction *a) : Instruction(type), a(a) {}
 
-Instruction *UnaryI::getA()
+Instruction *UnaryI::getA() const
 {
 	return a;
 }
@@ -35,7 +35,7 @@ UnaryI::~UnaryI()
 
 CastingI::CastingI(I_TYPE type, hashcode_t key) : Instruction(type), key(key) {}
 
-const hashcode_t CastingI::getKey()
+hashcode_t CastingI::getKey() const
 {
 	return key;
 }
@@ -46,7 +46,7 @@ const hashcode_t CastingI::getKey()
 
 BinaryI::BinaryI(I_TYPE type, Instruction *a, Instruction *b) : UnaryI(type, a), b(b) {}
 
-Instruction *BinaryI::getB()
+Instruction *BinaryI::getB() const
 {
 	return b;
 }
@@ -610,7 +610,7 @@ Symbol LessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA < evalB;
+	return Symbol(evalA < evalB);
 }
 
 const std::string LessI::toString(bool shared) const
@@ -633,7 +633,7 @@ Symbol MoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA > evalB;
+	return Symbol(evalA > evalB);
 }
 
 const std::string MoreI::toString(bool shared) const
@@ -656,7 +656,7 @@ Symbol ELessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA <= evalB;
+	return Symbol(evalA <= evalB);
 }
 
 const std::string ELessI::toString(bool shared) const
@@ -679,7 +679,7 @@ Symbol EMoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA >= evalB;
+	return Symbol(evalA >= evalB);
 }
 
 const std::string EMoreI::toString(bool shared) const
@@ -702,7 +702,7 @@ Symbol Equals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA.equals(evalB);
+	return Symbol(evalA == evalB);
 }
 
 const std::string Equals::toString(bool shared) const
@@ -725,7 +725,7 @@ Symbol NEquals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA.nequals(evalB);
+	return Symbol(evalA != evalB);
 }
 
 const std::string NEquals::toString(bool shared) const
@@ -1331,4 +1331,52 @@ const std::string ReferI::toString(bool shared) const
 	else
 		ret = "new ReferI(";
 	return ret + a->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class SwitchI                                                                                          */
+/*-------------------------------------------------------------------------------------------------------*/
+
+SwitchI::SwitchI(Instruction *switchs, std::map<Symbol, Instruction *> cases, Instruction *elses) : Instruction(SWITCH_I), switchs(switchs), cases(cases), elses(elses) {}
+
+Symbol SwitchI::evaluate(Scope &scope) const
+{
+	auto eval = switchs->evaluate(scope);
+	if (cases.find(eval) != cases.end())
+	{
+		Scope newScope(scope, "");
+		return cases.at(eval)->evaluate(newScope);
+	}
+	else if (elses != NULL)
+	{
+		Scope newScope(scope, "");
+		return elses->evaluate(newScope);
+	}
+	return Symbol();
+}
+
+const std::string SwitchI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<SwitchI>(new SwitchI({";
+	else
+		ret = "new SwitchI({";
+
+	unsigned long i = 0;
+	for (auto &e : cases)
+	{
+		if (i > 0)
+			ret += ", ";
+		ret += "{" + e.first.toCodeString() + ", " + e.second->toString(false) + "}";
+		i++;
+	}
+	return ret + "})" + (shared ? ")" : "");
+}
+
+SwitchI::~SwitchI()
+{
+	for (auto &e : cases)
+		delete e.second;
+	cases.clear();
 }

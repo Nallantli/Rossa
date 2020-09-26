@@ -124,6 +124,8 @@ const int Lexer::getToken()
 			return TOK_POINTER;
 		else if (ID_STRING == "virtual")
 			return TOK_VIRTUAL;
+		else if (ID_STRING == "switch")
+			return TOK_SWITCH;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 

@@ -40,7 +40,7 @@ std::unique_ptr<Node> NodeParser::parseEntryNode()
 		else
 			return logErrorN("Expected interior code for global entry", currentToken);
 	}
-	return std::make_unique<VectorNode>(std::move(v));
+	return std::make_unique<VectorNode>(std::move(v), false);
 }
 
 std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, bool allowInner)
@@ -58,6 +58,8 @@ std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, b
 			return ret;
 	case '(':
 		return parseCallNode(std::move(ret));
+	case '?':
+		return parseThenNode(std::move(ret));
 	case '[':
 		return parseIndexNode(std::move(ret));
 	default:
@@ -269,7 +271,7 @@ std::unique_ptr<Node> NodeParser::parseNewNode()
 	if (body->getType() != CALL_NODE)
 		return logErrorN("Expected Object declaration", currentToken);
 	auto object = ((CallNode *)body.get())->getCallee();
-	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()));
+	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()), false);
 
 	return std::make_unique<NewNode>(std::move(object), std::move(params));
 }
@@ -535,7 +537,7 @@ std::unique_ptr<Node> NodeParser::parseVectorNode()
 			return logErrorN("Expected `]`", currentToken);
 	}
 	nextToken();
-	return std::make_unique<VectorNode>(std::move(args));
+	return std::make_unique<VectorNode>(std::move(args), false);
 }
 
 std::unique_ptr<Node> NodeParser::parseMapNode()
@@ -571,6 +573,88 @@ std::unique_ptr<Node> NodeParser::parseMapNode()
 	}
 	nextToken();
 	return std::make_unique<MapNode>(std::move(args));
+}
+
+std::unique_ptr<Node> NodeParser::parseSwitchNode()
+{
+	nextToken();
+	std::map<Symbol, std::unique_ptr<Node>> cases;
+	auto switchs = parseEquNode();
+	if (!switchs)
+		return logErrorN("Expected expression after `switch`", currentToken);
+	if (currentToken.getType() != TOK_IN)
+		return logErrorN("Expected `in`", currentToken);
+	nextToken();
+	if (currentToken.getType() != '{')
+		return logErrorN("Expected `{`", currentToken);
+	nextToken();
+
+	while (currentToken.getType() != '}')
+	{
+		auto c = parseBaseNode();
+		if (!c)
+			return logErrorN("Expected value for switch case", currentToken);
+		if (!c->isConst())
+			return logErrorN("Values in switch cases must be constant", currentToken);
+
+		auto i = c->genParser();
+		Scope scope;
+		auto value = i->evaluate(scope);
+		delete i;
+
+		if (currentToken.getType() != TOK_DO)
+			return logErrorN("Expected `do`", currentToken);
+		nextToken();
+
+		if (currentToken.getType() != '{')
+			return logErrorN("Expected `{`", currentToken);
+		nextToken();
+		std::vector<std::unique_ptr<Node>> body;
+		while (currentToken.getType() != 0)
+		{
+			if (currentToken.getType() == '}')
+				break;
+			if (auto e = parseExprNode())
+				body.push_back(std::move(e));
+			else
+				return logErrorN("Expected interior code for switch case", currentToken);
+		}
+		if (currentToken.getType() != '}')
+			return logErrorN("Expected `}`", currentToken);
+		nextToken();
+
+		cases[value] = std::make_unique<VectorNode>(std::move(body), true);
+
+		if (currentToken.getType() == 0)
+			return logErrorN("Expected `}`", currentToken);
+	}
+	nextToken();
+	auto ret = std::make_unique<SwitchNode>(std::move(switchs), std::move(cases));
+
+	if (currentToken.getType() == TOK_ELSE)
+	{
+		nextToken();
+		if (currentToken.getType() != '{')
+			return logErrorN("Expected `{`", currentToken);
+		nextToken();
+		std::vector<std::unique_ptr<Node>> elses;
+		while (currentToken.getType() != 0)
+		{
+			if (currentToken.getType() == '}')
+				break;
+
+			if (auto e = parseExprNode())
+				elses.push_back(std::move(e));
+			else
+				return logErrorN("Expected interior code for `else` statement", currentToken);
+		}
+		if (currentToken.getType() != '}')
+			return logErrorN("Expected `}`", currentToken);
+		nextToken();
+		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true));
+	}
+
+	return ret;
 }
 
 std::unique_ptr<Node> NodeParser::parseUnitNode()
@@ -643,6 +727,23 @@ std::unique_ptr<Node> NodeParser::parseInsNode(std::unique_ptr<Node> ret)
 	return parseTrailingNode(std::move(ret), false);
 }
 
+std::unique_ptr<Node> NodeParser::parseThenNode(std::unique_ptr<Node> a)
+{
+	nextToken();
+	auto b = parseEquNode();
+	if (!b)
+		return logErrorN("Expected expression following `?`", currentToken);
+	if (currentToken.getType() != ':')
+		return logErrorN("Expected `:`", currentToken);
+	nextToken();
+	auto c = parseEquNode();
+	if (!c)
+		return logErrorN("Expected expression following `:`", currentToken);
+	auto ret = std::make_unique<IfElseNode>(std::move(a), std::move(b));
+	ret->setElse(std::move(c));
+	return ret;
+}
+
 std::unique_ptr<Node> NodeParser::parseEquNode()
 {
 	if (auto ret = parseUnitNode())
@@ -685,7 +786,7 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		return logErrorN("Expected `}`", currentToken);
 	nextToken();
 
-	auto ret = std::make_unique<IfElseNode>(std::move(ifs), std::move(body));
+	auto ret = std::make_unique<IfElseNode>(std::move(ifs), std::make_unique<VectorNode>(std::move(body), true));
 
 	switch (currentToken.getType())
 	{
@@ -709,7 +810,7 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		if (currentToken.getType() != '}')
 			return logErrorN("Expected `}`", currentToken);
 		nextToken();
-		ret->setElse(std::make_unique<VectorNode>(std::move(elses)));
+		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true));
 		return ret;
 	}
 	case TOK_ELSEIF:
@@ -903,6 +1004,8 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 		return parseIfElseNode();
 	case TOK_EXTERN:
 		return parseExternNode();
+	case TOK_SWITCH:
+		return parseSwitchNode();
 	case TOK_STRUCT:
 	case TOK_STATIC:
 	case TOK_VIRTUAL:
@@ -950,6 +1053,8 @@ Instruction *VectorNode::genParser() const
 	std::vector<Instruction *> ins;
 	for (auto &n : args)
 		ins.push_back(n->genParser());
+	if (scoped)
+		return new ScopeI(ins);
 	return new Sequence(ins);
 }
 
@@ -1098,13 +1203,9 @@ Instruction *InsNode::genParser() const
 
 Instruction *IfElseNode::genParser() const
 {
-	std::vector<Instruction *> is;
-	for (auto &e : this->body)
-		is.push_back(e->genParser());
-	auto bodyI = new ScopeI(is);
 	if (elses)
-		return new IfElseI(ifs->genParser(), bodyI, elses->genParser());
-	return new IfElseI(ifs->genParser(), bodyI, NULL);
+		return new IfElseI(ifs->genParser(), body->genParser(), elses->genParser());
+	return new IfElseI(ifs->genParser(), body->genParser(), NULL);
 }
 
 Instruction *MapNode::genParser() const
@@ -1115,6 +1216,18 @@ Instruction *MapNode::genParser() const
 		is[e.first] = e.second->genParser();
 	}
 	return new MapI(is);
+}
+
+Instruction *SwitchNode::genParser() const
+{
+	std::map<Symbol, Instruction *> is;
+	for (auto &e : this->cases)
+	{
+		is[e.first] = e.second->genParser();
+	}
+	if (elses)
+		return new SwitchI(switchs->genParser(), is, elses->genParser());
+	return new SwitchI(switchs->genParser(), is, NULL);
 }
 
 Instruction *NewNode::genParser() const

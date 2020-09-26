@@ -5,7 +5,7 @@ Object::Object(Scope &parent, OBJECT_TYPE type, std::shared_ptr<Instruction> bod
 	this->internal = std::make_shared<Scope>(parent, key);
 }
 
-std::shared_ptr<Scope> Object::getScope()
+std::shared_ptr<Scope> Object::getScope() const
 {
 	return this->internal;
 }

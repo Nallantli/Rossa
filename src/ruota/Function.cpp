@@ -2,12 +2,12 @@
 
 Function::Function(Scope &parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : parent(&parent), params(params), body(body) {}
 
-Symbol Function::evaluate(std::vector<Symbol> paramValues)
+Symbol Function::evaluate(std::vector<Symbol> paramValues) const
 {
 	return evaluate(paramValues, NULL);
 }
 
-Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym)
+Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym) const
 {
 	Scope newScope(*parent, "");
 
@@ -51,7 +51,7 @@ Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym)
 	return ret;
 }
 
-const unsigned long Function::getArgSize() const
+size_t Function::getArgSize() const
 {
 	return params.size();
 }

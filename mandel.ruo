@@ -1,32 +1,28 @@
 load "std.ruo";
 
 static mandel class {
+	var ASCII = [
+		".",
+		".",
+		"-",
+		"-",
+		"~",
+		"~",
+		"=",
+		"=",
+		"+",
+		"+",
+		"*",
+		"*",
+		"#",
+		"#",
+		"@",
+		"@",
+		" "
+	];
+
 	stringDensity(ref d) => {
-		if d == 16 then {
-			return " ";
-		}
-		if d > 14 then {
-			return "@";
-		}
-		if d > 12 then {
-			return "#";
-		}
-		if d > 10 then {
-			return "*";
-		}
-		if d > 8 then {
-			return "+";
-		}
-		if d > 6 then {
-			return "=";
-		}
-		if d > 4 then {
-			return "~";
-		}
-		if d > 2 then {
-			return "-";
-		}
-		return ".";
+		return ASCII[d];
 	}
 
 	mandelConverger(ref real, ref imag) => {
@@ -65,30 +61,38 @@ static mandel class {
 	}
 }
 
-var x = 0;
+var x = -0.5;
 var y = 0;
 var scale = 1;
-var c;
 var width = 120;
 var height = 40;
 
 console("cls");
 
-while c != "z" do {
+while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
-	c = input.char();
-	if c == "w" then {
-		y += 2 / height * scale;
-	} elseif c == "s" then {
-		y -= 2 / height * scale;
-	} elseif c == "a" then {
-		x -= 6 / width * scale;
-	} elseif c == "d" then {
-		x += 6 / width * scale;
-	} elseif c == "q" then {
-		scale *= 2;
-	} elseif c == "e" then {
-		scale /= 2;
+	switch input.char() in {
+		"w" do {
+			y += 2 / height * scale;
+		}
+		"s" do {
+			y -= 2 / height * scale;
+		}
+		"a" do {
+			x -= 6 / width * scale;
+		}
+		"d" do {
+			x += 6 / width * scale;
+		}
+		"q" do {
+			scale *= 2;
+		}
+		"e" do {
+			scale /= 2;
+		}
+		"z" do {
+			break;
+		}
 	}
 }
 

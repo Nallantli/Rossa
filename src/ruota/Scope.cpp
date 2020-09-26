@@ -12,10 +12,10 @@ const std::string &Scope::getName() const
 	return this->name;
 }
 
-Symbol Scope::getVariable(hashcode_t key)
+Symbol Scope::getVariable(hashcode_t key) const
 {
 	if (values.find(key) != values.end())
-		return values[key];
+		return values.at(key);
 	if (parent != NULL)
 		return parent->getVariable(key);
 
@@ -36,7 +36,7 @@ Symbol Scope::createVariable(hashcode_t key, Symbol d)
 		values[key] = d;
 	return getVariable(key);
 }
-Scope *Scope::getParent()
+Scope *Scope::getParent() const
 {
 	return this->parent;
 }

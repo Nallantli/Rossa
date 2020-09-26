@@ -32,7 +32,8 @@ enum NODE_TYPE
 	MAP_NODE,
 	CONTAINER_NODE,
 	BREAK_NODE,
-	REFER_NODE
+	REFER_NODE,
+	SWITCH_NODE
 };
 
 class NodeParser;
@@ -66,6 +67,7 @@ class MapNode;
 class ContainerNode;
 class BreakNode;
 class ReferNode;
+class SwitchNode;
 
 class Node
 {
@@ -120,9 +122,10 @@ class VectorNode : public Node
 {
 private:
 	std::vector<std::unique_ptr<Node>> args;
+	bool scoped;
 
 public:
-	VectorNode(std::vector<std::unique_ptr<Node>> args) : Node(VECTOR_NODE), args(std::move(args)) {}
+	VectorNode(std::vector<std::unique_ptr<Node>> args, bool scoped) : Node(VECTOR_NODE), args(std::move(args)), scoped(scoped) {}
 	Instruction *genParser() const override;
 	bool isConst() const override
 	{
@@ -144,7 +147,7 @@ public:
 			std::cout << "├─";
 			indent += "│ ";
 		}
-		std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VECTOR"
+		std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VECTOR : " << scoped
 				  << "\n"
 				  << colorASCII(RESET_TEXT);
 
@@ -178,7 +181,7 @@ public:
 				nargs.push_back(c->fold());
 			}
 		}
-		return std::make_unique<VectorNode>(std::move(nargs));
+		return std::make_unique<VectorNode>(std::move(nargs), scoped);
 	}
 	std::vector<std::unique_ptr<Node>> getChildren() { return std::move(args); }
 };
@@ -1073,20 +1076,19 @@ class IfElseNode : public Node
 {
 private:
 	std::unique_ptr<Node> ifs;
-	std::vector<std::unique_ptr<Node>> body;
+	std::unique_ptr<Node> body;
 	std::unique_ptr<Node> elses = nullptr;
 
 public:
-	IfElseNode(std::unique_ptr<Node> ifs, std::vector<std::unique_ptr<Node>> body) : Node(IF_ELSE_NODE), ifs(std::move(ifs)), body(std::move(body)) {}
+	IfElseNode(std::unique_ptr<Node> ifs, std::unique_ptr<Node> body) : Node(IF_ELSE_NODE), ifs(std::move(ifs)), body(std::move(body)) {}
 	void setElse(std::unique_ptr<Node> elses) { this->elses = std::move(elses); }
 	Instruction *genParser() const override;
 	bool isConst() const override
 	{
 		if (!ifs->isConst())
 			return false;
-		for (auto &c : body)
-			if (!c->isConst())
-				return false;
+		if (!body->isConst())
+			return false;
 		if (elses != nullptr && !elses->isConst())
 			return false;
 		return true;
@@ -1108,8 +1110,7 @@ public:
 				  << "\n"
 				  << colorASCII(RESET_TEXT);
 		ifs->printTree(indent, false);
-		for (size_t i = 0; i < body.size(); i++)
-			body[i]->printTree(indent, i == body.size() - 1 && elses == nullptr);
+		body->printTree(indent, elses == nullptr);
 		if (elses != nullptr)
 			elses->printTree(indent, true);
 	}
@@ -1124,23 +1125,7 @@ public:
 			return nn;
 		}
 
-		std::vector<std::unique_ptr<Node>> nbody;
-		for (auto &c : body)
-		{
-			if (c->isConst())
-			{
-				auto i = c->genParser();
-				Scope scope;
-				auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope)));
-				nbody.push_back(std::move(nn));
-				delete i;
-			}
-			else
-			{
-				nbody.push_back(c->fold());
-			}
-		}
-		auto ret = std::make_unique<IfElseNode>(ifs->fold(), std::move(nbody));
+		auto ret = std::make_unique<IfElseNode>(ifs->fold(), body->fold());
 		if (elses)
 			ret->setElse(elses->fold());
 		return ret;
@@ -1397,6 +1382,80 @@ public:
 	}
 };
 
+class SwitchNode : public Node
+{
+private:
+	std::unique_ptr<Node> switchs;
+	std::map<Symbol, std::unique_ptr<Node>> cases;
+	std::unique_ptr<Node> elses;
+
+public:
+	SwitchNode(std::unique_ptr<Node> switchs, std::map<Symbol, std::unique_ptr<Node>> cases) : Node(SWITCH_NODE), switchs(std::move(switchs)), cases(std::move(cases)) {}
+	Instruction *genParser() const override;
+	void setElse(std::unique_ptr<Node> elses) { this->elses = std::move(elses); }
+	bool isConst() const override
+	{
+		return false;
+	}
+	void printTree(std::string indent, bool last) const override
+	{
+		std::cout << indent;
+		if (last)
+		{
+			std::cout << "└─";
+			indent += "  ";
+		}
+		else
+		{
+			std::cout << "├─";
+			indent += "│ ";
+		}
+		std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "MAP"
+				  << "\n"
+				  << colorASCII(RESET_TEXT);
+		switchs->printTree(indent, cases.empty());
+		size_t i = 0;
+		for (auto &e : cases)
+		{
+			e.second->printTree(indent, i == cases.size() - 1 && !elses);
+			i++;
+		}
+		if (elses)
+			elses->printTree(indent, true);
+	}
+	std::unique_ptr<Node> fold() const override
+	{
+		if (isConst())
+		{
+			auto i = genParser();
+			Scope scope;
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope)));
+			delete i;
+			return nn;
+		}
+
+		std::map<Symbol, std::unique_ptr<Node>> ncases;
+		for (auto &c : cases)
+		{
+			if (c.second->isConst())
+			{
+				auto i = c.second->genParser();
+				Scope scope;
+				ncases[c.first] = std::make_unique<ContainerNode>(i->evaluate(scope));
+				delete i;
+			}
+			else
+			{
+				ncases[c.first] = c.second->fold();
+			}
+		}
+		auto ret = std::make_unique<SwitchNode>(switchs->fold(), std::move(ncases));
+		if (elses)
+			ret->setElse(elses->fold());
+		return ret;
+	}
+};
+
 class NodeParser
 {
 private:
@@ -1430,6 +1489,7 @@ private:
 	std::unique_ptr<Node> parseClassNode();
 	std::unique_ptr<Node> parseNewNode();
 	std::unique_ptr<Node> parseLoadNode();
+	std::unique_ptr<Node> parseSwitchNode();
 	std::unique_ptr<Node> parseTrailingNode(std::unique_ptr<Node>, bool);
 	std::unique_ptr<Node> parseInsNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseUntilNode(std::unique_ptr<Node>);
@@ -1437,6 +1497,7 @@ private:
 	std::unique_ptr<Node> parseBinOpNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseCallNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseIndexNode(std::unique_ptr<Node>);
+	std::unique_ptr<Node> parseThenNode(std::unique_ptr<Node>);
 
 	std::unique_ptr<Node> logErrorN(const std::string &, Token);
 	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> logErrorSN(const std::string &, Token);

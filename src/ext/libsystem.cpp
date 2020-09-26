@@ -16,7 +16,7 @@ namespace libsystem
 {
 	RUOTA_EXT_SYM(_puts, args)
 	{
-		std::cout << args[0].toString();
+		std::cout << args[0].getString();
 		return Symbol();
 	}
 

@@ -72,7 +72,7 @@ protected:
 
 public:
 	UnaryI(I_TYPE, Instruction *);
-	Instruction *getA();
+	Instruction *getA() const;
 	virtual ~UnaryI();
 };
 
@@ -83,7 +83,7 @@ protected:
 
 public:
 	CastingI(I_TYPE, hashcode_t);
-	const hashcode_t getKey();
+	hashcode_t getKey() const;
 };
 
 class BinaryI : public UnaryI
@@ -93,7 +93,7 @@ protected:
 
 public:
 	BinaryI(I_TYPE, Instruction *, Instruction *);
-	Instruction *getB();
+	Instruction *getB() const;
 	virtual ~BinaryI();
 };
 
@@ -451,6 +451,20 @@ public:
 	ReferI(Instruction *);
 	Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
+};
+
+class SwitchI : public Instruction
+{
+protected:
+	Instruction * switchs;
+	Instruction * elses;
+	std::map<Symbol, Instruction *> cases;
+
+public:
+	SwitchI(Instruction *, std::map<Symbol, Instruction *>, Instruction *);
+	Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+	virtual ~SwitchI();
 };
 
 namespace rdir
