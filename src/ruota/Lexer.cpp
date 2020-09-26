@@ -1,25 +1,78 @@
-#include "RuotaTypes.h"
+#include "Lexer.h"
+
 #include <sstream>
 
-Token::Token(const std::string &filename, const std::string &line, size_t lineNumber, size_t distance, const std::string &valueString, NUMBER_TYPE valueNumber, int type)
-{
-	this->filename = filename;
-	this->line = line;
-	this->distance = distance;
-	this->valueString = valueString;
-	this->lineNumber = lineNumber;
+Token::Token() : filename("nil"),
+				 line(""),
+				 distance(0),
+				 valueString(""),
+				 valueNumber(NUMBER_NEW_LONG(0)),
+				 type(0),
+				 lineNumber(0) {}
 
+Token::Token(
+	const std::string &filename,
+	const std::string &line,
+	size_t lineNumber,
+	size_t distance,
+	const std::string &valueString,
+	NUMBER_TYPE valueNumber,
+	int type) : filename(filename),
+				line(line),
+				distance(distance),
+				valueString(valueString),
+				lineNumber(lineNumber),
+				valueNumber(valueNumber),
+				type(type)
+{
 	while (!this->line.empty() && isspace(this->line[0]))
 	{
 		this->line = this->line.substr(1);
 		this->distance--;
 	}
-
-	this->valueNumber = valueNumber;
-	this->type = type;
 }
 
-const char Lexer::nextChar()
+const std::string &Token::getLine() const
+{
+	return this->line;
+}
+
+int Token::getType() const
+{
+	return this->type;
+}
+
+size_t Token::getDist() const
+{
+	return this->distance;
+}
+
+size_t Token::getLineNumber() const
+{
+	return this->lineNumber;
+}
+
+NUMBER_TYPE Token::getValueNumber() const
+{
+	return this->valueNumber;
+}
+
+const std::string &Token::getValueString() const
+{
+	return this->valueString;
+}
+
+const std::string &Token::getFilename() const
+{
+	return this->filename;
+}
+
+Lexer::Lexer(
+	std::map<std::string, signed int> bOperators,
+	std::map<std::string, signed int> uOperators) : bOperators(bOperators),
+													uOperators(uOperators) {}
+
+char Lexer::nextChar()
 {
 	auto c = INPUT[INPUT_INDEX++];
 	if (c == '\n')
@@ -34,12 +87,12 @@ const char Lexer::nextChar()
 	return c;
 }
 
-const char Lexer::peekChar() const
+char Lexer::peekChar() const
 {
 	return INPUT[INPUT_INDEX];
 }
 
-const int Lexer::getToken()
+int Lexer::getToken()
 {
 	static int last;
 	while (isspace(last = nextChar()))

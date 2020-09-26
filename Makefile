@@ -29,11 +29,11 @@ bin/lib/libstd.so: src/ext/libstd.cpp
 bin/lib/libfile.so: src/ext/libfile.cpp
 	$(CC) -o bin/lib/libfile.so src/ext/libfile.cpp $(LFLAGS)
 
-bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o
-	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o $(CFLAGS_WIN)
+bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/NodeParser.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o
+	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/NodeParser.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o $(CFLAGS_WIN)
 
-bin/ruota: build/nix/Main.o build/nix/Ruota.o build/nix/Node.o build/nix/Lexer.o build/nix/Parser.o build/nix/Scope.o build/nix/Function.o build/nix/Object.o
-	$(CC) -o bin/ruota build/nix/Main.o build/nix/Ruota.o build/nix/Node.o build/nix/Lexer.o build/nix/Parser.o build/nix/Scope.o build/nix/Function.o build/nix/Object.o $(CFLAGS)
+bin/ruota: build/nix/Main.o build/nix/Ruota.o build/nix/Node.o build/nix/NodeParser.o build/nix/Lexer.o build/nix/Parser.o build/nix/Scope.o build/nix/Function.o build/nix/Object.o
+	$(CC) -o bin/ruota build/nix/Main.o build/nix/Ruota.o build/nix/Node.o build/nix/NodeParser.o build/nix/Lexer.o build/nix/Parser.o build/nix/Scope.o build/nix/Function.o build/nix/Object.o $(CFLAGS)
 
 build/win/Main.o: src/Main.cpp
 	$(CC) src/Main.cpp -o build/win/Main.o -c $(CFLAGS_WIN)
@@ -43,6 +43,9 @@ build/win/Ruota.o: src/ruota/Ruota.cpp
 
 build/win/Node.o: src/ruota/Node.cpp
 	$(CC) src/ruota/Node.cpp -o build/win/Node.o -c $(CFLAGS_WIN)
+
+build/win/NodeParser.o: src/ruota/NodeParser.cpp
+	$(CC) src/ruota/NodeParser.cpp -o build/win/NodeParser.o -c $(CFLAGS_WIN)
 
 build/win/Lexer.o: src/ruota/Lexer.cpp
 	$(CC) src/ruota/Lexer.cpp -o build/win/Lexer.o -c $(CFLAGS_WIN)
@@ -67,6 +70,9 @@ build/nix/Ruota.o: src/ruota/Ruota.cpp
 
 build/nix/Node.o: src/ruota/Node.cpp
 	$(CC) src/ruota/Node.cpp -o build/nix/Node.o -c $(CFLAGS)
+
+build/nix/NodeParser.o: src/ruota/NodeParser.cpp
+	$(CC) src/ruota/NodeParser.cpp -o build/nix/NodeParser.o -c $(CFLAGS)
 
 build/nix/Lexer.o: src/ruota/Lexer.cpp
 	$(CC) src/ruota/Lexer.cpp -o build/nix/Lexer.o -c $(CFLAGS)

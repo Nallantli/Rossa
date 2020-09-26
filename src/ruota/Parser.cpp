@@ -1,4 +1,5 @@
-#include "Ruota.h"
+#include "Parser.h"
+#include "Library.h"
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Instruction                                                                                      */
@@ -60,9 +61,9 @@ BinaryI::~BinaryI()
 /*class Container                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(Symbol d) : Instruction(CONTAINER), d(d) {}
+Container::Container(const Symbol &d) : Instruction(CONTAINER), d(d) {}
 
-Symbol Container::evaluate(Scope &) const
+const Symbol Container::evaluate(Scope &) const
 {
 	return d;
 }
@@ -80,9 +81,9 @@ const std::string Container::toString(bool shared) const
 
 DefineI::DefineI(hashcode_t key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : Instruction(DEFINE), key(key), ftype(ftype), params(params), body(body) {}
 
-Symbol DefineI::evaluate(Scope &scope) const
+const Symbol DefineI::evaluate(Scope &scope) const
 {
-	auto f = std::make_shared<Function>(scope, params, body);
+	auto f = std::make_shared<Function>(key, scope, params, body);
 	if (key > 0)
 	{
 		auto d = Symbol(ftype, f);
@@ -119,7 +120,7 @@ const std::string DefineI::toString(bool shared) const
 
 Sequence::Sequence(std::vector<Instruction *> children) : Instruction(SEQUENCE), children(children) {}
 
-Symbol Sequence::evaluate(Scope &scope) const
+const Symbol Sequence::evaluate(Scope &scope) const
 {
 	std::vector<Symbol> evals;
 	for (auto &e : children)
@@ -170,7 +171,7 @@ Sequence::~Sequence()
 
 IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses) : Instruction(IFELSE), ifs(ifs), body(body), elses(elses) {}
 
-Symbol IfElseI::evaluate(Scope &scope) const
+const Symbol IfElseI::evaluate(Scope &scope) const
 {
 	Scope newScope(scope, "");
 	auto evalIf = ifs->evaluate(newScope);
@@ -212,7 +213,7 @@ IfElseI::~IfElseI()
 
 WhileI::WhileI(Instruction *whiles, Instruction *body) : Instruction(WHILE), whiles(whiles), body(body) {}
 
-Symbol WhileI::evaluate(Scope &scope) const
+const Symbol WhileI::evaluate(Scope &scope) const
 {
 	while (whiles->evaluate(scope).getBool())
 	{
@@ -249,7 +250,7 @@ WhileI::~WhileI()
 
 ForI::ForI(hashcode_t id, Instruction *fors, Instruction *body) : Instruction(FOR), id(id), fors(fors), body(body) {}
 
-Symbol ForI::evaluate(Scope &scope) const
+const Symbol ForI::evaluate(Scope &scope) const
 {
 	auto evalFor = fors->evaluate(scope).getVector();
 	for (size_t i = 0; i < evalFor.size(); i++)
@@ -289,7 +290,7 @@ ForI::~ForI()
 
 VariableI::VariableI(hashcode_t key) : CastingI(VARIABLE, key) {}
 
-Symbol VariableI::evaluate(Scope &scope) const
+const Symbol VariableI::evaluate(Scope &scope) const
 {
 	auto d = scope.getVariable(key);
 	return d;
@@ -311,7 +312,7 @@ const std::string VariableI::toString(bool shared) const
 
 DeclareI::DeclareI(hashcode_t key) : CastingI(DECLARE, key) {}
 
-Symbol DeclareI::evaluate(Scope &scope) const
+const Symbol DeclareI::evaluate(Scope &scope) const
 {
 	auto d = scope.createVariable(key);
 	return d;
@@ -333,7 +334,7 @@ const std::string DeclareI::toString(bool shared) const
 
 IndexI::IndexI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-Symbol IndexI::evaluate(Scope &scope) const
+const Symbol IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -356,7 +357,7 @@ const std::string IndexI::toString(bool shared) const
 
 InnerI::InnerI(Instruction *a, Instruction *b) : BinaryI(INNER, a, b) {}
 
-Symbol InnerI::evaluate(Scope &scope) const
+const Symbol InnerI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -368,7 +369,7 @@ Symbol InnerI::evaluate(Scope &scope) const
 	case OBJECT:
 	{
 		auto o = evalA.getObject();
-		if (o->getType() != STATIC_O)
+		if (o->getType() != STATIC_O && o->getType() != INSTANCE_O)
 			throw std::runtime_error("Cannot index a non-static, non-instantiated Object");
 		return b->evaluate(*o->getScope());
 	}
@@ -394,7 +395,7 @@ const std::string InnerI::toString(bool shared) const
 
 CallI::CallI(Instruction *a, Instruction *b) : BinaryI(INDEX, a, b) {}
 
-Symbol CallI::evaluate(Scope &scope) const
+const Symbol CallI::evaluate(Scope &scope) const
 {
 	auto args = b->evaluate(scope).getVector();
 	switch (a->getType())
@@ -412,6 +413,7 @@ Symbol CallI::evaluate(Scope &scope) const
 				auto evalB = ((InnerI *)a)->getB()->evaluate(*evalA.getObject()->getScope());
 				return evalB.call(NIL, args, evalA);
 			}
+			break;
 		}
 		case DICTIONARY:
 		{
@@ -421,6 +423,7 @@ Symbol CallI::evaluate(Scope &scope) const
 				auto evalB = a->evaluate(scope);
 				return evalB.call(NIL, args, evalA);
 			}
+			break;
 		}
 		}
 
@@ -458,7 +461,7 @@ const std::string CallI::toString(bool shared) const
 
 AddI::AddI(Instruction *a, Instruction *b) : BinaryI(ADD, a, b) {}
 
-Symbol AddI::evaluate(Scope &scope) const
+const Symbol AddI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -481,7 +484,7 @@ const std::string AddI::toString(bool shared) const
 
 SubI::SubI(Instruction *a, Instruction *b) : BinaryI(SUB, a, b) {}
 
-Symbol SubI::evaluate(Scope &scope) const
+const Symbol SubI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -504,7 +507,7 @@ const std::string SubI::toString(bool shared) const
 
 MulI::MulI(Instruction *a, Instruction *b) : BinaryI(MUL, a, b) {}
 
-Symbol MulI::evaluate(Scope &scope) const
+const Symbol MulI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -527,7 +530,7 @@ const std::string MulI::toString(bool shared) const
 
 DivI::DivI(Instruction *a, Instruction *b) : BinaryI(DIV, a, b) {}
 
-Symbol DivI::evaluate(Scope &scope) const
+const Symbol DivI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -550,7 +553,7 @@ const std::string DivI::toString(bool shared) const
 
 ModI::ModI(Instruction *a, Instruction *b) : BinaryI(MOD, a, b) {}
 
-Symbol ModI::evaluate(Scope &scope) const
+const Symbol ModI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -573,7 +576,7 @@ const std::string ModI::toString(bool shared) const
 
 PowI::PowI(Instruction *a, Instruction *b) : BinaryI(POW_I, a, b) {}
 
-Symbol PowI::evaluate(Scope &scope) const
+const Symbol PowI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -596,7 +599,7 @@ const std::string PowI::toString(bool shared) const
 
 LessI::LessI(Instruction *a, Instruction *b) : BinaryI(LESS, a, b) {}
 
-Symbol LessI::evaluate(Scope &scope) const
+const Symbol LessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -619,7 +622,7 @@ const std::string LessI::toString(bool shared) const
 
 MoreI::MoreI(Instruction *a, Instruction *b) : BinaryI(MORE, a, b) {}
 
-Symbol MoreI::evaluate(Scope &scope) const
+const Symbol MoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -642,7 +645,7 @@ const std::string MoreI::toString(bool shared) const
 
 ELessI::ELessI(Instruction *a, Instruction *b) : BinaryI(ELESS, a, b) {}
 
-Symbol ELessI::evaluate(Scope &scope) const
+const Symbol ELessI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -665,7 +668,7 @@ const std::string ELessI::toString(bool shared) const
 
 EMoreI::EMoreI(Instruction *a, Instruction *b) : BinaryI(EMORE, a, b) {}
 
-Symbol EMoreI::evaluate(Scope &scope) const
+const Symbol EMoreI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -688,7 +691,7 @@ const std::string EMoreI::toString(bool shared) const
 
 Equals::Equals(Instruction *a, Instruction *b) : BinaryI(EQUALS, a, b) {}
 
-Symbol Equals::evaluate(Scope &scope) const
+const Symbol Equals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -711,7 +714,7 @@ const std::string Equals::toString(bool shared) const
 
 NEquals::NEquals(Instruction *a, Instruction *b) : BinaryI(NEQUALS, a, b) {}
 
-Symbol NEquals::evaluate(Scope &scope) const
+const Symbol NEquals::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -734,7 +737,7 @@ const std::string NEquals::toString(bool shared) const
 
 AndI::AndI(Instruction *a, Instruction *b) : BinaryI(AND, a, b) {}
 
-Symbol AndI::evaluate(Scope &scope) const
+const Symbol AndI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	if (!evalA.getBool())
@@ -761,7 +764,7 @@ const std::string AndI::toString(bool shared) const
 
 OrI::OrI(Instruction *a, Instruction *b) : BinaryI(OR, a, b) {}
 
-Symbol OrI::evaluate(Scope &scope) const
+const Symbol OrI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	if (evalA.getBool())
@@ -788,7 +791,7 @@ const std::string OrI::toString(bool shared) const
 
 SetI::SetI(Instruction *a, Instruction *b) : BinaryI(SET, a, b) {}
 
-Symbol SetI::evaluate(Scope &scope) const
+const Symbol SetI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -812,7 +815,7 @@ const std::string SetI::toString(bool shared) const
 
 ReturnI::ReturnI(Instruction *a) : UnaryI(RETURN, a) {}
 
-Symbol ReturnI::evaluate(Scope &scope) const
+const Symbol ReturnI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	evalA.setSymbolType(ID_RETURN);
@@ -841,7 +844,7 @@ ExternI::ExternI(const std::string &id, Instruction *a) : UnaryI(EXTERN, a), id(
 		throw std::runtime_error("External function `" + id + "` is not defined");
 }
 
-Symbol ExternI::evaluate(Scope &scope) const
+const Symbol ExternI::evaluate(Scope &scope) const
 {
 	return f(a->evaluate(scope).getVector());
 }
@@ -864,7 +867,7 @@ const std::string ExternI::toString(bool shared) const
 
 LengthI::LengthI(Instruction *a) : UnaryI(LENGTH, a) {}
 
-Symbol LengthI::evaluate(Scope &scope) const
+const Symbol LengthI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -914,7 +917,7 @@ const std::string LengthI::toString(bool shared) const
 
 SizeI::SizeI(Instruction *a) : UnaryI(SIZE_I, a) {}
 
-Symbol SizeI::evaluate(Scope &scope) const
+const Symbol SizeI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -946,7 +949,7 @@ const std::string SizeI::toString(bool shared) const
 
 ClassI::ClassI(hashcode_t key, OBJECT_TYPE type, std::shared_ptr<Instruction> body, Instruction *extends) : Instruction(CLASS_I), key(key), type(type), body(body), extends(extends) {}
 
-Symbol ClassI::evaluate(Scope &scope) const
+const Symbol ClassI::evaluate(Scope &scope) const
 {
 	std::shared_ptr<Instruction> nbody = body;
 	if (extends != NULL)
@@ -990,7 +993,7 @@ ClassI::~ClassI()
 
 NewI::NewI(Instruction *a, Instruction *b) : BinaryI(NEW_I, a, b) {}
 
-Symbol NewI::evaluate(Scope &scope) const
+const Symbol NewI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -1014,7 +1017,7 @@ const std::string NewI::toString(bool shared) const
 
 CastToI::CastToI(Instruction *a, D_TYPE convert) : UnaryI(CAST_TO_I, a), convert(convert) {}
 
-Symbol CastToI::evaluate(Scope &scope) const
+const Symbol CastToI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (convert)
@@ -1169,7 +1172,7 @@ const std::string CastToI::toString(bool shared) const
 
 AllocI::AllocI(Instruction *a) : UnaryI(ALLOC_I, a) {}
 
-Symbol AllocI::evaluate(Scope &scope) const
+const Symbol AllocI::evaluate(Scope &scope) const
 {
 	auto evalA = NUMBER_GET_LONG(a->evaluate(scope).getNumber());
 	if (evalA < 0)
@@ -1194,7 +1197,7 @@ const std::string AllocI::toString(bool shared) const
 
 UntilI::UntilI(Instruction *a, Instruction *b) : BinaryI(UNTIL_I, a, b) {}
 
-Symbol UntilI::evaluate(Scope &scope) const
+const Symbol UntilI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope).getNumber();
 	auto evalB = b->evaluate(scope).getNumber();
@@ -1220,7 +1223,7 @@ const std::string UntilI::toString(bool shared) const
 
 ScopeI::ScopeI(std::vector<Instruction *> children) : Instruction(SCOPE_I), children(children) {}
 
-Symbol ScopeI::evaluate(Scope &scope) const
+const Symbol ScopeI::evaluate(Scope &scope) const
 {
 	for (auto &e : children)
 	{
@@ -1262,7 +1265,7 @@ ScopeI::~ScopeI()
 
 MapI::MapI(std::map<hashcode_t, Instruction *> children) : Instruction(MAP_I), children(children) {}
 
-Symbol MapI::evaluate(Scope &scope) const
+const Symbol MapI::evaluate(Scope &scope) const
 {
 	std::map<hashcode_t, Symbol> evals;
 	for (auto &e : children)
@@ -1306,7 +1309,7 @@ MapI::~MapI()
 
 ReferI::ReferI(Instruction *a) : UnaryI(REFER_I, a) {}
 
-Symbol ReferI::evaluate(Scope &scope) const
+const Symbol ReferI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	evalA.setSymbolType(ID_REFER);
@@ -1329,7 +1332,7 @@ const std::string ReferI::toString(bool shared) const
 
 SwitchI::SwitchI(Instruction *switchs, std::map<Symbol, Instruction *> cases, Instruction *elses) : Instruction(SWITCH_I), switchs(switchs), cases(cases), elses(elses) {}
 
-Symbol SwitchI::evaluate(Scope &scope) const
+const Symbol SwitchI::evaluate(Scope &scope) const
 {
 	auto eval = switchs->evaluate(scope);
 	if (cases.find(eval) != cases.end())

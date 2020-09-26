@@ -10,12 +10,12 @@ std::shared_ptr<Scope> Object::getScope() const
 	return this->internal;
 }
 
-Symbol Object::instantiate(std::vector<Symbol> params) const
+const Symbol Object::instantiate(std::vector<Symbol> params) const
 {
 	if (type != STRUCT_O)
 		throw std::runtime_error("Cannot instantiate a non-struct Object");
 
-	auto o = std::make_shared<Object>(*internal->getParent(), STATIC_O, body, key);
+	auto o = std::make_shared<Object>(*internal->getParent(), INSTANCE_O, body, key);
 	o->body->evaluate(*o->getScope());
 	auto f = o->getScope()->getVariable(Ruota::HASH_INIT).getFunction(NIL, params.size());
 	auto d = Symbol(o);

@@ -1,3 +1,5 @@
+#include "../ruota/Ruota.h"
+
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -7,8 +9,6 @@
 #ifndef __unix__
 #include <conio.h>
 #endif
-
-#include "../ruota/RuotaTypes.h"
 
 RUOTA_LIB_HEADER
 

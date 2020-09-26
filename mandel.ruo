@@ -1,5 +1,3 @@
-load "std.ruo";
-
 static mandel class {
 	var ASCII = [
 		" ",

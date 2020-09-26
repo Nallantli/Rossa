@@ -1,4 +1,4 @@
-#include "../ruota/RuotaTypes.h"
+#include "../ruota/Ruota.h"
 
 #include <fstream>
 

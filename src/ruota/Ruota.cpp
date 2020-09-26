@@ -1,8 +1,11 @@
 #include "Ruota.h"
-#include "Node.h"
+#include "Library.h"
+#include "NodeParser.h"
 
 std::vector<boost::filesystem::path> rdir::loaded = {};
-std::map<std::string, boost::function<Symbol(std::vector<Symbol>)>> rlib::loaded = {};
+std::map<std::string, boost::function<const Symbol(std::vector<Symbol>)>> rlib::loaded = {};
+
+std::vector<Function> Ruota::stack_trace = {};
 
 Hash hash = Hash();
 
@@ -65,14 +68,15 @@ const std::map<std::string, signed int> Ruota::uOperators = {
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-Symbol Ruota::parseCode(const std::string &code, boost::filesystem::path currentFile)
+Symbol Ruota::parseCode(const std::string &code, boost::filesystem::path currentFile, bool tree)
 {
 	auto tokens = lexer.lexString(code, currentFile.filename().string());
 	NodeParser testnp(tokens, bOperators, uOperators, currentFile);
 	auto n = testnp.parse();
-	//n->printTree("", true);
+
 	auto folded = n->fold();
-	//folded->printTree("", true);
+	if (tree)
+		folded->printTree("", true);
 
 	auto g = NodeParser::genParser(std::move(folded));
 	auto res = g->evaluate(main);

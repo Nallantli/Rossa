@@ -12,7 +12,7 @@ const std::string &Scope::getName() const
 	return this->name;
 }
 
-Symbol Scope::getVariable(hashcode_t key) const
+const Symbol &Scope::getVariable(hashcode_t key) const
 {
 	if (values.find(key) != values.end())
 		return values.at(key);
@@ -22,13 +22,13 @@ Symbol Scope::getVariable(hashcode_t key) const
 	throw std::runtime_error("Variable `" + hash.deHash(key) + "` is not declared within scope");
 }
 
-Symbol Scope::createVariable(hashcode_t key)
+const Symbol &Scope::createVariable(hashcode_t key)
 {
 	values[key] = Symbol();
 	return getVariable(key);
 }
 
-Symbol Scope::createVariable(hashcode_t key, Symbol d)
+const Symbol &Scope::createVariable(hashcode_t key, const Symbol &d)
 {
 	if (values.find(key) != values.end() && values[key].getValueType() == FUNCTION)
 		values[key].addFunctions(d);
