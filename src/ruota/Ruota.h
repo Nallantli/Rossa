@@ -3,8 +3,6 @@
 
 #include "RuotaTypes.h"
 
-class Ruota;
-
 class UnaryI;
 class CastingI;
 class BinaryI;
@@ -45,25 +43,6 @@ class UntilI;
 class ScopeI;
 class MapI;
 class ReferI;
-
-class Ruota
-{
-private:
-	static const std::map<std::string, signed int> bOperators;
-	static const std::map<std::string, signed int> uOperators;
-	Scope main;
-
-public:
-	static Lexer lexer;
-
-	static hashcode_t HASH_THIS;
-	static hashcode_t HASH_INIT;
-	static hashcode_t HASH_KEY;
-	static hashcode_t HASH_VALUE;
-
-	Ruota();
-	Symbol parseCode(const std::string &);
-};
 
 class UnaryI : public Instruction
 {

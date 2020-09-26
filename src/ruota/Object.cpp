@@ -43,3 +43,12 @@ std::shared_ptr<Instruction> Object::getBody() const
 {
 	return body;
 }
+
+Object::~Object()
+{
+	if (hasValue(Ruota::HASH_DELETER))
+	{
+		auto f = internal->getVariable(Ruota::HASH_DELETER).getFunction(NIL, 0);
+		f->evaluate({});
+	}
+}

@@ -12,7 +12,7 @@
 
 RUOTA_LIB_HEADER
 
-namespace libsystem
+namespace libstd
 {
 	RUOTA_EXT_SYM(_puts, args)
 	{
@@ -142,4 +142,4 @@ namespace libsystem
 #endif
 		return Symbol(std::string(1, c));
 	}
-} // namespace libsystem
+} // namespace libstd

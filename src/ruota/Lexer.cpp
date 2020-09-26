@@ -1,10 +1,20 @@
 #include "RuotaTypes.h"
+#include <sstream>
 
-Token::Token(const std::string &line, unsigned long distance, const std::string &valueString, NUMBER_TYPE valueNumber, int type)
+Token::Token(const std::string &filename, const std::string &line, size_t lineNumber, size_t distance, const std::string &valueString, NUMBER_TYPE valueNumber, int type)
 {
+	this->filename = filename;
 	this->line = line;
 	this->distance = distance;
 	this->valueString = valueString;
+	this->lineNumber = lineNumber;
+
+	while (!this->line.empty() && isspace(this->line[0]))
+	{
+		this->line = this->line.substr(1);
+		this->distance--;
+	}
+
 	this->valueNumber = valueNumber;
 	this->type = type;
 }
@@ -196,6 +206,20 @@ const int Lexer::getToken()
 		ID_STRING = opStr;
 		return TOK_OPR;
 	}
+	else if (last == '`')
+	{
+		std::string value = "";
+		while (true)
+		{
+			last = nextChar();
+			if (last == '`')
+			{
+				ID_STRING = value;
+				return TOK_IDF;
+			}
+			value += last;
+		}
+	}
 	else if (last == '"')
 	{
 		std::string value = "";
@@ -264,7 +288,7 @@ const int Lexer::getToken()
 	return ret;
 }
 
-std::vector<Token> Lexer::lexString(const std::string &INPUT)
+std::vector<Token> Lexer::lexString(const std::string &INPUT, const std::string &filename)
 {
 	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);
@@ -288,7 +312,7 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 			break;
 		if (token == '#')
 			continue;
-		Token t(LINES[LINE_INDEX], this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token);
+		Token t(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token);
 
 		if (t.getType() == TOK_DEF)
 		{
@@ -300,7 +324,7 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC))
+			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == '~' || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC))
 			{
 				temp.push_back(tokens.back());
 				tokens.pop_back();
@@ -315,7 +339,7 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT)
 			}
 			else
 			{
-				tokens.push_back(Token(LINES[LINE_INDEX], this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, '@'));
+				tokens.push_back(Token(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, '@'));
 			}
 			while (!temp.empty())
 			{

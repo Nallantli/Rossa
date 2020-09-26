@@ -251,11 +251,11 @@ ForI::ForI(hashcode_t id, Instruction *fors, Instruction *body) : Instruction(FO
 
 Symbol ForI::evaluate(Scope &scope) const
 {
-	auto evalFor = fors->evaluate(scope);
-	for (size_t i = 0; i < evalFor.vectorSize(); i++)
+	auto evalFor = fors->evaluate(scope).getVector();
+	for (size_t i = 0; i < evalFor.size(); i++)
 	{
 		Scope newScope(scope, "");
-		newScope.createVariable(id, evalFor.indexVector(i));
+		newScope.createVariable(id, evalFor[i]);
 		auto temp = body->evaluate(newScope);
 		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_REFER)
 			return temp;
@@ -337,17 +337,7 @@ Symbol IndexI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	switch (evalA.getValueType())
-	{
-	case VECTOR:
-		return evalA.indexVector(NUMBER_GET_LONG(evalB.getNumber()));
-		break;
-	case DICTIONARY:
-		return evalA.indexDictionary(hash.hashString(evalB.getString()));
-		break;
-	default:
-		throw std::runtime_error("Cannot index value");
-	}
+	return evalA.index(evalB);
 }
 
 const std::string IndexI::toString(bool shared) const
@@ -373,7 +363,7 @@ Symbol InnerI::evaluate(Scope &scope) const
 	{
 	case DICTIONARY:
 		if (b->getType() == VARIABLE)
-			return evalA.indexDictionary(((VariableI *)b)->getKey());
+			return evalA.index(b->evaluate(scope));
 		throw std::runtime_error("Cannot enter Dictionary with given value");
 	case OBJECT:
 	{

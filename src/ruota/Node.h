@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include "Ruota.h"
+#include <iostream>
 
 enum NODE_TYPE
 {
@@ -33,7 +34,8 @@ enum NODE_TYPE
 	CONTAINER_NODE,
 	BREAK_NODE,
 	REFER_NODE,
-	SWITCH_NODE
+	SWITCH_NODE,
+	BID_NODE
 };
 
 class NodeParser;
@@ -54,6 +56,7 @@ class ReturnNode;
 //class ExprNode;
 //class EquNode;
 class IDNode;
+class BIDNode;
 class NumNode;
 class BoolNode;
 class VarNode;
@@ -390,6 +393,45 @@ public:
 	std::unique_ptr<Node> fold() const override
 	{
 		return std::make_unique<IDNode>(key);
+	}
+};
+
+class BIDNode : public Node
+{
+private:
+	std::string key;
+
+public:
+	BIDNode(const std::string &key) : Node(BID_NODE), key(key) {}
+	const std::string getKey() const
+	{
+		return key;
+	}
+	Instruction *genParser() const override;
+	bool isConst() const override
+	{
+		return false;
+	}
+	void printTree(std::string indent, bool last) const override
+	{
+		std::cout << indent;
+		if (last)
+		{
+			std::cout << "└─";
+			indent += "  ";
+		}
+		else
+		{
+			std::cout << "├─";
+			indent += "│ ";
+		}
+		std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "BID"
+				  << " : " << key << "\n"
+				  << colorASCII(RESET_TEXT);
+	}
+	std::unique_ptr<Node> fold() const override
+	{
+		return std::make_unique<BIDNode>(key);
 	}
 };
 
@@ -735,7 +777,7 @@ public:
 	Instruction *genParser() const override;
 	bool isConst() const override
 	{
-		return false;
+		return arg->isConst();
 	}
 	void printTree(std::string indent, bool last) const override
 	{
@@ -757,6 +799,15 @@ public:
 	}
 	std::unique_ptr<Node> fold() const override
 	{
+		if (isConst())
+		{
+			auto i = genParser();
+			Scope scope;
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope)));
+			delete i;
+			return nn;
+		}
+
 		return std::make_unique<CallBuiltNode>(t, arg->fold());
 	}
 };
@@ -1459,7 +1510,7 @@ public:
 class NodeParser
 {
 private:
-	boost::filesystem::path currentDir;
+	boost::filesystem::path currentFile;
 	std::map<std::string, signed int> bOperators;
 	std::map<std::string, signed int> uOperators;
 	unsigned int index = 0;
@@ -1469,6 +1520,7 @@ private:
 	std::unique_ptr<Node> parseNumNode();
 	std::unique_ptr<Node> parseBoolNode();
 	std::unique_ptr<Node> parseIDNode();
+	std::unique_ptr<Node> parseBIDNode();
 	std::unique_ptr<Node> parseEntryNode();
 	std::unique_ptr<Node> parseExprNode();
 	std::unique_ptr<Node> parseEquNode();
@@ -1503,7 +1555,7 @@ private:
 	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> logErrorSN(const std::string &, Token);
 
 public:
-	NodeParser(std::vector<Token> tokens, std::map<std::string, signed int> bOperators, std::map<std::string, signed int> uOperators, boost::filesystem::path currentDir) : tokens(tokens), bOperators(bOperators), uOperators(uOperators), currentDir(currentDir) {}
+	NodeParser(std::vector<Token> tokens, std::map<std::string, signed int> bOperators, std::map<std::string, signed int> uOperators, boost::filesystem::path currentFile) : tokens(tokens), bOperators(bOperators), uOperators(uOperators), currentFile(currentFile) {}
 	std::unique_ptr<Node> parse();
 	static Instruction *genParser(std::unique_ptr<Node>);
 };

@@ -10,6 +10,19 @@ hashcode_t Ruota::HASH_INIT = hash.hashString("init");
 hashcode_t Ruota::HASH_THIS = hash.hashString("this");
 hashcode_t Ruota::HASH_KEY = hash.hashString("key");
 hashcode_t Ruota::HASH_VALUE = hash.hashString("value");
+hashcode_t Ruota::HASH_DELETER = hash.hashString("~");
+
+hashcode_t Ruota::HASH_ADD = hash.hashString("+");
+hashcode_t Ruota::HASH_SUB = hash.hashString("-");
+hashcode_t Ruota::HASH_MUL = hash.hashString("*");
+hashcode_t Ruota::HASH_DIV = hash.hashString("/");
+hashcode_t Ruota::HASH_MOD = hash.hashString("%");
+hashcode_t Ruota::HASH_POW = hash.hashString("**");
+hashcode_t Ruota::HASH_LESS = hash.hashString("<");
+hashcode_t Ruota::HASH_MORE = hash.hashString(">");
+hashcode_t Ruota::HASH_ELESS = hash.hashString("<=");
+hashcode_t Ruota::HASH_EMORE = hash.hashString(">=");
+hashcode_t Ruota::HASH_INDEX = hash.hashString("[]");
 
 Ruota::Ruota() {}
 
@@ -52,21 +65,17 @@ const std::map<std::string, signed int> Ruota::uOperators = {
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-Symbol Ruota::parseCode(const std::string &code)
+Symbol Ruota::parseCode(const std::string &code, boost::filesystem::path currentFile)
 {
-	auto tokens = lexer.lexString(code);
-	NodeParser testnp(tokens, bOperators, uOperators, boost::filesystem::current_path());
+	auto tokens = lexer.lexString(code, currentFile.filename().string());
+	NodeParser testnp(tokens, bOperators, uOperators, currentFile);
 	auto n = testnp.parse();
-	if (n)
-	{
-		//n->printTree("", true);
-		auto folded = n->fold();
-		//folded->printTree("", true);
+	//n->printTree("", true);
+	auto folded = n->fold();
+	//folded->printTree("", true);
 
-		auto g = NodeParser::genParser(std::move(folded));
-		auto res = g->evaluate(main);
-		delete g;
-		return res;
-	}
-	return Symbol();
+	auto g = NodeParser::genParser(std::move(folded));
+	auto res = g->evaluate(main);
+	delete g;
+	return res;
 }

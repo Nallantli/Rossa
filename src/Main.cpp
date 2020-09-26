@@ -20,33 +20,46 @@ int main()
 #endif
 	Ruota wrapper;
 
+	std::cout << "Ruota " << _RUOTA_VERSION_ << " Interpreter\n";
+	try
+	{
+		wrapper.parseCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil");
+		std::cout << "Standard Library Loaded\n";
+	}
+	catch (const std::runtime_error &e)
+	{
+		std::cout << "Failed to load Standard Library: " << std::string(e.what()) << "\n";
+	}
+
 	while (true)
 	{
-		std::cout << ">>> ";
+		std::cout << "> ";
 		std::string line;
 		std::getline(std::cin, line);
 		try
 		{
-			auto value = wrapper.parseCode(line);
-			if (value.vectorSize() != 1)
+			auto value = wrapper.parseCode(line, boost::filesystem::current_path() / "nil");
+			if (value.getValueType() == VECTOR)
 			{
-				int i = 0;
-				for (auto &e : value.getVector())
+				if (value.vectorSize() != 1)
 				{
-					printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
-					std::cout << e.toString() << "\n";
-					i++;
+					int i = 0;
+					for (auto &e : value.getVector())
+					{
+						printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
+						std::cout << e.toString() << "\n";
+						i++;
+					}
 				}
-			}
-			else
-			{
-				std::cout << "\t" << value.indexVector(0).toString() << "\n";
+				else
+				{
+					std::cout << "\t" << value.getVector()[0].toString() << "\n";
+				}
 			}
 		}
 		catch (const std::runtime_error &e)
 		{
-			printc(e.what(), BRIGHT_RED_TEXT);
-			std::cout << "\n";
+			std::cout << e.what() << "\n";
 		}
 	}
 

@@ -8,18 +8,14 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <iostream>
 #include <string>
 #include <algorithm>
 #include <vector>
-#include <deque>
 #include <stdexcept>
 #include <fstream>
 #include <memory>
-#include <sstream>
 #include <typeinfo>
 #include <cmath>
-#include <limits>
 #include <boost/config.hpp>
 #include <boost/dll.hpp>
 #include <boost/function.hpp>
@@ -29,6 +25,8 @@
 typedef long double long_double_t;
 typedef signed long long long_int_t;
 typedef unsigned long long hashcode_t;
+
+#define _RUOTA_VERSION_ "v1.0.0-beta"
 
 struct Hash
 {
@@ -88,6 +86,7 @@ extern Hash hash;
 #define RUOTA_EXT_SYM(name, args) extern "C" BOOST_SYMBOL_EXPORT Symbol name(std::vector<Symbol> args)
 #define RUOTA_LIB_HEADER Hash hash = Hash();
 
+class Ruota;
 class Token;
 class Lexer;
 class Symbol;
@@ -298,6 +297,8 @@ public:
 	std::shared_ptr<Instruction> getBody() const;
 	const std::string &getName() const;
 	bool hasValue(hashcode_t) const;
+
+	~Object();
 };
 
 class Instruction
@@ -687,31 +688,35 @@ struct SmartNumber
 class Token
 {
 private:
+	std::string filename;
 	std::string valueString;
 	std::string line;
 	NUMBER_TYPE valueNumber;
 	int type;
-	unsigned long distance;
+	size_t distance;
+	size_t lineNumber;
 
 public:
-	Token() : line(""), distance(0), valueString(""), valueNumber((long_int_t)0), type(0) {}
-	Token(const std::string &line, unsigned long distance, const std::string &, NUMBER_TYPE, int);
+	Token() : filename("nil"), line(""), distance(0), valueString(""), valueNumber(NUMBER_NEW_LONG(0)), type(0), lineNumber(0) {}
+	Token(const std::string &, const std::string &, size_t, size_t, const std::string &, NUMBER_TYPE, int);
 	const std::string getLine() const { return this->line; };
 	const int getType() const { return this->type; }
-	const unsigned long getDist() const { return this->distance; }
+	const size_t getDist() const { return this->distance; }
+	const size_t getLineNumber() const { return this->lineNumber; }
 	const NUMBER_TYPE getValueNumber() const { return this->valueNumber; }
 	const std::string getValueString() const { return this->valueString; }
+	const std::string getFilename() const { return this->filename; }
 };
 
 class Lexer
 {
 private:
 	std::string ID_STRING;
-	unsigned long LINE_INDEX;
+	size_t LINE_INDEX;
 	NUMBER_TYPE NUM_VALUE;
 	std::string INPUT;
-	unsigned long INPUT_INDEX;
-	unsigned long TOKEN_DIST;
+	size_t INPUT_INDEX;
+	size_t TOKEN_DIST;
 	const int getToken();
 	const char peekChar() const;
 	const char nextChar();
@@ -720,7 +725,39 @@ private:
 
 public:
 	Lexer(std::map<std::string, signed int> bOperators, std::map<std::string, signed int> uOperators) : bOperators(bOperators), uOperators(uOperators) {}
-	std::vector<Token> lexString(const std::string &);
+	std::vector<Token> lexString(const std::string &, const std::string &);
+};
+
+class Ruota
+{
+private:
+	static const std::map<std::string, signed int> bOperators;
+	static const std::map<std::string, signed int> uOperators;
+	Scope main;
+
+public:
+	static Lexer lexer;
+
+	static hashcode_t HASH_THIS;
+	static hashcode_t HASH_INIT;
+	static hashcode_t HASH_KEY;
+	static hashcode_t HASH_VALUE;
+	static hashcode_t HASH_DELETER;
+
+	static hashcode_t HASH_ADD;
+	static hashcode_t HASH_SUB;
+	static hashcode_t HASH_MUL;
+	static hashcode_t HASH_DIV;
+	static hashcode_t HASH_MOD;
+	static hashcode_t HASH_POW;
+	static hashcode_t HASH_LESS;
+	static hashcode_t HASH_MORE;
+	static hashcode_t HASH_ELESS;
+	static hashcode_t HASH_EMORE;
+	static hashcode_t HASH_INDEX;
+
+	Ruota();
+	Symbol parseCode(const std::string &code, boost::filesystem::path);
 };
 
 class Value
@@ -943,20 +980,31 @@ public:
 		return d->valueFunction;
 	}
 
-	inline Symbol indexVector(size_t index) const
+	inline Symbol index(const Symbol &a) const
 	{
-		if (d->type != VECTOR)
-			throw std::runtime_error("Value is not of type `Vector`");
-
-		return d->valueVector[index];
+		switch (d->type)
+		{
+		case VECTOR:
+			return d->valueVector[NUMBER_GET_LONG(a.getNumber())];
+		case DICTIONARY:
+			return d->valueDictionary[hash.hashString(a.getString())];
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_INDEX))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_INDEX).call(NIL, {a}, this);
+			}
+			throw std::runtime_error("Operator `[]` is undefined for Object type");
+		}
+		default:
+			throw std::runtime_error("Operator `[]` is undefined for value type");
+		}
 	}
 
-	inline Symbol indexDictionary(hashcode_t key) const
+	inline Symbol indexDict(hashcode_t i) const
 	{
-		if (d->type != DICTIONARY)
-			throw std::runtime_error("Value is not of type `Dictionary`");
-
-		return d->valueDictionary[key];
+		return d->valueDictionary[i];
 	}
 
 	inline bool hasDictionaryKey(hashcode_t key) const
@@ -1162,15 +1210,10 @@ public:
 
 	inline Symbol operator+(const Symbol &b) const
 	{
-		if (d->type != b.getValueType())
-			throw std::runtime_error("Cannot add values of different type");
 		switch (d->type)
 		{
 		case NUMBER:
-		{
-			auto valB = b.getNumber();
-			return Symbol(d->valueNumber + valB);
-		}
+			return Symbol(d->valueNumber + b.getNumber());
 		case VECTOR:
 		{
 			auto valA = d->valueVector;
@@ -1179,9 +1222,14 @@ public:
 			return Symbol(valA);
 		}
 		case STRING:
+			return Symbol(d->valueString + b.getString());
+		case OBJECT:
 		{
-			auto valB = b.getString();
-			return Symbol(d->valueString + valB);
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_ADD))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_ADD).call(NIL, {b}, this);
+			}
 		}
 		default:
 			throw std::runtime_error("Operator `+` is undefined for value type");
@@ -1248,32 +1296,97 @@ public:
 
 	inline Symbol operator-(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber - valB);
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber - b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_SUB))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_SUB).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `-` is undefined for value type");
+		}
 	}
 
 	inline Symbol operator*(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber * valB);
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber * b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_MUL))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_MUL).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `*` is undefined for value type");
+		}
 	}
 
 	inline Symbol operator/(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(d->valueNumber / valB);
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber / b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_DIV))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_DIV).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `/` is undefined for value type");
+		}
 	}
 
 	inline Symbol operator%(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(NUMBER_MOD(d->valueNumber, valB));
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber + b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_MOD))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_MOD).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `%` is undefined for value type");
+		}
 	}
 
 	inline Symbol operator^(const Symbol &b) const
 	{
-		auto valB = b.getNumber();
-		return Symbol(NUMBER_POW(d->valueNumber, valB));
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(NUMBER_POW(d->valueNumber, b.getNumber()));
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_POW))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_POW).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `**` is undefined for value type");
+		}
 	}
 
 	inline bool operator<(const Symbol &b) const
@@ -1288,6 +1401,15 @@ public:
 			return d->valueType < b.getTypeName();
 		case BOOLEAN_D:
 			return d->valueBool < b.getBool();
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_LESS))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_LESS).call(NIL, {b}, this).getBool();
+			}
+			throw std::runtime_error("Operator `<` not defined for Object type");
+		}
 		default:
 			return toString() < b.toString();
 		}
@@ -1305,6 +1427,15 @@ public:
 			return d->valueType > b.getTypeName();
 		case BOOLEAN_D:
 			return d->valueBool > b.getBool();
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_MORE))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_MORE).call(NIL, {b}, this).getBool();
+			}
+			throw std::runtime_error("Operator `>` not defined for Object type");
+		}
 		default:
 			return toString() > b.toString();
 		}
@@ -1322,6 +1453,15 @@ public:
 			return d->valueType <= b.getTypeName();
 		case BOOLEAN_D:
 			return d->valueBool <= b.getBool();
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_ELESS))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_ELESS).call(NIL, {b}, this).getBool();
+			}
+			throw std::runtime_error("Operator `<=` not defined for Object type");
+		}
 		default:
 			return toString() <= b.toString();
 		}
@@ -1339,6 +1479,15 @@ public:
 			return d->valueType >= b.getTypeName();
 		case BOOLEAN_D:
 			return d->valueBool >= b.getBool();
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_EMORE))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_EMORE).call(NIL, {b}, this).getBool();
+			}
+			throw std::runtime_error("Operator `>=` not defined for Object type");
+		}
 		default:
 			return toString() >= b.toString();
 		}
@@ -1361,18 +1510,21 @@ public:
 		case OBJECT:
 			return d->valueObject == b.getObject();
 		case VECTOR:
+		{
 			if (d->valueVector.size() != b.vectorSize())
 				return false;
+			auto bv = b.getVector();
 			for (unsigned long i = 0; i < d->valueVector.size(); i++)
 			{
-				if (!(d->valueVector[i] == b.indexVector(i)))
+				if (!(d->valueVector[i] == bv[i]))
 					return false;
 			}
 			return true;
+		}
 		case DICTIONARY:
 			for (auto &e : d->valueDictionary)
 			{
-				if (!(e.second == b.indexDictionary(e.first)))
+				if (!(e.second == b.indexDict(e.first)))
 					return false;
 			}
 			return true;

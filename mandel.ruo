@@ -2,6 +2,8 @@ load "std.ruo";
 
 static mandel class {
 	var ASCII = [
+		" ",
+		" ",
 		".",
 		".",
 		"-",
@@ -30,8 +32,7 @@ static mandel class {
 		var zImag = imag;
 		var r2;
 		var i2;
-
-		for i in [0 until 16] do {
+		for i in [0 until ASCII.size()] do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
 
@@ -42,7 +43,7 @@ static mandel class {
 			zImag = 2.0 * zReal * zImag + imag;
 			zReal = r2 - i2 + real;
 		}
-		return 16;
+		return ASCII.size() - 1;
 	}
 
 	draw(ref start_x, ref start_y, ref end_x, ref end_y, ref width, ref height) => {
