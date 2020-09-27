@@ -40,6 +40,7 @@ private:
 	std::unique_ptr<Node> parseNewNode();
 	std::unique_ptr<Node> parseLoadNode();
 	std::unique_ptr<Node> parseSwitchNode();
+	std::unique_ptr<Node> parseTryCatchNode();
 	std::unique_ptr<Node> parseTrailingNode(std::unique_ptr<Node>, bool);
 	std::unique_ptr<Node> parseInsNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseUntilNode(std::unique_ptr<Node>);

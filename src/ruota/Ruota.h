@@ -163,7 +163,10 @@ enum LEX_TOKEN_TYPE
 	TOK_NIL_NAME = -45,
 	TOK_POINTER = -46,
 	TOK_VIRTUAL = -47,
-	TOK_SWITCH = -48
+	TOK_SWITCH = -48,
+	TOK_TRY = -49,
+	TOK_CATCH = -50,
+	TOK_THROW = -51
 };
 
 enum DID_TYPE
@@ -213,6 +216,8 @@ enum I_TYPE
 	REFER_I,
 	MAP_I,
 	SWITCH_I,
+	TRY_CATCH_I,
+	THROW_I,
 	FOR,
 	SET,
 	ADD,
@@ -226,6 +231,8 @@ enum I_TYPE
 	EMORE,
 	EQUALS,
 	NEQUALS,
+	PURE_EQUALS,
+	PURE_NEQUALS,
 	AND,
 	OR
 };
@@ -338,6 +345,16 @@ public:
 	static hashcode_t HASH_ELESS;
 	static hashcode_t HASH_EMORE;
 	static hashcode_t HASH_INDEX;
+	static hashcode_t HASH_EQUALS;
+	static hashcode_t HASH_NEQUALS;
+	static hashcode_t HASH_SET;
+	static hashcode_t HASH_CALL;
+
+	static hashcode_t HASH_TO_STRING;
+	static hashcode_t HASH_TO_NUMBER;
+	static hashcode_t HASH_TO_BOOLEAN;
+	static hashcode_t HASH_TO_VECTOR;
+	static hashcode_t HASH_TO_DICTIONARY;
 
 	Ruota();
 	Symbol parseCode(const std::string &, boost::filesystem::path, bool);
@@ -1002,7 +1019,14 @@ public:
 		case FUNCTION:
 			return "<Function>";
 		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_TO_STRING))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_TO_STRING).call(NIL, {}, this).getString();
+			}
 			return "<Object>";
+		}
 		case POINTER:
 			return "<Pointer>";
 		case BOOLEAN_D:
@@ -1144,6 +1168,15 @@ public:
 
 	inline const Symbol call(D_TYPE ftype, std::vector<Symbol> params) const
 	{
+		if (d->type == OBJECT)
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_CALL))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, this);
+			}
+		}
+
 		auto f = getFunction(ftype, params.size());
 
 		return f->evaluate(params);
@@ -1151,6 +1184,15 @@ public:
 
 	inline const Symbol call(D_TYPE ftype, std::vector<Symbol> params, Symbol b) const
 	{
+		if (d->type == OBJECT)
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_CALL))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, this);
+			}
+		}
+
 		auto f = getFunction(ftype, params.size());
 
 		return f->evaluate(params, &b);
@@ -1198,6 +1240,11 @@ public:
 	{
 		if (!isMutable)
 			throw std::runtime_error("Cannot change the value of a variable declared as `final`");
+		if (d->type == OBJECT && d->valueObject != nullptr && d->valueObject->hasValue(Ruota::HASH_SET))
+		{
+			d->valueObject->getScope()->getVariable(Ruota::HASH_SET).call(NIL, {b}, this);
+			return;
+		}
 		d->type = b.getValueType();
 		clearData();
 		switch (d->type)
@@ -1453,7 +1500,7 @@ public:
 
 	inline bool operator==(const Symbol &b) const
 	{
-		if (d->type != b.getValueType())
+		if (d->type != b.getValueType() && d->type != OBJECT)
 			return false;
 		switch (d->type)
 		{
@@ -1466,7 +1513,14 @@ public:
 		case STRING:
 			return d->valueString == b.getString();
 		case OBJECT:
-			return d->valueObject == b.getObject();
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_EQUALS))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_EQUALS).call(NIL, {b}, this).getBool();
+			}
+			return o == b.getObject();
+		}
 		case VECTOR:
 		{
 			if (d->valueVector.size() != b.vectorSize())
@@ -1495,7 +1549,37 @@ public:
 
 	inline bool operator!=(const Symbol &b) const
 	{
-		return !(*this == b);
+		switch (d->type)
+		{
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_NEQUALS))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_NEQUALS).call(NIL, {b}, this).getBool();
+			}
+		}
+		default:
+			return !(*this == b);
+		}
+	}
+
+	inline bool pureEquals(const Symbol &b) const
+	{
+		if (d->type != b.getValueType())
+			return false;
+		switch (d->type)
+		{
+		case OBJECT:
+			return d->valueObject == b.getObject();
+		default:
+			return *this == b;
+		}
+	}
+
+	inline bool pureNEquals(const Symbol &b) const
+	{
+		return !this->pureEquals(b);
 	}
 };
 

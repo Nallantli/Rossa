@@ -189,6 +189,12 @@ int Lexer::getToken()
 			return TOK_VIRTUAL;
 		else if (ID_STRING == "switch")
 			return TOK_SWITCH;
+		else if (ID_STRING == "try")
+			return TOK_TRY;
+		else if (ID_STRING == "catch")
+			return TOK_CATCH;
+		else if (ID_STRING == "throw")
+			return TOK_THROW;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 

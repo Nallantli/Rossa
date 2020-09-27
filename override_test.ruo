@@ -1,0 +1,98 @@
+struct Test class {
+	init() => {}
+
+	`+`(ref a) => {
+		printl("ADD: " + (a -> String));
+	}
+
+	`-`(ref a) => {
+		printl("SUB: " + (a -> String));
+	}
+
+	`*`(ref a) => {
+		printl("MUL: " + (a -> String));
+	}
+
+	`/`(ref a) => {
+		printl("DIV: " + (a -> String));
+	}
+
+	`%`(ref a) => {
+		printl("MOD: " + (a -> String));
+	}
+
+	`**`(ref a) => {
+		printl("POW: " + (a -> String));
+	}
+
+	`<`(ref a) => {
+		printl("LESS: " + (a -> String));
+		return false;
+	}
+
+	`>`(ref a) => {
+		printl("MORE: " + (a -> String));
+		return false;
+	}
+
+	`<=`(ref a) => {
+		printl("ELESS: " + (a -> String));
+		return false;
+	}
+
+	`>=`(ref a) => {
+		printl("EMORE: " + (a -> String));
+		return false;
+	}
+
+	`==`(ref a) => {
+		printl("EQUALS: " + (a -> String));
+		return false;
+	}
+
+	`!=`(ref a) => {
+		printl("NEQUALS: " + (a -> String));
+		return false;
+	}
+
+	`[]`(ref a) => {
+		printl("INDEX: " + (a -> String));
+	}
+
+	`()`(ref a, ref b) => {
+		printl("CALL: " + (a -> String) + ", " + (b -> String));
+	}
+
+	`=`(ref a) => {
+		printl("SET: " + (a -> String));
+	}
+
+	`->String`() => {
+		printl("TO_STRING");
+		return "test";
+	}
+
+	`->Number`() => {
+		printl("TO_NUMBER");
+		return 0;
+	}
+
+	`->Boolean`() => {
+		printl("TO_BOOLEAN");
+		return false;
+	}
+
+	`->Vector`() => {
+		printl("TO_VECTOR");
+		return [];
+	}
+
+	`->Dictionary`() => {
+		printl("TO_DICTIONARY");
+		return {};
+	}
+
+	~() => {
+		printl("DELETER CALLED");
+	}
+}

@@ -26,6 +26,16 @@ hashcode_t Ruota::HASH_MORE = hash.hashString(">");
 hashcode_t Ruota::HASH_ELESS = hash.hashString("<=");
 hashcode_t Ruota::HASH_EMORE = hash.hashString(">=");
 hashcode_t Ruota::HASH_INDEX = hash.hashString("[]");
+hashcode_t Ruota::HASH_EQUALS = hash.hashString("==");
+hashcode_t Ruota::HASH_NEQUALS = hash.hashString("!=");
+hashcode_t Ruota::HASH_SET = hash.hashString("=");
+hashcode_t Ruota::HASH_CALL = hash.hashString("()");
+
+hashcode_t Ruota::HASH_TO_STRING = hash.hashString("->String");
+hashcode_t Ruota::HASH_TO_NUMBER = hash.hashString("->Number");
+hashcode_t Ruota::HASH_TO_BOOLEAN = hash.hashString("->Boolean");
+hashcode_t Ruota::HASH_TO_VECTOR = hash.hashString("->Vector");
+hashcode_t Ruota::HASH_TO_DICTIONARY = hash.hashString("->Dictionary");
 
 Ruota::Ruota() {}
 
@@ -42,7 +52,9 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"<", 8},
 	{">=", 8},
 	{"<=", 8},
+	{"===", 7},
 	{"==", 7},
+	{"!==", 7},
 	{"!=", 7},
 	{"!", -1}, //undef
 	{"&", 6},  //undef

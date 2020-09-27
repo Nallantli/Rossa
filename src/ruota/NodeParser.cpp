@@ -80,8 +80,6 @@ std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, b
 			return ret;
 	case '(':
 		return parseCallNode(std::move(ret));
-	case '?':
-		return parseThenNode(std::move(ret));
 	case '[':
 		return parseIndexNode(std::move(ret));
 	default:
@@ -802,10 +800,14 @@ std::unique_ptr<Node> NodeParser::parseEquNode()
 		switch (currentToken.getType())
 		{
 		case TOK_OPR:
-			return parseBinOpNode(std::move(ret));
+			ret = parseBinOpNode(std::move(ret));
+			break;
 		default:
-			return ret;
+			break;
 		}
+		if (currentToken.getType() == '?')
+			return parseThenNode(std::move(ret));
+		return ret;
 	}
 	return logErrorN("No expression given", currentToken);
 }
@@ -872,6 +874,61 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 	default:
 		return ret;
 	}
+}
+
+std::unique_ptr<Node> NodeParser::parseTryCatchNode()
+{
+	nextToken();
+	if (currentToken.getType() != '{')
+		return logErrorN("Try-Catch Statement: Expected `{`", currentToken);
+	nextToken();
+	std::vector<std::unique_ptr<Node>> tbody;
+	while (currentToken.getType() != 0)
+	{
+		if (currentToken.getType() == '}')
+			break;
+
+		if (auto e = parseExprNode())
+			tbody.push_back(std::move(e));
+		else
+			return logErrorN("Failure to parse code", currentToken);
+	}
+	if (currentToken.getType() != '}')
+		return logErrorN("Try-Catch Statement: Expected `}`", currentToken);
+	nextToken();
+
+	if (currentToken.getType() != TOK_CATCH)
+		return logErrorN("Try-Catch Statement: Expected `catch`", currentToken);
+	nextToken();
+
+	if (currentToken.getType() != TOK_IDF)
+		return logErrorN("Try-Catch Statement: Expected identifier", currentToken);
+	hashcode_t key = hash.hashString(currentToken.getValueString());
+	nextToken();
+
+	if (currentToken.getType() != TOK_THEN)
+		return logErrorN("Try-Catch Statement: Expected `then`", currentToken);
+	nextToken();
+
+	if (currentToken.getType() != '{')
+		return logErrorN("Try-Catch Statement: Expected `{`", currentToken);
+	nextToken();
+	std::vector<std::unique_ptr<Node>> cbody;
+	while (currentToken.getType() != 0)
+	{
+		if (currentToken.getType() == '}')
+			break;
+
+		if (auto e = parseExprNode())
+			cbody.push_back(std::move(e));
+		else
+			return logErrorN("Failure to parse code", currentToken);
+	}
+	if (currentToken.getType() != '}')
+		return logErrorN("Try-Catch Statement: Expected `}`", currentToken);
+	nextToken();
+
+	return std::make_unique<TryCatchNode>(std::make_unique<VectorNode>(std::move(tbody), true), std::make_unique<VectorNode>(std::move(cbody), true), key);
 }
 
 std::unique_ptr<Node> NodeParser::parseWhileNode()
@@ -1057,10 +1114,22 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 		return parseExternNode();
 	case TOK_SWITCH:
 		return parseSwitchNode();
+	case TOK_TRY:
+		return parseTryCatchNode();
 	case TOK_STRUCT:
 	case TOK_STATIC:
 	case TOK_VIRTUAL:
 		return parseClassNode();
+	case TOK_THROW:
+		nextToken();
+		if (auto ret = parseEquNode())
+		{
+			if (currentToken.getType() != ';')
+				return logErrorN("Expected `;`", currentToken);
+			nextToken();
+			return std::make_unique<ThrowNode>(std::move(ret));
+		}
+		return nullptr;
 	case TOK_BREAK:
 		nextToken();
 		if (currentToken.getType() != ';')

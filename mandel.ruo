@@ -21,10 +21,6 @@ static mandel class {
 		" "
 	];
 
-	stringDensity(ref d) => {
-		return ASCII[d];
-	}
-
 	mandelConverger(ref real, ref imag) => {
 		var zReal = real;
 		var zImag = imag;
@@ -50,7 +46,7 @@ static mandel class {
 		var s = "";
 		for i in [0 until height] do {
 			for j in [0 until width] do {
-				s += stringDensity(mandelConverger(start_x + j * dx, end_y - i * dy));
+				s += ASCII[mandelConverger(start_x + j * dx, end_y - i * dy)];
 			}
 			s += "\n";
 		}
@@ -66,7 +62,7 @@ var scale = 1;
 var width = 120;
 var height = 40;
 
-console("cls");
+system("cls");
 
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
@@ -95,4 +91,4 @@ while true do {
 	}
 }
 
-console("cls");
+system("cls");

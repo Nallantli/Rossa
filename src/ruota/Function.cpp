@@ -42,13 +42,14 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, Symbol *thisSym
 		newScope.createVariable(Ruota::HASH_THIS, *thisSym);
 
 	auto temp = body->evaluate(newScope);
+
+	Ruota::stack_trace.pop_back();
+
 	if (!temp.canSet() || temp.getSymbolType() == ID_REFER)
 	{
 		temp.setSymbolType(ID_CASUAL);
 		return temp;
 	}
-
-	Ruota::stack_trace.pop_back();
 
 	auto ret = Symbol();
 	ret.set(temp);

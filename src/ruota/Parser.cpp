@@ -1046,6 +1046,15 @@ const Symbol CastToI::evaluate(Scope &scope) const
 			{
 				throw std::runtime_error("String `" + evalA.getString() + "` cannot be converted to Number");
 			}
+		case OBJECT:
+		{
+			auto o = evalA.getObject();
+			if (o->hasValue(Ruota::HASH_TO_NUMBER))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_TO_NUMBER).call(NIL, {}, this);
+			}
+			break;
+		}
 		default:
 			break;
 		}
@@ -1060,6 +1069,15 @@ const Symbol CastToI::evaluate(Scope &scope) const
 			return Symbol(NUMBER_GET_LONG(evalA.getNumber()) != 0);
 		case STRING:
 			return Symbol(evalA.getString() == "true");
+		case OBJECT:
+		{
+			auto o = evalA.getObject();
+			if (o->hasValue(Ruota::HASH_TO_BOOLEAN))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_TO_BOOLEAN).call(NIL, {}, this);
+			}
+			break;
+		}
 		default:
 			break;
 		}
@@ -1078,6 +1096,15 @@ const Symbol CastToI::evaluate(Scope &scope) const
 			}
 			return Symbol(nd);
 		}
+		case OBJECT:
+		{
+			auto o = evalA.getObject();
+			if (o->hasValue(Ruota::HASH_TO_DICTIONARY))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_TO_DICTIONARY).call(NIL, {}, this);
+			}
+			break;
+		}
 		default:
 			break;
 		}
@@ -1095,6 +1122,15 @@ const Symbol CastToI::evaluate(Scope &scope) const
 				nv.push_back(Symbol({{Ruota::HASH_KEY, Symbol(hash.deHash(e.first))}, {Ruota::HASH_VALUE, e.second}}));
 			}
 			return Symbol(nv);
+		}
+		case OBJECT:
+		{
+			auto o = evalA.getObject();
+			if (o->hasValue(Ruota::HASH_TO_VECTOR))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_TO_VECTOR).call(NIL, {}, this);
+			}
+			break;
 		}
 		case STRING:
 		{
@@ -1372,4 +1408,103 @@ SwitchI::~SwitchI()
 	for (auto &e : cases)
 		delete e.second;
 	cases.clear();
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class TryCatchI                                                                                        */
+/*-------------------------------------------------------------------------------------------------------*/
+
+TryCatchI::TryCatchI(Instruction *a, Instruction *b, hashcode_t key) : BinaryI(TRY_CATCH_I, a, b), key(key) {}
+
+const Symbol TryCatchI::evaluate(Scope &scope) const
+{
+	try
+	{
+		Scope newScope(scope);
+		return a->evaluate(newScope);
+	}
+	catch (const std::runtime_error &e)
+	{
+		Scope newScope(scope);
+		newScope.createVariable(key, Symbol(std::string(e.what())));
+		return b->evaluate(newScope);
+	}
+}
+
+const std::string TryCatchI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<TryCatchI>(new TryCatchI(";
+	else
+		ret = "new TryCatchI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ", " + std::to_string(key) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ThrowI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ThrowI::ThrowI(Instruction *a) : UnaryI(THROW_I, a) {}
+
+const Symbol ThrowI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	throw std::runtime_error(evalA.getString());
+}
+
+const std::string ThrowI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<TryCatchI>(new ThrowI(";
+	else
+		ret = "new ThrowI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class PureEquals                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+PureEquals::PureEquals(Instruction *a, Instruction *b) : BinaryI(PURE_EQUALS, a, b) {}
+
+const Symbol PureEquals::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return Symbol(evalA.pureEquals(evalB));
+}
+
+const std::string PureEquals::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<Equals>(new PureEquals(";
+	else
+		ret = "new PureEquals(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class PureNEquals                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+PureNEquals::PureNEquals(Instruction *a, Instruction *b) : BinaryI(PURE_NEQUALS, a, b) {}
+
+const Symbol PureNEquals::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return Symbol(evalA.pureNEquals(evalB));
+}
+
+const std::string PureNEquals::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<NEquals>(new PureNEquals(";
+	else
+		ret = "new PureNEquals(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }

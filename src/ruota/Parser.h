@@ -5,47 +5,6 @@
 
 #include <boost/function.hpp>
 
-class UnaryI;
-class CastingI;
-class BinaryI;
-class Container;
-class DefineI;
-class Sequence;
-class IfElseI;
-class WhileI;
-class ForI;
-class VariableI;
-class DeclareI;
-class IndexI;
-class InnerI;
-class AddI;
-class SubI;
-class MulI;
-class DivI;
-class ModI;
-class PowI;
-class LessI;
-class MoreI;
-class ELessI;
-class EMoreI;
-class Equals;
-class NEquals;
-class AndI;
-class OrI;
-class SetI;
-class ReturnI;
-class ExternI;
-class LengthI;
-class SizeI;
-class ClassI;
-class NewI;
-class CastToI;
-class AllocI;
-class UntilI;
-class ScopeI;
-class MapI;
-class ReferI;
-
 class UnaryI : public Instruction
 {
 protected:
@@ -446,6 +405,40 @@ public:
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~SwitchI();
+};
+
+class TryCatchI : public BinaryI
+{
+protected:
+	hashcode_t key;
+public:
+	TryCatchI(Instruction *, Instruction *, hashcode_t);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class ThrowI : public UnaryI
+{
+public:
+	ThrowI(Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class PureEquals : public BinaryI
+{
+public:
+	PureEquals(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class PureNEquals : public BinaryI
+{
+public:
+	PureNEquals(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
 };
 
 #endif

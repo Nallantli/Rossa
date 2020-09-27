@@ -1037,6 +1037,10 @@ Instruction *BinOpNode::genParser() const
 		return new Equals(a->genParser(), b->genParser());
 	if (op == "!=")
 		return new NEquals(a->genParser(), b->genParser());
+	if (op == "===")
+		return new PureEquals(a->genParser(), b->genParser());
+	if (op == "!==")
+		return new PureNEquals(a->genParser(), b->genParser());
 	if (op == "&&")
 		return new AndI(a->genParser(), b->genParser());
 	if (op == "||")
@@ -1706,4 +1710,89 @@ std::unique_ptr<Node> SwitchNode::fold() const
 	if (elses)
 		ret->setElse(elses->fold());
 	return ret;
+}
+
+//------------------------------------------------------------------------------------------------------
+
+TryCatchNode::TryCatchNode(
+	std::unique_ptr<Node> trys,
+	std::unique_ptr<Node> catchs,
+	hashcode_t key) : Node(TRY_CATCH_NODE),
+					  trys(std::move(trys)),
+					  catchs(std::move(catchs)),
+					  key(key) {}
+
+Instruction *TryCatchNode::genParser() const
+{
+	return new TryCatchI(trys->genParser(), catchs->genParser(), key);
+}
+
+bool TryCatchNode::isConst() const
+{
+	return false;
+}
+
+void TryCatchNode::printTree(std::string indent, bool last) const
+{
+	std::cout << indent;
+	if (last)
+	{
+		std::cout << "└─";
+		indent += "  ";
+	}
+	else
+	{
+		std::cout << "├─";
+		indent += "│ ";
+	}
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "TRY_CATCH : " << hash.deHash(key) << "\n"
+			  << colorASCII(RESET_TEXT);
+
+	trys->printTree(indent, false);
+	catchs->printTree(indent, true);
+}
+
+std::unique_ptr<Node> TryCatchNode::fold() const
+{
+	return std::make_unique<TryCatchNode>(trys->fold(), catchs->fold(), key);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+ThrowNode::ThrowNode(
+	std::unique_ptr<Node> throws) : Node(THROW_NODE),
+									throws(std::move(throws)) {}
+
+Instruction *ThrowNode::genParser() const
+{
+	return new ThrowI(throws->genParser());
+}
+
+bool ThrowNode::isConst() const
+{
+	return false;
+}
+
+void ThrowNode::printTree(std::string indent, bool last) const
+{
+	std::cout << indent;
+	if (last)
+	{
+		std::cout << "└─";
+		indent += "  ";
+	}
+	else
+	{
+		std::cout << "├─";
+		indent += "│ ";
+	}
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "THROW\n"
+			  << colorASCII(RESET_TEXT);
+
+	throws->printTree(indent, true);
+}
+
+std::unique_ptr<Node> ThrowNode::fold() const
+{
+	return std::make_unique<ThrowNode>(throws->fold());
 }

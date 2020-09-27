@@ -39,42 +39,10 @@ enum NODE_TYPE
 	BREAK_NODE,
 	REFER_NODE,
 	SWITCH_NODE,
-	BID_NODE
+	BID_NODE,
+	TRY_CATCH_NODE,
+	THROW_NODE
 };
-
-class NodeParser;
-
-class Node;
-class CallNode;
-class CallBuiltNode;
-class IndexNode;
-class UnOpNode;
-class BinOpNode;
-class InsNode;
-class IfElseNode;
-class WhileNode;
-class ForNode;
-class VectorNode;
-class DefineNode;
-class ReturnNode;
-//class ExprNode;
-//class EquNode;
-class IDNode;
-class BIDNode;
-class NumNode;
-class BoolNode;
-class VarNode;
-class StringNode;
-class ClassNode;
-class ExternCallNode;
-class NewNode;
-class CastToNode;
-class UntilNode;
-class MapNode;
-class ContainerNode;
-class BreakNode;
-class ReferNode;
-class SwitchNode;
 
 class Node
 {
@@ -494,6 +462,34 @@ public:
 	SwitchNode(std::unique_ptr<Node>, std::map<Symbol, std::unique_ptr<Node>>);
 	Instruction *genParser() const override;
 	void setElse(std::unique_ptr<Node>);
+	bool isConst() const override;
+	void printTree(std::string, bool) const override;
+	std::unique_ptr<Node> fold() const override;
+};
+
+class TryCatchNode : public Node
+{
+private:
+	std::unique_ptr<Node> trys;
+	std::unique_ptr<Node> catchs;
+	hashcode_t key;
+
+public:
+	TryCatchNode(std::unique_ptr<Node>, std::unique_ptr<Node>, hashcode_t);
+	Instruction *genParser() const override;
+	bool isConst() const override;
+	void printTree(std::string, bool) const override;
+	std::unique_ptr<Node> fold() const override;
+};
+
+class ThrowNode : public Node
+{
+private:
+	std::unique_ptr<Node> throws;
+
+public:
+	ThrowNode(std::unique_ptr<Node>);
+	Instruction *genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;
 	std::unique_ptr<Node> fold() const override;
