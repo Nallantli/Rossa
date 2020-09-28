@@ -267,6 +267,46 @@ public:
 	const std::string toString(bool) const override;
 };
 
+class BOrI : public BinaryI
+{
+public:
+	BOrI(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class BAndI : public BinaryI
+{
+public:
+	BAndI(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class BXOrI : public BinaryI
+{
+public:
+	BXOrI(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class BShiftLeft : public BinaryI
+{
+public:
+	BShiftLeft(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class BShiftRight : public BinaryI
+{
+public:
+	BShiftRight(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
 class SetI : public BinaryI
 {
 public:
@@ -437,6 +477,22 @@ class PureNEquals : public BinaryI
 {
 public:
 	PureNEquals(Instruction *, Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class CharNI : public UnaryI
+{
+public:
+	CharNI(Instruction *);
+	const Symbol evaluate(Scope &) const override;
+	const std::string toString(bool) const override;
+};
+
+class CharSI : public UnaryI
+{
+public:
+	CharSI(Instruction *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };

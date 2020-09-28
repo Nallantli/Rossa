@@ -24,7 +24,7 @@ typedef unsigned long long hashcode_t;
 #define NUMBER_STRING(n) n.toString()
 #define NUMBER_NEW_DOUBLE(v) SmartNumber(static_cast<long_double_t>(v))
 #define NUMBER_NEW_LONG(v) SmartNumber(static_cast<long_int_t>(v))
-#define NUMBER_POW(a, b) a ^ b
+#define NUMBER_POW(a, b) a.pow(b)
 #define NUMBER_MOD(a, b) a % b
 #define NUMBER_GET_LONG(v) v.getLong()
 #define NUMBER_GET_DOUBLE(v) v.getDouble()
@@ -166,7 +166,9 @@ enum LEX_TOKEN_TYPE
 	TOK_SWITCH = -48,
 	TOK_TRY = -49,
 	TOK_CATCH = -50,
-	TOK_THROW = -51
+	TOK_THROW = -51,
+	TOK_CHARN = -52,
+	TOK_CHARS = -53
 };
 
 enum DID_TYPE
@@ -218,6 +220,8 @@ enum I_TYPE
 	SWITCH_I,
 	TRY_CATCH_I,
 	THROW_I,
+	CHARS_I,
+	CHARN_I,
 	FOR,
 	SET,
 	ADD,
@@ -234,7 +238,12 @@ enum I_TYPE
 	PURE_EQUALS,
 	PURE_NEQUALS,
 	AND,
-	OR
+	OR,
+	B_AND,
+	B_OR,
+	B_XOR,
+	B_SH_L,
+	B_SH_R
 };
 
 enum OBJECT_TYPE
@@ -340,6 +349,11 @@ public:
 	static hashcode_t HASH_DIV;
 	static hashcode_t HASH_MOD;
 	static hashcode_t HASH_POW;
+	static hashcode_t HASH_B_AND;
+	static hashcode_t HASH_B_OR;
+	static hashcode_t HASH_B_XOR;
+	static hashcode_t HASH_B_SH_L;
+	static hashcode_t HASH_B_SH_R;
 	static hashcode_t HASH_LESS;
 	static hashcode_t HASH_MORE;
 	static hashcode_t HASH_ELESS;
@@ -525,7 +539,7 @@ struct SmartNumber
 		return SmartNumber();
 	}
 
-	inline const SmartNumber operator^(const SmartNumber &n) const
+	inline const SmartNumber pow(const SmartNumber &n) const
 	{
 		switch (type)
 		{
@@ -688,6 +702,156 @@ struct SmartNumber
 	inline bool operator>=(const SmartNumber &n) const
 	{
 		return !(*this < n);
+	}
+
+	inline const SmartNumber operator&(const SmartNumber &n) const
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) & static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) & n.valueLong);
+			default:
+				break;
+			}
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(valueLong & static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(valueLong & n.valueLong);
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+		return SmartNumber();
+	}
+
+	inline const SmartNumber operator|(const SmartNumber &n) const
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) | static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) | n.valueLong);
+			default:
+				break;
+			}
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(valueLong | static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(valueLong | n.valueLong);
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+		return SmartNumber();
+	}
+
+	inline const SmartNumber operator^(const SmartNumber &n) const
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) ^ static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) ^ n.valueLong);
+			default:
+				break;
+			}
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(valueLong ^ static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(valueLong ^ n.valueLong);
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+		return SmartNumber();
+	}
+
+	inline const SmartNumber operator<<(const SmartNumber &n) const
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) << static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) << n.valueLong);
+			default:
+				break;
+			}
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(valueLong << static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(valueLong << n.valueLong);
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+		return SmartNumber();
+	}
+
+	inline const SmartNumber operator>>(const SmartNumber &n) const
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) >> static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(static_cast<long_int_t>(valueDouble) >> n.valueLong);
+			default:
+				break;
+			}
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return SmartNumber(valueLong >> static_cast<long_int_t>(n.valueDouble));
+			case LONG_NUM:
+				return SmartNumber(valueLong >> n.valueLong);
+			default:
+				break;
+			}
+		default:
+			break;
+		}
+		return SmartNumber();
 	}
 
 	inline const std::string toString() const
@@ -1361,7 +1525,7 @@ public:
 		switch (d->type)
 		{
 		case NUMBER:
-			return Symbol(d->valueNumber + b.getNumber());
+			return Symbol(d->valueNumber % b.getNumber());
 		case OBJECT:
 		{
 			auto o = d->valueObject;
@@ -1375,7 +1539,7 @@ public:
 		}
 	}
 
-	inline const Symbol operator^(const Symbol &b) const
+	inline const Symbol pow(const Symbol &b) const
 	{
 		switch (d->type)
 		{
@@ -1391,6 +1555,101 @@ public:
 		}
 		default:
 			throw std::runtime_error("Operator `**` is undefined for value type");
+		}
+	}
+
+	inline const Symbol operator&(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber & b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_B_AND))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_B_AND).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `&` is undefined for value type");
+		}
+	}
+
+	inline const Symbol operator|(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber | b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_B_OR))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_B_OR).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `|` is undefined for value type");
+		}
+	}
+
+	inline const Symbol operator^(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber ^ b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_B_XOR))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_B_XOR).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `^` is undefined for value type");
+		}
+	}
+
+	inline const Symbol operator<<(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber << b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_B_SH_L))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_B_SH_L).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `<<` is undefined for value type");
+		}
+	}
+
+	inline const Symbol operator>>(const Symbol &b) const
+	{
+		switch (d->type)
+		{
+		case NUMBER:
+			return Symbol(d->valueNumber >> b.getNumber());
+		case OBJECT:
+		{
+			auto o = d->valueObject;
+			if (o->hasValue(Ruota::HASH_B_SH_L))
+			{
+				return o->getScope()->getVariable(Ruota::HASH_B_SH_R).call(NIL, {b}, this);
+			}
+		}
+		default:
+			throw std::runtime_error("Operator `>>` is undefined for value type");
 		}
 	}
 

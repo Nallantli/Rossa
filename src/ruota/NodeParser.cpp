@@ -90,9 +90,10 @@ std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, b
 std::unique_ptr<Node> NodeParser::parseCallBuiltNode()
 {
 	LEX_TOKEN_TYPE t = (LEX_TOKEN_TYPE)currentToken.getType();
+	std::string temp = currentToken.getValueString();
 	nextToken();
 	if (currentToken.getType() != '(')
-		return logErrorN("Expected `(`", currentToken);
+		return std::make_unique<IDNode>(hash.hashString(temp));
 	nextToken();
 	auto arg = parseEquNode();
 	if (currentToken.getType() != ')')
@@ -143,6 +144,10 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 				ret = std::make_unique<CallBuiltNode>(TOK_SIZE, std::move(a_a));
 			if (key == "alloc")
 				ret = std::make_unique<CallBuiltNode>(TOK_ALLOC, std::move(a_a));
+			if (key == "charn")
+				ret = std::make_unique<CallBuiltNode>(TOK_CHARN, std::move(a_a));
+			if (key == "chars")
+				ret = std::make_unique<CallBuiltNode>(TOK_CHARS, std::move(a_a));
 
 			ret = parseTrailingNode(std::move(ret), true);
 		}
@@ -243,7 +248,7 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 	nextToken();
 
 	D_TYPE ftype = NIL;
-	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC)
+	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
 	{
 		switch (currentToken.getType())
 		{
@@ -282,7 +287,7 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 			return logErrorN("Function Definition: Expected `::`", currentToken);
 		nextToken();
 	}
-	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC)
+	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
 		return logErrorN("Expected Function name", currentToken);
 	auto key = hash.hashString(currentToken.getValueString());
 	nextToken();
@@ -640,7 +645,7 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 
 	while (currentToken.getType() != '}')
 	{
-		auto c = parseBaseNode();
+		auto c = parseUnitNode();
 		if (!c)
 			return logErrorN("Expected value for switch case", currentToken);
 		if (!c->isConst())
@@ -741,6 +746,8 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 	case TOK_LENGTH:
 	case TOK_SIZE:
 	case TOK_ALLOC:
+	case TOK_CHARN:
+	case TOK_CHARS:
 		return parseCallBuiltNode();
 	case TOK_NEW:
 		return parseNewNode();

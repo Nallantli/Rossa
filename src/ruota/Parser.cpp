@@ -580,7 +580,7 @@ const Symbol PowI::evaluate(Scope &scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return evalA ^ evalB;
+	return evalA.pow(evalB);
 }
 
 const std::string PowI::toString(bool shared) const
@@ -782,6 +782,121 @@ const std::string OrI::toString(bool shared) const
 		ret = "std::shared_ptr<OrI>(new OrI(";
 	else
 		ret = "new OrI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class BOrI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BOrI::BOrI(Instruction *a, Instruction *b) : BinaryI(B_OR, a, b) {}
+
+const Symbol BOrI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return evalA | evalB;
+}
+
+const std::string BOrI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<BOrI>(new BOrI(";
+	else
+		ret = "new BOrI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class BXOrI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BXOrI::BXOrI(Instruction *a, Instruction *b) : BinaryI(B_XOR, a, b) {}
+
+const Symbol BXOrI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return evalA ^ evalB;
+}
+
+const std::string BXOrI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<BXOrI>(new BXOrI(";
+	else
+		ret = "new BXOrI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class BAndI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BAndI::BAndI(Instruction *a, Instruction *b) : BinaryI(B_AND, a, b) {}
+
+const Symbol BAndI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return evalA & evalB;
+}
+
+const std::string BAndI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<BAndI>(new BAndI(";
+	else
+		ret = "new BAndI(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class BShiftLeft                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BShiftLeft::BShiftLeft(Instruction *a, Instruction *b) : BinaryI(B_SH_L, a, b) {}
+
+const Symbol BShiftLeft::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return evalA << evalB;
+}
+
+const std::string BShiftLeft::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<BShiftLeft>(new BShiftLeft(";
+	else
+		ret = "new BShiftLeft(";
+	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class BShiftRight                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BShiftRight::BShiftRight(Instruction *a, Instruction *b) : BinaryI(B_SH_R, a, b) {}
+
+const Symbol BShiftRight::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	return evalA >> evalB;
+}
+
+const std::string BShiftRight::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<BShiftRight>(new BShiftRight(";
+	else
+		ret = "new BShiftRight(";
 	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
 }
 
@@ -1507,4 +1622,65 @@ const std::string PureNEquals::toString(bool shared) const
 	else
 		ret = "new PureNEquals(";
 	return ret + a->toString(false) + ", " + b->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class CharNI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+CharNI::CharNI(Instruction *a) : UnaryI(CHARN_I, a) {}
+
+const Symbol CharNI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope).getString();
+	std::vector<Symbol> nv;
+	for (const unsigned char &c : evalA)
+		nv.push_back(Symbol(NUMBER_NEW_LONG(c)));
+	return Symbol(nv);
+}
+
+const std::string CharNI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<CharNI>(new CharNI(";
+	else
+		ret = "new CharNI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class CharSI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+CharSI::CharSI(Instruction *a) : UnaryI(CHARS_I, a) {}
+
+const Symbol CharSI::evaluate(Scope &scope) const
+{
+	auto evalA = a->evaluate(scope);
+	switch (evalA.getValueType())
+	{
+	case NUMBER:
+		return Symbol(std::string(1, static_cast<char>(NUMBER_GET_LONG(evalA.getNumber()))));
+	case VECTOR:
+	{
+		std::string ret = "";
+		auto v = evalA.getVector();
+		for (auto &e : v)
+			ret.push_back(static_cast<char>(NUMBER_GET_LONG(e.getNumber())));
+		return Symbol(ret);
+	}
+	default:
+		throw std::runtime_error("Cannot convert value(s) into String");
+	}
+}
+
+const std::string CharSI::toString(bool shared) const
+{
+	std::string ret;
+	if (shared)
+		ret = "std::shared_ptr<CharSI>(new CharSI(";
+	else
+		ret = "new CharSI(";
+	return ret + a->toString(false) + ")" + (shared ? ")" : "");
 }

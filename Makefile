@@ -13,21 +13,21 @@ win: bin/ruota.exe plugins-win
 
 nix: bin/ruota plugins-nix
 
-plugins-win: bin/lib/libstd.dll bin/lib/libfile.dll
+plugins-win: bin/lib/libstd.dll bin/lib/libfs.dll
 
-plugins-nix: bin/lib/libstd.so bin/lib/libfile.so
+plugins-nix: bin/lib/libstd.so bin/lib/libfs.so
 
 bin/lib/libstd.dll: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.dll src/ext/libstd.cpp $(LFLAGS_WIN)
 
-bin/lib/libfile.dll: src/ext/libfile.cpp
-	$(CC) -o bin/lib/libfile.dll src/ext/libfile.cpp $(LFLAGS_WIN)
+bin/lib/libfs.dll: src/ext/libfs.cpp
+	$(CC) -o bin/lib/libfs.dll src/ext/libfs.cpp $(LFLAGS_WIN)
 
 bin/lib/libstd.so: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.so src/ext/libstd.cpp $(LFLAGS)
 
-bin/lib/libfile.so: src/ext/libfile.cpp
-	$(CC) -o bin/lib/libfile.so src/ext/libfile.cpp $(LFLAGS)
+bin/lib/libfs.so: src/ext/libfs.cpp
+	$(CC) -o bin/lib/libfs.so src/ext/libfs.cpp $(LFLAGS)
 
 bin/ruota.exe: build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/NodeParser.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o
 	$(CC) -o bin/ruota.exe build/win/Main.o build/win/Ruota.o build/win/Node.o build/win/NodeParser.o build/win/Lexer.o build/win/Parser.o build/win/Scope.o build/win/Function.o build/win/Object.o $(CFLAGS_WIN)

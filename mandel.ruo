@@ -51,8 +51,8 @@ static mandel class {
 			s += "\n";
 		}
 		cons.setCursor(0, 0);
-		print(s);
-		printl("`Z` to Exit");
+		puts(s);
+		putln("`Z` to Exit");
 	}
 }
 
@@ -67,25 +67,25 @@ system("cls");
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
 	switch input.char() in {
-		"w" do {
+		charn("w") do {
 			y += 2 / height * scale;
 		}
-		"s" do {
+		charn("s") do {
 			y -= 2 / height * scale;
 		}
-		"a" do {
+		charn("a") do {
 			x -= 6 / width * scale;
 		}
-		"d" do {
+		charn("d") do {
 			x += 6 / width * scale;
 		}
-		"q" do {
+		charn("q") do {
 			scale *= 2;
 		}
-		"e" do {
+		charn("e") do {
 			scale /= 2;
 		}
-		"z" do {
+		charn("z") do {
 			break;
 		}
 	}

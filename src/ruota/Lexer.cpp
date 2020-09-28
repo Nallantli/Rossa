@@ -195,6 +195,10 @@ int Lexer::getToken()
 			return TOK_CATCH;
 		else if (ID_STRING == "throw")
 			return TOK_THROW;
+		else if (ID_STRING == "charn")
+			return TOK_CHARN;
+		else if (ID_STRING == "chars")
+			return TOK_CHARS;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -383,7 +387,7 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT, const std::string 
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == '~' || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC))
+			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == '~' || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_CHARN || tokens.back().getType() == TOK_CHARS || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC))
 			{
 				temp.push_back(tokens.back());
 				tokens.pop_back();

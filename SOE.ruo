@@ -4,7 +4,7 @@ SOE(final MAX) => {
 	for e in a do {
 		e = true;
 	}
-	printl("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
+	putln("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
     var c = MAX - 2;
@@ -20,7 +20,7 @@ SOE(final MAX) => {
 			}
 		}
 	}
-	printl("Algo Time: " + ((clock.milliseconds() - start) -> String) + "ms");
+	putln("Algo Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
 	var b = alloc(c);
@@ -31,7 +31,7 @@ SOE(final MAX) => {
 			j += 1;
 		}
 	}
-	printl("Final Time: " + ((clock.milliseconds() - start) -> String) + "ms");
+	putln("Final Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	return b;
 }
@@ -41,8 +41,8 @@ test(final MAX) => {
 	var result = SOE(MAX);
 	var time = clock.milliseconds() - start;
 
-	printl((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
-	printl("Total Time: " + (time -> String) + "ms");
+	putln((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
+	putln("Total Time: " + (time -> String) + "ms");
 }
 
 test(10 ** 6);

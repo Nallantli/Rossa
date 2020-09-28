@@ -140,6 +140,6 @@ namespace libstd
 #else
 		char c = getch();
 #endif
-		return Symbol(std::string(1, c));
+		return Symbol(NUMBER_NEW_LONG(c));
 	}
 } // namespace libstd

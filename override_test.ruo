@@ -2,97 +2,117 @@ struct Test class {
 	init() => {}
 
 	`+`(ref a) => {
-		printl("ADD: " + (a -> String));
+		putln("ADD: " + (a -> String));
 	}
 
 	`-`(ref a) => {
-		printl("SUB: " + (a -> String));
+		putln("SUB: " + (a -> String));
 	}
 
 	`*`(ref a) => {
-		printl("MUL: " + (a -> String));
+		putln("MUL: " + (a -> String));
 	}
 
 	`/`(ref a) => {
-		printl("DIV: " + (a -> String));
+		putln("DIV: " + (a -> String));
 	}
 
 	`%`(ref a) => {
-		printl("MOD: " + (a -> String));
+		putln("MOD: " + (a -> String));
 	}
 
 	`**`(ref a) => {
-		printl("POW: " + (a -> String));
+		putln("POW: " + (a -> String));
 	}
 
 	`<`(ref a) => {
-		printl("LESS: " + (a -> String));
+		putln("LESS: " + (a -> String));
 		return false;
 	}
 
 	`>`(ref a) => {
-		printl("MORE: " + (a -> String));
+		putln("MORE: " + (a -> String));
 		return false;
 	}
 
 	`<=`(ref a) => {
-		printl("ELESS: " + (a -> String));
+		putln("ELESS: " + (a -> String));
 		return false;
 	}
 
 	`>=`(ref a) => {
-		printl("EMORE: " + (a -> String));
+		putln("EMORE: " + (a -> String));
 		return false;
 	}
 
 	`==`(ref a) => {
-		printl("EQUALS: " + (a -> String));
+		putln("EQUALS: " + (a -> String));
 		return false;
 	}
 
 	`!=`(ref a) => {
-		printl("NEQUALS: " + (a -> String));
+		putln("NEQUALS: " + (a -> String));
 		return false;
 	}
 
 	`[]`(ref a) => {
-		printl("INDEX: " + (a -> String));
+		putln("INDEX: " + (a -> String));
 	}
 
 	`()`(ref a, ref b) => {
-		printl("CALL: " + (a -> String) + ", " + (b -> String));
+		putln("CALL: " + (a -> String) + ", " + (b -> String));
 	}
 
 	`=`(ref a) => {
-		printl("SET: " + (a -> String));
+		putln("SET: " + (a -> String));
+	}
+
+	`&`(ref a) => {
+		putln("B_AND: " + (a -> String));
+	}
+
+	`|`(ref a) => {
+		putln("B_OR: " + (a -> String));
+	}
+
+	`^`(ref a) => {
+		putln("B_XOR: " + (a -> String));
+	}
+
+	`<<`(ref a) => {
+		putln("B_SH_L: " + (a -> String));
+	}
+
+	`>>`(ref a) => {
+		putln("B_SH_R: " + (a -> String));
 	}
 
 	`->String`() => {
-		printl("TO_STRING");
+		putln("TO_STRING");
 		return "test";
 	}
 
 	`->Number`() => {
-		printl("TO_NUMBER");
+		putln("TO_NUMBER");
 		return 0;
 	}
 
 	`->Boolean`() => {
-		printl("TO_BOOLEAN");
+		putln("TO_BOOLEAN");
 		return false;
 	}
 
 	`->Vector`() => {
-		printl("TO_VECTOR");
+		putln("TO_VECTOR");
 		return [];
 	}
 
 	`->Dictionary`() => {
-		printl("TO_DICTIONARY");
+		putln("TO_DICTIONARY");
 		return {};
 	}
 
 	~() => {
-		printl("DELETER CALLED");
+		putln("DELETER CALLED");
 	}
 }

@@ -1,0 +1,353 @@
+extern _puts in "libstd";
+extern _timeMS in "libstd";
+extern _sleep in "libstd";
+extern _exit in "libstd";
+extern _log in "libstd";
+extern _floor in "libstd";
+extern _ceil in "libstd";
+extern _round in "libstd";
+extern _sin in "libstd";
+extern _cos in "libstd";
+extern _tan in "libstd";
+extern _sinh in "libstd";
+extern _cosh in "libstd";
+extern _tanh in "libstd";
+extern _input_line in "libstd";
+extern _input_char in "libstd";
+extern _rand_init in "libstd";
+extern _rand_nextFloat in "libstd";
+extern _rand_nextInt in "libstd";
+extern _system_call in "libstd";
+
+# BASIC
+
+var alloc = ((x) => {
+	refer alloc(x);
+});
+
+var length = ((x) => {
+	refer length(x);
+});
+
+var size = ((x) => {
+	refer size(x);
+});
+
+var charn = ((x) => {
+	refer charn(x);
+});
+
+var chars = ((x) => {
+	refer chars(x);
+});
+
+# CONSOLE
+
+puts(ref s) => {
+	extern_call libstd._puts(s -> String);
+}
+
+putln(ref s) => {
+	puts((s -> String) + "\n");
+}
+
+putln() => {
+	puts("\n");
+}
+
+system(ref s) => {
+	return (extern_call libstd._system_call(s));
+}
+
+static cons class {
+	var decor = {
+		FG_BLACK : "30",
+		FG_RED : "31",
+		FG_GREEN : "32",
+		FG_YELLOW : "33",
+		FG_BLUE : "34",
+		FG_MAGENTA : "35",
+		FG_CYAN : "36",
+		FG_WHITE : "37",
+		FG_BRIGHT_BLACK : "30;1",
+		FG_BRIGHT_RED : "31;1",
+		FG_BRIGHT_GREEN : "32;1",
+		FG_BRIGHT_YELLOW : "33;1",
+		FG_BRIGHT_BLUE : "34;1",
+		FG_BRIGHT_MAGENTA : "35;1",
+		FG_BRIGHT_CYAN : "36;1",
+		FG_BRIGHT_WHITE : "37;1",
+
+		BG_BLACK : "40",
+		BG_RED : "41",
+		BG_GREEN : "42",
+		BG_YELLOW : "43",
+		BG_BLUE : "44",
+		BG_MAGENTA : "45",
+		BG_CYAN : "46",
+		BG_WHITE : "47",
+		BG_BRIGHT_BLACK : "40;1",
+		BG_BRIGHT_RED : "41;1",
+		BG_BRIGHT_GREEN : "42;1",
+		BG_BRIGHT_YELLOW : "43;1",
+		BG_BRIGHT_BLUE : "44;1",
+		BG_BRIGHT_MAGENTA : "45;1",
+		BG_BRIGHT_CYAN : "46;1",
+		BG_BRIGHT_WHITE : "47;1",
+
+		BOLD : "1",
+		UNDERLINE : "4",
+		REVERSED : "7",
+
+		RESET : "0"
+	};
+
+	setDecor(ref v) => {
+		var s = "";
+		for c in v do {
+			s += "\u001B[" + c + "m";
+		}
+		puts(s);
+	}
+
+	moveCursor(ref x, ref y) => {
+		var s = "";
+		if x < 0 then {
+			s += "\u001B[" + (math.abs(x) -> String) + "D";
+		} else {
+			s += "\u001B[" + (x -> String) + "C";
+		}
+		if y < 0 then {
+			s += "\u001B[" + (math.abs(y) -> String) + "A";
+		} else {
+			s += "\u001B[" + (x -> String) + "B";
+		}
+		puts(s);
+	}
+
+	setCursor(ref x, ref y) => {
+		puts("\u001B[" + (y -> String) + ";" + (x -> String) + "H");
+	}
+}
+
+static input class {
+	line() => {
+		return (extern_call libstd._input_line());
+	}
+
+	char() => {
+		return (extern_call libstd._input_char());
+	}
+}
+
+# RANDOM
+
+struct Random class {
+	var ptr;
+
+	init() => {
+		ptr = (extern_call libstd._rand_init(0));
+	}
+
+	init(ref seed) => {
+		ptr = (extern_call libstd._rand_init(seed));
+	}
+
+	nextf() => {
+		return (extern_call libstd._rand_nextFloat(ptr, 0, 1));
+	}
+
+	nextf(ref max) => {
+		return (extern_call libstd._rand_nextFloat(ptr, 0, max));
+	}
+
+	nextf(ref min, ref max) => {
+		return (extern_call libstd._rand_nextFloat(ptr, min, max));
+	}
+
+	nexti() => {
+		return (extern_call libstd._rand_nextInt(ptr, 0, 1));
+	}
+
+	nexti(ref max) => {
+		return (extern_call libstd._rand_nextInt(ptr, 0, max));
+	}
+
+	nexti(ref min, ref max) => {
+		return (extern_call libstd._rand_nextInt(ptr, min, max));
+	}
+
+	nextb() => {
+		return nexti() -> Boolean;
+	}
+}
+
+# SYSTEM
+
+exit() => {
+	extern_call libstd._exit(0);
+}
+
+exit(ref n) => {
+	extern_call libstd._exit(n);
+}
+
+# TIME
+
+static clock class {
+	milliseconds() => {
+		return (extern_call libstd._timeMS());
+	}
+
+	sleep(ref ms) => {
+		return (extern_call libstd._sleep(ms));
+	}
+}
+
+# VECTOR
+
+Vector::join(ref this) => {
+	var s = "";
+	for e in this do {
+		s += (e -> String);
+	}
+	return s;
+}
+
+Vector::push(ref this, ref value) => {
+	refer this += [value];
+}
+
+Vector::unshift(ref this, ref value) => {
+	refer this = [value] + this;
+}
+
+Vector::pop(ref this, ref count) => {
+	var nv = alloc(length(this) - count);
+	for i in [0 until length(this) - count] do {
+		nv[i] = this[i];
+	}
+	refer this = nv;
+}
+
+Vector::shift(ref this, ref count) => {
+	var nv = alloc(length(this) - count);
+	for i in [count until length(this)] do {
+		nv[i - count] = this[i];
+	}
+	refer this = nv;
+}
+
+Vector::pop(ref this) => {
+	refer pop(this, 1);
+}
+
+Vector::shift(ref this) => {
+	refer shift(this, 1);
+}
+
+Vector::map(ref this, ref f) => {
+	var nv = alloc(length(this));
+	for i in [0 until length(this)] do {
+		nv[i] = f(this[i]);
+	}
+	return nv;
+}
+
+Vector::filter(ref this, ref f) => {
+	var nv = [];
+	for e in this do {
+		if f(e) then {
+			nv += [e];
+		}
+	}
+	return nv;
+}
+
+# STRING
+
+String::push(ref this, ref value) => {
+	refer this += (value -> String);
+}
+
+String::unshift(ref this, ref value) => {
+	refer this = (value -> String) + this;
+}
+
+String::pop(ref this, ref count) => {
+	var v = (this -> Vector);
+	var nv = alloc(length(v) - count);
+	for i in [0 until length(v) - count] do {
+		nv[i] = v[i];
+	}
+	refer this = join(nv);
+}
+
+String::shift(ref this, ref count) => {
+	var v = (this -> Vector);
+	var nv = alloc(length(v) - count);
+	for i in [count until length(v)] do {
+		nv[i - count] = v[i];
+	}
+	refer this = join(nv);
+}
+
+String::pop(ref this) => {
+	refer pop(this, 1);
+}
+
+String::shift(ref this) => {
+	refer shift(this, 1);
+}
+
+# MATH
+
+static math class {
+	log(ref x) => {
+		return (extern_call libstd._log(x));
+	}
+
+	abs(ref x) => {
+		return x < 0 ? -x : x;
+	}
+
+	floor(ref x) => {
+		return (extern_call libstd._floor(x));
+	}
+
+	ceil(ref x) => {
+		return (extern_call libstd._ceil(x));
+	}
+
+	round(ref x) => {
+		return (extern_call libstd._round(x));
+	}
+
+	round(ref x, ref place) => {
+		return ((extern_call libstd._round(x * (10 ** place))) / (10 ** place));
+	}
+
+	sin(ref x) => {
+		return (extern_call libstd._sin(x));
+	}
+
+	cos(ref x) => {
+		return (extern_call libstd._cos(x));
+	}
+
+	tan(ref x) => {
+		return (extern_call libstd._tan(x));
+	}
+
+	sinh(ref x) => {
+		return (extern_call libstd._sinh(x));
+	}
+
+	cosh(ref x) => {
+		return (extern_call libstd._cosh(x));
+	}
+
+	tanh(ref x) => {
+		return (extern_call libstd._tanh(x));
+	}
+}

@@ -21,6 +21,11 @@ hashcode_t Ruota::HASH_MUL = hash.hashString("*");
 hashcode_t Ruota::HASH_DIV = hash.hashString("/");
 hashcode_t Ruota::HASH_MOD = hash.hashString("%");
 hashcode_t Ruota::HASH_POW = hash.hashString("**");
+hashcode_t Ruota::HASH_B_AND = hash.hashString("&");
+hashcode_t Ruota::HASH_B_OR = hash.hashString("|");
+hashcode_t Ruota::HASH_B_XOR = hash.hashString("^");
+hashcode_t Ruota::HASH_B_SH_L = hash.hashString("<<");
+hashcode_t Ruota::HASH_B_SH_R = hash.hashString(">>");
 hashcode_t Ruota::HASH_LESS = hash.hashString("<");
 hashcode_t Ruota::HASH_MORE = hash.hashString(">");
 hashcode_t Ruota::HASH_ELESS = hash.hashString("<=");
@@ -48,6 +53,8 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"%", 12},
 	{"+", 11},
 	{"-", 11},
+	{"<<", 10},
+	{">>", 10},
 	{">", 8},
 	{"<", 8},
 	{">=", 8},
@@ -57,8 +64,9 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"!==", 7},
 	{"!=", 7},
 	{"!", -1}, //undef
-	{"&", 6},  //undef
-	{"|", 4},  //undef
+	{"&", 6},
+	{"^", 5},
+	{"|", 4},
 	{"&&", 3},
 	{"||", 2},
 	{"=", 1},
@@ -69,6 +77,9 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"%=", 1},
 	{"+=", 1},
 	{"-=", 1},
+	{"&=", 1},
+	{"|=", 1},
+	{"^=", 1},
 	{":", -1},
 	{"::", -1},
 	{"=>", -1}};

@@ -1,6 +1,7 @@
 build
-bin
+bin/ruota
+bin/ruota.exe
+bin/lib/*.so
+bin/lib/*.dll
 .vscode
-lib
-syntax.txt
-logo
+test.ruo

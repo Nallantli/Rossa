@@ -809,6 +809,10 @@ Instruction *CallBuiltNode::genParser() const
 		return new LengthI(arg->genParser());
 	case TOK_ALLOC:
 		return new AllocI(arg->genParser());
+	case TOK_CHARN:
+		return new CharNI(arg->genParser());
+	case TOK_CHARS:
+		return new CharSI(arg->genParser());
 	default:
 		break;
 	}
@@ -1008,6 +1012,16 @@ Instruction *BinOpNode::genParser() const
 		return new ModI(a->genParser(), b->genParser());
 	if (op == "**")
 		return new PowI(a->genParser(), b->genParser());
+	if (op == "|")
+		return new BOrI(a->genParser(), b->genParser());
+	if (op == "&")
+		return new BAndI(a->genParser(), b->genParser());
+	if (op == "^")
+		return new BXOrI(a->genParser(), b->genParser());
+	if (op == "<<")
+		return new BShiftLeft(a->genParser(), b->genParser());
+	if (op == ">>")
+		return new BShiftRight(a->genParser(), b->genParser());
 
 	if (op == "+=")
 		return new SetI(a->genParser(), new AddI(a->genParser(), b->genParser()));
@@ -1021,6 +1035,16 @@ Instruction *BinOpNode::genParser() const
 		return new SetI(a->genParser(), new ModI(a->genParser(), b->genParser()));
 	if (op == "**=")
 		return new SetI(a->genParser(), new PowI(a->genParser(), b->genParser()));
+	if (op == "|=")
+		return new SetI(a->genParser(), new BOrI(a->genParser(), b->genParser()));
+	if (op == "&=")
+		return new SetI(a->genParser(), new BAndI(a->genParser(), b->genParser()));
+	if (op == "^=")
+		return new SetI(a->genParser(), new BXOrI(a->genParser(), b->genParser()));
+	if (op == "<<=")
+		return new SetI(a->genParser(), new BShiftLeft(a->genParser(), b->genParser()));
+	if (op == ">>=")
+		return new SetI(a->genParser(), new BShiftRight(a->genParser(), b->genParser()));
 
 	if (op == "=")
 		return new SetI(a->genParser(), b->genParser());
