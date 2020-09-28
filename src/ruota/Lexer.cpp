@@ -402,7 +402,7 @@ std::vector<Token> Lexer::lexString(const std::string &INPUT, const std::string 
 			}
 			else
 			{
-				tokens.push_back(Token(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, '@'));
+				tokens.push_back(Token(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, TOK_LAMBDA));
 			}
 			while (!temp.empty())
 			{

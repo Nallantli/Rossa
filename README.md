@@ -32,20 +32,8 @@ There will be no downloadable binaries during the alpha stage - however everythi
 ```sh
 git clone https://github.com/Nallantli/Ruota
 cd Ruota
-```
-
-_Windows_
-
-```sh
-make dirs-win
-make win
-```
-
-_*NIX_
-
-```sh
-make dirs-nix
-make nix
+make dirs
+make
 ```
 
 The binary will be located in `bin/` and the dll/so libraries in `bin/lib/`.

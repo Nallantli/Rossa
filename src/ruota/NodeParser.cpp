@@ -419,6 +419,21 @@ std::unique_ptr<Node> NodeParser::parseCastToNode(std::unique_ptr<Node> a)
 	return parseTrailingNode(std::move(ret), true);
 }
 
+std::unique_ptr<Node> NodeParser::parseTypeNode()
+{
+	nextToken();
+	std::string typestr = "";
+	while (currentToken.getType() == TOK_IDF) {
+		typestr += currentToken.getValueString();
+		nextToken();
+		if (currentToken.getType() != '.')
+			break;
+		typestr += ".";
+		nextToken();
+	}
+	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(hash.hashString(typestr))));
+}
+
 std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a)
 {
 	nextToken();
@@ -501,6 +516,8 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 	case TOK_FALSE:
 		return parseBoolNode();
 	case '@':
+		return parseTypeNode();
+	case TOK_LAMBDA:
 		return parseLambdaNode();
 	case '[':
 		return parseVectorNode();
@@ -739,6 +756,7 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 	case TOK_FUNCTION:
 	case TOK_TYPE_NAME:
 	case TOK_POINTER:
+	case TOK_LAMBDA:
 		ret = parseBaseNode();
 		return parseTrailingNode(std::move(ret), true);
 	case TOK_EXTERN_CALL:

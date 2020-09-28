@@ -40,7 +40,7 @@ struct Path class {
 	}
 
 	`=`(ref a) => {
-		if a -> Type == this -> Type then {
+		if a -> Type == @Path then {
 			this.ptr = a.ptr;
 		} else {
 			init(a -> String);
@@ -56,7 +56,7 @@ struct Path class {
 	}
 
 	`/`(ref a) => {
-		if a -> Type == this -> Type then {
+		if a -> Type == @Path then {
 			return new Path(extern_call libfs._path_append_path(ptr, a.ptr));
 		} else {
 			return new Path(extern_call libfs._path_append_string(ptr, a -> String));

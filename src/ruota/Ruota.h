@@ -168,7 +168,8 @@ enum LEX_TOKEN_TYPE
 	TOK_CATCH = -50,
 	TOK_THROW = -51,
 	TOK_CHARN = -52,
-	TOK_CHARS = -53
+	TOK_CHARS = -53,
+	TOK_LAMBDA = -54
 };
 
 enum DID_TYPE
@@ -1247,7 +1248,7 @@ public:
 			case POINTER:
 				return "Type::Pointer";
 			default:
-				return "Type::Object::" + hash.deHash(a);
+				return "Type::@" + hash.deHash(a);
 			}
 		}
 		default:
