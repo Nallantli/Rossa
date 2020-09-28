@@ -108,7 +108,7 @@ std::unique_ptr<Node> VectorNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -120,7 +120,7 @@ std::unique_ptr<Node> VectorNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nargs.push_back(std::move(nn));
 			delete i;
 		}
@@ -461,7 +461,7 @@ std::unique_ptr<Node> DefineNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -473,7 +473,7 @@ std::unique_ptr<Node> DefineNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nbody.push_back(std::move(nn));
 			delete i;
 		}
@@ -605,7 +605,7 @@ std::unique_ptr<Node> ClassNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nbody.push_back(std::move(nn));
 			delete i;
 		}
@@ -721,7 +721,7 @@ std::unique_ptr<Node> CallNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nargs.push_back(std::move(nn));
 			delete i;
 		}
@@ -783,7 +783,7 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nargs.push_back(std::move(nn));
 			delete i;
 		}
@@ -856,7 +856,7 @@ std::unique_ptr<Node> CallBuiltNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -986,7 +986,7 @@ std::unique_ptr<Node> IndexNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1125,7 +1125,7 @@ std::unique_ptr<Node> BinOpNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1183,7 +1183,7 @@ std::unique_ptr<Node> UnOpNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1233,7 +1233,7 @@ std::unique_ptr<Node> CastToNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1294,7 +1294,7 @@ std::unique_ptr<Node> InsNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1361,7 +1361,7 @@ std::unique_ptr<Node> IfElseNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1426,7 +1426,7 @@ std::unique_ptr<Node> WhileNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1438,7 +1438,7 @@ std::unique_ptr<Node> WhileNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nbody.push_back(std::move(nn));
 			delete i;
 		}
@@ -1506,7 +1506,7 @@ std::unique_ptr<Node> ForNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1518,7 +1518,7 @@ std::unique_ptr<Node> ForNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 			nbody.push_back(std::move(nn));
 			delete i;
 		}
@@ -1574,7 +1574,7 @@ std::unique_ptr<Node> UntilNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1632,7 +1632,7 @@ std::unique_ptr<Node> MapNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1644,7 +1644,7 @@ std::unique_ptr<Node> MapNode::fold() const
 		{
 			auto i = c.second->genParser();
 			Scope scope;
-			nargs.push_back({c.first, std::make_unique<ContainerNode>(i->evaluate(scope), token)});
+			nargs.push_back({c.first, std::make_unique<ContainerNode>(i->evaluate(&scope), token)});
 			delete i;
 		}
 		else
@@ -1718,7 +1718,7 @@ std::unique_ptr<Node> SwitchNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(scope), token));
+		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
 		delete i;
 		return nn;
 	}
@@ -1730,7 +1730,7 @@ std::unique_ptr<Node> SwitchNode::fold() const
 		{
 			auto i = c.second->genParser();
 			Scope scope;
-			ncases[c.first] = std::make_unique<ContainerNode>(i->evaluate(scope), token);
+			ncases[c.first] = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			delete i;
 		}
 		else

@@ -103,7 +103,7 @@ Symbol Ruota::parseCode(const std::string &code, boost::filesystem::path current
 		folded->printTree("", true);
 
 	auto g = NodeParser::genParser(std::move(folded));
-	auto res = g->evaluate(main);
+	auto res = g->evaluate(&main);
 	delete g;
 	return res;
 }

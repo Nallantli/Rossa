@@ -681,7 +681,7 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 
 		auto i = c->genParser();
 		Scope scope;
-		auto value = i->evaluate(scope);
+		auto value = i->evaluate(&scope);
 		delete i;
 
 		if (currentToken == NULL || currentToken->getType() != TOK_DO)

@@ -16,7 +16,7 @@ typedef long double long_double_t;
 typedef signed long long long_int_t;
 typedef unsigned long long hashcode_t;
 
-#define _RUOTA_VERSION_ "v1.1.0-alpha"
+#define _RUOTA_VERSION_ "v1.1.1-alpha"
 
 #ifdef _USE_CONV_NUM_
 #define NUMBER_TYPE SmartNumber
@@ -889,7 +889,7 @@ private:
 	hashcode_t key;
 
 public:
-	Function(hashcode_t, Scope &, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>);
+	Function(hashcode_t, Scope *, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>);
 	const Symbol evaluate(std::vector<Symbol>, Token *) const;
 	const Symbol evaluate(std::vector<Symbol>, const Symbol *, Token *) const;
 	size_t getArgSize() const;
@@ -907,11 +907,11 @@ private:
 
 public:
 	Scope();
-	Scope(Scope &, const std::string &);
+	Scope(Scope *, const std::string &);
 	Scope *getParent() const;
-	Symbol getVariable(hashcode_t, Token *);
-	Symbol createVariable(hashcode_t, Token *);
-	Symbol createVariable(hashcode_t, const Symbol &, Token *);
+	Symbol &getVariable(hashcode_t, Token *);
+	Symbol &createVariable(hashcode_t, Token *);
+	Symbol &createVariable(hashcode_t, const Symbol &, Token *);
 	const std::string &getName() const;
 	bool hasValue(hashcode_t) const;
 
@@ -927,8 +927,8 @@ private:
 	std::shared_ptr<Instruction> body;
 
 public:
-	Object(Scope &, OBJECT_TYPE, std::shared_ptr<Instruction>, const std::string &);
-	std::shared_ptr<Scope> getScope() const;
+	Object(Scope *, OBJECT_TYPE, std::shared_ptr<Instruction>, const std::string &);
+	Scope * getScope() const;
 	const Symbol instantiate(std::vector<Symbol>, Token *) const;
 	OBJECT_TYPE getType() const;
 	std::shared_ptr<Instruction> getBody() const;
@@ -946,7 +946,7 @@ protected:
 
 public:
 	Instruction(I_TYPE, Token *);
-	virtual const Symbol evaluate(Scope &) const = 0;
+	virtual const Symbol evaluate(Scope *) const = 0;
 	virtual const std::string toString(bool) const = 0;
 	I_TYPE getType() const;
 	virtual ~Instruction();

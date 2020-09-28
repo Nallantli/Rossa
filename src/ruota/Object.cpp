@@ -1,13 +1,13 @@
 #include "Ruota.h"
 
-Object::Object(Scope &parent, OBJECT_TYPE type, std::shared_ptr<Instruction> body, const std::string &key) : body(body), type(type), key(key)
+Object::Object(Scope * parent, OBJECT_TYPE type, std::shared_ptr<Instruction> body, const std::string &key) : body(body), type(type), key(key)
 {
 	this->internal = std::make_shared<Scope>(parent, key);
 }
 
-std::shared_ptr<Scope> Object::getScope() const
+Scope * Object::getScope() const
 {
-	return this->internal;
+	return this->internal.get();
 }
 
 const Symbol Object::instantiate(std::vector<Symbol> params, Token * token) const
@@ -15,8 +15,8 @@ const Symbol Object::instantiate(std::vector<Symbol> params, Token * token) cons
 	if (type != STRUCT_O)
 		throwError("Cannot instantiate a non-struct Object", token);
 
-	auto o = std::make_shared<Object>(*internal->getParent(), INSTANCE_O, body, key);
-	o->body->evaluate(*o->getScope());
+	auto o = std::make_shared<Object>(internal->getParent(), INSTANCE_O, body, key);
+	o->body->evaluate(o->getScope());
 	auto f = o->getScope()->getVariable(Ruota::HASH_INIT, token).getFunction(NIL, params.size(), token);
 	auto d = Symbol(o);
 

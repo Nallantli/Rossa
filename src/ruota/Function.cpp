@@ -1,6 +1,6 @@
 #include "Ruota.h"
 
-Function::Function(hashcode_t key, Scope &parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(&parent), params(params), body(body) {}
+Function::Function(hashcode_t key, Scope * parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
 
 const Symbol Function::evaluate(std::vector<Symbol> paramValues, Token * token) const
 {
@@ -11,7 +11,7 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *t
 {
 	Ruota::stack_trace.push_back(*this);
 
-	Scope newScope(*parent, "");
+	Scope newScope(parent, "");
 
 	for (size_t i = 0; i < params.size(); i++)
 	{
@@ -41,7 +41,7 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *t
 	if (thisSym != NULL)
 		newScope.createVariable(Ruota::HASH_THIS, *thisSym, token);
 
-	auto temp = body->evaluate(newScope);
+	auto temp = body->evaluate(&newScope);
 
 	Ruota::stack_trace.pop_back();
 
