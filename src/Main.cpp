@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -139,16 +140,16 @@ int main(int argc, char const *argv[])
 					if (value.vectorSize() != 1)
 					{
 						int i = 0;
-						for (auto &e : value.getVector())
+						for (auto &e : value.getVector(NULL))
 						{
 							printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
-							std::cout << e.toString() << "\n";
+							std::cout << e.toString(NULL) << "\n";
 							i++;
 						}
 					}
 					else
 					{
-						std::cout << "\t" << value.getVector()[0].toString() << "\n";
+						std::cout << "\t" << value.getVector(NULL)[0].toString(NULL) << "\n";
 					}
 				}
 			}

@@ -1,5 +1,6 @@
 #include "NodeParser.h"
 #include "Library.h"
+#include "Lexer.h"
 #include <fstream>
 
 NodeParser::NodeParser(
@@ -11,43 +12,43 @@ NodeParser::NodeParser(
 										   uOperators(uOperators),
 										   currentFile(currentFile) {}
 
-Token NodeParser::nextToken()
+Token *NodeParser::nextToken()
 {
 	if (index < this->tokens.size())
-		currentToken = this->tokens[index++];
+		currentToken = new Token(this->tokens[index++]);
 	else
-		currentToken = Token();
+		currentToken = NULL;
 	return currentToken;
 }
 
 std::unique_ptr<Node> NodeParser::parseNumNode()
 {
-	auto n = std::make_unique<NumNode>(currentToken.getValueNumber());
+	auto n = std::make_unique<ContainerNode>(Symbol(currentToken->getValueNumber()), currentToken);
 	nextToken();
 	return n;
 }
 
 std::unique_ptr<Node> NodeParser::parseBoolNode()
 {
-	auto n = std::make_unique<BoolNode>(currentToken.getValueString() == "true");
+	auto n = std::make_unique<ContainerNode>(Symbol(currentToken->getValueString() == "true"), currentToken);
 	nextToken();
 	return n;
 }
 
 std::unique_ptr<Node> NodeParser::parseIDNode()
 {
-	auto n = std::make_unique<IDNode>(hash.hashString(currentToken.getValueString()));
+	auto n = std::make_unique<IDNode>(hash.hashString(currentToken->getValueString()), currentToken);
 	nextToken();
 	return n;
 }
 
 std::unique_ptr<Node> NodeParser::parseBIDNode()
 {
-	if (currentToken.getType() == TOK_IDF)
+	if (currentToken->getType() == TOK_IDF)
 	{
 		return parseIDNode();
 	}
-	auto n = std::make_unique<BIDNode>(currentToken.getValueString());
+	auto n = std::make_unique<BIDNode>(currentToken->getValueString(), currentToken);
 	nextToken();
 	return n;
 }
@@ -55,19 +56,22 @@ std::unique_ptr<Node> NodeParser::parseBIDNode()
 std::unique_ptr<Node> NodeParser::parseEntryNode()
 {
 	std::vector<std::unique_ptr<Node>> v;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
 		if (auto n = parseExprNode())
 			v.push_back(std::move(n));
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	return std::make_unique<VectorNode>(std::move(v), false);
+	return std::make_unique<VectorNode>(std::move(v), false, currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, bool allowInner)
 {
-	switch (currentToken.getType())
+	if (currentToken == NULL)
+		return ret;
+
+	switch (currentToken->getType())
 	{
 	case TOK_UNTIL:
 		return parseUntilNode(std::move(ret));
@@ -89,17 +93,17 @@ std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, b
 
 std::unique_ptr<Node> NodeParser::parseCallBuiltNode()
 {
-	LEX_TOKEN_TYPE t = (LEX_TOKEN_TYPE)currentToken.getType();
-	std::string temp = currentToken.getValueString();
+	LEX_TOKEN_TYPE t = (LEX_TOKEN_TYPE)currentToken->getType();
+	std::string temp = currentToken->getValueString();
 	nextToken();
-	if (currentToken.getType() != '(')
-		return std::make_unique<IDNode>(hash.hashString(temp));
+	if (currentToken == NULL || currentToken->getType() != '(')
+		return std::make_unique<IDNode>(hash.hashString(temp), currentToken);
 	nextToken();
 	auto arg = parseEquNode();
-	if (currentToken.getType() != ')')
+	if (currentToken == NULL || currentToken->getType() != ')')
 		return logErrorN("Expected `)`", currentToken);
 	nextToken();
-	auto ret = std::make_unique<CallBuiltNode>(t, std::move(arg));
+	auto ret = std::make_unique<CallBuiltNode>(t, std::move(arg), currentToken);
 	return parseTrailingNode(std::move(ret), true);
 }
 
@@ -108,11 +112,11 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 	nextToken();
 	std::vector<std::unique_ptr<Node>> args;
 	int i = 0;
-	while (currentToken.getType() != ')')
+	while (currentToken != NULL && currentToken->getType() != ')')
 	{
 		if (i > 0)
 		{
-			if (currentToken.getType() != ',')
+			if (currentToken->getType() != ',')
 				return logErrorN("Function Call: Expected `,`", currentToken);
 			nextToken();
 		}
@@ -121,7 +125,7 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 			args.push_back(std::move(b));
 		else
 			return logErrorN("Expected Function parameter", currentToken);
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorN("Function Call: Expected `)`", currentToken);
 	}
 	nextToken();
@@ -139,51 +143,51 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 				return logErrorN("Built in functions take a single argument", currentToken);
 
 			if (key == "length")
-				ret = std::make_unique<CallBuiltNode>(TOK_LENGTH, std::move(a_a));
+				ret = std::make_unique<CallBuiltNode>(TOK_LENGTH, std::move(a_a), currentToken);
 			if (key == "size")
-				ret = std::make_unique<CallBuiltNode>(TOK_SIZE, std::move(a_a));
+				ret = std::make_unique<CallBuiltNode>(TOK_SIZE, std::move(a_a), currentToken);
 			if (key == "alloc")
-				ret = std::make_unique<CallBuiltNode>(TOK_ALLOC, std::move(a_a));
+				ret = std::make_unique<CallBuiltNode>(TOK_ALLOC, std::move(a_a), currentToken);
 			if (key == "charn")
-				ret = std::make_unique<CallBuiltNode>(TOK_CHARN, std::move(a_a));
+				ret = std::make_unique<CallBuiltNode>(TOK_CHARN, std::move(a_a), currentToken);
 			if (key == "chars")
-				ret = std::make_unique<CallBuiltNode>(TOK_CHARS, std::move(a_a));
+				ret = std::make_unique<CallBuiltNode>(TOK_CHARS, std::move(a_a), currentToken);
 
 			ret = parseTrailingNode(std::move(ret), true);
 		}
 		else
 		{
-			ret = std::make_unique<CallNode>(std::make_unique<InsNode>(std::move(a_a), std::move(a_b)), std::move(args));
+			ret = std::make_unique<CallNode>(std::make_unique<InsNode>(std::move(a_a), std::move(a_b), currentToken), std::move(args), currentToken);
 		}
 		return parseTrailingNode(std::move(ret), true);
 	}
 
-	ret = std::make_unique<CallNode>(std::move(a), std::move(args));
+	ret = std::make_unique<CallNode>(std::move(a), std::move(args), currentToken);
 	return parseTrailingNode(std::move(ret), true);
 }
 
 std::unique_ptr<Node> NodeParser::parseExternCallNode()
 {
 	nextToken();
-	std::string libname = currentToken.getValueString();
+	std::string libname = currentToken->getValueString();
 	nextToken();
-	if (currentToken.getType() != '.')
+	if (currentToken == NULL || currentToken->getType() != '.')
 		return logErrorN("Expected `.`", currentToken);
 	nextToken();
-	std::string fname = currentToken.getValueString();
+	std::string fname = currentToken->getValueString();
 	nextToken();
 
-	if (currentToken.getType() != '(')
+	if (currentToken == NULL || currentToken->getType() != '(')
 		return logErrorN("External Call: Expected `(`", currentToken);
 	nextToken();
 
 	std::vector<std::unique_ptr<Node>> args;
 	int i = 0;
-	while (currentToken.getType() != ')')
+	while (currentToken->getType() != ')')
 	{
 		if (i > 0)
 		{
-			if (currentToken.getType() != ',')
+			if (currentToken->getType() != ',')
 				return logErrorN("External Call: Expected `,`", currentToken);
 			nextToken();
 		}
@@ -192,35 +196,35 @@ std::unique_ptr<Node> NodeParser::parseExternCallNode()
 			args.push_back(std::move(b));
 		else
 			return logErrorN("Expected Function parameter", currentToken);
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorN("External Call: Expected `)`", currentToken);
 	}
 	nextToken();
 
 	auto f = rlib::loaded.at(libname + "$" + fname);
 
-	return std::make_unique<ExternCallNode>(libname + "$" + fname, std::move(args));
+	return std::make_unique<ExternCallNode>(libname + "$" + fname, std::move(args), currentToken);
 }
 
 std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> NodeParser::parseSigNode()
 {
-	if (currentToken.getType() != '(')
+	if (currentToken == NULL || currentToken->getType() != '(')
 		return logErrorSN("Function Signature: Expected `(`", currentToken);
 	nextToken();
 
 	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> args;
 	int i = 0;
-	while (currentToken.getType() != ')')
+	while (currentToken != NULL && currentToken->getType() != ')')
 	{
 		if (i > 0)
 		{
-			if (currentToken.getType() != ',')
+			if (currentToken->getType() != ',')
 				return logErrorSN("Function Signature: Expected `,`", currentToken);
 			nextToken();
 		}
 		i++;
 
-		int type = currentToken.getType();
+		int type = currentToken->getType();
 		if (!(type == TOK_FINAL || type == TOK_REF))
 			type = TOK_NIL;
 		else
@@ -228,15 +232,15 @@ std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> NodeParser::parseSigNode()
 
 		std::string arg;
 
-		if (currentToken.getType() == TOK_IDF)
-			arg = currentToken.getValueString();
+		if (currentToken != NULL && currentToken->getType() == TOK_IDF)
+			arg = currentToken->getValueString();
 		else
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
 		args.push_back({(LEX_TOKEN_TYPE)type, hash.hashString(arg)});
 
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorSN("Function Signature: Expected `)`", currentToken);
 	}
 	nextToken();
@@ -248,9 +252,9 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 	nextToken();
 
 	D_TYPE ftype = NIL;
-	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
+	if (currentToken->getType() != TOK_IDF && currentToken->getType() != '~' && currentToken->getType() != TOK_LENGTH && currentToken->getType() != TOK_SIZE && currentToken->getType() != TOK_ALLOC && currentToken->getType() != TOK_CHARN && currentToken->getType() != TOK_CHARS)
 	{
-		switch (currentToken.getType())
+		switch (currentToken->getType())
 		{
 		case TOK_BOOLEAN:
 			ftype = BOOLEAN_D;
@@ -283,27 +287,27 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 			return logErrorN("Expected base type for prototypic Function declaration", currentToken);
 		}
 		nextToken();
-		if (currentToken.getType() != TOK_DEF_TYPE)
+		if (currentToken == NULL || currentToken->getType() != TOK_DEF_TYPE)
 			return logErrorN("Function Definition: Expected `::`", currentToken);
 		nextToken();
 	}
-	if (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
+	if (currentToken == NULL || currentToken->getType() != TOK_IDF && currentToken->getType() != '~' && currentToken->getType() != TOK_LENGTH && currentToken->getType() != TOK_SIZE && currentToken->getType() != TOK_ALLOC && currentToken->getType() != TOK_CHARN && currentToken->getType() != TOK_CHARS)
 		return logErrorN("Expected Function name", currentToken);
-	auto key = hash.hashString(currentToken.getValueString());
+	auto key = hash.hashString(currentToken->getValueString());
 	nextToken();
 
 	auto args = parseSigNode();
 	if (!args.empty() && args[0].first == 0)
 		return logErrorN("Expected Function signature", currentToken);
 
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Function Definition: Expected `{`", currentToken);
 	nextToken();
 
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken == NULL || currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -311,10 +315,10 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("Function Definition: Expected `}`", currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>(key, ftype, args, std::move(body));
+	return std::make_unique<DefineNode>(key, ftype, args, std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseNewNode()
@@ -325,9 +329,9 @@ std::unique_ptr<Node> NodeParser::parseNewNode()
 	if (body->getType() != CALL_NODE)
 		return logErrorN("Expected Object declaration", currentToken);
 	auto object = ((CallNode *)body.get())->getCallee();
-	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()), false);
+	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()), false, currentToken);
 
-	return std::make_unique<NewNode>(std::move(object), std::move(params));
+	return std::make_unique<NewNode>(std::move(object), std::move(params), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseLambdaNode()
@@ -338,14 +342,14 @@ std::unique_ptr<Node> NodeParser::parseLambdaNode()
 	if (!args.empty() && args[0].first == 0)
 		return logErrorN("Expected Function signature", currentToken);
 
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Expected `{`", currentToken);
 	nextToken();
 
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken == NULL || currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -353,10 +357,10 @@ std::unique_ptr<Node> NodeParser::parseLambdaNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("Lambda Definition: Expected `}`", currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>(0, NIL, args, std::move(body));
+	return std::make_unique<DefineNode>(0, NIL, args, std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseIndexNode(std::unique_ptr<Node> a)
@@ -364,10 +368,10 @@ std::unique_ptr<Node> NodeParser::parseIndexNode(std::unique_ptr<Node> a)
 	nextToken();
 	if (auto b = parseEquNode())
 	{
-		if (currentToken.getType() != ']')
+		if (currentToken == NULL || currentToken->getType() != ']')
 			return logErrorN("Index Operation: Expected `]`", currentToken);
 		nextToken();
-		auto ret = std::make_unique<IndexNode>(std::move(a), std::move(b));
+		auto ret = std::make_unique<IndexNode>(std::move(a), std::move(b), currentToken);
 		return parseTrailingNode(std::move(ret), true);
 	}
 	return nullptr;
@@ -378,7 +382,7 @@ std::unique_ptr<Node> NodeParser::parseCastToNode(std::unique_ptr<Node> a)
 	nextToken();
 
 	D_TYPE convert;
-	switch (currentToken.getType())
+	switch (currentToken->getType())
 	{
 	case TOK_NIL_NAME:
 		convert = NIL;
@@ -415,7 +419,7 @@ std::unique_ptr<Node> NodeParser::parseCastToNode(std::unique_ptr<Node> a)
 	}
 
 	nextToken();
-	auto ret = std::make_unique<CastToNode>(convert, std::move(a));
+	auto ret = std::make_unique<CastToNode>(convert, std::move(a), currentToken);
 	return parseTrailingNode(std::move(ret), true);
 }
 
@@ -423,15 +427,16 @@ std::unique_ptr<Node> NodeParser::parseTypeNode()
 {
 	nextToken();
 	std::string typestr = "";
-	while (currentToken.getType() == TOK_IDF) {
-		typestr += currentToken.getValueString();
+	while (currentToken != NULL && currentToken->getType() == TOK_IDF)
+	{
+		typestr += currentToken->getValueString();
 		nextToken();
-		if (currentToken.getType() != '.')
+		if (currentToken == NULL || currentToken->getType() != '.')
 			break;
 		typestr += ".";
 		nextToken();
 	}
-	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(hash.hashString(typestr))));
+	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(hash.hashString(typestr))), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a)
@@ -442,7 +447,7 @@ std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a)
 	if (!b)
 		return logErrorN("Expected expression", currentToken);
 
-	return std::make_unique<UntilNode>(std::move(a), std::move(b));
+	return std::make_unique<UntilNode>(std::move(a), std::move(b), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
@@ -450,9 +455,9 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 	std::unique_ptr<Node> current = std::move(a);
 	int pastPrec = 999;
 
-	while (bOperators.find(currentToken.getValueString()) != bOperators.end())
+	while (bOperators.find(currentToken->getValueString()) != bOperators.end())
 	{
-		std::string opStr = currentToken.getValueString();
+		std::string opStr = currentToken->getValueString();
 		int prec = bOperators[opStr];
 		nextToken();
 
@@ -463,11 +468,13 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 				current = std::make_unique<BinOpNode>(
 					opStr,
 					std::move(current),
-					std::move(b));
+					std::move(b),
+					currentToken);
 				pastPrec = prec;
 			}
 			else
 			{
+				auto oldToken = current->getToken();
 				auto oldOp = ((BinOpNode *)current.get())->getOp();
 				auto current_a = ((BinOpNode *)current.get())->getA();
 				auto current_b = ((BinOpNode *)current.get())->getB();
@@ -477,7 +484,8 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 					std::make_unique<BinOpNode>(
 						opStr,
 						std::move(current_b),
-						std::move(b)));
+						std::move(b), currentToken),
+					oldToken);
 				pastPrec = bOperators[oldOp];
 			}
 		}
@@ -492,8 +500,11 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 
 std::unique_ptr<Node> NodeParser::parseBaseNode()
 {
+	if (currentToken == NULL)
+		logErrorN("Expression terminated unexpectedly", currentToken);
+
 	std::unique_ptr<Node> ret;
-	switch (currentToken.getType())
+	switch (currentToken->getType())
 	{
 	case TOK_NUM:
 		return parseNumNode();
@@ -501,15 +512,15 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 		return parseIDNode();
 	case TOK_VAR:
 		nextToken();
-		ret = std::make_unique<VarNode>(hash.hashString(currentToken.getValueString()));
+		ret = std::make_unique<VarNode>(hash.hashString(currentToken->getValueString()), currentToken);
 		nextToken();
 		return ret;
 	case TOK_STR_LIT:
-		ret = std::make_unique<StringNode>(currentToken.getValueString());
+		ret = std::make_unique<ContainerNode>(Symbol(currentToken->getValueString()), currentToken);
 		nextToken();
 		return ret;
 	case TOK_NIL:
-		ret = std::make_unique<NilNode>();
+		ret = std::make_unique<ContainerNode>(Symbol(), currentToken);
 		nextToken();
 		return ret;
 	case TOK_TRUE:
@@ -524,43 +535,43 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 	case '{':
 		return parseMapNode();
 	case TOK_NIL_NAME:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NIL)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NIL)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_NUMBER:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NUMBER)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NUMBER)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_STRING:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(STRING)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(STRING)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_BOOLEAN:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(BOOLEAN_D)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(BOOLEAN_D)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_VECTOR:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(VECTOR)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(VECTOR)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_DICTIONARY:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(DICTIONARY)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(DICTIONARY)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_OBJECT:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(OBJECT)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(OBJECT)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_FUNCTION:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(FUNCTION)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(FUNCTION)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_TYPE_NAME:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(TYPE_NAME)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(TYPE_NAME)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_POINTER:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(POINTER)));
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(POINTER)), currentToken);
 		nextToken();
 		return ret;
 	default:
@@ -570,13 +581,13 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 
 std::unique_ptr<Node> NodeParser::parseUnOpNode()
 {
-	std::string opStr = currentToken.getValueString();
+	std::string opStr = currentToken->getValueString();
 	nextToken();
 	if (uOperators.find(opStr) != uOperators.end())
 	{
 		if (auto a = parseEquNode())
 		{
-			return std::make_unique<UnOpNode>(opStr, std::move(a));
+			return std::make_unique<UnOpNode>(opStr, std::move(a), currentToken);
 		}
 		return logErrorN("Failure to parse code", currentToken);
 	}
@@ -591,11 +602,11 @@ std::unique_ptr<Node> NodeParser::parseVectorNode()
 	nextToken();
 	std::vector<std::unique_ptr<Node>> args;
 	int i = 0;
-	while (currentToken.getType() != ']')
+	while (currentToken != NULL && currentToken->getType() != ']')
 	{
 		if (i > 0)
 		{
-			if (currentToken.getType() != ',')
+			if (currentToken == NULL || currentToken->getType() != ',')
 				return logErrorN("Vector Declaration: Expected `,`", currentToken);
 			nextToken();
 		}
@@ -604,11 +615,11 @@ std::unique_ptr<Node> NodeParser::parseVectorNode()
 			args.push_back(std::move(b));
 		else
 			return nullptr;
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorN("Vector Declaration: Expected `]`", currentToken);
 	}
 	nextToken();
-	return std::make_unique<VectorNode>(std::move(args), false);
+	return std::make_unique<VectorNode>(std::move(args), false, currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseMapNode()
@@ -616,20 +627,20 @@ std::unique_ptr<Node> NodeParser::parseMapNode()
 	nextToken();
 	std::vector<std::pair<hashcode_t, std::unique_ptr<Node>>> args;
 	int i = 0;
-	while (currentToken.getType() != '}')
+	while (currentToken != NULL && currentToken->getType() != '}')
 	{
 		if (i > 0)
 		{
-			if (currentToken.getType() != ',')
+			if (currentToken == NULL || currentToken->getType() != ',')
 				return logErrorN("Dictionary Declaration: Expected `,`", currentToken);
 			nextToken();
 		}
 		i++;
-		if (!(currentToken.getType() == TOK_STR_LIT || currentToken.getType() == TOK_IDF || currentToken.getType() == TOK_NUM || currentToken.getType() == TOK_TRUE || currentToken.getType() == TOK_FALSE))
+		if (!(currentToken->getType() == TOK_STR_LIT || currentToken->getType() == TOK_IDF || currentToken->getType() == TOK_NUM || currentToken->getType() == TOK_TRUE || currentToken->getType() == TOK_FALSE))
 			return logErrorN("Value cannot be used to generate key-value pair", currentToken);
-		auto key = currentToken.getValueString();
+		auto key = currentToken->getValueString();
 		nextToken();
-		if (currentToken.getType() != ':')
+		if (currentToken == NULL || currentToken->getType() != ':')
 			return logErrorN("Dictionary Declaration: Expected `:`", currentToken);
 		nextToken();
 		if (auto b = parseEquNode())
@@ -639,11 +650,11 @@ std::unique_ptr<Node> NodeParser::parseMapNode()
 		}
 		else
 			return nullptr;
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorN("Dictionary Declaration: Expected `}`", currentToken);
 	}
 	nextToken();
-	return std::make_unique<MapNode>(std::move(args));
+	return std::make_unique<MapNode>(std::move(args), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseSwitchNode()
@@ -653,14 +664,14 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 	auto switchs = parseEquNode();
 	if (!switchs)
 		return logErrorN("Switch Statement: Expected expression after `switch`", currentToken);
-	if (currentToken.getType() != TOK_IN)
+	if (currentToken == NULL || currentToken->getType() != TOK_IN)
 		return logErrorN("Switch Statement: Expected `in`", currentToken);
 	nextToken();
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Switch Statement: Expected `{`", currentToken);
 	nextToken();
 
-	while (currentToken.getType() != '}')
+	while (currentToken != NULL && currentToken->getType() != '}')
 	{
 		auto c = parseUnitNode();
 		if (!c)
@@ -673,45 +684,45 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 		auto value = i->evaluate(scope);
 		delete i;
 
-		if (currentToken.getType() != TOK_DO)
+		if (currentToken == NULL || currentToken->getType() != TOK_DO)
 			return logErrorN("Case Statement: Expected `do`", currentToken);
 		nextToken();
 
-		if (currentToken.getType() != '{')
+		if (currentToken == NULL || currentToken->getType() != '{')
 			return logErrorN("Case Statement: Expected `{`", currentToken);
 		nextToken();
 		std::vector<std::unique_ptr<Node>> body;
-		while (currentToken.getType() != 0)
+		while (currentToken != NULL)
 		{
-			if (currentToken.getType() == '}')
+			if (currentToken->getType() == '}')
 				break;
 			if (auto e = parseExprNode())
 				body.push_back(std::move(e));
 			else
 				return logErrorN("Failure to parse code", currentToken);
 		}
-		if (currentToken.getType() != '}')
+		if (currentToken == NULL || currentToken->getType() != '}')
 			return logErrorN("Case Statement: Expected `}`", currentToken);
 		nextToken();
 
-		cases[value] = std::make_unique<VectorNode>(std::move(body), true);
+		cases[value] = std::make_unique<VectorNode>(std::move(body), true, currentToken);
 
-		if (currentToken.getType() == 0)
+		if (currentToken == NULL)
 			return logErrorN("Switch Statement: Expected `}`", currentToken);
 	}
 	nextToken();
-	auto ret = std::make_unique<SwitchNode>(std::move(switchs), std::move(cases));
+	auto ret = std::make_unique<SwitchNode>(std::move(switchs), std::move(cases), currentToken);
 
-	if (currentToken.getType() == TOK_ELSE)
+	if (currentToken != NULL && currentToken->getType() == TOK_ELSE)
 	{
 		nextToken();
-		if (currentToken.getType() != '{')
+		if (currentToken == NULL || currentToken->getType() != '{')
 			return logErrorN("Switch-Else Statement: Expected `{`", currentToken);
 		nextToken();
 		std::vector<std::unique_ptr<Node>> elses;
-		while (currentToken.getType() != 0)
+		while (currentToken != NULL)
 		{
-			if (currentToken.getType() == '}')
+			if (currentToken->getType() == '}')
 				break;
 
 			if (auto e = parseExprNode())
@@ -719,10 +730,10 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 			else
 				return logErrorN("Failure to parse code", currentToken);
 		}
-		if (currentToken.getType() != '}')
+		if (currentToken->getType() != '}')
 			return logErrorN("Switch-Else Statement: Expected `}`", currentToken);
 		nextToken();
-		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true));
+		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true, currentToken));
 	}
 
 	return ret;
@@ -730,8 +741,11 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 
 std::unique_ptr<Node> NodeParser::parseUnitNode()
 {
+	if (currentToken == NULL)
+		return logErrorN("Expression terminated unexpectedly", currentToken);
+
 	std::unique_ptr<Node> ret = nullptr;
-	switch (currentToken.getType())
+	switch (currentToken->getType())
 	{
 	case ';':
 	case 0:
@@ -775,7 +789,7 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 		nextToken();
 		if (ret = parseEquNode())
 		{
-			if (currentToken.getType() != ')')
+			if (currentToken == NULL || currentToken->getType() != ')')
 				return logErrorN("Parenthetical: Expected `)`", currentToken);
 			nextToken();
 			return parseTrailingNode(std::move(ret), true);
@@ -792,10 +806,10 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 
 std::unique_ptr<Node> NodeParser::parseInsNode(std::unique_ptr<Node> ret)
 {
-	while (currentToken.getType() == '.')
+	while (currentToken->getType() == '.')
 	{
 		nextToken();
-		ret = std::make_unique<InsNode>(std::move(ret), parseBIDNode());
+		ret = std::make_unique<InsNode>(std::move(ret), parseBIDNode(), currentToken);
 	}
 
 	return parseTrailingNode(std::move(ret), false);
@@ -807,33 +821,41 @@ std::unique_ptr<Node> NodeParser::parseThenNode(std::unique_ptr<Node> a)
 	auto b = parseEquNode();
 	if (!b)
 		return logErrorN("Expected expression following `?`", currentToken);
-	if (currentToken.getType() != ':')
+	if (currentToken == NULL || currentToken->getType() != ':')
 		return logErrorN("Expected `:`", currentToken);
 	nextToken();
 	auto c = parseEquNode();
 	if (!c)
 		return logErrorN("Expected expression following `:`", currentToken);
-	auto ret = std::make_unique<IfElseNode>(std::move(a), std::move(b));
+	auto ret = std::make_unique<IfElseNode>(std::move(a), std::move(b), currentToken);
 	ret->setElse(std::move(c));
 	return ret;
 }
 
 std::unique_ptr<Node> NodeParser::parseEquNode()
 {
+	if (currentToken == NULL)
+		return logErrorN("Expression terminated unexpectedly", currentToken);
+
 	if (auto ret = parseUnitNode())
 	{
-		switch (currentToken.getType())
+		if (currentToken != NULL)
 		{
-		case TOK_OPR:
-			ret = parseBinOpNode(std::move(ret));
-			break;
-		default:
-			break;
+			switch (currentToken->getType())
+			{
+			case TOK_OPR:
+				ret = parseBinOpNode(std::move(ret));
+				break;
+			default:
+				break;
+			}
+			if (currentToken != NULL && currentToken->getType() == '?')
+				return parseThenNode(std::move(ret));
 		}
-		if (currentToken.getType() == '?')
-			return parseThenNode(std::move(ret));
+
 		return ret;
 	}
+
 	return logErrorN("No expression given", currentToken);
 }
 
@@ -843,16 +865,16 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 	auto ifs = parseEquNode();
 	if (!ifs)
 		return nullptr;
-	if (currentToken.getType() != TOK_THEN)
+	if (currentToken == NULL || currentToken->getType() != TOK_THEN)
 		return logErrorN("Expected `then`", currentToken);
 	nextToken();
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("If-Then Statement: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -860,24 +882,24 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("If-Then Statement: Expected `}`", currentToken);
 	nextToken();
 
-	auto ret = std::make_unique<IfElseNode>(std::move(ifs), std::make_unique<VectorNode>(std::move(body), true));
+	auto ret = std::make_unique<IfElseNode>(std::move(ifs), std::make_unique<VectorNode>(std::move(body), true, currentToken), currentToken);
 
-	switch (currentToken.getType())
+	switch (currentToken->getType())
 	{
 	case TOK_ELSE:
 	{
 		nextToken();
-		if (currentToken.getType() != '{')
+		if (currentToken == NULL || currentToken->getType() != '{')
 			return logErrorN("If-Then-Else Statement: Expected `{`", currentToken);
 		nextToken();
 		std::vector<std::unique_ptr<Node>> elses;
-		while (currentToken.getType() != 0)
+		while (currentToken != NULL)
 		{
-			if (currentToken.getType() == '}')
+			if (currentToken == NULL || currentToken->getType() == '}')
 				break;
 
 			if (auto e = parseExprNode())
@@ -885,10 +907,10 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 			else
 				return logErrorN("Failure to parse code", currentToken);
 		}
-		if (currentToken.getType() != '}')
+		if (currentToken == NULL || currentToken->getType() != '}')
 			return logErrorN("If-Then-Else Statement: Expected `}`", currentToken);
 		nextToken();
-		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true));
+		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true, currentToken));
 		return ret;
 	}
 	case TOK_ELSEIF:
@@ -904,13 +926,13 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 std::unique_ptr<Node> NodeParser::parseTryCatchNode()
 {
 	nextToken();
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Try-Catch Statement: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> tbody;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -918,30 +940,30 @@ std::unique_ptr<Node> NodeParser::parseTryCatchNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("Try-Catch Statement: Expected `}`", currentToken);
 	nextToken();
 
-	if (currentToken.getType() != TOK_CATCH)
+	if (currentToken == NULL || currentToken->getType() != TOK_CATCH)
 		return logErrorN("Try-Catch Statement: Expected `catch`", currentToken);
 	nextToken();
 
-	if (currentToken.getType() != TOK_IDF)
+	if (currentToken == NULL || currentToken->getType() != TOK_IDF)
 		return logErrorN("Try-Catch Statement: Expected identifier", currentToken);
-	hashcode_t key = hash.hashString(currentToken.getValueString());
+	hashcode_t key = hash.hashString(currentToken->getValueString());
 	nextToken();
 
-	if (currentToken.getType() != TOK_THEN)
+	if (currentToken == NULL || currentToken->getType() != TOK_THEN)
 		return logErrorN("Try-Catch Statement: Expected `then`", currentToken);
 	nextToken();
 
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Try-Catch Statement: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> cbody;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -949,29 +971,30 @@ std::unique_ptr<Node> NodeParser::parseTryCatchNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("Try-Catch Statement: Expected `}`", currentToken);
 	nextToken();
 
-	return std::make_unique<TryCatchNode>(std::make_unique<VectorNode>(std::move(tbody), true), std::make_unique<VectorNode>(std::move(cbody), true), key);
+	return std::make_unique<TryCatchNode>(std::make_unique<VectorNode>(std::move(tbody), true, currentToken), std::make_unique<VectorNode>(std::move(cbody), true, currentToken), key, currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseWhileNode()
 {
+
 	nextToken();
 	auto ifs = parseEquNode();
 	if (!ifs)
 		return nullptr;
-	if (currentToken.getType() != TOK_DO)
+	if (currentToken->getType() != TOK_DO)
 		return logErrorN("While Statement: Expected `do`", currentToken);
 	nextToken();
-	if (currentToken.getType() != '{')
+	if (currentToken->getType() != '{')
 		return logErrorN("While Statement: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken == NULL || currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -979,32 +1002,33 @@ std::unique_ptr<Node> NodeParser::parseWhileNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("While Statement: Expected `}`", currentToken);
 	nextToken();
 
-	return std::make_unique<WhileNode>(std::move(ifs), std::move(body));
+	return std::make_unique<WhileNode>(std::move(ifs), std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseForNode()
 {
+
 	nextToken();
-	auto id = hash.hashString(currentToken.getValueString());
+	auto id = hash.hashString(currentToken->getValueString());
 	nextToken();
-	if (currentToken.getType() != TOK_IN)
+	if (currentToken == NULL || currentToken->getType() != TOK_IN)
 		return logErrorN("For Statement: Expected `in`", currentToken);
 	nextToken();
 	auto fors = parseEquNode();
-	if (currentToken.getType() != TOK_DO)
+	if (currentToken == NULL || currentToken->getType() != TOK_DO)
 		return logErrorN("For Statement: Expected `do`", currentToken);
 	nextToken();
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("For Statement: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken == NULL || currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -1012,56 +1036,58 @@ std::unique_ptr<Node> NodeParser::parseForNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("For Statement: Expected `}`", currentToken);
 	nextToken();
 
-	return std::make_unique<ForNode>(id, std::move(fors), std::move(body));
+	return std::make_unique<ForNode>(id, std::move(fors), std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseExternNode()
 {
+
 	nextToken();
-	std::string fname = currentToken.getValueString();
+	std::string fname = currentToken->getValueString();
 	nextToken();
 
-	if (currentToken.getType() != TOK_IN)
+	if (currentToken == NULL || currentToken->getType() != TOK_IN)
 		return logErrorN("Expected `in`", currentToken);
 	nextToken();
 
-	std::string libname = currentToken.getValueString();
+	std::string libname = currentToken->getValueString();
 
 	nextToken();
-	if (currentToken.getType() != ';')
+	if (currentToken == NULL || currentToken->getType() != ';')
 		return logErrorN("Expected `;`", currentToken);
 	nextToken();
 
 	rlib::loadFunction(currentFile.parent_path(), libname, fname);
-	return std::make_unique<NilNode>();
+	return std::make_unique<ContainerNode>(Symbol(), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseClassNode()
 {
-	auto type = currentToken.getType();
+
+	auto type = currentToken->getType();
 	nextToken();
-	auto key = hash.hashString(currentToken.getValueString());
+	auto key = hash.hashString(currentToken->getValueString());
 	nextToken();
-	if (currentToken.getType() != TOK_CLASS)
+	if (currentToken == NULL || currentToken->getType() != TOK_CLASS)
 		return logErrorN("Class Declaration: Expected `class`", currentToken);
 	nextToken();
 	std::unique_ptr<Node> extends = nullptr;
-	if (currentToken.getType() == ':')
+	if (currentToken == NULL || currentToken->getType() == ':')
 	{
 		nextToken();
 		extends = parseUnitNode();
 	}
-	if (currentToken.getType() != '{')
+	if (currentToken == NULL || currentToken->getType() != '{')
 		return logErrorN("Class Declaration: Expected `{`", currentToken);
 	nextToken();
 	std::vector<std::unique_ptr<Node>> body;
-	while (currentToken.getType() != 0)
+	while (currentToken != NULL)
 	{
-		if (currentToken.getType() == '}')
+		if (currentToken == NULL || currentToken->getType() == '}')
 			break;
 
 		if (auto e = parseExprNode())
@@ -1069,29 +1095,30 @@ std::unique_ptr<Node> NodeParser::parseClassNode()
 		else
 			return logErrorN("Failure to parse code", currentToken);
 	}
-	if (currentToken.getType() != '}')
+	if (currentToken == NULL || currentToken->getType() != '}')
 		return logErrorN("Class Declaration: Expected `}`", currentToken);
 	nextToken();
 
-	return std::make_unique<ClassNode>(key, type, std::move(body), std::move(extends));
+	return std::make_unique<ClassNode>(key, type, std::move(body), std::move(extends), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseLoadNode()
 {
+
 	nextToken();
-	if (currentToken.getType() != TOK_STR_LIT)
+	if (currentToken == NULL || currentToken->getType() != TOK_STR_LIT)
 		return logErrorN("Expected filepath after `load`", currentToken);
-	std::string filename = currentToken.getValueString();
+	std::string filename = currentToken->getValueString();
 	nextToken();
 
 	auto path = rdir::findFile(currentFile.parent_path(), filename);
 
 	if (std::find(rdir::loaded.begin(), rdir::loaded.end(), path) != rdir::loaded.end())
 	{
-		if (currentToken.getType() != ';')
+		if (currentToken == NULL || currentToken->getType() != ';')
 			return logErrorN("Expected `;`", currentToken);
 		nextToken();
-		return std::make_unique<NilNode>();
+		return std::make_unique<ContainerNode>(Symbol(), currentToken);
 	}
 
 	rdir::loaded.push_back(path);
@@ -1112,7 +1139,7 @@ std::unique_ptr<Node> NodeParser::parseLoadNode()
 	NodeParser np(tokens, this->bOperators, this->uOperators, path);
 	auto n = np.parse();
 
-	if (currentToken.getType() != ';')
+	if (currentToken == NULL || currentToken->getType() != ';')
 		return logErrorN("Expected `;`", currentToken);
 	nextToken();
 
@@ -1121,7 +1148,11 @@ std::unique_ptr<Node> NodeParser::parseLoadNode()
 
 std::unique_ptr<Node> NodeParser::parseExprNode()
 {
-	switch (currentToken.getType())
+
+	if (currentToken == NULL)
+		return logErrorN("Expression terminated unexpectedly", currentToken);
+
+	switch (currentToken->getType())
 	{
 	case ';':
 		return logErrorN("Expected expression", currentToken);
@@ -1149,42 +1180,42 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 		nextToken();
 		if (auto ret = parseEquNode())
 		{
-			if (currentToken.getType() != ';')
+			if (currentToken == NULL || currentToken->getType() != ';')
 				return logErrorN("Expected `;`", currentToken);
 			nextToken();
-			return std::make_unique<ThrowNode>(std::move(ret));
+			return std::make_unique<ThrowNode>(std::move(ret), currentToken);
 		}
 		return nullptr;
 	case TOK_BREAK:
 		nextToken();
-		if (currentToken.getType() != ';')
+		if (currentToken == NULL || currentToken->getType() != ';')
 			return logErrorN("Expected `;`", currentToken);
 		nextToken();
-		return std::make_unique<BreakNode>();
+		return std::make_unique<BreakNode>(currentToken);
 	case TOK_RETURN:
 		nextToken();
 		if (auto ret = parseEquNode())
 		{
-			if (currentToken.getType() != ';')
+			if (currentToken == NULL || currentToken->getType() != ';')
 				return logErrorN("Expected `;`", currentToken);
 			nextToken();
-			return std::make_unique<ReturnNode>(std::move(ret));
+			return std::make_unique<ReturnNode>(std::move(ret), currentToken);
 		}
 		return nullptr;
 	case TOK_REFER:
 		nextToken();
 		if (auto ret = parseEquNode())
 		{
-			if (currentToken.getType() != ';')
+			if (currentToken == NULL || currentToken->getType() != ';')
 				return logErrorN("Expected `;`", currentToken);
 			nextToken();
-			return std::make_unique<ReferNode>(std::move(ret));
+			return std::make_unique<ReferNode>(std::move(ret), currentToken);
 		}
 		return nullptr;
 	default:
 		if (auto ret = parseEquNode())
 		{
-			if (currentToken.getType() != ';')
+			if (currentToken == NULL || currentToken->getType() != ';')
 				return logErrorN("Expected `;`", currentToken);
 			nextToken();
 			return ret;
@@ -1204,31 +1235,16 @@ Instruction *NodeParser::genParser(std::unique_ptr<Node> n)
 	return n->genParser();
 }
 
-std::unique_ptr<Node> NodeParser::logErrorN(const std::string &s, Token t)
+std::unique_ptr<Node> NodeParser::logErrorN(const std::string &s, Token *t)
 {
-	std::string ret = "\033[" + std::to_string(RED_TEXT) + "m" + s + "\n";
-
-	std::string lineInfoRaw = "<" + t.getFilename() + ">:" + std::to_string(t.getLineNumber() + 1) + " | ";
-	ret += "\033[" + std::to_string(CYAN_TEXT) + "m<\033[4m" + t.getFilename() + "\033[0m\033[" + std::to_string(CYAN_TEXT) + "m>:" + std::to_string(t.getLineNumber() + 1) + " | ";
-	ret += "\033[" + std::to_string(MAGENTA_TEXT) + "m" + t.getLine() + "\n";
-
-	ret += "\033[" + std::to_string(RED_TEXT) + "m";
-	for (size_t i = 0; i < t.getDist() - t.getValueString().size() + lineInfoRaw.size(); i++)
-		ret += " ";
-	ret += "^";
-
-	if (t.getValueString().size() > 0)
-		for (size_t i = 0; i < t.getValueString().size() - 1; i++)
-			ret += "~";
-
-	ret += "\033[0m";
-
-	throw std::runtime_error(ret);
-
+	if (t == NULL)
+		throwError(s, &tokens[index - 1]);
+	else
+		throwError(s, t);
 	return nullptr;
 }
 
-std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> NodeParser::logErrorSN(const std::string &s, Token t)
+std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> NodeParser::logErrorSN(const std::string &s, Token *t)
 {
 	logErrorN(s, t);
 	return {{(LEX_TOKEN_TYPE)0, -1}};

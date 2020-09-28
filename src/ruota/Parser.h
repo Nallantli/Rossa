@@ -11,7 +11,7 @@ protected:
 	Instruction *a;
 
 public:
-	UnaryI(I_TYPE, Instruction *);
+	UnaryI(I_TYPE, Instruction *, Token *);
 	Instruction *getA() const;
 	virtual ~UnaryI();
 };
@@ -22,7 +22,7 @@ protected:
 	hashcode_t key;
 
 public:
-	CastingI(I_TYPE, hashcode_t);
+	CastingI(I_TYPE, hashcode_t, Token *);
 	hashcode_t getKey() const;
 };
 
@@ -32,7 +32,7 @@ protected:
 	Instruction *b;
 
 public:
-	BinaryI(I_TYPE, Instruction *, Instruction *);
+	BinaryI(I_TYPE, Instruction *, Instruction *, Token *);
 	Instruction *getB() const;
 	virtual ~BinaryI();
 };
@@ -43,7 +43,7 @@ protected:
 	Symbol d;
 
 public:
-	Container(const Symbol &d);
+	Container(const Symbol &d, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -57,7 +57,7 @@ protected:
 	std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(hashcode_t, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>);
+	DefineI(hashcode_t, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -68,7 +68,7 @@ protected:
 	std::vector<Instruction *> children;
 
 public:
-	Sequence(std::vector<Instruction *>);
+	Sequence(std::vector<Instruction *>, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~Sequence();
@@ -82,7 +82,7 @@ protected:
 	Instruction *elses;
 
 public:
-	IfElseI(Instruction *, Instruction *, Instruction *);
+	IfElseI(Instruction *, Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~IfElseI();
@@ -95,7 +95,7 @@ protected:
 	Instruction *body;
 
 public:
-	WhileI(Instruction *, Instruction *);
+	WhileI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~WhileI();
@@ -109,7 +109,7 @@ protected:
 	Instruction *body;
 
 public:
-	ForI(hashcode_t, Instruction *, Instruction *);
+	ForI(hashcode_t, Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~ForI();
@@ -118,7 +118,7 @@ public:
 class VariableI : public CastingI
 {
 public:
-	VariableI(hashcode_t);
+	VariableI(hashcode_t, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -126,7 +126,7 @@ public:
 class DeclareI : public CastingI
 {
 public:
-	DeclareI(hashcode_t);
+	DeclareI(hashcode_t, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -134,7 +134,7 @@ public:
 class IndexI : public BinaryI
 {
 public:
-	IndexI(Instruction *, Instruction *);
+	IndexI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -142,7 +142,7 @@ public:
 class InnerI : public BinaryI
 {
 public:
-	InnerI(Instruction *, Instruction *);
+	InnerI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -150,7 +150,7 @@ public:
 class CallI : public BinaryI
 {
 public:
-	CallI(Instruction *, Instruction *);
+	CallI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -158,7 +158,7 @@ public:
 class AddI : public BinaryI
 {
 public:
-	AddI(Instruction *, Instruction *);
+	AddI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -166,7 +166,7 @@ public:
 class SubI : public BinaryI
 {
 public:
-	SubI(Instruction *, Instruction *);
+	SubI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -174,7 +174,7 @@ public:
 class MulI : public BinaryI
 {
 public:
-	MulI(Instruction *, Instruction *);
+	MulI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -182,7 +182,7 @@ public:
 class DivI : public BinaryI
 {
 public:
-	DivI(Instruction *, Instruction *);
+	DivI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -190,7 +190,7 @@ public:
 class ModI : public BinaryI
 {
 public:
-	ModI(Instruction *, Instruction *);
+	ModI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -198,7 +198,7 @@ public:
 class PowI : public BinaryI
 {
 public:
-	PowI(Instruction *, Instruction *);
+	PowI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -206,7 +206,7 @@ public:
 class LessI : public BinaryI
 {
 public:
-	LessI(Instruction *, Instruction *);
+	LessI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -214,7 +214,7 @@ public:
 class MoreI : public BinaryI
 {
 public:
-	MoreI(Instruction *, Instruction *);
+	MoreI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -222,7 +222,7 @@ public:
 class ELessI : public BinaryI
 {
 public:
-	ELessI(Instruction *, Instruction *);
+	ELessI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -230,7 +230,7 @@ public:
 class EMoreI : public BinaryI
 {
 public:
-	EMoreI(Instruction *, Instruction *);
+	EMoreI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -238,7 +238,7 @@ public:
 class Equals : public BinaryI
 {
 public:
-	Equals(Instruction *, Instruction *);
+	Equals(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -246,7 +246,7 @@ public:
 class NEquals : public BinaryI
 {
 public:
-	NEquals(Instruction *, Instruction *);
+	NEquals(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -254,7 +254,7 @@ public:
 class AndI : public BinaryI
 {
 public:
-	AndI(Instruction *, Instruction *);
+	AndI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -262,7 +262,7 @@ public:
 class OrI : public BinaryI
 {
 public:
-	OrI(Instruction *, Instruction *);
+	OrI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -270,7 +270,7 @@ public:
 class BOrI : public BinaryI
 {
 public:
-	BOrI(Instruction *, Instruction *);
+	BOrI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -278,7 +278,7 @@ public:
 class BAndI : public BinaryI
 {
 public:
-	BAndI(Instruction *, Instruction *);
+	BAndI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -286,7 +286,7 @@ public:
 class BXOrI : public BinaryI
 {
 public:
-	BXOrI(Instruction *, Instruction *);
+	BXOrI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -294,7 +294,7 @@ public:
 class BShiftLeft : public BinaryI
 {
 public:
-	BShiftLeft(Instruction *, Instruction *);
+	BShiftLeft(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -302,7 +302,7 @@ public:
 class BShiftRight : public BinaryI
 {
 public:
-	BShiftRight(Instruction *, Instruction *);
+	BShiftRight(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -310,7 +310,7 @@ public:
 class SetI : public BinaryI
 {
 public:
-	SetI(Instruction *, Instruction *);
+	SetI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -318,7 +318,7 @@ public:
 class ReturnI : public UnaryI
 {
 public:
-	ReturnI(Instruction *);
+	ReturnI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -327,10 +327,10 @@ class ExternI : public UnaryI
 {
 protected:
 	std::string id;
-	boost::function<const Symbol(std::vector<Symbol>)> f;
+	boost::function<const Symbol(std::vector<Symbol>, Token*)> f;
 
 public:
-	ExternI(const std::string &, Instruction *a);
+	ExternI(const std::string &, Instruction *a, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -338,7 +338,7 @@ public:
 class LengthI : public UnaryI
 {
 public:
-	LengthI(Instruction *);
+	LengthI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -346,7 +346,7 @@ public:
 class SizeI : public UnaryI
 {
 public:
-	SizeI(Instruction *);
+	SizeI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -360,7 +360,7 @@ protected:
 	Instruction * extends;
 
 public:
-	ClassI(hashcode_t, OBJECT_TYPE, std::shared_ptr<Instruction>, Instruction *);
+	ClassI(hashcode_t, OBJECT_TYPE, std::shared_ptr<Instruction>, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	~ClassI();
@@ -369,7 +369,7 @@ public:
 class NewI : public BinaryI
 {
 public:
-	NewI(Instruction *, Instruction *);
+	NewI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -380,7 +380,7 @@ protected:
 	D_TYPE convert;
 
 public:
-	CastToI(Instruction *, D_TYPE);
+	CastToI(Instruction *, D_TYPE, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -388,7 +388,7 @@ public:
 class AllocI : public UnaryI
 {
 public:
-	AllocI(Instruction *);
+	AllocI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -396,7 +396,7 @@ public:
 class UntilI : public BinaryI
 {
 public:
-	UntilI(Instruction *, Instruction *);
+	UntilI(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -407,7 +407,7 @@ protected:
 	std::vector<Instruction *> children;
 
 public:
-	ScopeI(std::vector<Instruction *>);
+	ScopeI(std::vector<Instruction *>, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~ScopeI();
@@ -419,7 +419,7 @@ protected:
 	std::map<hashcode_t, Instruction *> children;
 
 public:
-	MapI(std::map<hashcode_t, Instruction *>);
+	MapI(std::map<hashcode_t, Instruction *>, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~MapI();
@@ -428,7 +428,7 @@ public:
 class ReferI : public UnaryI
 {
 public:
-	ReferI(Instruction *);
+	ReferI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -441,7 +441,7 @@ protected:
 	std::map<Symbol, Instruction *> cases;
 
 public:
-	SwitchI(Instruction *, std::map<Symbol, Instruction *>, Instruction *);
+	SwitchI(Instruction *, std::map<Symbol, Instruction *>, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 	virtual ~SwitchI();
@@ -452,7 +452,7 @@ class TryCatchI : public BinaryI
 protected:
 	hashcode_t key;
 public:
-	TryCatchI(Instruction *, Instruction *, hashcode_t);
+	TryCatchI(Instruction *, Instruction *, hashcode_t, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -460,7 +460,7 @@ public:
 class ThrowI : public UnaryI
 {
 public:
-	ThrowI(Instruction *);
+	ThrowI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -468,7 +468,7 @@ public:
 class PureEquals : public BinaryI
 {
 public:
-	PureEquals(Instruction *, Instruction *);
+	PureEquals(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -476,7 +476,7 @@ public:
 class PureNEquals : public BinaryI
 {
 public:
-	PureNEquals(Instruction *, Instruction *);
+	PureNEquals(Instruction *, Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -484,7 +484,7 @@ public:
 class CharNI : public UnaryI
 {
 public:
-	CharNI(Instruction *);
+	CharNI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };
@@ -492,7 +492,7 @@ public:
 class CharSI : public UnaryI
 {
 public:
-	CharSI(Instruction *);
+	CharSI(Instruction *, Token *);
 	const Symbol evaluate(Scope &) const override;
 	const std::string toString(bool) const override;
 };

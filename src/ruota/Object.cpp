@@ -10,17 +10,17 @@ std::shared_ptr<Scope> Object::getScope() const
 	return this->internal;
 }
 
-const Symbol Object::instantiate(std::vector<Symbol> params) const
+const Symbol Object::instantiate(std::vector<Symbol> params, Token * token) const
 {
 	if (type != STRUCT_O)
-		throw std::runtime_error("Cannot instantiate a non-struct Object");
+		throwError("Cannot instantiate a non-struct Object", token);
 
 	auto o = std::make_shared<Object>(*internal->getParent(), INSTANCE_O, body, key);
 	o->body->evaluate(*o->getScope());
-	auto f = o->getScope()->getVariable(Ruota::HASH_INIT).getFunction(NIL, params.size());
+	auto f = o->getScope()->getVariable(Ruota::HASH_INIT, token).getFunction(NIL, params.size(), token);
 	auto d = Symbol(o);
 
-	f->evaluate(params, &d);
+	f->evaluate(params, &d, token);
 	return d;
 }
 
@@ -48,7 +48,7 @@ Object::~Object()
 {
 	if (hasValue(Ruota::HASH_DELETER))
 	{
-		auto f = internal->getVariable(Ruota::HASH_DELETER).getFunction(NIL, 0);
-		f->evaluate({});
+		auto f = internal->getVariable(Ruota::HASH_DELETER, NULL).getFunction(NIL, 0, NULL);
+		f->evaluate({}, NULL);
 	}
 }

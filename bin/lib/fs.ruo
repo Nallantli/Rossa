@@ -1,9 +1,12 @@
-extern _file_init in "libfs";
-extern _file_close in "libfs";
-extern _file_readLine in "libfs";
-extern _file_read in "libfs";
-extern _file_isOpen in "libfs";
-extern _file_write in "libfs";
+extern _writer_init in "libfs";
+extern _writer_close in "libfs";
+extern _writer_write in "libfs";
+extern _writer_isOpen in "libfs";
+extern _reader_init in "libfs";
+extern _reader_close in "libfs";
+extern _reader_readLine in "libfs";
+extern _reader_read in "libfs";
+extern _reader_isOpen in "libfs";
 extern _path_init in "libfs";
 extern _path_filename in "libfs";
 extern _path_string in "libfs";
@@ -68,19 +71,46 @@ struct Path class {
 	}
 }
 
-struct FileIO class {
+struct Writer class {
 	var ptr;
 
 	init(ref filename) => {
-		ptr = (extern_call libfs._file_init(filename -> String));
+		ptr = (extern_call libfs._writer_init(filename -> String));
 	}
 
 	isOpen() => {
-		return (extern_call libfs._file_isOpen(ptr));
+		return (extern_call libfs._writer_isOpen(ptr));
+	}
+
+	write(ref s) => {
+		extern_call libfs._writer_write(ptr, s);
+	}
+
+	close() => {
+		if ptr != nil then {
+			extern_call libfs._writer_close(ptr);
+			ptr = nil;
+		}
+	}
+
+	~() => {
+		close();
+	}
+}
+
+struct Reader class {
+	var ptr;
+
+	init(ref filename) => {
+		ptr = (extern_call libfs._reader_init(filename -> String));
+	}
+
+	isOpen() => {
+		return (extern_call libfs._reader_isOpen(ptr));
 	}
 
 	read(ref n) => {
-		return (extern_call libfs._file_read(ptr, n));
+		return (extern_call libfs._reader_read(ptr, n));
 	}
 
 	read() => {
@@ -88,16 +118,12 @@ struct FileIO class {
 	}
 
 	readLine() => {
-		return (extern_call libfs._file_readLine(ptr));
-	}
-
-	write(ref s) => {
-		extern_call libfs._file_write(ptr, s);
+		return (extern_call libfs._reader_readLine(ptr));
 	}
 
 	close() => {
 		if ptr != nil then {
-			extern_call libfs._file_close(ptr);
+			extern_call libfs._reader_close(ptr);
 			ptr = nil;
 		}
 	}

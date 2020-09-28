@@ -1,9 +1,10 @@
 #include "Ruota.h"
+#include "Lexer.h"
 #include "Library.h"
 #include "NodeParser.h"
 
 std::vector<boost::filesystem::path> rdir::loaded = {};
-std::map<std::string, boost::function<const Symbol(std::vector<Symbol>)>> rlib::loaded = {};
+std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, Token*)>> rlib::loaded = {};
 
 std::vector<Function> Ruota::stack_trace = {};
 

@@ -3,7 +3,6 @@
 
 #include "Ruota.h"
 #include "Node.h"
-#include "Lexer.h"
 
 class NodeParser
 {
@@ -12,9 +11,9 @@ private:
 	std::map<std::string, signed int> bOperators;
 	std::map<std::string, signed int> uOperators;
 	unsigned int index = 0;
-	Token currentToken;
+	Token *currentToken;
 	std::vector<Token> tokens;
-	Token nextToken();
+	Token *nextToken();
 	std::unique_ptr<Node> parseNumNode();
 	std::unique_ptr<Node> parseBoolNode();
 	std::unique_ptr<Node> parseIDNode();
@@ -51,8 +50,8 @@ private:
 	std::unique_ptr<Node> parseIndexNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseThenNode(std::unique_ptr<Node>);
 
-	std::unique_ptr<Node> logErrorN(const std::string &, Token);
-	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> logErrorSN(const std::string &, Token);
+	std::unique_ptr<Node> logErrorN(const std::string &, Token *);
+	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> logErrorSN(const std::string &, Token *);
 
 public:
 	NodeParser(std::vector<Token>, std::map<std::string, signed int>, std::map<std::string, signed int>, boost::filesystem::path);

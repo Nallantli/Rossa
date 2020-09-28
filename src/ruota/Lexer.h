@@ -2,30 +2,6 @@
 #define LEXER_H
 
 #include "Ruota.h"
-
-class Token
-{
-private:
-	std::string filename;
-	std::string valueString;
-	std::string line;
-	NUMBER_TYPE valueNumber;
-	int type;
-	size_t distance;
-	size_t lineNumber;
-
-public:
-	Token();
-	Token(const std::string &, const std::string &, size_t, size_t, const std::string &, NUMBER_TYPE, int);
-	const std::string &getLine() const;
-	int getType() const;
-	size_t getDist() const;
-	size_t getLineNumber() const;
-	NUMBER_TYPE getValueNumber() const;
-	const std::string &getValueString() const;
-	const std::string &getFilename() const;
-};
-
 class Lexer
 {
 private:

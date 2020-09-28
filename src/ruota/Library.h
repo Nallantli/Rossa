@@ -24,7 +24,7 @@ namespace rdir
 
 namespace rlib
 {
-	extern std::map<std::string, boost::function<const Symbol(std::vector<Symbol>)>> loaded;
+	extern std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, Token *)>> loaded;
 
 	inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname)
 	{
@@ -40,7 +40,7 @@ namespace rlib
 		if (loaded.find(search) != loaded.end())
 			return;
 
-		loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>)>(rdir::findFile(currentDir, libname), fname);
+		loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, Token *)>(rdir::findFile(currentDir, libname), fname);
 	}
 } // namespace rlib
 

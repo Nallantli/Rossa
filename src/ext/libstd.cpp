@@ -14,124 +14,124 @@ RUOTA_LIB_HEADER
 
 namespace libstd
 {
-	RUOTA_EXT_SYM(_puts, args)
+	RUOTA_EXT_SYM(_puts, args, token)
 	{
-		std::cout << args[0].getString();
+		std::cout << args[0].getString(NULL);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_timeMS, args)
+	RUOTA_EXT_SYM(_timeMS, args, token)
 	{
 		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 		return Symbol(NUMBER_NEW_LONG(ms.count()));
 	}
 
-	RUOTA_EXT_SYM(_rand_init, args)
+	RUOTA_EXT_SYM(_rand_init, args, token)
 	{
-		auto rng = std::make_shared<std::default_random_engine>(NUMBER_GET_LONG(args[0].getNumber()));
+		auto rng = std::make_shared<std::default_random_engine>(NUMBER_GET_LONG(args[0].getNumber(NULL)));
 		return Symbol(static_cast<std::shared_ptr<void>>(rng));
 	}
 
-	RUOTA_EXT_SYM(_rand_nextFloat, args)
+	RUOTA_EXT_SYM(_rand_nextFloat, args, token)
 	{
-		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer().get());
-		std::uniform_real_distribution<long_double_t> distribution(NUMBER_GET_DOUBLE(args[1].getNumber()), NUMBER_GET_DOUBLE(args[2].getNumber()));
+		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer(NULL).get());
+		std::uniform_real_distribution<long_double_t> distribution(NUMBER_GET_DOUBLE(args[1].getNumber(NULL)), NUMBER_GET_DOUBLE(args[2].getNumber(NULL)));
 		return Symbol(NUMBER_NEW_DOUBLE(distribution(*rng)));
 	}
 
-	RUOTA_EXT_SYM(_rand_nextInt, args)
+	RUOTA_EXT_SYM(_rand_nextInt, args, token)
 	{
-		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer().get());
-		std::uniform_int_distribution<long_int_t> distribution(NUMBER_GET_LONG(args[1].getNumber()), NUMBER_GET_LONG(args[2].getNumber()));
+		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer(NULL).get());
+		std::uniform_int_distribution<long_int_t> distribution(NUMBER_GET_LONG(args[1].getNumber(NULL)), NUMBER_GET_LONG(args[2].getNumber(NULL)));
 		return Symbol(NUMBER_NEW_LONG(distribution(*rng)));
 	}
 
-	RUOTA_EXT_SYM(_exit, args)
+	RUOTA_EXT_SYM(_exit, args, token)
 	{
-		exit(NUMBER_GET_LONG(args[0].getNumber()));
+		exit(NUMBER_GET_LONG(args[0].getNumber(NULL)));
 	}
 
-	RUOTA_EXT_SYM(_system_call, args)
+	RUOTA_EXT_SYM(_system_call, args, token)
 	{
-		return Symbol(NUMBER_NEW_LONG(system(args[0].getString().c_str())));
+		return Symbol(NUMBER_NEW_LONG(system(args[0].getString(NULL).c_str())));
 	}
 
-	RUOTA_EXT_SYM(_sleep, args)
+	RUOTA_EXT_SYM(_sleep, args, token)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds((long long)NUMBER_GET_LONG(args[0].getNumber())));
+		std::this_thread::sleep_for(std::chrono::milliseconds((long long)NUMBER_GET_LONG(args[0].getNumber(NULL))));
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_log, args)
+	RUOTA_EXT_SYM(_log, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::log(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::log(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_sin, args)
+	RUOTA_EXT_SYM(_sin, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::sin(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::sin(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_cos, args)
+	RUOTA_EXT_SYM(_cos, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::cos(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::cos(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_tan, args)
+	RUOTA_EXT_SYM(_tan, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::tan(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::tan(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_sinh, args)
+	RUOTA_EXT_SYM(_sinh, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::sinh(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::sinh(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_cosh, args)
+	RUOTA_EXT_SYM(_cosh, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::cosh(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::cosh(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_tanh, args)
+	RUOTA_EXT_SYM(_tanh, args, token)
 	{
-		return Symbol(NUMBER_NEW_DOUBLE(std::tanh(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_DOUBLE(std::tanh(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_floor, args)
-	{
-#ifdef _USE_CONV_NUM_
-		if (args[0].getNumber().type == LONG_NUM)
-			return args[0];
-#endif
-		return Symbol(NUMBER_NEW_LONG(std::floor(NUMBER_GET_DOUBLE(args[0].getNumber()))));
-	}
-
-	RUOTA_EXT_SYM(_ceil, args)
+	RUOTA_EXT_SYM(_floor, args, token)
 	{
 #ifdef _USE_CONV_NUM_
-		if (args[0].getNumber().type == LONG_NUM)
+		if (args[0].getNumber(NULL).type == LONG_NUM)
 			return args[0];
 #endif
-		return Symbol(NUMBER_NEW_LONG(std::ceil(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_LONG(std::floor(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_round, args)
+	RUOTA_EXT_SYM(_ceil, args, token)
 	{
 #ifdef _USE_CONV_NUM_
-		if (args[0].getNumber().type == LONG_NUM)
+		if (args[0].getNumber(NULL).type == LONG_NUM)
 			return args[0];
 #endif
-		return Symbol(NUMBER_NEW_LONG(std::round(NUMBER_GET_DOUBLE(args[0].getNumber()))));
+		return Symbol(NUMBER_NEW_LONG(std::ceil(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
 	}
 
-	RUOTA_EXT_SYM(_input_line, args)
+	RUOTA_EXT_SYM(_round, args, token)
+	{
+#ifdef _USE_CONV_NUM_
+		if (args[0].getNumber(NULL).type == LONG_NUM)
+			return args[0];
+#endif
+		return Symbol(NUMBER_NEW_LONG(std::round(NUMBER_GET_DOUBLE(args[0].getNumber(NULL)))));
+	}
+
+	RUOTA_EXT_SYM(_input_line, args, token)
 	{
 		std::string line;
 		std::getline(std::cin, line);
 		return Symbol(line);
 	}
 
-	RUOTA_EXT_SYM(_input_char, args)
+	RUOTA_EXT_SYM(_input_char, args, token)
 	{
 #ifdef __unix__
 		system("stty raw");
