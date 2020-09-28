@@ -5,7 +5,7 @@
 
 RUOTA_LIB_HEADER
 
-namespace fs
+namespace libfs
 {
 	RUOTA_EXT_SYM(_file_init, args)
 	{
@@ -104,4 +104,4 @@ namespace fs
 		auto path2 = args[1].getString();
 		return Symbol((*path1 / path2).string());
 	}
-} // namespace fs
+} // namespace libfs

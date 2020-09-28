@@ -1,0 +1,26 @@
+load "net.ruo";
+
+var server = new net.Server(9999);
+putln("Server Created");
+var data;
+
+while data != "exit\n" do {
+	putln("Waiting for Connection...");
+	var socket = server.accept();
+	putln("Connected");
+
+	while true do {
+		puts("Recieved:\t" + (data = socket.readTo("\n")));
+		if data == "exit\n" || data == "\n" then {
+			break;
+		}
+
+		data.pop();
+		putln("Sending:\t" + data.reverse());
+		socket << data.reverse() << "\n";
+	}
+
+	putln("Client Disconnected");
+}
+
+putln("Server Shutdown");

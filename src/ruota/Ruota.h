@@ -17,7 +17,7 @@ typedef long double long_double_t;
 typedef signed long long long_int_t;
 typedef unsigned long long hashcode_t;
 
-#define _RUOTA_VERSION_ "v1.0.0-alpha"
+#define _RUOTA_VERSION_ "v1.0.1-alpha"
 
 #ifdef _USE_CONV_NUM_
 #define NUMBER_TYPE SmartNumber
@@ -1122,7 +1122,7 @@ public:
 		{
 			auto i = NUMBER_GET_LONG(a.getNumber());
 			if (i >= d->valueVector.size())
-				throw std::runtime_error("Array index out of bounds");
+				throw std::runtime_error("Array index out of bounds: size = " + std::to_string(d->valueVector.size()) + ", got " + std::to_string(i));
 			return d->valueVector[NUMBER_GET_LONG(a.getNumber())];
 		}
 		case DICTIONARY:
@@ -1132,7 +1132,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_INDEX))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_INDEX).call(NIL, {a}, this);
+				return o->getScope()->getVariable(Ruota::HASH_INDEX).call(NIL, {a}, *this);
 			}
 			throw std::runtime_error("Operator `[]` is undefined for Object type");
 		}
@@ -1187,7 +1187,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_TO_STRING))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_TO_STRING).call(NIL, {}, this).getString();
+				return o->getScope()->getVariable(Ruota::HASH_TO_STRING).call(NIL, {}, *this).getString();
 			}
 			return "<Object>";
 		}
@@ -1337,7 +1337,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_CALL))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, this);
+				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, *this);
 			}
 		}
 
@@ -1353,7 +1353,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_CALL))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, this);
+				return o->getScope()->getVariable(Ruota::HASH_CALL).call(NIL, params, *this);
 			}
 		}
 
@@ -1392,11 +1392,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_ADD))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_ADD).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_ADD).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `+` is undefined for value type");
+			throw std::runtime_error("Operator `+` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1406,7 +1406,7 @@ public:
 			throw std::runtime_error("Cannot change the value of a variable declared as `final`");
 		if (d->type == OBJECT && d->valueObject != nullptr && d->valueObject->hasValue(Ruota::HASH_SET))
 		{
-			d->valueObject->getScope()->getVariable(Ruota::HASH_SET).call(NIL, {b}, this);
+			d->valueObject->getScope()->getVariable(Ruota::HASH_SET).call(NIL, {b}, *this);
 			return;
 		}
 		d->type = b.getValueType();
@@ -1474,11 +1474,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_SUB))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_SUB).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_SUB).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `-` is undefined for value type");
+			throw std::runtime_error("Operator `-` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1493,11 +1493,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_MUL))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_MUL).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_MUL).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `*` is undefined for value type");
+			throw std::runtime_error("Operator `*` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1512,11 +1512,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_DIV))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_DIV).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_DIV).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `/` is undefined for value type");
+			throw std::runtime_error("Operator `/` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1531,11 +1531,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_MOD))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_MOD).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_MOD).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `%` is undefined for value type");
+			throw std::runtime_error("Operator `%` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1550,11 +1550,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_POW))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_POW).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_POW).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `**` is undefined for value type");
+			throw std::runtime_error("Operator `**` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1569,11 +1569,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_B_AND))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_B_AND).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_B_AND).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `&` is undefined for value type");
+			throw std::runtime_error("Operator `&` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1588,11 +1588,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_B_OR))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_B_OR).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_B_OR).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `|` is undefined for value type");
+			throw std::runtime_error("Operator `|` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1607,11 +1607,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_B_XOR))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_B_XOR).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_B_XOR).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `^` is undefined for value type");
+			throw std::runtime_error("Operator `^` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1626,11 +1626,11 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_B_SH_L))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_B_SH_L).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_B_SH_L).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `<<` is undefined for value type");
+			throw std::runtime_error("Operator `<<` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1643,13 +1643,13 @@ public:
 		case OBJECT:
 		{
 			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_B_SH_L))
+			if (o->hasValue(Ruota::HASH_B_SH_R))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_B_SH_R).call(NIL, {b}, this);
+				return o->getScope()->getVariable(Ruota::HASH_B_SH_R).call(NIL, {b}, *this);
 			}
 		}
 		default:
-			throw std::runtime_error("Operator `>>` is undefined for value type");
+			throw std::runtime_error("Operator `>>` is undefined for value type: " + Symbol(static_cast<signed long long>(d->type)).toString());
 		}
 	}
 
@@ -1670,7 +1670,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_LESS))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_LESS).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_LESS).call(NIL, {b}, *this).getBool();
 			}
 			throw std::runtime_error("Operator `<` not defined for Object type");
 		}
@@ -1696,7 +1696,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_MORE))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_MORE).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_MORE).call(NIL, {b}, *this).getBool();
 			}
 			throw std::runtime_error("Operator `>` not defined for Object type");
 		}
@@ -1722,7 +1722,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_ELESS))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_ELESS).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_ELESS).call(NIL, {b}, *this).getBool();
 			}
 			throw std::runtime_error("Operator `<=` not defined for Object type");
 		}
@@ -1748,7 +1748,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_EMORE))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_EMORE).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_EMORE).call(NIL, {b}, *this).getBool();
 			}
 			throw std::runtime_error("Operator `>=` not defined for Object type");
 		}
@@ -1776,7 +1776,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_EQUALS))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_EQUALS).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_EQUALS).call(NIL, {b}, *this).getBool();
 			}
 			return o == b.getObject();
 		}
@@ -1815,7 +1815,7 @@ public:
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_NEQUALS))
 			{
-				return o->getScope()->getVariable(Ruota::HASH_NEQUALS).call(NIL, {b}, this).getBool();
+				return o->getScope()->getVariable(Ruota::HASH_NEQUALS).call(NIL, {b}, *this).getBool();
 			}
 		}
 		default:

@@ -1327,7 +1327,7 @@ const Symbol AllocI::evaluate(Scope &scope) const
 {
 	auto evalA = NUMBER_GET_LONG(a->evaluate(scope).getNumber());
 	if (evalA < 0)
-		throw std::runtime_error("Cannot initialize a Vector with size 0");
+		throw std::runtime_error("Cannot initialize a Vector with size < 0");
 	std::vector<Symbol> v(evalA);
 	return Symbol(v);
 }

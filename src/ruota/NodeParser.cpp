@@ -443,7 +443,7 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 
 		if (auto b = parseUnitNode())
 		{
-			if (prec <= pastPrec)
+			if (std::abs(prec) < std::abs(pastPrec) || (std::abs(prec) == std::abs(pastPrec) && prec > 0))
 			{
 				current = std::make_unique<BinOpNode>(
 					opStr,

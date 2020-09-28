@@ -7,24 +7,24 @@ BOOST_PATH_WIN=C:/Program Files/boost
 BOOST_VERSION_WIN=1_73
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
-CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
-CFLAGS=-O3 -lboost_filesystem --std=gnu++17 -ldl
-LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
-LFLAGS=-fPIC -shared -O3 -lboost_filesystem --std=gnu++17 -ldl
+CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lwsock32 -lws2_32 -lboost_filesystem$(SUFFIX_WIN) -lboost_system$(SUFFIX_WIN) --std=gnu++17
+CFLAGS=-O3 -lboost_filesystem -lboost_system --std=gnu++17 -ldl
+LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lwsock32 -lws2_32 -lboost_filesystem$(SUFFIX_WIN) -lboost_system$(SUFFIX_WIN) --std=gnu++17
+LFLAGS=-fPIC -shared -O3 -lboost_filesystem -lboost_system --std=gnu++17 -ldl
 
-win: mkdirswin bin/ruota.exe plugins-win
+win: bin/ruota.exe plugins-win
 
-nix: mkdirsnix bin/ruota plugins-nix
+nix: bin/ruota plugins-nix
 
-mkdirswin:
-	mkdir -p $(WINDIR)
+dirs-win:
+	mkdir $(WINDIR)
 
-mkdirsnix:
+dirs-nix:
 	mkdir -p $(NIXDIR)
 
-plugins-win: bin/lib/libstd.dll bin/lib/libfs.dll
+plugins-win: bin/lib/libstd.dll bin/lib/libfs.dll bin/lib/libnet.dll
 
-plugins-nix: bin/lib/libstd.so bin/lib/libfs.so
+plugins-nix: bin/lib/libstd.so bin/lib/libfs.so bin/lib/libnet.so
 
 bin/lib/libstd.dll: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.dll src/ext/libstd.cpp $(LFLAGS_WIN)
@@ -32,11 +32,17 @@ bin/lib/libstd.dll: src/ext/libstd.cpp
 bin/lib/libfs.dll: src/ext/libfs.cpp
 	$(CC) -o bin/lib/libfs.dll src/ext/libfs.cpp $(LFLAGS_WIN)
 
+bin/lib/libnet.dll: src/ext/libnet.cpp
+	$(CC) -o bin/lib/libnet.dll src/ext/libnet.cpp $(LFLAGS_WIN)
+
 bin/lib/libstd.so: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.so src/ext/libstd.cpp $(LFLAGS)
 
 bin/lib/libfs.so: src/ext/libfs.cpp
 	$(CC) -o bin/lib/libfs.so src/ext/libfs.cpp $(LFLAGS)
+
+bin/lib/libnet.so: src/ext/libnet.cpp
+	$(CC) -o bin/lib/libnet.so src/ext/libnet.cpp $(LFLAGS)
 
 bin/ruota.exe: $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o
 	$(CC) -o bin/ruota.exe $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(CFLAGS_WIN)

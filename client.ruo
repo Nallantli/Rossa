@@ -1,0 +1,17 @@
+load "net.ruo";
+
+var client = new net.Socket("127.0.0.1", 9999);
+
+putln("Client Socket Created");
+
+while true do {
+	puts("?> ");
+	var data = input.line();
+	client << data << "\n";
+	if data == "exit" || data == "" then {
+		break;
+	}
+	puts("Recieved:\t" + client.readTo("\n"));
+}
+
+putln("Client Socket Disconnected");

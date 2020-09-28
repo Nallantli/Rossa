@@ -21,23 +21,23 @@ extern _system_call in "libstd";
 
 # BASIC
 
-var alloc = ((x) => {
+var alloc = ((ref x) => {
 	refer alloc(x);
 });
 
-var length = ((x) => {
+var length = ((ref x) => {
 	refer length(x);
 });
 
-var size = ((x) => {
+var size = ((ref x) => {
 	refer size(x);
 });
 
-var charn = ((x) => {
+var charn = ((ref x) => {
 	refer charn(x);
 });
 
-var chars = ((x) => {
+var chars = ((ref x) => {
 	refer chars(x);
 });
 
@@ -264,6 +264,14 @@ Vector::filter(ref this, ref f) => {
 	return nv;
 }
 
+Vector::reverse(ref this) => {
+	var nv = alloc(length(this));
+	for i in [0 until length(this)] do {
+		nv[i] = this[length(this) - i - 1];
+	}
+	return nv;
+}
+
 # STRING
 
 String::push(ref this, ref value) => {
@@ -293,11 +301,15 @@ String::shift(ref this, ref count) => {
 }
 
 String::pop(ref this) => {
-	refer pop(this, 1);
+	refer this = pop(this, 1);
 }
 
 String::shift(ref this) => {
-	refer shift(this, 1);
+	refer this = shift(this, 1);
+}
+
+String::reverse(ref this) => {
+	return (this -> Vector).reverse().join();
 }
 
 # MATH

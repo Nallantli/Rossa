@@ -1,0 +1,87 @@
+extern _service_init in "libnet";
+extern _socket_init in "libnet";
+extern _socket_send in "libnet";
+extern _socket_read in "libnet";
+extern _socket_read_until in "libnet";
+extern _socket_close in "libnet";
+extern _server_init in "libnet";
+extern _server_accept in "libnet";
+
+static net class {
+	struct Service class {
+		var ptr;
+
+		init() => {
+			ptr = (extern_call libnet._service_init());
+		}
+	}
+
+	var __DEFAULT_NET_SERVICE__ = new Service();
+
+	struct Socket class {
+		var ptr;
+		var service;
+
+		init(ref ip, ref port) => {
+			ptr = (extern_call libnet._socket_init(ip, port -> Number, __DEFAULT_NET_SERVICE__.ptr));
+			this.service = __DEFAULT_NET_SERVICE__;
+		}
+
+		init(ref ip, ref port, ref service) => {
+			ptr = (extern_call libnet._socket_init(ip, port -> Number, service.ptr));
+			this.service = service;
+		}
+
+		init(ref DATA) => {
+			this.ptr = DATA[0];
+			this.service = DATA[1];
+		}
+
+		send(ref data) => {
+			extern_call libnet._socket_send(ptr, data -> String);
+		}
+
+		`<<`(ref data) => {
+			send(data);
+			refer this;
+		}
+
+		read() => {
+			return (extern_call libnet._socket_read(ptr));
+		}
+
+		readTo(ref delim) => {
+			return (extern_call libnet._socket_read_until(ptr, delim));
+		}
+
+		close() => {
+			if ptr != nil then {
+				extern_call libnet._socket_close(ptr);
+				ptr = nil;
+			}
+		}
+
+		~() => {
+			close();
+		}
+	}
+
+	struct Server class {
+		var ptr;
+		var service;
+
+		init(ref port) => {
+			ptr = (extern_call libnet._server_init(port -> Number, __DEFAULT_NET_SERVICE__.ptr));
+			this.service = __DEFAULT_NET_SERVICE__;
+		}
+
+		init(ref port, ref service) => {
+			ptr = (extern_call libnet._server_init(port -> Number, service.ptr));
+			this.service = service;
+		}
+
+		accept() => {
+			return new Socket([extern_call libnet._server_accept(ptr, service.ptr), service]);
+		}
+	}
+}
