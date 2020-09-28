@@ -17,7 +17,7 @@ typedef long double long_double_t;
 typedef signed long long long_int_t;
 typedef unsigned long long hashcode_t;
 
-#define _RUOTA_VERSION_ "v1.0.0-beta"
+#define _RUOTA_VERSION_ "v1.0.0-alpha"
 
 #ifdef _USE_CONV_NUM_
 #define NUMBER_TYPE SmartNumber
