@@ -25,6 +25,21 @@ _Current features, divergences from previous repo, and features to be implemente
 
 -----
 
+## Building
+
+There will be no downloadable binaries during the alpha stage - however everything can be built from the source rather easily.
+
+```sh
+git clone https://github.com/Nallantli/Ruota
+cd Ruota
+make win #if windows
+make nix #if everything else
+```
+
+The binary will be located in `bin/` and the dll/so libraries in `bin/lib/`.
+
+-----
+
 ## Basics
 
 Hello World:
