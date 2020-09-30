@@ -11,7 +11,7 @@ protected:
 	std::shared_ptr<Instruction> a;
 
 public:
-	UnaryI(I_TYPE, std::shared_ptr<Instruction>, const Token *);
+	UnaryI(I_TYPE, std::shared_ptr<Instruction>, const Token);
 	std::shared_ptr<Instruction> getA() const;
 };
 
@@ -21,7 +21,7 @@ protected:
 	hashcode_t key;
 
 public:
-	CastingI(I_TYPE, hashcode_t, const Token *);
+	CastingI(I_TYPE, hashcode_t, const Token);
 	hashcode_t getKey() const;
 };
 
@@ -31,7 +31,7 @@ protected:
 	std::shared_ptr<Instruction> b;
 
 public:
-	BinaryI(I_TYPE, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BinaryI(I_TYPE, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	std::shared_ptr<Instruction> getB() const;
 };
 
@@ -41,9 +41,8 @@ protected:
 	Symbol d;
 
 public:
-	Container(const Symbol &d, const Token *);
+	Container(const Symbol &d, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class DefineI : public Instruction
@@ -55,9 +54,8 @@ protected:
 	std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(hashcode_t, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>, const Token *);
+	DefineI(hashcode_t, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class Sequence : public Instruction
@@ -66,9 +64,8 @@ protected:
 	std::vector<std::shared_ptr<Instruction>> children;
 
 public:
-	Sequence(std::vector<std::shared_ptr<Instruction>>, const Token *);
+	Sequence(std::vector<std::shared_ptr<Instruction>>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class IfElseI : public Instruction
@@ -79,9 +76,8 @@ protected:
 	std::shared_ptr<Instruction> elses;
 
 public:
-	IfElseI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	IfElseI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class WhileI : public Instruction
@@ -91,9 +87,8 @@ protected:
 	std::shared_ptr<Instruction> body;
 
 public:
-	WhileI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	WhileI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ForI : public Instruction
@@ -104,217 +99,190 @@ protected:
 	std::shared_ptr<Instruction> body;
 
 public:
-	ForI(hashcode_t, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	ForI(hashcode_t, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class VariableI : public CastingI
 {
 public:
-	VariableI(hashcode_t, const Token *);
+	VariableI(hashcode_t, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class DeclareI : public CastingI
 {
 public:
-	DeclareI(hashcode_t, const Token *);
+	DeclareI(hashcode_t, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class IndexI : public BinaryI
 {
 public:
-	IndexI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	IndexI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class InnerI : public BinaryI
 {
 public:
-	InnerI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	InnerI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class CallI : public BinaryI
 {
 public:
-	CallI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	CallI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class AddI : public BinaryI
 {
 public:
-	AddI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	AddI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class SubI : public BinaryI
 {
 public:
-	SubI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	SubI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class MulI : public BinaryI
 {
 public:
-	MulI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	MulI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class DivI : public BinaryI
 {
 public:
-	DivI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	DivI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ModI : public BinaryI
 {
 public:
-	ModI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	ModI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class PowI : public BinaryI
 {
 public:
-	PowI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	PowI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class LessI : public BinaryI
 {
 public:
-	LessI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	LessI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class MoreI : public BinaryI
 {
 public:
-	MoreI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	MoreI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ELessI : public BinaryI
 {
 public:
-	ELessI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	ELessI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class EMoreI : public BinaryI
 {
 public:
-	EMoreI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	EMoreI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class Equals : public BinaryI
 {
 public:
-	Equals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	Equals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class NEquals : public BinaryI
 {
 public:
-	NEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	NEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class AndI : public BinaryI
 {
 public:
-	AndI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	AndI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class OrI : public BinaryI
 {
 public:
-	OrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	OrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class BOrI : public BinaryI
 {
 public:
-	BOrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BOrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class BAndI : public BinaryI
 {
 public:
-	BAndI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BAndI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class BXOrI : public BinaryI
 {
 public:
-	BXOrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BXOrI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class BShiftLeft : public BinaryI
 {
 public:
-	BShiftLeft(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BShiftLeft(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class BShiftRight : public BinaryI
 {
 public:
-	BShiftRight(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	BShiftRight(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class SetI : public BinaryI
 {
 public:
-	SetI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	SetI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ReturnI : public UnaryI
 {
 public:
-	ReturnI(std::shared_ptr<Instruction>, const Token *);
+	ReturnI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ExternI : public UnaryI
@@ -324,25 +292,22 @@ protected:
 	boost::function<const Symbol(std::vector<Symbol>, const Token *)> f;
 
 public:
-	ExternI(const std::string &, std::shared_ptr<Instruction> a, const Token *);
+	ExternI(const std::string &, std::shared_ptr<Instruction> a, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class LengthI : public UnaryI
 {
 public:
-	LengthI(std::shared_ptr<Instruction>, const Token *);
+	LengthI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class SizeI : public UnaryI
 {
 public:
-	SizeI(std::shared_ptr<Instruction>, const Token *);
+	SizeI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ClassI : public Instruction
@@ -354,17 +319,15 @@ protected:
 	std::shared_ptr<Instruction> extends;
 
 public:
-	ClassI(hashcode_t, OBJECT_TYPE, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	ClassI(hashcode_t, OBJECT_TYPE, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class NewI : public BinaryI
 {
 public:
-	NewI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	NewI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class CastToI : public UnaryI
@@ -373,25 +336,22 @@ protected:
 	D_TYPE convert;
 
 public:
-	CastToI(std::shared_ptr<Instruction>, D_TYPE, const Token *);
+	CastToI(std::shared_ptr<Instruction>, D_TYPE, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class AllocI : public UnaryI
 {
 public:
-	AllocI(std::shared_ptr<Instruction>, const Token *);
+	AllocI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class UntilI : public BinaryI
 {
 public:
-	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ScopeI : public Instruction
@@ -400,9 +360,8 @@ protected:
 	std::vector<std::shared_ptr<Instruction>> children;
 
 public:
-	ScopeI(std::vector<std::shared_ptr<Instruction>>, const Token *);
+	ScopeI(std::vector<std::shared_ptr<Instruction>>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class MapI : public Instruction
@@ -411,17 +370,15 @@ protected:
 	std::map<hashcode_t, std::shared_ptr<Instruction>> children;
 
 public:
-	MapI(std::map<hashcode_t, std::shared_ptr<Instruction>>, const Token *);
+	MapI(std::map<hashcode_t, std::shared_ptr<Instruction>>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ReferI : public UnaryI
 {
 public:
-	ReferI(std::shared_ptr<Instruction>, const Token *);
+	ReferI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class SwitchI : public Instruction
@@ -432,9 +389,8 @@ protected:
 	std::map<Symbol, std::shared_ptr<Instruction>> cases;
 
 public:
-	SwitchI(std::shared_ptr<Instruction>, std::map<Symbol, std::shared_ptr<Instruction>>, std::shared_ptr<Instruction>, const Token *);
+	SwitchI(std::shared_ptr<Instruction>, std::map<Symbol, std::shared_ptr<Instruction>>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class TryCatchI : public BinaryI
@@ -443,49 +399,43 @@ protected:
 	hashcode_t key;
 
 public:
-	TryCatchI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, hashcode_t, const Token *);
+	TryCatchI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, hashcode_t, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class ThrowI : public UnaryI
 {
 public:
-	ThrowI(std::shared_ptr<Instruction>, const Token *);
+	ThrowI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class PureEquals : public BinaryI
 {
 public:
-	PureEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	PureEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class PureNEquals : public BinaryI
 {
 public:
-	PureNEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token *);
+	PureNEquals(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class CharNI : public UnaryI
 {
 public:
-	CharNI(std::shared_ptr<Instruction>, const Token *);
+	CharNI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 class CharSI : public UnaryI
 {
 public:
-	CharSI(std::shared_ptr<Instruction>, const Token *);
+	CharSI(std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
-	const std::string toString(bool) const override;
 };
 
 #endif

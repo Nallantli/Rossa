@@ -247,9 +247,9 @@ Vector::shift(ref this) => {
 }
 
 Vector::map(ref this, ref f) => {
-	var nv = alloc(length(this));
-	for i in [0 until length(this)] do {
-		nv[i] = f(this[i]);
+	var nv = this;
+	for e in nv do {
+		e = f(e);
 	}
 	return nv;
 }
@@ -270,6 +270,18 @@ Vector::reverse(ref this) => {
 		nv[i] = this[length(this) - i - 1];
 	}
 	return nv;
+}
+
+Vector::back(ref this) => {
+	refer this[size(this) - 1];
+}
+
+Vector::front(ref this) => {
+	refer this[0];
+}
+
+Vector::empty(ref this) => {
+	return size(this) == 0;
 }
 
 # STRING
@@ -310,6 +322,18 @@ String::shift(ref this) => {
 
 String::reverse(ref this) => {
 	return (this -> Vector).reverse().join();
+}
+
+String::back(ref this) => {
+	return (this -> Vector).back();
+}
+
+String::front(ref this) => {
+	return (this -> Vector).front();
+}
+
+String::empty(ref this) => {
+	return this(size) == 0;
 }
 
 # MATH

@@ -4,15 +4,15 @@
 
 Node::Node(
 	NODE_TYPE type,
-	const Token *token) : type(type),
-						  token(token) {}
+	const Token token) : type(type),
+						 token(token) {}
 
 NODE_TYPE Node::getType() const
 {
 	return type;
 }
 
-const Token *Node::getToken() const
+const Token Node::getToken() const
 {
 	return token;
 }
@@ -21,9 +21,9 @@ const Token *Node::getToken() const
 
 ContainerNode::ContainerNode(
 	Symbol s,
-	const Token *token) : Node(CONTAINER_NODE,
-							   token),
-						  s(s)
+	const Token token) : Node(CONTAINER_NODE,
+							  token),
+						 s(s)
 {
 	this->s.setMutable(false);
 }
@@ -65,10 +65,10 @@ std::unique_ptr<Node> ContainerNode::fold() const
 VectorNode::VectorNode(
 	std::vector<std::unique_ptr<Node>> args,
 	bool scoped,
-	const Token *token) : Node(VECTOR_NODE,
-							   token),
-						  args(std::move(args)),
-						  scoped(scoped) {}
+	const Token token) : Node(VECTOR_NODE,
+							  token),
+						 args(std::move(args)),
+						 scoped(scoped) {}
 
 std::shared_ptr<Instruction> VectorNode::genParser() const
 {
@@ -145,8 +145,8 @@ std::vector<std::unique_ptr<Node>> VectorNode::getChildren()
 //------------------------------------------------------------------------------------------------------
 
 BreakNode::BreakNode(
-	const Token *token) : Node(BREAK_NODE,
-							   token) {}
+	const Token token) : Node(BREAK_NODE,
+							  token) {}
 
 std::shared_ptr<Instruction> BreakNode::genParser() const
 {
@@ -184,9 +184,9 @@ std::unique_ptr<Node> BreakNode::fold() const
 
 IDNode::IDNode(
 	hashcode_t key,
-	const Token *token) : Node(ID_NODE,
-							   token),
-						  key(key) {}
+	const Token token) : Node(ID_NODE,
+							  token),
+						 key(key) {}
 
 hashcode_t IDNode::getKey() const
 {
@@ -229,9 +229,9 @@ std::unique_ptr<Node> IDNode::fold() const
 
 BIDNode::BIDNode(
 	const std::string &key,
-	const Token *token) : Node(BID_NODE,
-							   token),
-						  key(key) {}
+	const Token token) : Node(BID_NODE,
+							  token),
+						 key(key) {}
 
 const std::string BIDNode::getKey() const
 {
@@ -277,12 +277,12 @@ DefineNode::DefineNode(
 	D_TYPE ftype,
 	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params,
 	std::vector<std::unique_ptr<Node>> body,
-	const Token *token) : Node(DEFINE_NODE,
-							   token),
-						  key(key),
-						  ftype(ftype),
-						  params(params),
-						  body(std::move(body)) {}
+	const Token token) : Node(DEFINE_NODE,
+							  token),
+						 key(key),
+						 ftype(ftype),
+						 params(params),
+						 body(std::move(body)) {}
 
 std::shared_ptr<Instruction> DefineNode::genParser() const
 {
@@ -351,10 +351,10 @@ std::unique_ptr<Node> DefineNode::fold() const
 NewNode::NewNode(
 	std::unique_ptr<Node> object,
 	std::unique_ptr<Node> params,
-	const Token *token) : Node(NEW_NODE,
-							   token),
-						  object(std::move(object)),
-						  params(std::move(params)) {}
+	const Token token) : Node(NEW_NODE,
+							  token),
+						 object(std::move(object)),
+						 params(std::move(params)) {}
 
 std::shared_ptr<Instruction> NewNode::genParser() const
 {
@@ -399,12 +399,12 @@ ClassNode::ClassNode(
 	int type,
 	std::vector<std::unique_ptr<Node>> body,
 	std::unique_ptr<Node> extends,
-	const Token *token) : Node(CLASS_NODE,
-							   token),
-						  key(key),
-						  type(type),
-						  body(std::move(body)),
-						  extends(std::move(extends)) {}
+	const Token token) : Node(CLASS_NODE,
+							  token),
+						 key(key),
+						 type(type),
+						 body(std::move(body)),
+						 extends(std::move(extends)) {}
 
 std::shared_ptr<Instruction> ClassNode::genParser() const
 {
@@ -426,7 +426,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 		ot = VIRTUAL_O;
 		break;
 	default:
-		throwError("Invalid Object type", token);
+		throwError("Invalid Object type", &token);
 	}
 
 	if (extends == nullptr)
@@ -489,9 +489,9 @@ std::unique_ptr<Node> ClassNode::fold() const
 
 VarNode::VarNode(
 	hashcode_t key,
-	const Token *token) : Node(VAR_NODE,
-							   token),
-						  key(key) {}
+	const Token token) : Node(VAR_NODE,
+							  token),
+						 key(key) {}
 
 std::shared_ptr<Instruction> VarNode::genParser() const
 {
@@ -530,10 +530,10 @@ std::unique_ptr<Node> VarNode::fold() const
 CallNode::CallNode(
 	std::unique_ptr<Node> callee,
 	std::vector<std::unique_ptr<Node>> args,
-	const Token *token) : Node(CALL_NODE,
-							   token),
-						  callee(std::move(callee)),
-						  args(std::move(args)) {}
+	const Token token) : Node(CALL_NODE,
+							  token),
+						 callee(std::move(callee)),
+						 args(std::move(args)) {}
 
 std::shared_ptr<Instruction> CallNode::genParser() const
 {
@@ -606,10 +606,10 @@ std::unique_ptr<Node> CallNode::fold() const
 ExternCallNode::ExternCallNode(
 	const std::string &id,
 	std::vector<std::unique_ptr<Node>> args,
-	const Token *token) : Node(EXTERN_CALL_NODE,
-							   token),
-						  id(id),
-						  args(std::move(args)) {}
+	const Token token) : Node(EXTERN_CALL_NODE,
+							  token),
+						 id(id),
+						 args(std::move(args)) {}
 
 std::shared_ptr<Instruction> ExternCallNode::genParser() const
 {
@@ -669,10 +669,10 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 CallBuiltNode::CallBuiltNode(
 	LEX_TOKEN_TYPE t,
 	std::unique_ptr<Node> arg,
-	const Token *token) : Node(CALL_BUILT_NODE,
-							   token),
-						  t(t),
-						  arg(std::move(arg)) {}
+	const Token token) : Node(CALL_BUILT_NODE,
+							  token),
+						 t(t),
+						 arg(std::move(arg)) {}
 
 std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 {
@@ -692,7 +692,7 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 		break;
 	}
 
-	throwError("Unknown built in function: " + std::to_string(t), token);
+	throwError("Unknown built in function: " + std::to_string(t), &token);
 	return nullptr;
 }
 
@@ -737,9 +737,9 @@ std::unique_ptr<Node> CallBuiltNode::fold() const
 
 ReturnNode::ReturnNode(
 	std::unique_ptr<Node> a,
-	const Token *token) : Node(REFER_NODE,
-							   token),
-						  a(std::move(a)) {}
+	const Token token) : Node(REFER_NODE,
+							  token),
+						 a(std::move(a)) {}
 
 std::shared_ptr<Instruction> ReturnNode::genParser() const
 {
@@ -779,9 +779,9 @@ std::unique_ptr<Node> ReturnNode::fold() const
 
 ReferNode::ReferNode(
 	std::unique_ptr<Node> a,
-	const Token *token) : Node(RETURN_NODE,
-							   token),
-						  a(std::move(a)) {}
+	const Token token) : Node(RETURN_NODE,
+							  token),
+						 a(std::move(a)) {}
 
 std::shared_ptr<Instruction> ReferNode::genParser() const
 {
@@ -821,10 +821,10 @@ std::unique_ptr<Node> ReferNode::fold() const
 IndexNode::IndexNode(
 	std::unique_ptr<Node> callee,
 	std::unique_ptr<Node> arg,
-	const Token *token) : Node(INDEX_NODE,
-							   token),
-						  callee(std::move(callee)),
-						  arg(std::move(arg)) {}
+	const Token token) : Node(INDEX_NODE,
+							  token),
+						 callee(std::move(callee)),
+						 arg(std::move(arg)) {}
 
 std::shared_ptr<Instruction> IndexNode::genParser() const
 {
@@ -874,11 +874,11 @@ BinOpNode::BinOpNode(
 	const std::string &op,
 	std::unique_ptr<Node> a,
 	std::unique_ptr<Node> b,
-	const Token *token) : Node(BIN_OP_NODE,
-							   token),
-						  op(op),
-						  a(std::move(a)),
-						  b(std::move(b)) {}
+	const Token token) : Node(BIN_OP_NODE,
+							  token),
+						 op(op),
+						 a(std::move(a)),
+						 b(std::move(b)) {}
 
 std::shared_ptr<Instruction> BinOpNode::genParser() const
 {
@@ -952,7 +952,7 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "||")
 		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
-	throwError("Unknown binary operator: " + op, token);
+	throwError("Unknown binary operator: " + op, &token);
 	return nullptr;
 }
 
@@ -1013,10 +1013,10 @@ std::unique_ptr<Node> BinOpNode::fold() const
 UnOpNode::UnOpNode(
 	const std::string &op,
 	std::unique_ptr<Node> a,
-	const Token *token) : Node(UN_OP_NODE,
-							   token),
-						  op(op),
-						  a(std::move(a)) {}
+	const Token token) : Node(UN_OP_NODE,
+							  token),
+						 op(op),
+						 a(std::move(a)) {}
 
 std::shared_ptr<Instruction> UnOpNode::genParser() const
 {
@@ -1027,7 +1027,7 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "!")
 		return std::make_shared<Equals>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
-	throwError("Unknown unary operator: " + op, token);
+	throwError("Unknown unary operator: " + op, &token);
 	return nullptr;
 }
 
@@ -1072,10 +1072,10 @@ std::unique_ptr<Node> UnOpNode::fold() const
 CastToNode::CastToNode(
 	D_TYPE convert,
 	std::unique_ptr<Node> a,
-	const Token *token) : Node(CAST_TO_NODE,
-							   token),
-						  convert(convert),
-						  a(std::move(a)) {}
+	const Token token) : Node(CAST_TO_NODE,
+							  token),
+						 convert(convert),
+						 a(std::move(a)) {}
 
 std::shared_ptr<Instruction> CastToNode::genParser() const
 {
@@ -1123,10 +1123,10 @@ std::unique_ptr<Node> CastToNode::fold() const
 InsNode::InsNode(
 	std::unique_ptr<Node> callee,
 	std::unique_ptr<Node> arg,
-	const Token *token) : Node(INS_NODE,
-							   token),
-						  callee(std::move(callee)),
-						  arg(std::move(arg)) {}
+	const Token token) : Node(INS_NODE,
+							  token),
+						 callee(std::move(callee)),
+						 arg(std::move(arg)) {}
 
 std::shared_ptr<Instruction> InsNode::genParser() const
 {
@@ -1185,10 +1185,10 @@ std::unique_ptr<Node> InsNode::fold() const
 IfElseNode::IfElseNode(
 	std::unique_ptr<Node> ifs,
 	std::unique_ptr<Node> body,
-	const Token *token) : Node(IF_ELSE_NODE,
-							   token),
-						  ifs(std::move(ifs)),
-						  body(std::move(body)) {}
+	const Token token) : Node(IF_ELSE_NODE,
+							  token),
+						 ifs(std::move(ifs)),
+						 body(std::move(body)) {}
 
 void IfElseNode::setElse(std::unique_ptr<Node> elses)
 {
@@ -1256,10 +1256,10 @@ std::unique_ptr<Node> IfElseNode::fold() const
 WhileNode::WhileNode(
 	std::unique_ptr<Node> whiles,
 	std::vector<std::unique_ptr<Node>> body,
-	const Token *token) : Node(WHILE_NODE,
-							   token),
-						  whiles(std::move(whiles)),
-						  body(std::move(body)) {}
+	const Token token) : Node(WHILE_NODE,
+							  token),
+						 whiles(std::move(whiles)),
+						 body(std::move(body)) {}
 
 std::shared_ptr<Instruction> WhileNode::genParser() const
 {
@@ -1335,11 +1335,11 @@ ForNode::ForNode(
 	hashcode_t id,
 	std::unique_ptr<Node> fors,
 	std::vector<std::unique_ptr<Node>> body,
-	const Token *token) : Node(FOR_NODE,
-							   token),
-						  id(id),
-						  fors(std::move(fors)),
-						  body(std::move(body)) {}
+	const Token token) : Node(FOR_NODE,
+							  token),
+						 id(id),
+						 fors(std::move(fors)),
+						 body(std::move(body)) {}
 
 std::shared_ptr<Instruction> ForNode::genParser() const
 {
@@ -1414,10 +1414,10 @@ std::unique_ptr<Node> ForNode::fold() const
 UntilNode::UntilNode(
 	std::unique_ptr<Node> a,
 	std::unique_ptr<Node> b,
-	const Token *token) : Node(UNTIL_NODE,
-							   token),
-						  a(std::move(a)),
-						  b(std::move(b)) {}
+	const Token token) : Node(UNTIL_NODE,
+							  token),
+						 a(std::move(a)),
+						 b(std::move(b)) {}
 
 std::shared_ptr<Instruction> UntilNode::genParser() const
 {
@@ -1466,9 +1466,9 @@ std::unique_ptr<Node> UntilNode::fold() const
 
 MapNode::MapNode(
 	std::vector<std::pair<hashcode_t, std::unique_ptr<Node>>> args,
-	const Token *token) : Node(MAP_NODE,
-							   token),
-						  args(std::move(args)) {}
+	const Token token) : Node(MAP_NODE,
+							  token),
+						 args(std::move(args)) {}
 
 std::shared_ptr<Instruction> MapNode::genParser() const
 {
@@ -1540,10 +1540,10 @@ std::unique_ptr<Node> MapNode::fold() const
 SwitchNode::SwitchNode(
 	std::unique_ptr<Node> switchs,
 	std::map<Symbol, std::unique_ptr<Node>> cases,
-	const Token *token) : Node(SWITCH_NODE,
-							   token),
-						  switchs(std::move(switchs)),
-						  cases(std::move(cases)) {}
+	const Token token) : Node(SWITCH_NODE,
+							  token),
+						 switchs(std::move(switchs)),
+						 cases(std::move(cases)) {}
 
 std::shared_ptr<Instruction> SwitchNode::genParser() const
 {
@@ -1630,11 +1630,11 @@ TryCatchNode::TryCatchNode(
 	std::unique_ptr<Node> trys,
 	std::unique_ptr<Node> catchs,
 	hashcode_t key,
-	const Token *token) : Node(TRY_CATCH_NODE,
-							   token),
-						  trys(std::move(trys)),
-						  catchs(std::move(catchs)),
-						  key(key) {}
+	const Token token) : Node(TRY_CATCH_NODE,
+							  token),
+						 trys(std::move(trys)),
+						 catchs(std::move(catchs)),
+						 key(key) {}
 
 std::shared_ptr<Instruction> TryCatchNode::genParser() const
 {
@@ -1675,8 +1675,8 @@ std::unique_ptr<Node> TryCatchNode::fold() const
 
 ThrowNode::ThrowNode(
 	std::unique_ptr<Node> throws,
-	const Token *token) : Node(THROW_NODE, token),
-						  throws(std::move(throws)) {}
+	const Token token) : Node(THROW_NODE, token),
+						 throws(std::move(throws)) {}
 
 std::shared_ptr<Instruction> ThrowNode::genParser() const
 {

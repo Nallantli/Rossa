@@ -101,6 +101,8 @@ enum TextColor
 
 enum LEX_TOKEN_TYPE
 {
+	NULL_TOK = 0,
+
 	TOK_EOF = -1,
 
 	TOK_IDF = -2,
@@ -784,7 +786,7 @@ public:
 			  distance(0),
 			  valueString(""),
 			  valueNumber(NUMBER_NEW_LONG(0)),
-			  type(0),
+			  type(NULL_TOK),
 			  lineNumber(0) {}
 
 	Token(
@@ -932,12 +934,11 @@ class Instruction
 {
 protected:
 	I_TYPE type;
-	const Token *token;
+	const Token token;
 
 public:
-	Instruction(I_TYPE, const Token *);
+	Instruction(I_TYPE, const Token);
 	virtual const Symbol evaluate(Scope *) const = 0;
-	virtual const std::string toString(bool) const = 0;
 	I_TYPE getType() const;
 	virtual ~Instruction();
 };

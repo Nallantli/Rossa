@@ -45,4 +45,8 @@ test(final MAX) => {
 	putln("Total Time: " + (time -> String) + "ms");
 }
 
-test(10 ** 6);
+if _args.size() == 1 then {
+	test(_args[0] -> Number);
+} else {
+	putln("Usage requires numerical argument");
+}

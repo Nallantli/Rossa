@@ -8,6 +8,12 @@
 
 #ifndef __unix__
 #include <conio.h>
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <termios.h>
 #endif
 
 RUOTA_LIB_HEADER
@@ -134,9 +140,14 @@ namespace libstd
 	RUOTA_EXT_SYM(_input_char, args, token)
 	{
 #ifdef __unix__
-		system("stty raw");
+		struct termios oldattr, newattr;
+		int ch;
+		tcgetattr(0, &oldattr);
+		newattr = oldattr;
+		newattr.c_lflag &= ~(ICANON | ECHO);
+		tcsetattr(0, TCSANOW, &newattr);
 		char c = getchar();
-		system("stty cooked");
+		tcsetattr(0, TCSANOW, &oldattr);
 #else
 		char c = getch();
 #endif
