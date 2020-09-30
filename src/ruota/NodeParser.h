@@ -13,7 +13,7 @@ private:
 	unsigned int index = 0;
 	Token *currentToken;
 	std::vector<Token> tokens;
-	Token *nextToken();
+	const Token *nextToken();
 	std::unique_ptr<Node> parseNumNode();
 	std::unique_ptr<Node> parseBoolNode();
 	std::unique_ptr<Node> parseIDNode();
@@ -56,7 +56,7 @@ private:
 public:
 	NodeParser(std::vector<Token>, std::map<std::string, signed int>, std::map<std::string, signed int>, boost::filesystem::path);
 	std::unique_ptr<Node> parse();
-	static Instruction *genParser(std::unique_ptr<Node>);
+	static std::shared_ptr<Instruction> genParser(std::unique_ptr<Node>);
 };
 
 #endif

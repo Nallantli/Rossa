@@ -2,14 +2,17 @@
 #include "Parser.h"
 #include <iostream>
 
-Node::Node(NODE_TYPE type, Token *token) : type(type), token(token) {}
+Node::Node(
+	NODE_TYPE type,
+	const Token *token) : type(type),
+						  token(token) {}
 
 NODE_TYPE Node::getType() const
 {
 	return type;
 }
 
-Token *Node::getToken() const
+const Token *Node::getToken() const
 {
 	return token;
 }
@@ -17,15 +20,17 @@ Token *Node::getToken() const
 //------------------------------------------------------------------------------------------------------
 
 ContainerNode::ContainerNode(
-	Symbol s, Token *token) : Node(CONTAINER_NODE, token),
-							  s(s)
+	Symbol s,
+	const Token *token) : Node(CONTAINER_NODE,
+							   token),
+						  s(s)
 {
 	this->s.setMutable(false);
 }
 
-Instruction *ContainerNode::genParser() const
+std::shared_ptr<Instruction> ContainerNode::genParser() const
 {
-	return new Container(s, token);
+	return std::make_shared<Container>(s, token);
 }
 
 bool ContainerNode::isConst() const
@@ -59,18 +64,20 @@ std::unique_ptr<Node> ContainerNode::fold() const
 
 VectorNode::VectorNode(
 	std::vector<std::unique_ptr<Node>> args,
-	bool scoped, Token *token) : Node(VECTOR_NODE, token),
-								 args(std::move(args)),
-								 scoped(scoped) {}
+	bool scoped,
+	const Token *token) : Node(VECTOR_NODE,
+							   token),
+						  args(std::move(args)),
+						  scoped(scoped) {}
 
-Instruction *VectorNode::genParser() const
+std::shared_ptr<Instruction> VectorNode::genParser() const
 {
-	std::vector<Instruction *> ins;
+	std::vector<std::shared_ptr<Instruction>> ins;
 	for (auto &n : args)
 		ins.push_back(n->genParser());
 	if (scoped)
-		return new ScopeI(ins, token);
-	return new Sequence(ins, token);
+		return std::make_shared<ScopeI>(ins, token);
+	return std::make_shared<Sequence>(ins, token);
 }
 
 bool VectorNode::isConst() const
@@ -108,8 +115,7 @@ std::unique_ptr<Node> VectorNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -120,9 +126,8 @@ std::unique_ptr<Node> VectorNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nargs.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -139,85 +144,13 @@ std::vector<std::unique_ptr<Node>> VectorNode::getChildren()
 
 //------------------------------------------------------------------------------------------------------
 
-/*NumNode::NumNode(
-	NUMBER_TYPE numberValue, Token * token) : Node(NUM_NODE, token),
-							   numberValue(numberValue) {}
+BreakNode::BreakNode(
+	const Token *token) : Node(BREAK_NODE,
+							   token) {}
 
-Instruction *NumNode::genParser() const
+std::shared_ptr<Instruction> BreakNode::genParser() const
 {
-	return new Container(Symbol(numberValue, token));
-}
-
-bool NumNode::isConst() const
-{
-	return true;
-}
-
-void NumNode::printTree(std::string indent, bool last) const
-{
-	std::cout << indent;
-	if (last)
-	{
-		std::cout << "└─";
-		indent += "  ";
-	}
-	else
-	{
-		std::cout << "├─";
-		indent += "│ ";
-	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "NUMBER : " << NUMBER_STRING(numberValue) << "\n"
-			  << colorASCII(RESET_TEXT);
-}
-
-std::unique_ptr<Node> NumNode::fold() const
-{
-	return std::make_unique<ContainerNode>(Symbol(numberValue), token);
-}*/
-
-//------------------------------------------------------------------------------------------------------
-
-/*NilNode::NilNode(, Token * token) : Node(NIL_NODE, token) {}
-
-Instruction *NilNode::genParser() const
-{
-	return new Container(Symbol(, token));
-}
-
-bool NilNode::isConst() const
-{
-	return true;
-}
-
-void NilNode::printTree(std::string indent, bool last) const
-{
-	std::cout << indent;
-	if (last)
-	{
-		std::cout << "└─";
-		indent += "  ";
-	}
-	else
-	{
-		std::cout << "├─";
-		indent += "│ ";
-	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "NIL : nil\n"
-			  << colorASCII(RESET_TEXT);
-}
-
-std::unique_ptr<Node> NilNode::fold() const
-{
-	return std::make_unique<ContainerNode>(Symbol(), token);
-}*/
-
-//------------------------------------------------------------------------------------------------------
-
-BreakNode::BreakNode(Token *token) : Node(BREAK_NODE, token) {}
-
-Instruction *BreakNode::genParser() const
-{
-	return new Container(Symbol(ID_BREAK), token);
+	return std::make_shared<Container>(Symbol(ID_BREAK), token);
 }
 
 bool BreakNode::isConst() const
@@ -249,94 +182,20 @@ std::unique_ptr<Node> BreakNode::fold() const
 
 //------------------------------------------------------------------------------------------------------
 
-/*StringNode::StringNode(
-	const std::string &stringValue, Token * token) : Node(STRING_NODE, token),
-									  stringValue(stringValue) {}
-
-Instruction *StringNode::genParser() const
-{
-	return new Container(Symbol(stringValue, token));
-}
-
-bool StringNode::isConst() const
-{
-	return true;
-}
-
-void StringNode::printTree(std::string indent, bool last) const
-{
-	std::cout << indent;
-	if (last)
-	{
-		std::cout << "└─";
-		indent += "  ";
-	}
-	else
-	{
-		std::cout << "├─";
-		indent += "│ ";
-	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "STRING : " << stringValue << "\n"
-			  << colorASCII(RESET_TEXT);
-}
-
-std::unique_ptr<Node> StringNode::fold() const
-{
-	return std::make_unique<ContainerNode>(Symbol(stringValue), token);
-}*/
-
-//------------------------------------------------------------------------------------------------------
-
-/*BoolNode::BoolNode(
-	bool boolValue, Token * token) : Node(BOOL_NODE, token),
-					  boolValue(boolValue) {}
-
-Instruction *BoolNode::genParser() const
-{
-	return new Container(Symbol(boolValue, token));
-}
-
-bool BoolNode::isConst() const
-{
-	return true;
-}
-
-void BoolNode::printTree(std::string indent, bool last) const
-{
-	std::cout << indent;
-	if (last)
-	{
-		std::cout << "└─";
-		indent += "  ";
-	}
-	else
-	{
-		std::cout << "├─";
-		indent += "│ ";
-	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "BOOL : " << (boolValue ? "true" : "false") << "\n"
-			  << colorASCII(RESET_TEXT);
-}
-
-std::unique_ptr<Node> BoolNode::fold() const
-{
-	return std::make_unique<ContainerNode>(Symbol(boolValue), token);
-}*/
-
-//------------------------------------------------------------------------------------------------------
-
 IDNode::IDNode(
-	hashcode_t key, Token *token) : Node(ID_NODE, token),
-									key(key) {}
+	hashcode_t key,
+	const Token *token) : Node(ID_NODE,
+							   token),
+						  key(key) {}
 
 hashcode_t IDNode::getKey() const
 {
 	return key;
 }
 
-Instruction *IDNode::genParser() const
+std::shared_ptr<Instruction> IDNode::genParser() const
 {
-	return new VariableI(key, token);
+	return std::make_shared<VariableI>(key, token);
 }
 
 bool IDNode::isConst() const
@@ -369,17 +228,19 @@ std::unique_ptr<Node> IDNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 BIDNode::BIDNode(
-	const std::string &key, Token *token) : Node(BID_NODE, token),
-											key(key) {}
+	const std::string &key,
+	const Token *token) : Node(BID_NODE,
+							   token),
+						  key(key) {}
 
 const std::string BIDNode::getKey() const
 {
 	return key;
 }
 
-Instruction *BIDNode::genParser() const
+std::shared_ptr<Instruction> BIDNode::genParser() const
 {
-	return new VariableI(hash.hashString(key), token);
+	return std::make_shared<VariableI>(hash.hashString(key), token);
 }
 
 bool BIDNode::isConst() const
@@ -415,19 +276,21 @@ DefineNode::DefineNode(
 	hashcode_t key,
 	D_TYPE ftype,
 	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params,
-	std::vector<std::unique_ptr<Node>> body, Token *token) : Node(DEFINE_NODE, token),
-															 key(key),
-															 ftype(ftype),
-															 params(params),
-															 body(std::move(body)) {}
+	std::vector<std::unique_ptr<Node>> body,
+	const Token *token) : Node(DEFINE_NODE,
+							   token),
+						  key(key),
+						  ftype(ftype),
+						  params(params),
+						  body(std::move(body)) {}
 
-Instruction *DefineNode::genParser() const
+std::shared_ptr<Instruction> DefineNode::genParser() const
 {
-	std::vector<Instruction *> is;
+	std::vector<std::shared_ptr<Instruction>> is;
 	for (auto &e : this->body)
 		is.push_back(e->genParser());
 	auto fbody = std::make_shared<ScopeI>(is, token);
-	return new DefineI(key, ftype, params, fbody, token);
+	return std::make_shared<DefineI>(key, ftype, params, fbody, token);
 }
 
 bool DefineNode::isConst() const
@@ -461,8 +324,7 @@ std::unique_ptr<Node> DefineNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -473,9 +335,8 @@ std::unique_ptr<Node> DefineNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nbody.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -489,14 +350,16 @@ std::unique_ptr<Node> DefineNode::fold() const
 
 NewNode::NewNode(
 	std::unique_ptr<Node> object,
-	std::unique_ptr<Node> params, Token *token) : Node(NEW_NODE, token),
-												  object(std::move(object)),
-												  params(std::move(params)) {}
+	std::unique_ptr<Node> params,
+	const Token *token) : Node(NEW_NODE,
+							   token),
+						  object(std::move(object)),
+						  params(std::move(params)) {}
 
-Instruction *NewNode::genParser() const
+std::shared_ptr<Instruction> NewNode::genParser() const
 {
 	auto paramsI = params->genParser();
-	return new NewI(object->genParser(), paramsI, token);
+	return std::make_shared<NewI>(object->genParser(), paramsI, token);
 }
 
 bool NewNode::isConst() const
@@ -535,15 +398,17 @@ ClassNode::ClassNode(
 	hashcode_t key,
 	int type,
 	std::vector<std::unique_ptr<Node>> body,
-	std::unique_ptr<Node> extends, Token *token) : Node(CLASS_NODE, token),
-												   key(key),
-												   type(type),
-												   body(std::move(body)),
-												   extends(std::move(extends)) {}
+	std::unique_ptr<Node> extends,
+	const Token *token) : Node(CLASS_NODE,
+							   token),
+						  key(key),
+						  type(type),
+						  body(std::move(body)),
+						  extends(std::move(extends)) {}
 
-Instruction *ClassNode::genParser() const
+std::shared_ptr<Instruction> ClassNode::genParser() const
 {
-	std::vector<Instruction *> is;
+	std::vector<std::shared_ptr<Instruction>> is;
 	for (auto &e : this->body)
 		is.push_back(e->genParser());
 	auto bodyI = std::make_shared<ScopeI>(is, token);
@@ -565,9 +430,9 @@ Instruction *ClassNode::genParser() const
 	}
 
 	if (extends == nullptr)
-		return new ClassI(key, ot, bodyI, NULL, token);
+		return std::make_shared<ClassI>(key, ot, bodyI, nullptr, token);
 	else
-		return new ClassI(key, ot, bodyI, extends->genParser(), token);
+		return std::make_shared<ClassI>(key, ot, bodyI, extends->genParser(), token);
 }
 
 bool ClassNode::isConst() const
@@ -605,9 +470,8 @@ std::unique_ptr<Node> ClassNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nbody.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -624,12 +488,14 @@ std::unique_ptr<Node> ClassNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 VarNode::VarNode(
-	hashcode_t key, Token *token) : Node(VAR_NODE, token),
-									key(key) {}
+	hashcode_t key,
+	const Token *token) : Node(VAR_NODE,
+							   token),
+						  key(key) {}
 
-Instruction *VarNode::genParser() const
+std::shared_ptr<Instruction> VarNode::genParser() const
 {
-	return new DeclareI(key, token);
+	return std::make_shared<DeclareI>(key, token);
 }
 
 bool VarNode::isConst() const
@@ -663,17 +529,19 @@ std::unique_ptr<Node> VarNode::fold() const
 
 CallNode::CallNode(
 	std::unique_ptr<Node> callee,
-	std::vector<std::unique_ptr<Node>> args, Token *token) : Node(CALL_NODE, token),
-															 callee(std::move(callee)),
-															 args(std::move(args)) {}
+	std::vector<std::unique_ptr<Node>> args,
+	const Token *token) : Node(CALL_NODE,
+							   token),
+						  callee(std::move(callee)),
+						  args(std::move(args)) {}
 
-Instruction *CallNode::genParser() const
+std::shared_ptr<Instruction> CallNode::genParser() const
 {
 	auto fcallee = callee->genParser();
-	std::vector<Instruction *> fargs;
+	std::vector<std::shared_ptr<Instruction>> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return new CallI(fcallee, new Sequence(fargs, token), token);
+	return std::make_shared<CallI>(fcallee, std::make_shared<Sequence>(fargs, token), token);
 }
 
 std::unique_ptr<Node> CallNode::getCallee()
@@ -721,9 +589,8 @@ std::unique_ptr<Node> CallNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nargs.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -738,16 +605,18 @@ std::unique_ptr<Node> CallNode::fold() const
 
 ExternCallNode::ExternCallNode(
 	const std::string &id,
-	std::vector<std::unique_ptr<Node>> args, Token *token) : Node(EXTERN_CALL_NODE, token),
-															 id(id),
-															 args(std::move(args)) {}
+	std::vector<std::unique_ptr<Node>> args,
+	const Token *token) : Node(EXTERN_CALL_NODE,
+							   token),
+						  id(id),
+						  args(std::move(args)) {}
 
-Instruction *ExternCallNode::genParser() const
+std::shared_ptr<Instruction> ExternCallNode::genParser() const
 {
-	std::vector<Instruction *> fargs;
+	std::vector<std::shared_ptr<Instruction>> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return new ExternI(id, new Sequence(fargs, token), token);
+	return std::make_shared<ExternI>(id, std::make_shared<Sequence>(fargs, token), token);
 }
 
 bool ExternCallNode::isConst() const
@@ -783,9 +652,8 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nargs.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -800,30 +668,32 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 
 CallBuiltNode::CallBuiltNode(
 	LEX_TOKEN_TYPE t,
-	std::unique_ptr<Node> arg, Token *token) : Node(CALL_BUILT_NODE, token),
-											   t(t),
-											   arg(std::move(arg)) {}
+	std::unique_ptr<Node> arg,
+	const Token *token) : Node(CALL_BUILT_NODE,
+							   token),
+						  t(t),
+						  arg(std::move(arg)) {}
 
-Instruction *CallBuiltNode::genParser() const
+std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 {
 	switch (t)
 	{
 	case TOK_SIZE:
-		return new SizeI(arg->genParser(), token);
+		return std::make_shared<SizeI>(arg->genParser(), token);
 	case TOK_LENGTH:
-		return new LengthI(arg->genParser(), token);
+		return std::make_shared<LengthI>(arg->genParser(), token);
 	case TOK_ALLOC:
-		return new AllocI(arg->genParser(), token);
+		return std::make_shared<AllocI>(arg->genParser(), token);
 	case TOK_CHARN:
-		return new CharNI(arg->genParser(), token);
+		return std::make_shared<CharNI>(arg->genParser(), token);
 	case TOK_CHARS:
-		return new CharSI(arg->genParser(), token);
+		return std::make_shared<CharSI>(arg->genParser(), token);
 	default:
 		break;
 	}
 
 	throwError("Unknown built in function: " + std::to_string(t), token);
-	return NULL;
+	return nullptr;
 }
 
 bool CallBuiltNode::isConst() const
@@ -856,8 +726,7 @@ std::unique_ptr<Node> CallBuiltNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -867,12 +736,14 @@ std::unique_ptr<Node> CallBuiltNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReturnNode::ReturnNode(
-	std::unique_ptr<Node> a, Token *token) : Node(REFER_NODE, token),
-											 a(std::move(a)) {}
+	std::unique_ptr<Node> a,
+	const Token *token) : Node(REFER_NODE,
+							   token),
+						  a(std::move(a)) {}
 
-Instruction *ReturnNode::genParser() const
+std::shared_ptr<Instruction> ReturnNode::genParser() const
 {
-	return new ReturnI(a->genParser(), token);
+	return std::make_shared<ReturnI>(a->genParser(), token);
 }
 
 bool ReturnNode::isConst() const
@@ -907,12 +778,14 @@ std::unique_ptr<Node> ReturnNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReferNode::ReferNode(
-	std::unique_ptr<Node> a, Token *token) : Node(RETURN_NODE, token),
-											 a(std::move(a)) {}
+	std::unique_ptr<Node> a,
+	const Token *token) : Node(RETURN_NODE,
+							   token),
+						  a(std::move(a)) {}
 
-Instruction *ReferNode::genParser() const
+std::shared_ptr<Instruction> ReferNode::genParser() const
 {
-	return new ReferI(a->genParser(), token);
+	return std::make_shared<ReferI>(a->genParser(), token);
 }
 
 bool ReferNode::isConst() const
@@ -947,13 +820,15 @@ std::unique_ptr<Node> ReferNode::fold() const
 
 IndexNode::IndexNode(
 	std::unique_ptr<Node> callee,
-	std::unique_ptr<Node> arg, Token *token) : Node(INDEX_NODE, token),
-											   callee(std::move(callee)),
-											   arg(std::move(arg)) {}
+	std::unique_ptr<Node> arg,
+	const Token *token) : Node(INDEX_NODE,
+							   token),
+						  callee(std::move(callee)),
+						  arg(std::move(arg)) {}
 
-Instruction *IndexNode::genParser() const
+std::shared_ptr<Instruction> IndexNode::genParser() const
 {
-	return new IndexI(callee->genParser(), arg->genParser(), token);
+	return std::make_shared<IndexI>(callee->genParser(), arg->genParser(), token);
 }
 
 bool IndexNode::isConst() const
@@ -986,8 +861,7 @@ std::unique_ptr<Node> IndexNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -999,85 +873,87 @@ std::unique_ptr<Node> IndexNode::fold() const
 BinOpNode::BinOpNode(
 	const std::string &op,
 	std::unique_ptr<Node> a,
-	std::unique_ptr<Node> b, Token *token) : Node(BIN_OP_NODE, token),
-											 op(op),
-											 a(std::move(a)),
-											 b(std::move(b)) {}
+	std::unique_ptr<Node> b,
+	const Token *token) : Node(BIN_OP_NODE,
+							   token),
+						  op(op),
+						  a(std::move(a)),
+						  b(std::move(b)) {}
 
-Instruction *BinOpNode::genParser() const
+std::shared_ptr<Instruction> BinOpNode::genParser() const
 {
 	if (op == "+")
-		return new AddI(a->genParser(), b->genParser(), token);
+		return std::make_shared<AddI>(a->genParser(), b->genParser(), token);
 	if (op == "-")
-		return new SubI(a->genParser(), b->genParser(), token);
+		return std::make_shared<SubI>(a->genParser(), b->genParser(), token);
 	if (op == "*")
-		return new MulI(a->genParser(), b->genParser(), token);
+		return std::make_shared<MulI>(a->genParser(), b->genParser(), token);
 	if (op == "/")
-		return new DivI(a->genParser(), b->genParser(), token);
+		return std::make_shared<DivI>(a->genParser(), b->genParser(), token);
 	if (op == "%")
-		return new ModI(a->genParser(), b->genParser(), token);
+		return std::make_shared<ModI>(a->genParser(), b->genParser(), token);
 	if (op == "**")
-		return new PowI(a->genParser(), b->genParser(), token);
+		return std::make_shared<PowI>(a->genParser(), b->genParser(), token);
 	if (op == "|")
-		return new BOrI(a->genParser(), b->genParser(), token);
+		return std::make_shared<BOrI>(a->genParser(), b->genParser(), token);
 	if (op == "&")
-		return new BAndI(a->genParser(), b->genParser(), token);
+		return std::make_shared<BAndI>(a->genParser(), b->genParser(), token);
 	if (op == "^")
-		return new BXOrI(a->genParser(), b->genParser(), token);
+		return std::make_shared<BXOrI>(a->genParser(), b->genParser(), token);
 	if (op == "<<")
-		return new BShiftLeft(a->genParser(), b->genParser(), token);
+		return std::make_shared<BShiftLeft>(a->genParser(), b->genParser(), token);
 	if (op == ">>")
-		return new BShiftRight(a->genParser(), b->genParser(), token);
+		return std::make_shared<BShiftRight>(a->genParser(), b->genParser(), token);
 
 	if (op == "+=")
-		return new SetI(a->genParser(), new AddI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<AddI>(a->genParser(), b->genParser(), token), token);
 	if (op == "-=")
-		return new SetI(a->genParser(), new SubI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<SubI>(a->genParser(), b->genParser(), token), token);
 	if (op == "*=")
-		return new SetI(a->genParser(), new MulI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<MulI>(a->genParser(), b->genParser(), token), token);
 	if (op == "/=")
-		return new SetI(a->genParser(), new DivI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<DivI>(a->genParser(), b->genParser(), token), token);
 	if (op == "%=")
-		return new SetI(a->genParser(), new ModI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<ModI>(a->genParser(), b->genParser(), token), token);
 	if (op == "**=")
-		return new SetI(a->genParser(), new PowI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<PowI>(a->genParser(), b->genParser(), token), token);
 	if (op == "|=")
-		return new SetI(a->genParser(), new BOrI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BOrI>(a->genParser(), b->genParser(), token), token);
 	if (op == "&=")
-		return new SetI(a->genParser(), new BAndI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BAndI>(a->genParser(), b->genParser(), token), token);
 	if (op == "^=")
-		return new SetI(a->genParser(), new BXOrI(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BXOrI>(a->genParser(), b->genParser(), token), token);
 	if (op == "<<=")
-		return new SetI(a->genParser(), new BShiftLeft(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeft>(a->genParser(), b->genParser(), token), token);
 	if (op == ">>=")
-		return new SetI(a->genParser(), new BShiftRight(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRight>(a->genParser(), b->genParser(), token), token);
 
 	if (op == "=")
-		return new SetI(a->genParser(), b->genParser(), token);
+		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
 
 	if (op == "<")
-		return new LessI(a->genParser(), b->genParser(), token);
+		return std::make_shared<LessI>(a->genParser(), b->genParser(), token);
 	if (op == ">")
-		return new MoreI(a->genParser(), b->genParser(), token);
+		return std::make_shared<MoreI>(a->genParser(), b->genParser(), token);
 	if (op == "<=")
-		return new ELessI(a->genParser(), b->genParser(), token);
+		return std::make_shared<ELessI>(a->genParser(), b->genParser(), token);
 	if (op == ">=")
-		return new EMoreI(a->genParser(), b->genParser(), token);
+		return std::make_shared<EMoreI>(a->genParser(), b->genParser(), token);
 	if (op == "==")
-		return new Equals(a->genParser(), b->genParser(), token);
+		return std::make_shared<Equals>(a->genParser(), b->genParser(), token);
 	if (op == "!=")
-		return new NEquals(a->genParser(), b->genParser(), token);
+		return std::make_shared<NEquals>(a->genParser(), b->genParser(), token);
 	if (op == "===")
-		return new PureEquals(a->genParser(), b->genParser(), token);
+		return std::make_shared<PureEquals>(a->genParser(), b->genParser(), token);
 	if (op == "!==")
-		return new PureNEquals(a->genParser(), b->genParser(), token);
+		return std::make_shared<PureNEquals>(a->genParser(), b->genParser(), token);
 	if (op == "&&")
-		return new AndI(a->genParser(), b->genParser(), token);
+		return std::make_shared<AndI>(a->genParser(), b->genParser(), token);
 	if (op == "||")
-		return new OrI(a->genParser(), b->genParser(), token);
+		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
 	throwError("Unknown binary operator: " + op, token);
-	return NULL;
+	return nullptr;
 }
 
 const std::string &BinOpNode::getOp() const
@@ -1125,8 +1001,7 @@ std::unique_ptr<Node> BinOpNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1137,21 +1012,23 @@ std::unique_ptr<Node> BinOpNode::fold() const
 
 UnOpNode::UnOpNode(
 	const std::string &op,
-	std::unique_ptr<Node> a, Token *token) : Node(UN_OP_NODE, token),
-											 op(op),
-											 a(std::move(a)) {}
+	std::unique_ptr<Node> a,
+	const Token *token) : Node(UN_OP_NODE,
+							   token),
+						  op(op),
+						  a(std::move(a)) {}
 
-Instruction *UnOpNode::genParser() const
+std::shared_ptr<Instruction> UnOpNode::genParser() const
 {
 	if (op == "+")
 		return a->genParser();
 	if (op == "-")
-		return new SubI(std::make_unique<ContainerNode>(Symbol(NUMBER_NEW_LONG(0)), token)->genParser(), a->genParser(), token);
+		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(NUMBER_NEW_LONG(0)), token)->genParser(), a->genParser(), token);
 	if (op == "!")
-		return new Equals(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
+		return std::make_shared<Equals>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
 	throwError("Unknown unary operator: " + op, token);
-	return NULL;
+	return nullptr;
 }
 
 bool UnOpNode::isConst() const
@@ -1183,8 +1060,7 @@ std::unique_ptr<Node> UnOpNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1195,13 +1071,15 @@ std::unique_ptr<Node> UnOpNode::fold() const
 
 CastToNode::CastToNode(
 	D_TYPE convert,
-	std::unique_ptr<Node> a, Token *token) : Node(CAST_TO_NODE, token),
-											 convert(convert),
-											 a(std::move(a)) {}
+	std::unique_ptr<Node> a,
+	const Token *token) : Node(CAST_TO_NODE,
+							   token),
+						  convert(convert),
+						  a(std::move(a)) {}
 
-Instruction *CastToNode::genParser() const
+std::shared_ptr<Instruction> CastToNode::genParser() const
 {
-	return new CastToI(a->genParser(), convert, token);
+	return std::make_shared<CastToI>(a->genParser(), convert, token);
 }
 
 bool CastToNode::isConst() const
@@ -1233,8 +1111,7 @@ std::unique_ptr<Node> CastToNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1245,13 +1122,15 @@ std::unique_ptr<Node> CastToNode::fold() const
 
 InsNode::InsNode(
 	std::unique_ptr<Node> callee,
-	std::unique_ptr<Node> arg, Token *token) : Node(INS_NODE, token),
-											   callee(std::move(callee)),
-											   arg(std::move(arg)) {}
+	std::unique_ptr<Node> arg,
+	const Token *token) : Node(INS_NODE,
+							   token),
+						  callee(std::move(callee)),
+						  arg(std::move(arg)) {}
 
-Instruction *InsNode::genParser() const
+std::shared_ptr<Instruction> InsNode::genParser() const
 {
-	return new InnerI(callee->genParser(), arg->genParser(), token);
+	return std::make_shared<InnerI>(callee->genParser(), arg->genParser(), token);
 }
 
 std::unique_ptr<Node> InsNode::getCallee()
@@ -1294,8 +1173,7 @@ std::unique_ptr<Node> InsNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1306,20 +1184,22 @@ std::unique_ptr<Node> InsNode::fold() const
 
 IfElseNode::IfElseNode(
 	std::unique_ptr<Node> ifs,
-	std::unique_ptr<Node> body, Token *token) : Node(IF_ELSE_NODE, token),
-												ifs(std::move(ifs)),
-												body(std::move(body)) {}
+	std::unique_ptr<Node> body,
+	const Token *token) : Node(IF_ELSE_NODE,
+							   token),
+						  ifs(std::move(ifs)),
+						  body(std::move(body)) {}
 
 void IfElseNode::setElse(std::unique_ptr<Node> elses)
 {
 	this->elses = std::move(elses);
 }
 
-Instruction *IfElseNode::genParser() const
+std::shared_ptr<Instruction> IfElseNode::genParser() const
 {
 	if (elses)
-		return new IfElseI(ifs->genParser(), body->genParser(), elses->genParser(), token);
-	return new IfElseI(ifs->genParser(), body->genParser(), NULL, token);
+		return std::make_shared<IfElseI>(ifs->genParser(), body->genParser(), elses->genParser(), token);
+	return std::make_shared<IfElseI>(ifs->genParser(), body->genParser(), nullptr, token);
 }
 
 bool IfElseNode::isConst() const
@@ -1361,8 +1241,7 @@ std::unique_ptr<Node> IfElseNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1376,18 +1255,20 @@ std::unique_ptr<Node> IfElseNode::fold() const
 
 WhileNode::WhileNode(
 	std::unique_ptr<Node> whiles,
-	std::vector<std::unique_ptr<Node>> body, Token *token) : Node(WHILE_NODE, token),
-															 whiles(std::move(whiles)),
-															 body(std::move(body)) {}
+	std::vector<std::unique_ptr<Node>> body,
+	const Token *token) : Node(WHILE_NODE,
+							   token),
+						  whiles(std::move(whiles)),
+						  body(std::move(body)) {}
 
-Instruction *WhileNode::genParser() const
+std::shared_ptr<Instruction> WhileNode::genParser() const
 {
-	std::vector<Instruction *> is;
+	std::vector<std::shared_ptr<Instruction>> is;
 	for (auto &e : this->body)
 		is.push_back(e->genParser());
-	auto bodyI = new ScopeI(is, token);
+	auto bodyI = std::make_shared<ScopeI>(is, token);
 
-	return new WhileI(whiles->genParser(), bodyI, token);
+	return std::make_shared<WhileI>(whiles->genParser(), bodyI, token);
 }
 
 bool WhileNode::isConst() const
@@ -1426,8 +1307,7 @@ std::unique_ptr<Node> WhileNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1438,9 +1318,8 @@ std::unique_ptr<Node> WhileNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nbody.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -1455,19 +1334,21 @@ std::unique_ptr<Node> WhileNode::fold() const
 ForNode::ForNode(
 	hashcode_t id,
 	std::unique_ptr<Node> fors,
-	std::vector<std::unique_ptr<Node>> body, Token *token) : Node(FOR_NODE, token),
-															 id(id),
-															 fors(std::move(fors)),
-															 body(std::move(body)) {}
+	std::vector<std::unique_ptr<Node>> body,
+	const Token *token) : Node(FOR_NODE,
+							   token),
+						  id(id),
+						  fors(std::move(fors)),
+						  body(std::move(body)) {}
 
-Instruction *ForNode::genParser() const
+std::shared_ptr<Instruction> ForNode::genParser() const
 {
-	std::vector<Instruction *> is;
+	std::vector<std::shared_ptr<Instruction>> is;
 	for (auto &e : this->body)
 		is.push_back(e->genParser());
-	auto bodyI = new ScopeI(is, token);
+	auto bodyI = std::make_shared<ScopeI>(is, token);
 
-	return new ForI(id, fors->genParser(), bodyI, token);
+	return std::make_shared<ForI>(id, fors->genParser(), bodyI, token);
 }
 
 bool ForNode::isConst() const
@@ -1506,8 +1387,7 @@ std::unique_ptr<Node> ForNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1518,9 +1398,8 @@ std::unique_ptr<Node> ForNode::fold() const
 		{
 			auto i = c->genParser();
 			Scope scope;
-			auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
+			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 			nbody.push_back(std::move(nn));
-			delete i;
 		}
 		else
 		{
@@ -1534,13 +1413,15 @@ std::unique_ptr<Node> ForNode::fold() const
 
 UntilNode::UntilNode(
 	std::unique_ptr<Node> a,
-	std::unique_ptr<Node> b, Token *token) : Node(UNTIL_NODE, token),
-											 a(std::move(a)),
-											 b(std::move(b)) {}
+	std::unique_ptr<Node> b,
+	const Token *token) : Node(UNTIL_NODE,
+							   token),
+						  a(std::move(a)),
+						  b(std::move(b)) {}
 
-Instruction *UntilNode::genParser() const
+std::shared_ptr<Instruction> UntilNode::genParser() const
 {
-	return new UntilI(a->genParser(), b->genParser(), token);
+	return std::make_shared<UntilI>(a->genParser(), b->genParser(), token);
 }
 
 bool UntilNode::isConst() const
@@ -1574,8 +1455,7 @@ std::unique_ptr<Node> UntilNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1585,17 +1465,19 @@ std::unique_ptr<Node> UntilNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 MapNode::MapNode(
-	std::vector<std::pair<hashcode_t, std::unique_ptr<Node>>> args, Token *token) : Node(MAP_NODE, token),
-																					args(std::move(args)) {}
+	std::vector<std::pair<hashcode_t, std::unique_ptr<Node>>> args,
+	const Token *token) : Node(MAP_NODE,
+							   token),
+						  args(std::move(args)) {}
 
-Instruction *MapNode::genParser() const
+std::shared_ptr<Instruction> MapNode::genParser() const
 {
-	std::map<hashcode_t, Instruction *> is;
+	std::map<hashcode_t, std::shared_ptr<Instruction>> is;
 	for (auto &e : this->args)
 	{
 		is[e.first] = e.second->genParser();
 	}
-	return new MapI(is, token);
+	return std::make_shared<MapI>(is, token);
 }
 
 bool MapNode::isConst() const
@@ -1632,8 +1514,7 @@ std::unique_ptr<Node> MapNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1645,7 +1526,6 @@ std::unique_ptr<Node> MapNode::fold() const
 			auto i = c.second->genParser();
 			Scope scope;
 			nargs.push_back({c.first, std::make_unique<ContainerNode>(i->evaluate(&scope), token)});
-			delete i;
 		}
 		else
 		{
@@ -1659,20 +1539,22 @@ std::unique_ptr<Node> MapNode::fold() const
 
 SwitchNode::SwitchNode(
 	std::unique_ptr<Node> switchs,
-	std::map<Symbol, std::unique_ptr<Node>> cases, Token *token) : Node(SWITCH_NODE, token),
-																   switchs(std::move(switchs)),
-																   cases(std::move(cases)) {}
+	std::map<Symbol, std::unique_ptr<Node>> cases,
+	const Token *token) : Node(SWITCH_NODE,
+							   token),
+						  switchs(std::move(switchs)),
+						  cases(std::move(cases)) {}
 
-Instruction *SwitchNode::genParser() const
+std::shared_ptr<Instruction> SwitchNode::genParser() const
 {
-	std::map<Symbol, Instruction *> is;
+	std::map<Symbol, std::shared_ptr<Instruction>> is;
 	for (auto &e : this->cases)
 	{
 		is[e.first] = e.second->genParser();
 	}
 	if (elses)
-		return new SwitchI(switchs->genParser(), is, elses->genParser(), token);
-	return new SwitchI(switchs->genParser(), is, NULL, token);
+		return std::make_shared<SwitchI>(switchs->genParser(), is, elses->genParser(), token);
+	return std::make_shared<SwitchI>(switchs->genParser(), is, nullptr, token);
 }
 
 void SwitchNode::setElse(std::unique_ptr<Node> elses)
@@ -1718,8 +1600,7 @@ std::unique_ptr<Node> SwitchNode::fold() const
 	{
 		auto i = genParser();
 		Scope scope;
-		auto nn = std::unique_ptr<Node>(new ContainerNode(i->evaluate(&scope), token));
-		delete i;
+		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 		return nn;
 	}
 
@@ -1731,7 +1612,6 @@ std::unique_ptr<Node> SwitchNode::fold() const
 			auto i = c.second->genParser();
 			Scope scope;
 			ncases[c.first] = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			delete i;
 		}
 		else
 		{
@@ -1749,14 +1629,16 @@ std::unique_ptr<Node> SwitchNode::fold() const
 TryCatchNode::TryCatchNode(
 	std::unique_ptr<Node> trys,
 	std::unique_ptr<Node> catchs,
-	hashcode_t key, Token *token) : Node(TRY_CATCH_NODE, token),
-									trys(std::move(trys)),
-									catchs(std::move(catchs)),
-									key(key) {}
+	hashcode_t key,
+	const Token *token) : Node(TRY_CATCH_NODE,
+							   token),
+						  trys(std::move(trys)),
+						  catchs(std::move(catchs)),
+						  key(key) {}
 
-Instruction *TryCatchNode::genParser() const
+std::shared_ptr<Instruction> TryCatchNode::genParser() const
 {
-	return new TryCatchI(trys->genParser(), catchs->genParser(), key, token);
+	return std::make_shared<TryCatchI>(trys->genParser(), catchs->genParser(), key, token);
 }
 
 bool TryCatchNode::isConst() const
@@ -1792,12 +1674,13 @@ std::unique_ptr<Node> TryCatchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ThrowNode::ThrowNode(
-	std::unique_ptr<Node> throws, Token *token) : Node(THROW_NODE, token),
-												  throws(std::move(throws)) {}
+	std::unique_ptr<Node> throws,
+	const Token *token) : Node(THROW_NODE, token),
+						  throws(std::move(throws)) {}
 
-Instruction *ThrowNode::genParser() const
+std::shared_ptr<Instruction> ThrowNode::genParser() const
 {
-	return new ThrowI(throws->genParser(), token);
+	return std::make_shared<ThrowI>(throws->genParser(), token);
 }
 
 bool ThrowNode::isConst() const

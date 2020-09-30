@@ -2,28 +2,56 @@
 #include <fstream>
 #include <stdexcept>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #include "ruota/Node.h"
 #include "ruota/Ruota.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <conio.h>
+char getch_n()
+{
+	return getch();
+}
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <termios.h>
+
+int getch_n()
+{
+	struct termios oldattr, newattr;
+	int ch;
+	tcgetattr(0, &oldattr);
+	newattr = oldattr;
+	newattr.c_lflag &= ~(ICANON | ECHO);
+	tcsetattr(0, TCSANOW, &newattr);
+	ch = getchar();
+	tcsetattr(0, TCSANOW, &oldattr);
+	return (ch);
+}
+#endif
 
 void printc(const std::string &s, TextColor color)
 {
 	std::cout << "\033[" << color << "m" << s << "\033[0m";
 }
 
-std::map<std::string, std::string> parseOptions(int argc, char const *argv[])
+std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
 	std::map<std::string, std::string> options = {
 		{"tree", "false"},
+		{"version", "false"},
 		{"std", "true"},
 		{"file", ""}};
+	std::vector<std::string> passed;
+
+	bool flag = false;
 
 	for (int i = 1; i < argc; i++)
 	{
-		if (argv[i][0] == '-')
+		if (flag == false && argv[i][0] == '-')
 		{
 			if (std::string(argv[i]) == "--tree" || std::string(argv[i]) == "-t")
 			{
@@ -33,24 +61,28 @@ std::map<std::string, std::string> parseOptions(int argc, char const *argv[])
 			{
 				options["std"] = "false";
 			}
+			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
+			{
+				options["version"] = "true";
+			}
 			else
 			{
 				std::cerr << "Unknown command line option: " << argv[i] << "\n";
 				exit(1);
 			}
 		}
+		else if (flag == false)
+		{
+			flag = true;
+			options["file"] = argv[i];
+		}
 		else
 		{
-			if (options["file"] != "")
-			{
-				std::cerr << "File already given: " << options["file"] << "\n";
-				exit(1);
-			}
-			options["file"] = argv[i];
+			passed.push_back(argv[i]);
 		}
 	}
 
-	return options;
+	return {options, passed};
 }
 
 void printError(const std::runtime_error &e)
@@ -95,15 +127,54 @@ void printError(const std::runtime_error &e)
 	}
 }
 
+void moveback(std::string &code, int c)
+{
+	for (int i = 0; i < c; i++)
+	{
+		if (code.size() > 0)
+		{
+			auto back = code.back();
+			code.pop_back();
+			if (back == '\n')
+			{
+				size_t i = 0;
+				while (i < code.size() && code[code.size() - i - 1] != '\n')
+					i++;
+				if (code.size() == i)
+				{
+					std::cout << "\033[2D  \033[2D\033[1A> ";
+				}
+				else
+				{
+					std::cout << "\033[2D  \033[2D\033[1A";
+					printc("└ ", BRIGHT_YELLOW_TEXT);
+				}
+				if (i > 0)
+					std::cout << "\033[" << i << "C";
+			}
+			else
+			{
+				std::cout << "\033[1D \033[1D";
+			}
+		}
+	}
+}
+
 int main(int argc, char const *argv[])
 {
-	auto options = parseOptions(argc, argv);
+	auto parsed = parseOptions(argc, argv);
+	auto options = parsed.first;
+
+	if (options["version"] == "true") {
+		std::cout << _RUOTA_VERSION_LONG_ << "\n";
+		return 0;
+	}
 
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
 #endif
-	Ruota wrapper;
+	Ruota wrapper(parsed.second);
 	bool tree = options["tree"] == "true";
 
 	if (options["file"] == "")
@@ -114,7 +185,7 @@ int main(int argc, char const *argv[])
 		{
 			try
 			{
-				wrapper.parseCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false);
+				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false));
 				std::cout << "Standard Library Loaded\n";
 			}
 			catch (const std::runtime_error &e)
@@ -127,35 +198,89 @@ int main(int argc, char const *argv[])
 			std::cout << "Option --no-std (-ns) used; Standard Library not loaded\n";
 		}
 
+		bool flag = true;
+		std::string code = "";
 		while (true)
 		{
-			std::cout << "> ";
-			std::string line;
-			std::getline(std::cin, line);
+			if (flag)
+				std::cout << "> ";
+			char c;
+			while ((c = getch_n()) != '\r')
+			{
+				if (c == '\n')
+					break;
+				else if (c == 3)
+					exit(0);
+				else if (c == '\t')
+				{
+					code += "    ";
+					std::cout << "    ";
+				}
+				else if (c == 27)
+				{
+					while (!code.empty())
+						moveback(code, 1);
+				}
+				else if (c == '\b' | c == 127)
+					moveback(code, 1);
+				else
+				{
+					code += c;
+					std::cout << c;
+				}
+			}
+
+			std::shared_ptr<Instruction> comp;
 			try
 			{
-				auto value = wrapper.parseCode(line, boost::filesystem::current_path() / "nil", tree);
-				if (value.getValueType() == VECTOR)
-				{
-					if (value.vectorSize() != 1)
-					{
-						int i = 0;
-						for (auto &e : value.getVector(NULL))
-						{
-							printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
-							std::cout << e.toString(NULL) << "\n";
-							i++;
-						}
-					}
-					else
-					{
-						std::cout << "\t" << value.getVector(NULL)[0].toString(NULL) << "\n";
-					}
-				}
+				flag = true;
+				comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil", tree);
 			}
 			catch (const std::runtime_error &e)
 			{
-				printError(e);
+				flag = false;
+				std::cout << "\n";
+
+				if (code.find('\n') != std::string::npos)
+				{
+					std::cout << "\033[1A";
+					printc("│ ", BRIGHT_YELLOW_TEXT);
+					std::cout << "\033[2D\033[1B";
+				}
+				printc("└ ", BRIGHT_YELLOW_TEXT);
+
+				code += "\n";
+			}
+
+			if (flag)
+			{
+				std::cout << "\n";
+				code = "";
+				try
+				{
+					auto value = wrapper.runCode(comp);
+					if (value.getValueType() == VECTOR)
+					{
+						if (value.vectorSize() != 1)
+						{
+							int i = 0;
+							for (auto &e : value.getVector(NULL))
+							{
+								printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
+								std::cout << e.toString(NULL) << "\n";
+								i++;
+							}
+						}
+						else
+						{
+							std::cout << "\t" << value.getVector(NULL)[0].toString(NULL) << "\n";
+						}
+					}
+				}
+				catch (const std::runtime_error &e)
+				{
+					printError(e);
+				}
 			}
 		}
 	}
@@ -177,8 +302,8 @@ int main(int argc, char const *argv[])
 		try
 		{
 			if (options["std"] == "true")
-				wrapper.parseCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false);
-			wrapper.parseCode(content, boost::filesystem::path(options["file"]), tree);
+				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false));
+			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"]), tree));
 		}
 		catch (const std::runtime_error &e)
 		{

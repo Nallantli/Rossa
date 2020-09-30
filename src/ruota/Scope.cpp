@@ -12,7 +12,7 @@ const std::string &Scope::getName() const
 	return this->name;
 }
 
-Symbol &Scope::getVariable(hashcode_t key, Token *token)
+Symbol &Scope::getVariable(hashcode_t key, const Token *token)
 {
 	if (values.find(key) != values.end())
 		return values[key];
@@ -22,20 +22,21 @@ Symbol &Scope::getVariable(hashcode_t key, Token *token)
 	throwError("Variable `" + hash.deHash(key) + "` is not declared within scope", token);
 }
 
-Symbol &Scope::createVariable(hashcode_t key, Token *token)
+Symbol &Scope::createVariable(hashcode_t key, const Token *token)
 {
 	values[key] = Symbol();
 	return getVariable(key, token);
 }
 
-Symbol &Scope::createVariable(hashcode_t key, const Symbol &d, Token *token)
+Symbol &Scope::createVariable(hashcode_t key, const Symbol &d, const Token *token)
 {
 	if (values.find(key) != values.end() && values[key].getValueType() == FUNCTION)
-		values[key].addFunctions(d, token);
+		values[key].addFunctions(&d, token);
 	else
 		values[key] = d;
 	return getVariable(key, token);
 }
+
 Scope *Scope::getParent() const
 {
 	return this->parent;

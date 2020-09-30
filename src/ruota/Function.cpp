@@ -1,13 +1,8 @@
 #include "Ruota.h"
 
-Function::Function(hashcode_t key, Scope * parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
+Function::Function(hashcode_t key, Scope *parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
 
-const Symbol Function::evaluate(std::vector<Symbol> paramValues, Token * token) const
-{
-	return evaluate(paramValues, NULL, token);
-}
-
-const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *thisSym, Token * token) const
+const Symbol Function::evaluate(std::vector<Symbol> &paramValues, const Symbol *thisSym, const Token *token) const
 {
 	Ruota::stack_trace.push_back(*this);
 
@@ -20,7 +15,7 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *t
 		case TOK_FINAL:
 		{
 			auto temp = newScope.createVariable(params[i].second, token);
-			temp.set(paramValues[i], token);
+			temp.set(&paramValues[i], token);
 			temp.setMutable(false);
 			break;
 		}
@@ -32,14 +27,14 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *t
 		default:
 		{
 			auto temp = newScope.createVariable(params[i].second, token);
-			temp.set(paramValues[i], token);
+			temp.set(&paramValues[i], token);
 			break;
 		}
 		}
 	}
 
 	if (thisSym != NULL)
-		newScope.createVariable(Ruota::HASH_THIS, *thisSym, token);
+		newScope.createVariable(Ruota::HASH_THIS, thisSym, token);
 
 	auto temp = body->evaluate(&newScope);
 
@@ -52,7 +47,7 @@ const Symbol Function::evaluate(std::vector<Symbol> paramValues, const Symbol *t
 	}
 
 	auto ret = Symbol();
-	ret.set(temp, token);
+	ret.set(&temp, token);
 	return ret;
 }
 

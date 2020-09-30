@@ -5,7 +5,7 @@
 /*class Instruction                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Instruction::Instruction(I_TYPE type, Token *token) : type(type), token(token) {}
+Instruction::Instruction(I_TYPE type, const Token *token) : type(type), token(token) {}
 
 I_TYPE Instruction::getType() const
 {
@@ -21,23 +21,18 @@ Instruction::~Instruction()
 /*class UnaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UnaryI::UnaryI(I_TYPE type, Instruction *a, Token *token) : Instruction(type, token), a(a) {}
+UnaryI::UnaryI(I_TYPE type, std::shared_ptr<Instruction> a, const Token *token) : Instruction(type, token), a(a) {}
 
-Instruction *UnaryI::getA() const
+std::shared_ptr<Instruction> UnaryI::getA() const
 {
 	return a;
-}
-
-UnaryI::~UnaryI()
-{
-	delete a;
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CastingI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastingI::CastingI(I_TYPE type, hashcode_t key, Token *token) : Instruction(type, token), key(key) {}
+CastingI::CastingI(I_TYPE type, hashcode_t key, const Token *token) : Instruction(type, token), key(key) {}
 
 hashcode_t CastingI::getKey() const
 {
@@ -48,25 +43,20 @@ hashcode_t CastingI::getKey() const
 /*class BinaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BinaryI::BinaryI(I_TYPE type, Instruction *a, Instruction *b, Token *token) : UnaryI(type, a, token), b(b) {}
+BinaryI::BinaryI(I_TYPE type, std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : UnaryI(type, a, token), b(b) {}
 
-Instruction *BinaryI::getB() const
+std::shared_ptr<Instruction> BinaryI::getB() const
 {
 	return b;
-}
-
-BinaryI::~BinaryI()
-{
-	delete b;
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Container                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(const Symbol &d, Token *token) : Instruction(CONTAINER, token), d(d) {}
+Container::Container(const Symbol &d, const Token *token) : Instruction(CONTAINER, token), d(d) {}
 
-const Symbol Container::evaluate(Scope * scope) const
+const Symbol Container::evaluate(Scope *scope) const
 {
 	return d;
 }
@@ -82,9 +72,9 @@ const std::string Container::toString(bool shared) const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(hashcode_t key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body, Token *token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body) {}
+DefineI::DefineI(hashcode_t key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body, const Token *token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body) {}
 
-const Symbol DefineI::evaluate(Scope * scope) const
+const Symbol DefineI::evaluate(Scope *scope) const
 {
 	auto f = std::make_shared<Function>(key, scope, params, body);
 	if (key > 0)
@@ -121,9 +111,9 @@ const std::string DefineI::toString(bool shared) const
 /*class Sequence                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Sequence::Sequence(std::vector<Instruction *> children, Token *token) : Instruction(SEQUENCE, token), children(children) {}
+Sequence::Sequence(std::vector<std::shared_ptr<Instruction>> children, const Token *token) : Instruction(SEQUENCE, token), children(children) {}
 
-const Symbol Sequence::evaluate(Scope * scope) const
+const Symbol Sequence::evaluate(Scope *scope) const
 {
 	std::vector<Symbol> evals;
 	for (auto &e : children)
@@ -162,30 +152,20 @@ const std::string Sequence::toString(bool shared) const
 	return ret + "})" + (shared ? ")" : "");
 }
 
-Sequence::~Sequence()
-{
-	for (auto &e : children)
-		delete e;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class IFElseI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-IfElseI::IfElseI(Instruction *ifs, Instruction *body, Instruction *elses, Token *token) : Instruction(IFELSE, token), ifs(ifs), body(body), elses(elses) {}
+IfElseI::IfElseI(std::shared_ptr<Instruction> ifs, std::shared_ptr<Instruction> body, std::shared_ptr<Instruction> elses, const Token *token) : Instruction(IFELSE, token), ifs(ifs), body(body), elses(elses) {}
 
-const Symbol IfElseI::evaluate(Scope * scope) const
+const Symbol IfElseI::evaluate(Scope *scope) const
 {
 	Scope newScope(scope, "");
 	auto evalIf = ifs->evaluate(&newScope);
 	if (evalIf.getBool(token))
-	{
 		return body->evaluate(&newScope);
-	}
 	else if (elses)
-	{
 		return elses->evaluate(&newScope);
-	}
 	return Symbol();
 }
 
@@ -202,21 +182,13 @@ const std::string IfElseI::toString(bool shared) const
 	return ret + ")" + (shared ? ")" : "");
 }
 
-IfElseI::~IfElseI()
-{
-	delete ifs;
-	delete body;
-	if (elses)
-		delete elses;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class WhileI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-WhileI::WhileI(Instruction *whiles, Instruction *body, Token *token) : Instruction(WHILE, token), whiles(whiles), body(body) {}
+WhileI::WhileI(std::shared_ptr<Instruction> whiles, std::shared_ptr<Instruction> body, const Token *token) : Instruction(WHILE, token), whiles(whiles), body(body) {}
 
-const Symbol WhileI::evaluate(Scope * scope) const
+const Symbol WhileI::evaluate(Scope *scope) const
 {
 	while (whiles->evaluate(scope).getBool(token))
 	{
@@ -241,19 +213,13 @@ const std::string WhileI::toString(bool shared) const
 	return ret + ")" + (shared ? ")" : "");
 }
 
-WhileI::~WhileI()
-{
-	delete whiles;
-	delete body;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ForI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ForI::ForI(hashcode_t id, Instruction *fors, Instruction *body, Token *token) : Instruction(FOR, token), id(id), fors(fors), body(body) {}
+ForI::ForI(hashcode_t id, std::shared_ptr<Instruction> fors, std::shared_ptr<Instruction> body, const Token *token) : Instruction(FOR, token), id(id), fors(fors), body(body) {}
 
-const Symbol ForI::evaluate(Scope * scope) const
+const Symbol ForI::evaluate(Scope *scope) const
 {
 	auto evalFor = fors->evaluate(scope).getVector(token);
 	for (size_t i = 0; i < evalFor.size(); i++)
@@ -281,19 +247,13 @@ const std::string ForI::toString(bool shared) const
 	return ret + ")" + (shared ? ")" : "");
 }
 
-ForI::~ForI()
-{
-	delete fors;
-	delete body;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class VariableI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-VariableI::VariableI(hashcode_t key, Token *token) : CastingI(VARIABLE, key, token) {}
+VariableI::VariableI(hashcode_t key, const Token *token) : CastingI(VARIABLE, key, token) {}
 
-const Symbol VariableI::evaluate(Scope * scope) const
+const Symbol VariableI::evaluate(Scope *scope) const
 {
 	auto d = scope->getVariable(key, token);
 	return d;
@@ -314,9 +274,9 @@ const std::string VariableI::toString(bool shared) const
 /*class DeclareI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeclareI::DeclareI(hashcode_t key, Token *token) : CastingI(DECLARE, key, token) {}
+DeclareI::DeclareI(hashcode_t key, const Token *token) : CastingI(DECLARE, key, token) {}
 
-const Symbol DeclareI::evaluate(Scope * scope) const
+const Symbol DeclareI::evaluate(Scope *scope) const
 {
 	auto d = scope->createVariable(key, token);
 	return d;
@@ -336,9 +296,9 @@ const std::string DeclareI::toString(bool shared) const
 /*class IndexI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-IndexI::IndexI(Instruction *a, Instruction *b, Token *token) : BinaryI(INDEX, a, b, token) {}
+IndexI::IndexI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(INDEX, a, b, token) {}
 
-const Symbol IndexI::evaluate(Scope * scope) const
+const Symbol IndexI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -347,20 +307,12 @@ const Symbol IndexI::evaluate(Scope * scope) const
 	case DICTIONARY:
 		return evalA.indexDict(hash.hashString(evalB.getString(token)));
 	case VECTOR:
-	{
-		auto i = NUMBER_GET_LONG(evalB.getNumber(token));
-		auto v = evalA.getVector(token);
-		if (i >= v.size())
-			throwError("Array index out of bounds: size = " + std::to_string(v.size()) + ", got " + std::to_string(i), token);
-		return v[i];
-	}
+		return evalA.indexVector(NUMBER_GET_LONG(evalB.getNumber(token)), token);
 	case OBJECT:
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_INDEX))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_INDEX, token).call(NIL, {evalB}, &evalA, token);
-		}
 		throwError("Operator `[]` is undefined for Object type", token);
 	}
 	}
@@ -381,9 +333,9 @@ const std::string IndexI::toString(bool shared) const
 /*class InnerI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-InnerI::InnerI(Instruction *a, Instruction *b, Token *token) : BinaryI(INNER, a, b, token) {}
+InnerI::InnerI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(INNER, a, b, token) {}
 
-const Symbol InnerI::evaluate(Scope * scope) const
+const Symbol InnerI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -420,24 +372,24 @@ const std::string InnerI::toString(bool shared) const
 /*class CallI                                                                                            */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CallI::CallI(Instruction *a, Instruction *b, Token *token) : BinaryI(INDEX, a, b, token) {}
+CallI::CallI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(INDEX, a, b, token) {}
 
-const Symbol CallI::evaluate(Scope * scope) const
+const Symbol CallI::evaluate(Scope *scope) const
 {
 	auto args = b->evaluate(scope).getVector(token);
 	switch (a->getType())
 	{
 	case INNER:
 	{
-		auto evalA = ((InnerI *)a)->getA()->evaluate(scope);
+		auto evalA = ((InnerI *)a.get())->getA()->evaluate(scope);
 		switch (evalA.getValueType())
 		{
 		case OBJECT:
 		{
-			auto bb = ((InnerI *)a)->getB();
-			if (bb->getType() == VARIABLE && evalA.getObject(token)->hasValue(((VariableI *)bb)->getKey()))
+			auto bb = ((InnerI *)a.get())->getB();
+			if (bb->getType() == VARIABLE && evalA.getObject(token)->hasValue(((VariableI *)bb.get())->getKey()))
 			{
-				auto evalB = ((InnerI *)a)->getB()->evaluate(evalA.getObject(token)->getScope());
+				auto evalB = ((InnerI *)a.get())->getB()->evaluate(evalA.getObject(token)->getScope());
 
 				if (evalB.getValueType() == OBJECT)
 				{
@@ -454,8 +406,8 @@ const Symbol CallI::evaluate(Scope * scope) const
 		}
 		case DICTIONARY:
 		{
-			auto bb = ((InnerI *)a)->getB();
-			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(((VariableI *)bb)->getKey()))
+			auto bb = ((InnerI *)a.get())->getB();
+			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(((VariableI *)bb.get())->getKey()))
 			{
 				auto evalB = a->evaluate(scope);
 
@@ -474,7 +426,7 @@ const Symbol CallI::evaluate(Scope * scope) const
 		}
 		}
 
-		auto evalB = ((InnerI *)a)->getB()->evaluate(scope);
+		auto evalB = ((InnerI *)a.get())->getB()->evaluate(scope);
 		std::vector<Symbol> params;
 		params.push_back(evalA);
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
@@ -488,7 +440,7 @@ const Symbol CallI::evaluate(Scope * scope) const
 			}
 		}
 
-		return evalB.call(evalA.getValueType(), params, token);
+		return evalB.call(evalA.getValueType(), params, NULL, token);
 	}
 	default:
 	{
@@ -504,9 +456,9 @@ const Symbol CallI::evaluate(Scope * scope) const
 		}
 
 		if (args.size() > 0)
-			return evalA.call(args[0].getValueType(), args, token);
+			return evalA.call(args[0].getValueType(), args, NULL, token);
 		else
-			return evalA.call(NIL, args, token);
+			return evalA.call(NIL, args, NULL, token);
 	}
 	}
 }
@@ -525,12 +477,14 @@ const std::string CallI::toString(bool shared) const
 /*class AddI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AddI::AddI(Instruction *a, Instruction *b, Token *token) : BinaryI(ADD, a, b, token) {}
+AddI::AddI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(ADD, a, b, token) {}
 
-const Symbol AddI::evaluate(Scope * scope) const
+const Symbol AddI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -572,12 +526,14 @@ const std::string AddI::toString(bool shared) const
 /*class SubI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SubI::SubI(Instruction *a, Instruction *b, Token *token) : BinaryI(SUB, a, b, token) {}
+SubI::SubI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(SUB, a, b, token) {}
 
-const Symbol SubI::evaluate(Scope * scope) const
+const Symbol SubI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -610,12 +566,14 @@ const std::string SubI::toString(bool shared) const
 /*class MulI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MulI::MulI(Instruction *a, Instruction *b, Token *token) : BinaryI(MUL, a, b, token) {}
+MulI::MulI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(MUL, a, b, token) {}
 
-const Symbol MulI::evaluate(Scope * scope) const
+const Symbol MulI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -624,9 +582,7 @@ const Symbol MulI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_MUL))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_MUL, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `*` is undefined for value type", token);
@@ -648,12 +604,14 @@ const std::string MulI::toString(bool shared) const
 /*class DivI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DivI::DivI(Instruction *a, Instruction *b, Token *token) : BinaryI(DIV, a, b, token) {}
+DivI::DivI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(DIV, a, b, token) {}
 
-const Symbol DivI::evaluate(Scope * scope) const
+const Symbol DivI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -662,9 +620,7 @@ const Symbol DivI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_DIV))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_DIV, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `/` is undefined for value type", token);
@@ -686,12 +642,14 @@ const std::string DivI::toString(bool shared) const
 /*class ModI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ModI::ModI(Instruction *a, Instruction *b, Token *token) : BinaryI(MOD, a, b, token) {}
+ModI::ModI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(MOD, a, b, token) {}
 
-const Symbol ModI::evaluate(Scope * scope) const
+const Symbol ModI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -700,9 +658,7 @@ const Symbol ModI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_MOD))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_MOD, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `%` is undefined for value type", token);
@@ -724,12 +680,14 @@ const std::string ModI::toString(bool shared) const
 /*class PowI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PowI::PowI(Instruction *a, Instruction *b, Token *token) : BinaryI(POW_I, a, b, token) {}
+PowI::PowI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(POW_I, a, b, token) {}
 
-const Symbol PowI::evaluate(Scope * scope) const
+const Symbol PowI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -762,12 +720,14 @@ const std::string PowI::toString(bool shared) const
 /*class LessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-LessI::LessI(Instruction *a, Instruction *b, Token *token) : BinaryI(LESS, a, b, token) {}
+LessI::LessI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(LESS, a, b, token) {}
 
-const Symbol LessI::evaluate(Scope * scope) const
+const Symbol LessI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -782,9 +742,7 @@ const Symbol LessI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_LESS))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_LESS, token).call(NIL, {evalB}, &evalA, token).getBool(token);
-		}
 		throwError("Operator `<` not defined for Object type", token);
 	}
 	default:
@@ -806,12 +764,14 @@ const std::string LessI::toString(bool shared) const
 /*class MoreI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MoreI::MoreI(Instruction *a, Instruction *b, Token *token) : BinaryI(MORE, a, b, token) {}
+MoreI::MoreI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(MORE, a, b, token) {}
 
-const Symbol MoreI::evaluate(Scope * scope) const
+const Symbol MoreI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -826,9 +786,7 @@ const Symbol MoreI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_MORE))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_MORE, token).call(NIL, {evalB}, &evalA, token).getBool(token);
-		}
 		throwError("Operator `>` not defined for Object type", token);
 	}
 	default:
@@ -850,12 +808,14 @@ const std::string MoreI::toString(bool shared) const
 /*class ELessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ELessI::ELessI(Instruction *a, Instruction *b, Token *token) : BinaryI(ELESS, a, b, token) {}
+ELessI::ELessI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(ELESS, a, b, token) {}
 
-const Symbol ELessI::evaluate(Scope * scope) const
+const Symbol ELessI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -870,9 +830,7 @@ const Symbol ELessI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_ELESS))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_ELESS, token).call(NIL, {evalB}, &evalA, token).getBool(token);
-		}
 		throwError("Operator `<=` not defined for Object type", token);
 	}
 	default:
@@ -894,12 +852,14 @@ const std::string ELessI::toString(bool shared) const
 /*class EMoreI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-EMoreI::EMoreI(Instruction *a, Instruction *b, Token *token) : BinaryI(EMORE, a, b, token) {}
+EMoreI::EMoreI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(EMORE, a, b, token) {}
 
-const Symbol EMoreI::evaluate(Scope * scope) const
+const Symbol EMoreI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -914,9 +874,7 @@ const Symbol EMoreI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_EMORE))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_EMORE, token).call(NIL, {evalB}, &evalA, token).getBool(token);
-		}
 		throwError("Operator `>=` not defined for Object type", token);
 	}
 	default:
@@ -938,13 +896,13 @@ const std::string EMoreI::toString(bool shared) const
 /*class Equals                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Equals::Equals(Instruction *a, Instruction *b, Token *token) : BinaryI(EQUALS, a, b, token) {}
+Equals::Equals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(EQUALS, a, b, token) {}
 
-const Symbol Equals::evaluate(Scope * scope) const
+const Symbol Equals::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA.equals(evalB, token));
+	return Symbol(evalA.equals(&evalB, token));
 }
 
 const std::string Equals::toString(bool shared) const
@@ -961,13 +919,13 @@ const std::string Equals::toString(bool shared) const
 /*class NEquals                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-NEquals::NEquals(Instruction *a, Instruction *b, Token *token) : BinaryI(NEQUALS, a, b, token) {}
+NEquals::NEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(NEQUALS, a, b, token) {}
 
-const Symbol NEquals::evaluate(Scope * scope) const
+const Symbol NEquals::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA.nequals(evalB, token));
+	return Symbol(evalA.nequals(&evalB, token));
 }
 
 const std::string NEquals::toString(bool shared) const
@@ -984,9 +942,9 @@ const std::string NEquals::toString(bool shared) const
 /*class AndI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AndI::AndI(Instruction *a, Instruction *b, Token *token) : BinaryI(AND, a, b, token) {}
+AndI::AndI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(AND, a, b, token) {}
 
-const Symbol AndI::evaluate(Scope * scope) const
+const Symbol AndI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	if (!evalA.getBool(token))
@@ -1011,9 +969,9 @@ const std::string AndI::toString(bool shared) const
 /*class OrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-OrI::OrI(Instruction *a, Instruction *b, Token *token) : BinaryI(OR, a, b, token) {}
+OrI::OrI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(OR, a, b, token) {}
 
-const Symbol OrI::evaluate(Scope * scope) const
+const Symbol OrI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	if (evalA.getBool(token))
@@ -1038,12 +996,14 @@ const std::string OrI::toString(bool shared) const
 /*class BOrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BOrI::BOrI(Instruction *a, Instruction *b, Token *token) : BinaryI(B_OR, a, b, token) {}
+BOrI::BOrI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(B_OR, a, b, token) {}
 
-const Symbol BOrI::evaluate(Scope * scope) const
+const Symbol BOrI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -1052,9 +1012,7 @@ const Symbol BOrI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_B_OR))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_B_OR, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `|` is undefined for value type", token);
@@ -1076,12 +1034,14 @@ const std::string BOrI::toString(bool shared) const
 /*class BXOrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BXOrI::BXOrI(Instruction *a, Instruction *b, Token *token) : BinaryI(B_XOR, a, b, token) {}
+BXOrI::BXOrI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(B_XOR, a, b, token) {}
 
-const Symbol BXOrI::evaluate(Scope * scope) const
+const Symbol BXOrI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -1090,9 +1050,7 @@ const Symbol BXOrI::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_B_XOR))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_B_XOR, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `^` is undefined for value type", token);
@@ -1114,12 +1072,14 @@ const std::string BXOrI::toString(bool shared) const
 /*class BAndI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BAndI::BAndI(Instruction *a, Instruction *b, Token *token) : BinaryI(B_AND, a, b, token) {}
+BAndI::BAndI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(B_AND, a, b, token) {}
 
-const Symbol BAndI::evaluate(Scope * scope) const
+const Symbol BAndI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -1152,12 +1112,14 @@ const std::string BAndI::toString(bool shared) const
 /*class BShiftLeft                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftLeft::BShiftLeft(Instruction *a, Instruction *b, Token *token) : BinaryI(B_SH_L, a, b, token) {}
+BShiftLeft::BShiftLeft(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(B_SH_L, a, b, token) {}
 
-const Symbol BShiftLeft::evaluate(Scope * scope) const
+const Symbol BShiftLeft::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -1166,9 +1128,7 @@ const Symbol BShiftLeft::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_B_SH_L))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_B_SH_L, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `<<` is undefined for value type", token);
@@ -1190,12 +1150,14 @@ const std::string BShiftLeft::toString(bool shared) const
 /*class BShiftRight                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftRight::BShiftRight(Instruction *a, Instruction *b, Token *token) : BinaryI(B_SH_R, a, b, token) {}
+BShiftRight::BShiftRight(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(B_SH_R, a, b, token) {}
 
-const Symbol BShiftRight::evaluate(Scope * scope) const
+const Symbol BShiftRight::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
+	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
+		throwError("Operator is undefined for base values of different types", token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -1204,9 +1166,7 @@ const Symbol BShiftRight::evaluate(Scope * scope) const
 	{
 		auto o = evalA.getObject(token);
 		if (o->hasValue(Ruota::HASH_B_SH_R))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_B_SH_R, token).call(NIL, {evalB}, &evalA, token);
-		}
 	}
 	default:
 		throwError("Operator `>>` is undefined for value type", token);
@@ -1228,13 +1188,13 @@ const std::string BShiftRight::toString(bool shared) const
 /*class SetI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SetI::SetI(Instruction *a, Instruction *b, Token *token) : BinaryI(SET, a, b, token) {}
+SetI::SetI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(SET, a, b, token) {}
 
-const Symbol SetI::evaluate(Scope * scope) const
+const Symbol SetI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	evalA.set(evalB, token);
+	evalA.set(&evalB, token);
 	return evalA;
 }
 
@@ -1252,9 +1212,9 @@ const std::string SetI::toString(bool shared) const
 /*class ReturnI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ReturnI::ReturnI(Instruction *a, Token *token) : UnaryI(RETURN, a, token) {}
+ReturnI::ReturnI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(RETURN, a, token) {}
 
-const Symbol ReturnI::evaluate(Scope * scope) const
+const Symbol ReturnI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	evalA.setSymbolType(ID_RETURN);
@@ -1275,15 +1235,15 @@ const std::string ReturnI::toString(bool shared) const
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(const std::string &id, Instruction *a, Token *token) : UnaryI(EXTERN, a, token), id(id)
+ExternI::ExternI(const std::string &id, std::shared_ptr<Instruction> a, const Token *token) : UnaryI(EXTERN, a, token), id(id)
 {
 	if (rlib::loaded.find(id) != rlib::loaded.end())
-		this->f = rlib::loaded.at(id);
+		this->f = rlib::loaded[id];
 	else
 		throwError("External function `" + id + "` is not defined", token);
 }
 
-const Symbol ExternI::evaluate(Scope * scope) const
+const Symbol ExternI::evaluate(Scope *scope) const
 {
 	return f(a->evaluate(scope).getVector(token), token);
 }
@@ -1304,9 +1264,9 @@ const std::string ExternI::toString(bool shared) const
 /*class LengthI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-LengthI::LengthI(Instruction *a, Token *token) : UnaryI(LENGTH, a, token) {}
+LengthI::LengthI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(LENGTH, a, token) {}
 
-const Symbol LengthI::evaluate(Scope * scope) const
+const Symbol LengthI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -1355,9 +1315,9 @@ const std::string LengthI::toString(bool shared) const
 /*class LengthI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SizeI::SizeI(Instruction *a, Token *token) : UnaryI(SIZE_I, a, token) {}
+SizeI::SizeI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(SIZE_I, a, token) {}
 
-const Symbol SizeI::evaluate(Scope * scope) const
+const Symbol SizeI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
@@ -1369,7 +1329,7 @@ const Symbol SizeI::evaluate(Scope * scope) const
 	case VECTOR:
 		return Symbol(NUMBER_NEW_LONG(evalA.vectorSize()));
 	default:
-		throwError("Cannot get length of value", token);
+		throwError("Cannot get size of value", token);
 	}
 	return Symbol();
 }
@@ -1388,19 +1348,21 @@ const std::string SizeI::toString(bool shared) const
 /*class ClassI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ClassI::ClassI(hashcode_t key, OBJECT_TYPE type, std::shared_ptr<Instruction> body, Instruction *extends, Token *token) : Instruction(CLASS_I, token), key(key), type(type), body(body), extends(extends) {}
+ClassI::ClassI(hashcode_t key, OBJECT_TYPE type, std::shared_ptr<Instruction> body, std::shared_ptr<Instruction> extends, const Token *token) : Instruction(CLASS_I, token), key(key), type(type), body(body), extends(extends) {}
 
-const Symbol ClassI::evaluate(Scope * scope) const
+const Symbol ClassI::evaluate(Scope *scope) const
 {
 	std::shared_ptr<Instruction> nbody = body;
-	if (extends != NULL)
+	if (extends)
 	{
 		auto e = extends->evaluate(scope);
 		auto eo = e.getObject(token);
 		if (eo->getType() == STATIC_O)
 			throwError("Cannot extend a statically declared Object", token);
-		auto eb = eo->getBody().get();
-		std::vector<Instruction *> temp = {body.get(), eb};
+		auto eb = eo->getBody();
+		std::vector<std::shared_ptr<Instruction>> temp;
+		temp.push_back(body);
+		temp.push_back(eb);
 		nbody = std::make_shared<ScopeI>(temp, token);
 	}
 	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, nbody, hash.deHash(key));
@@ -1422,24 +1384,19 @@ const std::string ClassI::toString(bool shared) const
 	return ret + ")" + (shared ? ")" : "");
 }
 
-ClassI::~ClassI()
-{
-	if (extends != NULL)
-		delete extends;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NewI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-NewI::NewI(Instruction *a, Instruction *b, Token *token) : BinaryI(NEW_I, a, b, token) {}
+NewI::NewI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(NEW_I, a, b, token) {}
 
-const Symbol NewI::evaluate(Scope * scope) const
+const Symbol NewI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
-	auto evalB = b->evaluate(scope);
+	auto evalB = b->evaluate(scope).getVector(token);
+
 	auto base = evalA.getObject(token);
-	return base->instantiate(evalB.getVector(token), token);
+	return base->instantiate(evalB, token);
 }
 
 const std::string NewI::toString(bool shared) const
@@ -1456,9 +1413,9 @@ const std::string NewI::toString(bool shared) const
 /*class CastToI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastToI::CastToI(Instruction *a, D_TYPE convert, Token *token) : UnaryI(CAST_TO_I, a, token), convert(convert) {}
+CastToI::CastToI(std::shared_ptr<Instruction> a, D_TYPE convert, const Token *token) : UnaryI(CAST_TO_I, a, token), convert(convert) {}
 
-const Symbol CastToI::evaluate(Scope * scope) const
+const Symbol CastToI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (convert)
@@ -1491,9 +1448,7 @@ const Symbol CastToI::evaluate(Scope * scope) const
 		{
 			auto o = evalA.getObject(token);
 			if (o->hasValue(Ruota::HASH_TO_NUMBER))
-			{
 				return o->getScope()->getVariable(Ruota::HASH_TO_NUMBER, token).call(NIL, {}, &evalA, token);
-			}
 			break;
 		}
 		default:
@@ -1514,9 +1469,7 @@ const Symbol CastToI::evaluate(Scope * scope) const
 		{
 			auto o = evalA.getObject(token);
 			if (o->hasValue(Ruota::HASH_TO_BOOLEAN))
-			{
 				return o->getScope()->getVariable(Ruota::HASH_TO_BOOLEAN, token).call(NIL, {}, &evalA, token);
-			}
 			break;
 		}
 		default:
@@ -1532,18 +1485,14 @@ const Symbol CastToI::evaluate(Scope * scope) const
 			auto v = evalA.getVector(token);
 			std::map<hashcode_t, Symbol> nd;
 			for (size_t i = 0; i < v.size(); i++)
-			{
 				nd[hash.hashString(std::to_string(i))] = v[i];
-			}
 			return Symbol(nd);
 		}
 		case OBJECT:
 		{
 			auto o = evalA.getObject(token);
 			if (o->hasValue(Ruota::HASH_TO_DICTIONARY))
-			{
 				return o->getScope()->getVariable(Ruota::HASH_TO_DICTIONARY, token).call(NIL, {}, &evalA, token);
-			}
 			break;
 		}
 		default:
@@ -1559,18 +1508,14 @@ const Symbol CastToI::evaluate(Scope * scope) const
 			auto dict = evalA.getDictionary(token);
 			std::vector<Symbol> nv;
 			for (auto &e : dict)
-			{
 				nv.push_back(Symbol({{Ruota::HASH_KEY, Symbol(hash.deHash(e.first))}, {Ruota::HASH_VALUE, e.second}}));
-			}
 			return Symbol(nv);
 		}
 		case OBJECT:
 		{
 			auto o = evalA.getObject(token);
 			if (o->hasValue(Ruota::HASH_TO_VECTOR))
-			{
 				return o->getScope()->getVariable(Ruota::HASH_TO_VECTOR, token).call(NIL, {}, &evalA, token);
-			}
 			break;
 		}
 		case STRING:
@@ -1630,7 +1575,7 @@ const Symbol CastToI::evaluate(Scope * scope) const
 	default:
 		break;
 	}
-	throwError("Cannot convert between given types", token);
+	throwError("Cannot convert to given type", token);
 	return Symbol();
 }
 
@@ -1648,9 +1593,9 @@ const std::string CastToI::toString(bool shared) const
 /*class AllocI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AllocI::AllocI(Instruction *a, Token *token) : UnaryI(ALLOC_I, a, token) {}
+AllocI::AllocI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(ALLOC_I, a, token) {}
 
-const Symbol AllocI::evaluate(Scope * scope) const
+const Symbol AllocI::evaluate(Scope *scope) const
 {
 	auto evalA = NUMBER_GET_LONG(a->evaluate(scope).getNumber(token));
 	if (evalA < 0)
@@ -1673,9 +1618,9 @@ const std::string AllocI::toString(bool shared) const
 /*class UntilI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UntilI::UntilI(Instruction *a, Instruction *b, Token *token) : BinaryI(UNTIL_I, a, b, token) {}
+UntilI::UntilI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(UNTIL_I, a, b, token) {}
 
-const Symbol UntilI::evaluate(Scope * scope) const
+const Symbol UntilI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope).getNumber(token);
 	auto evalB = b->evaluate(scope).getNumber(token);
@@ -1699,9 +1644,9 @@ const std::string UntilI::toString(bool shared) const
 /*class ScopeI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ScopeI::ScopeI(std::vector<Instruction *> children, Token *token) : Instruction(SCOPE_I, token), children(children) {}
+ScopeI::ScopeI(std::vector<std::shared_ptr<Instruction>> children, const Token *token) : Instruction(SCOPE_I, token), children(children) {}
 
-const Symbol ScopeI::evaluate(Scope * scope) const
+const Symbol ScopeI::evaluate(Scope *scope) const
 {
 	for (auto &e : children)
 	{
@@ -1731,19 +1676,13 @@ const std::string ScopeI::toString(bool shared) const
 	return ret + "})" + (shared ? ")" : "");
 }
 
-ScopeI::~ScopeI()
-{
-	for (auto &e : children)
-		delete e;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class MapI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MapI::MapI(std::map<hashcode_t, Instruction *> children, Token *token) : Instruction(MAP_I, token), children(children) {}
+MapI::MapI(std::map<hashcode_t, std::shared_ptr<Instruction>> children, const Token *token) : Instruction(MAP_I, token), children(children) {}
 
-const Symbol MapI::evaluate(Scope * scope) const
+const Symbol MapI::evaluate(Scope *scope) const
 {
 	std::map<hashcode_t, Symbol> evals;
 	for (auto &e : children)
@@ -1775,19 +1714,13 @@ const std::string MapI::toString(bool shared) const
 	return ret + "})" + (shared ? ")" : "");
 }
 
-MapI::~MapI()
-{
-	for (auto &e : children)
-		delete e.second;
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ReferI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ReferI::ReferI(Instruction *a, Token *token) : UnaryI(REFER_I, a, token) {}
+ReferI::ReferI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(REFER_I, a, token) {}
 
-const Symbol ReferI::evaluate(Scope * scope) const
+const Symbol ReferI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	evalA.setSymbolType(ID_REFER);
@@ -1808,9 +1741,9 @@ const std::string ReferI::toString(bool shared) const
 /*class SwitchI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SwitchI::SwitchI(Instruction *switchs, std::map<Symbol, Instruction *> cases, Instruction *elses, Token *token) : Instruction(SWITCH_I, token), switchs(switchs), cases(cases), elses(elses) {}
+SwitchI::SwitchI(std::shared_ptr<Instruction> switchs, std::map<Symbol, std::shared_ptr<Instruction>> cases, std::shared_ptr<Instruction> elses, const Token *token) : Instruction(SWITCH_I, token), switchs(switchs), cases(cases), elses(elses) {}
 
-const Symbol SwitchI::evaluate(Scope * scope) const
+const Symbol SwitchI::evaluate(Scope *scope) const
 {
 	auto eval = switchs->evaluate(scope);
 	if (cases.find(eval) != cases.end())
@@ -1818,7 +1751,7 @@ const Symbol SwitchI::evaluate(Scope * scope) const
 		Scope newScope(scope, "");
 		return cases.at(eval)->evaluate(&newScope);
 	}
-	else if (elses != NULL)
+	else if (elses)
 	{
 		Scope newScope(scope, "");
 		return elses->evaluate(&newScope);
@@ -1845,20 +1778,13 @@ const std::string SwitchI::toString(bool shared) const
 	return ret + "})" + (shared ? ")" : "");
 }
 
-SwitchI::~SwitchI()
-{
-	for (auto &e : cases)
-		delete e.second;
-	cases.clear();
-}
-
 /*-------------------------------------------------------------------------------------------------------*/
 /*class TryCatchI                                                                                        */
 /*-------------------------------------------------------------------------------------------------------*/
 
-TryCatchI::TryCatchI(Instruction *a, Instruction *b, hashcode_t key, Token *token) : BinaryI(TRY_CATCH_I, a, b, token), key(key) {}
+TryCatchI::TryCatchI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, hashcode_t key, const Token *token) : BinaryI(TRY_CATCH_I, a, b, token), key(key) {}
 
-const Symbol TryCatchI::evaluate(Scope * scope) const
+const Symbol TryCatchI::evaluate(Scope *scope) const
 {
 	try
 	{
@@ -1887,9 +1813,9 @@ const std::string TryCatchI::toString(bool shared) const
 /*class ThrowI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ThrowI::ThrowI(Instruction *a, Token *token) : UnaryI(THROW_I, a, token) {}
+ThrowI::ThrowI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(THROW_I, a, token) {}
 
-const Symbol ThrowI::evaluate(Scope * scope) const
+const Symbol ThrowI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	throwError(evalA.getString(token), token);
@@ -1910,13 +1836,13 @@ const std::string ThrowI::toString(bool shared) const
 /*class PureEquals                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureEquals::PureEquals(Instruction *a, Instruction *b, Token *token) : BinaryI(PURE_EQUALS, a, b, token) {}
+PureEquals::PureEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(PURE_EQUALS, a, b, token) {}
 
-const Symbol PureEquals::evaluate(Scope * scope) const
+const Symbol PureEquals::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA.pureEquals(evalB, token));
+	return Symbol(evalA.pureEquals(&evalB, token));
 }
 
 const std::string PureEquals::toString(bool shared) const
@@ -1933,13 +1859,13 @@ const std::string PureEquals::toString(bool shared) const
 /*class PureNEquals                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureNEquals::PureNEquals(Instruction *a, Instruction *b, Token *token) : BinaryI(PURE_NEQUALS, a, b, token) {}
+PureNEquals::PureNEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token *token) : BinaryI(PURE_NEQUALS, a, b, token) {}
 
-const Symbol PureNEquals::evaluate(Scope * scope) const
+const Symbol PureNEquals::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	return Symbol(evalA.pureNEquals(evalB, token));
+	return Symbol(evalA.pureNEquals(&evalB, token));
 }
 
 const std::string PureNEquals::toString(bool shared) const
@@ -1956,9 +1882,9 @@ const std::string PureNEquals::toString(bool shared) const
 /*class CharNI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CharNI::CharNI(Instruction *a, Token *token) : UnaryI(CHARN_I, a, token) {}
+CharNI::CharNI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(CHARN_I, a, token) {}
 
-const Symbol CharNI::evaluate(Scope * scope) const
+const Symbol CharNI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope).getString(token);
 	std::vector<Symbol> nv;
@@ -1981,9 +1907,9 @@ const std::string CharNI::toString(bool shared) const
 /*class CharSI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CharSI::CharSI(Instruction *a, Token *token) : UnaryI(CHARS_I, a, token) {}
+CharSI::CharSI(std::shared_ptr<Instruction> a, const Token *token) : UnaryI(CHARS_I, a, token) {}
 
-const Symbol CharSI::evaluate(Scope * scope) const
+const Symbol CharSI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType())
