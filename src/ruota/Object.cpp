@@ -1,6 +1,6 @@
 #include "Ruota.h"
 
-Object::Object(Scope *parent, OBJECT_TYPE type, std::shared_ptr<Instruction> body, const std::string &key) : body(body), type(type), key(key)
+Object::Object(Scope *parent, ObjectType type, std::shared_ptr<Instruction> body, const std::string &key) : body(body), type(type), key(key)
 {
 	this->internal = std::make_shared<Scope>(parent, key);
 }
@@ -13,7 +13,7 @@ Scope *Object::getScope() const
 const Symbol Object::instantiate(std::vector<Symbol> &params, const Token *token) const
 {
 	if (type != STRUCT_O)
-		throwError("Cannot instantiate a non-struct Object", token);
+		throw RuotaError(_FAILURE_INSTANTIATE_OBJECT_, *token);
 
 	auto o = std::make_shared<Object>(internal->getParent(), INSTANCE_O, body, key);
 	o->body->evaluate(o->getScope());
@@ -22,7 +22,7 @@ const Symbol Object::instantiate(std::vector<Symbol> &params, const Token *token
 	return d;
 }
 
-OBJECT_TYPE Object::getType() const
+ObjectType Object::getType() const
 {
 	return this->type;
 }

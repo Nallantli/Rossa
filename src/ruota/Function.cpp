@@ -1,6 +1,6 @@
 #include "Ruota.h"
 
-Function::Function(hashcode_t key, Scope *parent, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
+Function::Function(hashcode_t key, Scope *parent, std::vector<std::pair<LexerTokenType, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
 
 const Symbol Function::evaluate(std::vector<Symbol> &paramValues, const Symbol *thisSym, const Token *token) const
 {
@@ -66,7 +66,7 @@ Scope *Function::getParent() const
 	return parent;
 }
 
-std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> Function::getParams() const
+std::vector<std::pair<LexerTokenType, hashcode_t>> Function::getParams() const
 {
 	return params;
 }

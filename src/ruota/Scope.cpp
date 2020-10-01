@@ -19,7 +19,7 @@ Symbol &Scope::getVariable(hashcode_t key, const Token *token)
 	if (parent != NULL)
 		return parent->getVariable(key, token);
 
-	throwError("Variable `" + hash.deHash(key) + "` is not declared within scope", token);
+	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % hash.deHash(key)).str(), *token);
 }
 
 Symbol &Scope::createVariable(hashcode_t key, const Token *token)

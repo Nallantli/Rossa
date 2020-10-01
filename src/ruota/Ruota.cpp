@@ -1,5 +1,4 @@
 #include "Ruota.h"
-#include "Lexer.h"
 #include "Library.h"
 #include "NodeParser.h"
 
@@ -100,21 +99,20 @@ const std::map<std::string, signed int> Ruota::uOperators = {
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-std::shared_ptr<Instruction> Ruota::compileCode(const std::string &code, boost::filesystem::path currentFile, bool tree)
+std::unique_ptr<Node> Ruota::compileCode(const std::string &code, boost::filesystem::path currentFile) const
 {
 	auto tokens = lexer.lexString(code, currentFile.filename().string());
 	NodeParser testnp(tokens, bOperators, uOperators, currentFile);
 	auto n = testnp.parse();
-
-	auto folded = n->fold();
-	if (tree)
-		folded->printTree("", true);
-	auto g = NodeParser::genParser(std::move(folded));
-
-	return g;
+	return n->fold();
 }
 
-const Symbol Ruota::runCode(std::shared_ptr<Instruction> entry)
+const Symbol Ruota::runCode(std::unique_ptr<Node> entry, bool tree)
 {
-	return entry->evaluate(&main);
+	if (tree)
+		entry->printTree("", true);
+
+	auto g = NodeParser::genParser(std::move(entry));
+
+	return g->evaluate(&main);
 }

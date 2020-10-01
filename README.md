@@ -36,6 +36,12 @@ make dirs
 make
 ```
 
+`make` can also be used with optional `locale` to specify a language. Current options are `ENG` (Default), `LAT`, `JPN`.
+
+e.g. `make locale=LAT`
+
+Changing the locale variable merely alters the language of the error messages.
+
 The binary will be located in `bin/` and the dll/so libraries in `bin/lib/`.
 
 -----

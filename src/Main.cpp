@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <stdexcept>
 
 #include "ruota/Node.h"
 #include "ruota/Ruota.h"
@@ -85,10 +84,29 @@ std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOpt
 	return {options, passed};
 }
 
-void printError(const std::runtime_error &e)
+void printError(const RuotaError &e)
 {
-	printc(e.what(), RED_TEXT);
-	std::cout << "\n";
+	std::string ret = "\033[" + std::to_string(RED_TEXT) + "m" + e.what() + "\n";
+
+	if (e.getToken().getType() != NULL_TOK)
+	{
+		std::string lineInfoRaw = "<" + e.getToken().getFilename() + ">:" + std::to_string(e.getToken().getLineNumber() + 1) + " | ";
+		ret += "\033[" + std::to_string(CYAN_TEXT) + "m<\033[4m" + e.getToken().getFilename() + "\033[0m\033[" + std::to_string(CYAN_TEXT) + "m>:" + std::to_string(e.getToken().getLineNumber() + 1) + " | ";
+		ret += "\033[" + std::to_string(MAGENTA_TEXT) + "m" + e.getToken().getLine() + "\n";
+
+		ret += "\033[" + std::to_string(RED_TEXT) + "m";
+		for (size_t i = 0; i < e.getToken().getDist() - e.getToken().getValueString().size() + lineInfoRaw.size(); i++)
+			ret += " ";
+		ret += "^";
+
+		if (e.getToken().getValueString().size() > 0)
+			for (size_t i = 0; i < e.getToken().getValueString().size() - 1; i++)
+				ret += "~";
+
+		ret += "\033[0m";
+	}
+
+	std::cout << ret << "\n";
 	size_t j = 0;
 	while (!Ruota::stack_trace.empty())
 	{
@@ -162,18 +180,18 @@ void moveback(std::string &code, int c)
 
 int main(int argc, char const *argv[])
 {
-	auto parsed = parseOptions(argc, argv);
-	auto options = parsed.first;
-
-	if (options["version"] == "true") {
-		std::cout << _RUOTA_VERSION_LONG_ << "\n";
-		return 0;
-	}
-
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
 #endif
+	auto parsed = parseOptions(argc, argv);
+	auto options = parsed.first;
+
+	if (options["version"] == "true")
+	{
+		std::cout << _RUOTA_VERSION_LONG_ << "\n";
+		return 0;
+	}
 	Ruota wrapper(parsed.second);
 	bool tree = options["tree"] == "true";
 
@@ -185,10 +203,10 @@ int main(int argc, char const *argv[])
 		{
 			try
 			{
-				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false));
+				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
 				std::cout << "Standard Library Loaded\n";
 			}
-			catch (const std::runtime_error &e)
+			catch (const RuotaError &e)
 			{
 				std::cout << "Failed to load Standard Library: " << std::string(e.what()) << "\n";
 			}
@@ -199,6 +217,7 @@ int main(int argc, char const *argv[])
 		}
 
 		bool flag = true;
+		bool force = false;
 		std::string code = "";
 		while (true)
 		{
@@ -211,6 +230,11 @@ int main(int argc, char const *argv[])
 					break;
 				else if (c == 3)
 					exit(0);
+				else if (c == 18)
+				{
+					force = true;
+					break;
+				}
 				else if (c == '\t')
 				{
 					code += "    ";
@@ -230,26 +254,46 @@ int main(int argc, char const *argv[])
 				}
 			}
 
-			std::shared_ptr<Instruction> comp;
-			try
+			std::unique_ptr<Node> comp;
+			if (!force)
 			{
-				flag = true;
-				comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil", tree);
-			}
-			catch (const std::runtime_error &e)
-			{
-				flag = false;
-				std::cout << "\n";
-
-				if (code.find('\n') != std::string::npos)
+				try
 				{
-					std::cout << "\033[1A";
-					printc("│ ", BRIGHT_YELLOW_TEXT);
-					std::cout << "\033[2D\033[1B";
+					flag = true;
+					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
 				}
-				printc("└ ", BRIGHT_YELLOW_TEXT);
+				catch (const RuotaError &e)
+				{
+					flag = false;
+					std::cout << "\n";
 
-				code += "\n";
+					if (code.find('\n') != std::string::npos)
+					{
+						std::cout << "\033[1A";
+						printc("│ ", BRIGHT_YELLOW_TEXT);
+						std::cout << "\033[2D\033[1B";
+					}
+					printc("└ ", BRIGHT_YELLOW_TEXT);
+
+					code += "\n";
+				}
+			}
+			else
+			{
+				force = false;
+				try
+				{
+					flag = true;
+					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
+				}
+				catch (const RuotaError &e)
+				{
+					flag = false;
+					code = "";
+					std::cout << "\n";
+					printError(e);
+					std::cout << "> ";
+				}
 			}
 
 			if (flag)
@@ -258,7 +302,7 @@ int main(int argc, char const *argv[])
 				code = "";
 				try
 				{
-					auto value = wrapper.runCode(comp);
+					auto value = wrapper.runCode(std::move(comp), tree);
 					if (value.getValueType() == VECTOR)
 					{
 						if (value.vectorSize() != 1)
@@ -277,7 +321,7 @@ int main(int argc, char const *argv[])
 						}
 					}
 				}
-				catch (const std::runtime_error &e)
+				catch (const RuotaError &e)
 				{
 					printError(e);
 				}
@@ -302,10 +346,10 @@ int main(int argc, char const *argv[])
 		try
 		{
 			if (options["std"] == "true")
-				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil", false));
-			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"]), tree));
+				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
+			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
 		}
-		catch (const std::runtime_error &e)
+		catch (const RuotaError &e)
 		{
 			printError(e);
 			return 1;

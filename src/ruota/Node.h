@@ -8,55 +8,6 @@ inline std::string colorASCII(TextColor color)
 	return "\033[" + std::to_string(color) + "m";
 }
 
-enum NODE_TYPE
-{
-	ENTRY_NODE,
-	CALL_NODE,
-	CALL_BUILT_NODE,
-	INDEX_NODE,
-	UN_OP_NODE,
-	BIN_OP_NODE,
-	INS_NODE,
-	IF_ELSE_NODE,
-	WHILE_NODE,
-	FOR_NODE,
-	VECTOR_NODE,
-	DEFINE_NODE,
-	RETURN_NODE,
-	ID_NODE,
-	VAR_NODE,
-	CLASS_NODE,
-	EXTERN_CALL_NODE,
-	NEW_NODE,
-	CAST_TO_NODE,
-	UNTIL_NODE,
-	MAP_NODE,
-	CONTAINER_NODE,
-	BREAK_NODE,
-	REFER_NODE,
-	SWITCH_NODE,
-	BID_NODE,
-	TRY_CATCH_NODE,
-	THROW_NODE
-};
-
-class Node
-{
-protected:
-	NODE_TYPE type;
-	const Token token;
-
-public:
-	Node(NODE_TYPE, const Token);
-	NODE_TYPE getType() const;
-	const Token getToken() const;
-
-	virtual std::shared_ptr<Instruction> genParser() const = 0;
-	virtual bool isConst() const = 0;
-	virtual void printTree(std::string, bool) const = 0;
-	virtual std::unique_ptr<Node> fold() const = 0;
-};
-
 class ContainerNode : public Node
 {
 private:
@@ -127,12 +78,12 @@ class DefineNode : public Node
 {
 private:
 	hashcode_t key;
-	D_TYPE ftype;
-	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params;
+	ValueType ftype;
+	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
 	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	DefineNode(hashcode_t, D_TYPE, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>>, std::vector<std::unique_ptr<Node>>, const Token);
+	DefineNode(hashcode_t, ValueType, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::vector<std::unique_ptr<Node>>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;
@@ -215,11 +166,11 @@ public:
 class CallBuiltNode : public Node
 {
 private:
-	LEX_TOKEN_TYPE t;
+	LexerTokenType t;
 	std::unique_ptr<Node> arg;
 
 public:
-	CallBuiltNode(LEX_TOKEN_TYPE, std::unique_ptr<Node>, const Token);
+	CallBuiltNode(LexerTokenType, std::unique_ptr<Node>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;
@@ -301,11 +252,11 @@ public:
 class CastToNode : public Node
 {
 private:
-	D_TYPE convert;
+	ValueType convert;
 	std::unique_ptr<Node> a;
 
 public:
-	CastToNode(D_TYPE, std::unique_ptr<Node>, const Token);
+	CastToNode(ValueType, std::unique_ptr<Node>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;

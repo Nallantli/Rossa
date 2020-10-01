@@ -1,4 +1,6 @@
-CC=g++
+locale=ENG
+
+CC=g++ -D_LOCALIZED_ -D_LOCALE_${locale}_
 
 WINDIR=build\\win
 NIXDIR=build/nix
@@ -51,11 +53,11 @@ bin/lib/libfs.so: src/ext/libfs.cpp
 bin/lib/libnet.so: src/ext/libnet.cpp
 	$(CC) -o bin/lib/libnet.so src/ext/libnet.cpp $(LFLAGS) $(LIBNET_FLAGS_NIX)
 
-bin/ruota.exe: $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o
-	$(CC) -o bin/ruota.exe $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(CFLAGS_WIN)
+bin/ruota.exe: $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(WINDIR)/Token.o
+	$(CC) -o bin/ruota.exe $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(WINDIR)/Token.o $(CFLAGS_WIN)
 
-bin/ruota: $(NIXDIR)/Main.o $(NIXDIR)/Ruota.o $(NIXDIR)/Node.o $(NIXDIR)/NodeParser.o $(NIXDIR)/Lexer.o $(NIXDIR)/Parser.o $(NIXDIR)/Scope.o $(NIXDIR)/Function.o $(NIXDIR)/Object.o
-	$(CC) -o bin/ruota $(NIXDIR)/Main.o $(NIXDIR)/Ruota.o $(NIXDIR)/Node.o $(NIXDIR)/NodeParser.o $(NIXDIR)/Lexer.o $(NIXDIR)/Parser.o $(NIXDIR)/Scope.o $(NIXDIR)/Function.o $(NIXDIR)/Object.o $(CFLAGS)
+bin/ruota: $(NIXDIR)/Main.o $(NIXDIR)/Ruota.o $(NIXDIR)/Node.o $(NIXDIR)/NodeParser.o $(NIXDIR)/Lexer.o $(NIXDIR)/Parser.o $(NIXDIR)/Scope.o $(NIXDIR)/Function.o $(NIXDIR)/Object.o $(NIXDIR)/Token.o
+	$(CC) -o bin/ruota $(NIXDIR)/Main.o $(NIXDIR)/Ruota.o $(NIXDIR)/Node.o $(NIXDIR)/NodeParser.o $(NIXDIR)/Lexer.o $(NIXDIR)/Parser.o $(NIXDIR)/Scope.o $(NIXDIR)/Function.o $(NIXDIR)/Object.o $(NIXDIR)/Token.o $(CFLAGS)
 
 $(WINDIR)/Main.o: src/Main.cpp
 	$(CC) src/Main.cpp -o $(WINDIR)/Main.o -c $(CFLAGS_WIN)
@@ -84,6 +86,10 @@ $(WINDIR)/Function.o: src/ruota/Function.cpp
 $(WINDIR)/Object.o: src/ruota/Object.cpp
 	$(CC) src/ruota/Object.cpp -o $(WINDIR)/Object.o -c $(CFLAGS_WIN)
 
+$(WINDIR)/Token.o: src/ruota/Token.cpp
+	$(CC) src/ruota/Token.cpp -o $(WINDIR)/Token.o -c $(CFLAGS_WIN)
+
+
 $(NIXDIR)/Main.o: src/Main.cpp
 	$(CC) src/Main.cpp -o $(NIXDIR)/Main.o -c $(CFLAGS)
 
@@ -110,3 +116,6 @@ $(NIXDIR)/Function.o: src/ruota/Function.cpp
 
 $(NIXDIR)/Object.o: src/ruota/Object.cpp
 	$(CC) src/ruota/Object.cpp -o $(NIXDIR)/Object.o -c $(CFLAGS)
+
+$(NIXDIR)/Token.o: src/ruota/Token.cpp
+	$(CC) src/ruota/Token.cpp -o $(NIXDIR)/Token.o -c $(CFLAGS)

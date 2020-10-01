@@ -3,11 +3,11 @@
 #include <iostream>
 
 Node::Node(
-	NODE_TYPE type,
+	NodeType type,
 	const Token token) : type(type),
 						 token(token) {}
 
-NODE_TYPE Node::getType() const
+NodeType Node::getType() const
 {
 	return type;
 }
@@ -30,7 +30,7 @@ ContainerNode::ContainerNode(
 
 std::shared_ptr<Instruction> ContainerNode::genParser() const
 {
-	return std::make_shared<Container>(s, token);
+	return std::make_shared<ContainerI>(s, token);
 }
 
 bool ContainerNode::isConst() const
@@ -77,7 +77,7 @@ std::shared_ptr<Instruction> VectorNode::genParser() const
 		ins.push_back(n->genParser());
 	if (scoped)
 		return std::make_shared<ScopeI>(ins, token);
-	return std::make_shared<Sequence>(ins, token);
+	return std::make_shared<SequenceI>(ins, token);
 }
 
 bool VectorNode::isConst() const
@@ -150,7 +150,7 @@ BreakNode::BreakNode(
 
 std::shared_ptr<Instruction> BreakNode::genParser() const
 {
-	return std::make_shared<Container>(Symbol(ID_BREAK), token);
+	return std::make_shared<ContainerI>(Symbol(ID_BREAK), token);
 }
 
 bool BreakNode::isConst() const
@@ -274,8 +274,8 @@ std::unique_ptr<Node> BIDNode::fold() const
 
 DefineNode::DefineNode(
 	hashcode_t key,
-	D_TYPE ftype,
-	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params,
+	ValueType ftype,
+	std::vector<std::pair<LexerTokenType, hashcode_t>> params,
 	std::vector<std::unique_ptr<Node>> body,
 	const Token token) : Node(DEFINE_NODE,
 							  token),
@@ -413,7 +413,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 		is.push_back(e->genParser());
 	auto bodyI = std::make_shared<ScopeI>(is, token);
 
-	OBJECT_TYPE ot;
+	ObjectType ot;
 	switch (type)
 	{
 	case TOK_STRUCT:
@@ -426,7 +426,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 		ot = VIRTUAL_O;
 		break;
 	default:
-		throwError("Invalid Object type", &token);
+		throw RuotaError(_INVALID_OBJECT_TYPE_, token);
 	}
 
 	if (extends == nullptr)
@@ -541,7 +541,7 @@ std::shared_ptr<Instruction> CallNode::genParser() const
 	std::vector<std::shared_ptr<Instruction>> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return std::make_shared<CallI>(fcallee, std::make_shared<Sequence>(fargs, token), token);
+	return std::make_shared<CallI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
 }
 
 std::unique_ptr<Node> CallNode::getCallee()
@@ -616,7 +616,7 @@ std::shared_ptr<Instruction> ExternCallNode::genParser() const
 	std::vector<std::shared_ptr<Instruction>> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return std::make_shared<ExternI>(id, std::make_shared<Sequence>(fargs, token), token);
+	return std::make_shared<ExternI>(id, std::make_shared<SequenceI>(fargs, token), token);
 }
 
 bool ExternCallNode::isConst() const
@@ -667,7 +667,7 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 CallBuiltNode::CallBuiltNode(
-	LEX_TOKEN_TYPE t,
+	LexerTokenType t,
 	std::unique_ptr<Node> arg,
 	const Token token) : Node(CALL_BUILT_NODE,
 							  token),
@@ -692,7 +692,7 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 		break;
 	}
 
-	throwError("Unknown built in function: " + std::to_string(t), &token);
+	throw RuotaError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token);
 	return nullptr;
 }
 
@@ -901,9 +901,9 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "^")
 		return std::make_shared<BXOrI>(a->genParser(), b->genParser(), token);
 	if (op == "<<")
-		return std::make_shared<BShiftLeft>(a->genParser(), b->genParser(), token);
+		return std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token);
 	if (op == ">>")
-		return std::make_shared<BShiftRight>(a->genParser(), b->genParser(), token);
+		return std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token);
 
 	if (op == "+=")
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<AddI>(a->genParser(), b->genParser(), token), token);
@@ -924,9 +924,9 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "^=")
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<BXOrI>(a->genParser(), b->genParser(), token), token);
 	if (op == "<<=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeft>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token), token);
 	if (op == ">>=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRight>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token), token);
 
 	if (op == "=")
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
@@ -940,19 +940,19 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == ">=")
 		return std::make_shared<EMoreI>(a->genParser(), b->genParser(), token);
 	if (op == "==")
-		return std::make_shared<Equals>(a->genParser(), b->genParser(), token);
+		return std::make_shared<EqualsI>(a->genParser(), b->genParser(), token);
 	if (op == "!=")
-		return std::make_shared<NEquals>(a->genParser(), b->genParser(), token);
+		return std::make_shared<NEqualsI>(a->genParser(), b->genParser(), token);
 	if (op == "===")
-		return std::make_shared<PureEquals>(a->genParser(), b->genParser(), token);
+		return std::make_shared<PureEqualsI>(a->genParser(), b->genParser(), token);
 	if (op == "!==")
-		return std::make_shared<PureNEquals>(a->genParser(), b->genParser(), token);
+		return std::make_shared<PureNEqualsI>(a->genParser(), b->genParser(), token);
 	if (op == "&&")
 		return std::make_shared<AndI>(a->genParser(), b->genParser(), token);
 	if (op == "||")
 		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
-	throwError("Unknown binary operator: " + op, &token);
+	throw RuotaError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);
 	return nullptr;
 }
 
@@ -1023,11 +1023,11 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "+")
 		return a->genParser();
 	if (op == "-")
-		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(NUMBER_NEW_LONG(0)), token)->genParser(), a->genParser(), token);
+		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(CNumber(static_cast<long_int_t>(0))), token)->genParser(), a->genParser(), token);
 	if (op == "!")
-		return std::make_shared<Equals>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
+		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
-	throwError("Unknown unary operator: " + op, &token);
+	throw RuotaError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token);
 	return nullptr;
 }
 
@@ -1070,7 +1070,7 @@ std::unique_ptr<Node> UnOpNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 CastToNode::CastToNode(
-	D_TYPE convert,
+	ValueType convert,
 	std::unique_ptr<Node> a,
 	const Token token) : Node(CAST_TO_NODE,
 							  token),

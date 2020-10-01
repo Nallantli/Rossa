@@ -5,9 +5,9 @@
 /*class Instruction                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Instruction::Instruction(I_TYPE type, const Token token) : type(type), token(token) {}
+Instruction::Instruction(InstructionType type, const Token token) : type(type), token(token) {}
 
-I_TYPE Instruction::getType() const
+InstructionType Instruction::getType() const
 {
 	return type;
 }
@@ -18,7 +18,7 @@ Instruction::~Instruction() {}
 /*class UnaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UnaryI::UnaryI(I_TYPE type, std::shared_ptr<Instruction> a, const Token token) : Instruction(type, token), a(a) {}
+UnaryI::UnaryI(InstructionType type, std::shared_ptr<Instruction> a, const Token token) : Instruction(type, token), a(a) {}
 
 std::shared_ptr<Instruction> UnaryI::getA() const
 {
@@ -29,7 +29,7 @@ std::shared_ptr<Instruction> UnaryI::getA() const
 /*class CastingI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastingI::CastingI(I_TYPE type, hashcode_t key, const Token token) : Instruction(type, token), key(key) {}
+CastingI::CastingI(InstructionType type, hashcode_t key, const Token token) : Instruction(type, token), key(key) {}
 
 hashcode_t CastingI::getKey() const
 {
@@ -40,7 +40,7 @@ hashcode_t CastingI::getKey() const
 /*class BinaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BinaryI::BinaryI(I_TYPE type, std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : UnaryI(type, a, token), b(b) {}
+BinaryI::BinaryI(InstructionType type, std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : UnaryI(type, a, token), b(b) {}
 
 std::shared_ptr<Instruction> BinaryI::getB() const
 {
@@ -48,12 +48,12 @@ std::shared_ptr<Instruction> BinaryI::getB() const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class Container                                                                                      */
+/*class ContainerI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Container::Container(const Symbol &d, const Token token) : Instruction(CONTAINER, token), d(d) {}
+ContainerI::ContainerI(const Symbol &d, const Token token) : Instruction(CONTAINER, token), d(d) {}
 
-const Symbol Container::evaluate(Scope *scope) const
+const Symbol ContainerI::evaluate(Scope *scope) const
 {
 	return d;
 }
@@ -62,7 +62,7 @@ const Symbol Container::evaluate(Scope *scope) const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(hashcode_t key, D_TYPE ftype, std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> params, std::shared_ptr<Instruction> body, const Token token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body) {}
+DefineI::DefineI(hashcode_t key, ValueType ftype, std::vector<std::pair<LexerTokenType, hashcode_t>> params, std::shared_ptr<Instruction> body, const Token token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body) {}
 
 const Symbol DefineI::evaluate(Scope *scope) const
 {
@@ -78,12 +78,12 @@ const Symbol DefineI::evaluate(Scope *scope) const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class Sequence                                                                                      */
+/*class SequenceI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Sequence::Sequence(std::vector<std::shared_ptr<Instruction>> children, const Token token) : Instruction(SEQUENCE, token), children(children) {}
+SequenceI::SequenceI(std::vector<std::shared_ptr<Instruction>> children, const Token token) : Instruction(SEQUENCE, token), children(children) {}
 
-const Symbol Sequence::evaluate(Scope *scope) const
+const Symbol SequenceI::evaluate(Scope *scope) const
 {
 	std::vector<Symbol> evals;
 	for (auto &e : children)
@@ -202,16 +202,15 @@ const Symbol IndexI::evaluate(Scope *scope) const
 	case DICTIONARY:
 		return evalA.indexDict(hash.hashString(evalB.getString(&token)));
 	case VECTOR:
-		return evalA.indexVector(NUMBER_GET_LONG(evalB.getNumber(&token)), &token);
+		return evalA.indexVector(evalB.getNumber(&token).getLong(), &token);
 	case OBJECT:
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_INDEX))
 			return o->getScope()->getVariable(Ruota::HASH_INDEX, &token).call(NIL, {evalB}, &evalA, &token);
-		throwError("Operator `[]` is undefined for Object type", &token);
 	}
 	}
-	return Symbol();
+	throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "[]").str(), token);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -228,16 +227,16 @@ const Symbol InnerI::evaluate(Scope *scope) const
 	case DICTIONARY:
 		if (b->getType() == VARIABLE)
 			evalA.indexDict(hash.hashString(b->evaluate(scope).getString(&token)));
-		throwError("Cannot enter Dictionary with given value", &token);
+		throw RuotaError(_CANNOT_ENTER_DICTIONARY_, token);
 	case OBJECT:
 	{
 		auto o = evalA.getObject(&token);
 		if (o->getType() != STATIC_O && o->getType() != INSTANCE_O)
-			throwError("Cannot index a non-static, non-instantiated Object", &token);
+			throw RuotaError(_CANNOT_INDEX_OBJECT_, token);
 		return b->evaluate(o->getScope());
 	}
 	default:
-		throwError("Cannot enter value", &token);
+		throw RuotaError(_CANNOT_INDEX_VALUE_, token);
 	}
 	return Symbol();
 }
@@ -348,7 +347,7 @@ const Symbol AddI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -371,7 +370,7 @@ const Symbol AddI::evaluate(Scope *scope) const
 		}
 	}
 	default:
-		throwError("Operator `+` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "+").str(), token);
 	}
 	return Symbol();
 }
@@ -387,7 +386,7 @@ const Symbol SubI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -397,10 +396,13 @@ const Symbol SubI::evaluate(Scope *scope) const
 		auto vA = evalA.getVector(&token);
 		auto vB = evalB.getVector(&token);
 		std::vector<Symbol> nv;
-		for (auto &e : vA) {
+		for (auto &e : vA)
+		{
 			bool flag = true;
-			for (auto &e2 : vB) {
-				if (e.equals(&e2, &token)){
+			for (auto &e2 : vB)
+			{
+				if (e.equals(&e2, &token))
+				{
 					flag = false;
 					break;
 				}
@@ -419,7 +421,7 @@ const Symbol SubI::evaluate(Scope *scope) const
 		}
 	}
 	default:
-		throwError("Operator `-` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "-").str(), token);
 	}
 	return Symbol();
 }
@@ -435,7 +437,7 @@ const Symbol MulI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -447,7 +449,7 @@ const Symbol MulI::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_MUL, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `*` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "*").str(), token);
 	}
 	return Symbol();
 }
@@ -463,7 +465,7 @@ const Symbol DivI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -475,7 +477,7 @@ const Symbol DivI::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_DIV, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `/` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "/").str(), token);
 	}
 	return Symbol();
 }
@@ -491,7 +493,7 @@ const Symbol ModI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -503,7 +505,7 @@ const Symbol ModI::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_MOD, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `%` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "%").str(), token);
 	}
 	return Symbol();
 }
@@ -519,11 +521,11 @@ const Symbol PowI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
-		return Symbol(NUMBER_POW(evalA.getNumber(&token), evalB.getNumber(&token)));
+		return Symbol(evalA.getNumber(&token).pow(evalB.getNumber(&token)));
 	case OBJECT:
 	{
 		auto o = evalA.getObject(&token);
@@ -533,7 +535,7 @@ const Symbol PowI::evaluate(Scope *scope) const
 		}
 	}
 	default:
-		throwError("Operator `**` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "**").str(), token);
 	}
 	return Symbol();
 }
@@ -549,7 +551,7 @@ const Symbol LessI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -565,7 +567,7 @@ const Symbol LessI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_LESS))
 			return o->getScope()->getVariable(Ruota::HASH_LESS, &token).call(NIL, {evalB}, &evalA, &token).getBool(&token);
-		throwError("Operator `<` not defined for Object type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<").str(), token);
 	}
 	default:
 		return evalA.toString(&token) < evalB.toString(&token);
@@ -583,7 +585,7 @@ const Symbol MoreI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -599,7 +601,7 @@ const Symbol MoreI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_MORE))
 			return o->getScope()->getVariable(Ruota::HASH_MORE, &token).call(NIL, {evalB}, &evalA, &token).getBool(&token);
-		throwError("Operator `>` not defined for Object type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">").str(), token);
 	}
 	default:
 		return evalA.toString(&token) > evalB.toString(&token);
@@ -617,7 +619,7 @@ const Symbol ELessI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -633,7 +635,7 @@ const Symbol ELessI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_ELESS))
 			return o->getScope()->getVariable(Ruota::HASH_ELESS, &token).call(NIL, {evalB}, &evalA, &token).getBool(&token);
-		throwError("Operator `<=` not defined for Object type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<=").str(), token);
 	}
 	default:
 		return evalA.toString(&token) <= evalB.toString(&token);
@@ -651,7 +653,7 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -667,7 +669,7 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_EMORE))
 			return o->getScope()->getVariable(Ruota::HASH_EMORE, &token).call(NIL, {evalB}, &evalA, &token).getBool(&token);
-		throwError("Operator `>=` not defined for Object type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">=").str(), token);
 	}
 	default:
 		return evalA.toString(&token) >= evalB.toString(&token);
@@ -675,12 +677,12 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class Equals                                                                                      */
+/*class EqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Equals::Equals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(EQUALS, a, b, token) {}
+EqualsI::EqualsI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(EQUALS, a, b, token) {}
 
-const Symbol Equals::evaluate(Scope *scope) const
+const Symbol EqualsI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -688,12 +690,12 @@ const Symbol Equals::evaluate(Scope *scope) const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class NEquals                                                                                      */
+/*class NEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-NEquals::NEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(NEQUALS, a, b, token) {}
+NEqualsI::NEqualsI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(NEQUALS, a, b, token) {}
 
-const Symbol NEquals::evaluate(Scope *scope) const
+const Symbol NEqualsI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -745,7 +747,7 @@ const Symbol BOrI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -757,7 +759,7 @@ const Symbol BOrI::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_B_OR, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `|` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "|").str(), token);
 	}
 	return Symbol();
 }
@@ -773,7 +775,7 @@ const Symbol BXOrI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -785,7 +787,7 @@ const Symbol BXOrI::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_B_XOR, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `^` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "^").str(), token);
 	}
 	return Symbol();
 }
@@ -801,7 +803,7 @@ const Symbol BAndI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -815,23 +817,23 @@ const Symbol BAndI::evaluate(Scope *scope) const
 		}
 	}
 	default:
-		throwError("Operator `&` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "&").str(), token);
 	}
 	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class BShiftLeft                                                                                      */
+/*class BShiftLeftI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftLeft::BShiftLeft(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(B_SH_L, a, b, token) {}
+BShiftLeftI::BShiftLeftI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(B_SH_L, a, b, token) {}
 
-const Symbol BShiftLeft::evaluate(Scope *scope) const
+const Symbol BShiftLeftI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -843,23 +845,23 @@ const Symbol BShiftLeft::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_B_SH_L, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `<<` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<<").str(), token);
 	}
 	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class BShiftRight                                                                                      */
+/*class BShiftRightI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftRight::BShiftRight(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(B_SH_R, a, b, token) {}
+BShiftRightI::BShiftRightI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(B_SH_R, a, b, token) {}
 
-const Symbol BShiftRight::evaluate(Scope *scope) const
+const Symbol BShiftRightI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
 	if (evalA.getValueType() != OBJECT && evalA.getValueType() != evalB.getValueType())
-		throwError("Operator is undefined for base values of different types", &token);
+		throw RuotaError(_OPERATOR_UNDEFINED_DIFFERENT_TYPE_, token);
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
@@ -871,7 +873,7 @@ const Symbol BShiftRight::evaluate(Scope *scope) const
 			return o->getScope()->getVariable(Ruota::HASH_B_SH_R, &token).call(NIL, {evalB}, &evalA, &token);
 	}
 	default:
-		throwError("Operator `>>` is undefined for value type", &token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">>").str(), token);
 	}
 	return Symbol();
 }
@@ -912,7 +914,7 @@ ExternI::ExternI(const std::string &id, std::shared_ptr<Instruction> a, const To
 	if (rlib::loaded.find(id) != rlib::loaded.end())
 		this->f = rlib::loaded[id];
 	else
-		throwError("External function `" + id + "` is not defined", &token);
+		throw RuotaError((boost::format(_EXTERN_NOT_DEFINED_) % id).str(), token);
 }
 
 const Symbol ExternI::evaluate(Scope *scope) const
@@ -947,16 +949,16 @@ const Symbol LengthI::evaluate(Scope *scope) const
 			else if ((c & 0xF8) == 0xF0)
 				i += 3;
 			else
-				return Symbol(NUMBER_NEW_LONG(evalA.getString(&token).size()));
+				return Symbol(CNumber(static_cast<long_int_t>(evalA.getString(&token).size())));
 		}
-		return Symbol(NUMBER_NEW_LONG(q));
+		return Symbol(CNumber(static_cast<long_int_t>(q)));
 	}
 	case DICTIONARY:
-		return Symbol(NUMBER_NEW_LONG(evalA.dictionarySize(&token)));
+		return Symbol(CNumber(static_cast<long_int_t>(evalA.dictionarySize(&token))));
 	case VECTOR:
-		return Symbol(NUMBER_NEW_LONG(evalA.vectorSize()));
+		return Symbol(CNumber(static_cast<long_int_t>(evalA.vectorSize())));
 	default:
-		throwError("Cannot get length of value", &token);
+		throw RuotaError(_FAILURE_LENGTH_, token);
 	}
 	return Symbol();
 }
@@ -973,13 +975,13 @@ const Symbol SizeI::evaluate(Scope *scope) const
 	switch (evalA.getValueType())
 	{
 	case STRING:
-		return Symbol(NUMBER_NEW_LONG(evalA.getString(&token).size()));
+		return Symbol(CNumber(static_cast<long_int_t>(evalA.getString(&token).size())));
 	case DICTIONARY:
-		return Symbol(NUMBER_NEW_LONG(evalA.dictionarySize(&token)));
+		return Symbol(CNumber(static_cast<long_int_t>(evalA.dictionarySize(&token))));
 	case VECTOR:
-		return Symbol(NUMBER_NEW_LONG(evalA.vectorSize()));
+		return Symbol(CNumber(static_cast<long_int_t>(evalA.vectorSize())));
 	default:
-		throwError("Cannot get size of value", &token);
+		throw RuotaError(_FAILURE_SIZE_, token);
 	}
 	return Symbol();
 }
@@ -988,7 +990,7 @@ const Symbol SizeI::evaluate(Scope *scope) const
 /*class ClassI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ClassI::ClassI(hashcode_t key, OBJECT_TYPE type, std::shared_ptr<Instruction> body, std::shared_ptr<Instruction> extends, const Token token) : Instruction(CLASS_I, token), key(key), type(type), body(body), extends(extends) {}
+ClassI::ClassI(hashcode_t key, ObjectType type, std::shared_ptr<Instruction> body, std::shared_ptr<Instruction> extends, const Token token) : Instruction(CLASS_I, token), key(key), type(type), body(body), extends(extends) {}
 
 const Symbol ClassI::evaluate(Scope *scope) const
 {
@@ -998,7 +1000,7 @@ const Symbol ClassI::evaluate(Scope *scope) const
 		auto e = extends->evaluate(scope);
 		auto eo = e.getObject(&token);
 		if (eo->getType() == STATIC_O)
-			throwError("Cannot extend a statically declared Object", &token);
+			throw RuotaError(_FAILURE_EXTEND_, token);
 		auto eb = eo->getBody();
 		std::vector<std::shared_ptr<Instruction>> temp;
 		temp.push_back(body);
@@ -1032,7 +1034,7 @@ const Symbol NewI::evaluate(Scope *scope) const
 /*class CastToI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastToI::CastToI(std::shared_ptr<Instruction> a, D_TYPE convert, const Token token) : UnaryI(CAST_TO_I, a, token), convert(convert) {}
+CastToI::CastToI(std::shared_ptr<Instruction> a, ValueType convert, const Token token) : UnaryI(CAST_TO_I, a, token), convert(convert) {}
 
 const Symbol CastToI::evaluate(Scope *scope) const
 {
@@ -1053,15 +1055,15 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		case NUMBER:
 			return evalA;
 		case NIL:
-			return Symbol(NUMBER_NEW_LONG(0));
+			return Symbol(CNumber(static_cast<long_int_t>(0)));
 		case STRING:
 			try
 			{
-				return Symbol(NUMBER_NEW_DOUBLE(std::stold(evalA.getString(&token))));
+				return Symbol(CNumber(static_cast<long_double_t>(std::stold(evalA.getString(&token)))));
 			}
 			catch (const std::invalid_argument &e)
 			{
-				throwError("String `" + evalA.getString(&token) + "` cannot be converted to Number", &token);
+				throw RuotaError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token)).str(), token);
 			}
 		case OBJECT:
 		{
@@ -1081,7 +1083,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		case NIL:
 			return Symbol(false);
 		case NUMBER:
-			return Symbol(NUMBER_GET_LONG(evalA.getNumber(&token)) != 0);
+			return Symbol(evalA.getNumber(&token).getLong() != 0);
 		case STRING:
 			return Symbol(evalA.getString(&token) == "true");
 		case OBJECT:
@@ -1194,7 +1196,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 	default:
 		break;
 	}
-	throwError("Cannot convert to given type", &token);
+	throw RuotaError(_FAILURE_CONVERT_, token);
 	return Symbol();
 }
 
@@ -1206,9 +1208,9 @@ AllocI::AllocI(std::shared_ptr<Instruction> a, const Token token) : UnaryI(ALLOC
 
 const Symbol AllocI::evaluate(Scope *scope) const
 {
-	auto evalA = NUMBER_GET_LONG(a->evaluate(scope).getNumber(&token));
+	auto evalA = a->evaluate(scope).getNumber(&token).getLong();
 	if (evalA < 0)
-		throwError("Cannot initialize a Vector with size < 0", &token);
+		throw RuotaError(_FAILURE_ALLOC_, token);
 	std::vector<Symbol> v(evalA);
 	return Symbol(v);
 }
@@ -1313,7 +1315,7 @@ const Symbol TryCatchI::evaluate(Scope *scope) const
 		Scope newScope(scope, "");
 		return a->evaluate(&newScope);
 	}
-	catch (const std::runtime_error &e)
+	catch (const RuotaError &e)
 	{
 		Scope newScope(scope, "");
 		newScope.createVariable(key, Symbol(std::string(e.what())), &token);
@@ -1330,17 +1332,17 @@ ThrowI::ThrowI(std::shared_ptr<Instruction> a, const Token token) : UnaryI(THROW
 const Symbol ThrowI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
-	throwError(evalA.getString(&token), &token);
+	throw RuotaError(evalA.getString(&token), token);
 	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class PureEquals                                                                                      */
+/*class PureEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureEquals::PureEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(PURE_EQUALS, a, b, token) {}
+PureEqualsI::PureEqualsI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(PURE_EQUALS, a, b, token) {}
 
-const Symbol PureEquals::evaluate(Scope *scope) const
+const Symbol PureEqualsI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -1348,12 +1350,12 @@ const Symbol PureEquals::evaluate(Scope *scope) const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class PureNEquals                                                                                      */
+/*class PureNEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureNEquals::PureNEquals(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(PURE_NEQUALS, a, b, token) {}
+PureNEqualsI::PureNEqualsI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(PURE_NEQUALS, a, b, token) {}
 
-const Symbol PureNEquals::evaluate(Scope *scope) const
+const Symbol PureNEqualsI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
@@ -1371,7 +1373,7 @@ const Symbol CharNI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope).getString(&token);
 	std::vector<Symbol> nv;
 	for (const unsigned char &c : evalA)
-		nv.push_back(Symbol(NUMBER_NEW_LONG(c)));
+		nv.push_back(Symbol(CNumber(static_cast<long_int_t>(c))));
 	return Symbol(nv);
 }
 
@@ -1387,17 +1389,17 @@ const Symbol CharSI::evaluate(Scope *scope) const
 	switch (evalA.getValueType())
 	{
 	case NUMBER:
-		return Symbol(std::string(1, static_cast<char>(NUMBER_GET_LONG(evalA.getNumber(&token)))));
+		return Symbol(std::string(1, static_cast<char>(evalA.getNumber(&token).getLong())));
 	case VECTOR:
 	{
 		std::string ret = "";
 		auto v = evalA.getVector(&token);
 		for (auto &e : v)
-			ret.push_back(static_cast<char>(NUMBER_GET_LONG(e.getNumber(&token))));
+			ret.push_back(static_cast<char>(e.getNumber(&token).getLong()));
 		return Symbol(ret);
 	}
 	default:
-		throwError("Cannot convert value(s) into String", &token);
+		throw RuotaError(_FAILURE_TO_STR_, token);
 	}
 	return Symbol();
 }

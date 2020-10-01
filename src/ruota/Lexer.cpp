@@ -1,4 +1,4 @@
-#include "Lexer.h"
+#include "Ruota.h"
 
 #include <sstream>
 
@@ -153,9 +153,9 @@ int Lexer::getToken()
 
 		ID_STRING = numStr;
 		if (flag)
-			NUM_VALUE = NUMBER_NEW_DOUBLE(strtold(numStr.c_str(), 0));
+			NUM_VALUE = CNumber(static_cast<long_double_t>(strtold(numStr.c_str(), 0)));
 		else
-			NUM_VALUE = NUMBER_NEW_LONG(strtoll(numStr.c_str(), 0, 0));
+			NUM_VALUE = CNumber(static_cast<long_int_t>(strtoll(numStr.c_str(), 0, 0)));
 		return TOK_NUM;
 	}
 	else if (last == '#')

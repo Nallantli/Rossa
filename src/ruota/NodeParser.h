@@ -29,7 +29,7 @@ private:
 	std::unique_ptr<Node> parseIfElseNode();
 	std::unique_ptr<Node> parseWhileNode();
 	std::unique_ptr<Node> parseForNode();
-	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> parseSigNode();
+	std::vector<std::pair<LexerTokenType, hashcode_t>> parseSigNode();
 	std::unique_ptr<Node> parseDefineNode();
 	std::unique_ptr<Node> parseLambdaNode();
 	std::unique_ptr<Node> parseExternNode();
@@ -51,7 +51,7 @@ private:
 	std::unique_ptr<Node> parseThenNode(std::unique_ptr<Node>);
 
 	std::unique_ptr<Node> logErrorN(const std::string &, const Token);
-	std::vector<std::pair<LEX_TOKEN_TYPE, hashcode_t>> logErrorSN(const std::string &, const Token);
+	std::vector<std::pair<LexerTokenType, hashcode_t>> logErrorSN(const std::string &, const Token);
 
 public:
 	NodeParser(std::vector<Token>, std::map<std::string, signed int>, std::map<std::string, signed int>, boost::filesystem::path);
