@@ -392,6 +392,24 @@ const Symbol SubI::evaluate(Scope *scope) const
 	{
 	case NUMBER:
 		return Symbol(evalA.getNumber(&token) - evalB.getNumber(&token));
+	case VECTOR:
+	{
+		auto vA = evalA.getVector(&token);
+		auto vB = evalB.getVector(&token);
+		std::vector<Symbol> nv;
+		for (auto &e : vA) {
+			bool flag = true;
+			for (auto &e2 : vB) {
+				if (e.equals(&e2, &token)){
+					flag = false;
+					break;
+				}
+			}
+			if (flag)
+				nv.push_back(e);
+		}
+		return Symbol(nv);
+	}
 	case OBJECT:
 	{
 		auto o = evalA.getObject(&token);

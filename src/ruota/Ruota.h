@@ -15,7 +15,7 @@ typedef long double long_double_t;
 typedef signed long long long_int_t;
 typedef unsigned long long hashcode_t;
 
-#define _RUOTA_VERSION_ "v1.1.2-alpha"
+#define _RUOTA_VERSION_ "v1.2.0-alpha"
 
 #define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\nCopyright 2020 - BSD 3-Clause License\nAuthors:\n * Benjamin Park / parkbenjamin2@gmail.com"
 
