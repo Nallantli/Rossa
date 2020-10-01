@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include <regex>
 #include <boost/generator_iterator.hpp>
 
 #ifndef __unix__
@@ -146,5 +147,25 @@ namespace libstd
 		char c = getch();
 #endif
 		return Symbol(CNumber(static_cast<long_int_t>(c)));
+	}
+
+	RUOTA_EXT_SYM(_regex_match, args, token)
+	{
+		std::regex r(args[0].getString(token));
+		std::string s = args[1].getString(token);
+		std::vector<Symbol> v;
+		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++){
+			std::string m = (*i).str();
+			v.push_back(Symbol(m));
+		}
+		return Symbol(v);
+	}
+
+	RUOTA_EXT_SYM(_regex_replace, args, token)
+	{
+		std::regex r(args[0].getString(token));
+		std::string rpl = args[1].getString(token);
+		std::string s = args[2].getString(token);
+		return Symbol(std::regex_replace(s, r, rpl));
 	}
 } // namespace libstd

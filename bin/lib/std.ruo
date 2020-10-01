@@ -18,6 +18,8 @@ extern _rand_init in "libstd";
 extern _rand_nextFloat in "libstd";
 extern _rand_nextInt in "libstd";
 extern _system_call in "libstd";
+extern _regex_match in "libstd";
+extern _regex_replace in "libstd";
 
 # BASIC
 
@@ -385,5 +387,15 @@ static math class {
 
 	tanh(ref x) => {
 		return (extern_call libstd._tanh(x));
+	}
+}
+
+static regex class {
+	match(ref s, ref r) => {
+		return (extern_call libstd._regex_match(r, s));
+	}
+
+	replace(ref s, ref r, ref x) => {
+		return (extern_call libstd._regex_replace(r, x, s));
 	}
 }
