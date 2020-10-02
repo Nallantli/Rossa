@@ -36,7 +36,7 @@ make dirs
 make
 ```
 
-`make` can also be used with optional `locale` to specify a language. Current options are `ENG` (Default), `LAT`, `JPN`.
+`make` can also be used with optional `locale` to specify a language. Current options are `ENG` (Default), `LAT`, `JPN`, `ITA`.
 
 e.g. `make locale=LAT`
 

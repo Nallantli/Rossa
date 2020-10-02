@@ -1,9 +1,9 @@
 locale=ENG
 
-CC=g++ -D_LOCALIZED_ -D_LOCALE_${locale}_
+CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_
 
-WINDIR=build\\win
-NIXDIR=build/nix
+WINDIR=build\\win\\$(locale)
+NIXDIR=build/nix/$(locale)
 
 BOOST_PATH_WIN=C:/Program Files/boost
 BOOST_VERSION_WIN=1_73

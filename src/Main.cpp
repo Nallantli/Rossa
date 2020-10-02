@@ -112,7 +112,8 @@ void printError(const RuotaError &e)
 	{
 		if (j++ > 10)
 		{
-			printc(" ... (" + std::to_string(Ruota::stack_trace.size()) + " more) ...\n", MAGENTA_TEXT);
+			printc((boost::format(_STACK_TRACE_MORE_) % Ruota::stack_trace.size()).str(), MAGENTA_TEXT);
+			std::cout << "\n";
 			Ruota::stack_trace.clear();
 			break;
 		}
@@ -197,23 +198,23 @@ int main(int argc, char const *argv[])
 
 	if (options["file"] == "")
 	{
-		std::cout << "Ruota " << _RUOTA_VERSION_ << " Interpreter\n";
+		std::cout << _RUOTA_INTERPRETER_START_ << "\n";
 
 		if (options["std"] == "true")
 		{
 			try
 			{
 				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
-				std::cout << "Standard Library Loaded\n";
+				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
 			}
 			catch (const RuotaError &e)
 			{
-				std::cout << "Failed to load Standard Library: " << std::string(e.what()) << "\n";
+				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		}
 		else
 		{
-			std::cout << "Option --no-std (-ns) used; Standard Library not loaded\n";
+			std::cout << _OPTION_NO_STD_ << "\n";
 		}
 
 		bool flag = true;
@@ -334,7 +335,7 @@ int main(int argc, char const *argv[])
 		file.open(options["file"]);
 		if (!file.is_open())
 		{
-			std::cerr << "Cannot find path to file: " << options["file"] << "\n";
+			std::cerr << _FAILURE_FILEPATH_ << options["file"] << "\n";
 			return 1;
 		}
 
