@@ -49,12 +49,12 @@ class DefineI : public Instruction
 {
 protected:
 	hashcode_t key;
-	ValueType ftype;
+	Signature ftype;
 	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
 	std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(hashcode_t, ValueType ftype, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
+	DefineI(hashcode_t, Signature ftype, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 

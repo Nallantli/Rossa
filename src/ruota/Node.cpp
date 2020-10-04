@@ -274,7 +274,7 @@ std::unique_ptr<Node> BIDNode::fold() const
 
 DefineNode::DefineNode(
 	hashcode_t key,
-	ValueType ftype,
+	Signature ftype,
 	std::vector<std::pair<LexerTokenType, hashcode_t>> params,
 	std::vector<std::unique_ptr<Node>> body,
 	const Token token) : Node(DEFINE_NODE,
@@ -311,7 +311,7 @@ void DefineNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? hash.deHash(key) : "<LAMBDA>") << ", " << std::to_string(ftype) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? hash.deHash(key) : "<LAMBDA>") << ", " << ftype.values.size() << "\n"
 			  << colorASCII(RESET_TEXT);
 
 	for (size_t i = 0; i < body.size(); i++)

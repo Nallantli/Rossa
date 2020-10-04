@@ -34,7 +34,7 @@ const Symbol Function::evaluate(std::vector<Symbol> &paramValues, const Symbol *
 	}
 
 	if (thisSym != NULL)
-		newScope.createVariable(Ruota::HASH_THIS, thisSym, token);
+		newScope.createVariable(Ruota::HASH_THIS, *thisSym, token);
 
 	auto temp = body->evaluate(&newScope);
 

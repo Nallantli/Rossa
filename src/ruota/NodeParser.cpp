@@ -211,13 +211,15 @@ std::unique_ptr<Node> NodeParser::parseExternCallNode()
 	return std::make_unique<ExternCallNode>(libname + "$" + fname, std::move(args), marker);
 }
 
-std::vector<std::pair<LexerTokenType, hashcode_t>> NodeParser::parseSigNode()
+std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodeParser::parseSigNode(ValueType start)
 {
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '(')
 		return logErrorSN((boost::format(_EXPECTED_ERROR_) % "(").str(), currentToken);
 	nextToken();
 
 	std::vector<std::pair<LexerTokenType, hashcode_t>> args;
+	std::vector<ValueType> types;
+
 	int i = 0;
 	while (currentToken.getType() != NULL_TOK && currentToken.getType() != ')')
 	{
@@ -243,13 +245,57 @@ std::vector<std::pair<LexerTokenType, hashcode_t>> NodeParser::parseSigNode()
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		args.push_back({(LexerTokenType)type, hash.hashString(arg)});
+		ValueType ftype = NIL;
+		if (currentToken.getType() != NULL_TOK && currentToken.getType() == ':')
+		{
+			nextToken();
+			switch (currentToken.getType())
+			{
+			case TOK_BOOLEAN:
+				ftype = BOOLEAN_D;
+				break;
+			case TOK_NUMBER:
+				ftype = NUMBER;
+				break;
+			case TOK_VECTOR:
+				ftype = VECTOR;
+				break;
+			case TOK_STRING:
+				ftype = STRING;
+				break;
+			case TOK_DICTIONARY:
+				ftype = DICTIONARY;
+				break;
+			case TOK_OBJECT:
+				ftype = OBJECT;
+				break;
+			case TOK_FUNCTION:
+				ftype = FUNCTION;
+				break;
+			case TOK_POINTER:
+				ftype = POINTER;
+				break;
+			case TOK_TYPE_NAME:
+				ftype = TYPE_NAME;
+				break;
+			default:
+				return logErrorSN(_EXPECTED_BASE_TYPE_, currentToken);
+			}
+			nextToken();
+		}
+
+		args.push_back({static_cast<LexerTokenType>(type), hash.hashString(arg)});
+		types.push_back(ftype);
 
 		if (currentToken.getType() == NULL_TOK)
 			return logErrorSN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
 	}
 	nextToken();
-	return args;
+
+	if (start != NIL && !types.empty())
+		types[0] = start;
+
+	return {Signature(types), args};
 }
 
 std::unique_ptr<Node> NodeParser::parseDefineNode()
@@ -296,13 +342,14 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "::").str(), currentToken);
 		nextToken();
 	}
+
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = hash.hashString(currentToken.getValueString());
 	nextToken();
 
-	auto args = parseSigNode();
-	if (!args.empty() && args[0].first == 0)
+	auto sig = parseSigNode(ftype);
+	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
 
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '{')
@@ -323,7 +370,8 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '}')
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>(key, ftype, args, std::move(body), currentToken);
+
+	return std::make_unique<DefineNode>(key, sig.first, sig.second, std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseNewNode()
@@ -343,8 +391,8 @@ std::unique_ptr<Node> NodeParser::parseLambdaNode()
 {
 	nextToken();
 
-	auto args = parseSigNode();
-	if (!args.empty() && args[0].first == 0)
+	auto sig = parseSigNode(NIL);
+	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
 
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '{')
@@ -365,7 +413,8 @@ std::unique_ptr<Node> NodeParser::parseLambdaNode()
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '}')
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 	nextToken();
-	return std::make_unique<DefineNode>(0, NIL, args, std::move(body), currentToken);
+
+	return std::make_unique<DefineNode>(0, sig.first, sig.second, std::move(body), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseIndexNode(std::unique_ptr<Node> a)
@@ -1260,8 +1309,8 @@ std::unique_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token t)
 	return nullptr;
 }
 
-std::vector<std::pair<LexerTokenType, hashcode_t>> NodeParser::logErrorSN(const std::string &s, const Token t)
+std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodeParser::logErrorSN(const std::string &s, const Token t)
 {
 	logErrorN(s, t);
-	return {{(LexerTokenType)0, -1}};
+	return {Signature({}), {{NULL_TOK, -1}}};
 }

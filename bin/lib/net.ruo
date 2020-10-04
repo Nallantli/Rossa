@@ -22,19 +22,19 @@ static net class {
 		var ptr;
 		var service;
 
-		init(ref ip, ref port) => {
+		init(ref ip : String, ref port : Number) => {
 			ptr = (extern_call libnet._socket_init(ip, port -> Number, __DEFAULT_NET_SERVICE__.ptr));
 			this.service = __DEFAULT_NET_SERVICE__;
 		}
 
-		init(ref ip, ref port, ref service) => {
+		init(ref ip : String, ref port : Number, ref service) => {
 			ptr = (extern_call libnet._socket_init(ip, port -> Number, service.ptr));
 			this.service = service;
 		}
 
-		init(ref DATA) => {
-			this.ptr = DATA[0];
-			this.service = DATA[1];
+		init(ref ptr : Pointer, ref service) => {
+			this.ptr = ptr;
+			this.service = service;
 		}
 
 		send(ref data) => {
@@ -50,7 +50,7 @@ static net class {
 			return (extern_call libnet._socket_read(ptr));
 		}
 
-		readTo(ref delim) => {
+		readTo(ref delim : String) => {
 			return (extern_call libnet._socket_read_until(ptr, delim));
 		}
 
@@ -70,18 +70,18 @@ static net class {
 		var ptr;
 		var service;
 
-		init(ref port) => {
+		init(ref port : Number) => {
 			ptr = (extern_call libnet._server_init(port -> Number, __DEFAULT_NET_SERVICE__.ptr));
 			this.service = __DEFAULT_NET_SERVICE__;
 		}
 
-		init(ref port, ref service) => {
+		init(ref port : Number, ref service) => {
 			ptr = (extern_call libnet._server_init(port -> Number, service.ptr));
 			this.service = service;
 		}
 
 		accept() => {
-			return new Socket([extern_call libnet._server_accept(ptr, service.ptr), service]);
+			return new Socket(extern_call libnet._server_accept(ptr, service.ptr), service);
 		}
 	}
 }

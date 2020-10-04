@@ -78,12 +78,12 @@ class DefineNode : public Node
 {
 private:
 	hashcode_t key;
-	ValueType ftype;
+	Signature ftype;
 	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
 	std::vector<std::unique_ptr<Node>> body;
 
 public:
-	DefineNode(hashcode_t, ValueType, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::vector<std::unique_ptr<Node>>, const Token);
+	DefineNode(hashcode_t, Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::vector<std::unique_ptr<Node>>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;

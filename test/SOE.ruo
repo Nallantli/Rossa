@@ -1,4 +1,4 @@
-SOE(final MAX) => {
+SOE(final MAX : Number) => {
 	var start = clock.milliseconds();
 	var a = alloc(MAX);
 	for e in a do {
@@ -36,7 +36,7 @@ SOE(final MAX) => {
 	return b;
 }
 
-test(final MAX) => {
+test(final MAX : Number) => {
 	var start = clock.milliseconds();
 	var result = SOE(MAX);
 	var time = clock.milliseconds() - start;

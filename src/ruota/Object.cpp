@@ -18,7 +18,7 @@ const Symbol Object::instantiate(std::vector<Symbol> &params, const Token *token
 	auto o = std::make_shared<Object>(internal->getParent(), INSTANCE_O, body, key);
 	o->body->evaluate(o->getScope());
 	auto d = Symbol(o);
-	o->getScope()->getVariable(Ruota::HASH_INIT, token).call(NIL, params, &d, token);
+	o->getScope()->getVariable(Ruota::HASH_INIT, token).call(params, &d, token);
 	return d;
 }
 
@@ -46,6 +46,6 @@ Object::~Object()
 {
 	if (hasValue(Ruota::HASH_DELETER))
 	{
-		internal->getVariable(Ruota::HASH_DELETER, NULL).call(NIL, {}, NULL, NULL);
+		internal->getVariable(Ruota::HASH_DELETER, NULL).call({}, NULL, NULL);
 	}
 }
