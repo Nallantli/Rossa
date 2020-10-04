@@ -8,7 +8,7 @@ SOE(final MAX : Number) => {
 
 	start = clock.milliseconds();
     var c = MAX - 2;
-	for i in [2 until (MAX ** 0.5)] do {
+	for i in [2 .. (MAX ** 0.5)] do {
 		if a[i] then {
 			var n = i ** 2;
 			while n < MAX do {
@@ -25,7 +25,7 @@ SOE(final MAX : Number) => {
 	start = clock.milliseconds();
 	var b = alloc(c);
 	var j = 0;
-	for i in [2 until MAX] do {
+	for i in [2 .. MAX] do {
 		if a[i] then {
 			b[j] = i;
 			j += 1;

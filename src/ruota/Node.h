@@ -80,10 +80,10 @@ private:
 	hashcode_t key;
 	Signature ftype;
 	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
-	std::vector<std::unique_ptr<Node>> body;
+	std::unique_ptr<Node> body;
 
 public:
-	DefineNode(hashcode_t, Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::vector<std::unique_ptr<Node>>, const Token);
+	DefineNode(hashcode_t, Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::unique_ptr<Node>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;
@@ -329,9 +329,11 @@ class UntilNode : public Node
 private:
 	std::unique_ptr<Node> a;
 	std::unique_ptr<Node> b;
+	std::unique_ptr<Node> step;
+	bool inclusive;
 
 public:
-	UntilNode(std::unique_ptr<Node>, std::unique_ptr<Node>, const Token);
+	UntilNode(std::unique_ptr<Node>, std::unique_ptr<Node>, std::unique_ptr<Node>, bool, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;

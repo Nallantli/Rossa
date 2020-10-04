@@ -4,7 +4,7 @@ Token::Token() : filename("nil"),
 				 line(""),
 				 distance(0),
 				 valueString(""),
-				 valueNumber(CNumber(static_cast<long_int_t>(0))),
+				 valueNumber(CNumber()),
 				 type(NULL_TOK),
 				 lineNumber(0) {}
 
@@ -50,7 +50,7 @@ size_t Token::getLineNumber() const
 	return this->lineNumber;
 }
 
-CNumber Token::getValueNumber() const
+const CNumber Token::getValueNumber() const
 {
 	return this->valueNumber;
 }

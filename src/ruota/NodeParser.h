@@ -43,7 +43,7 @@ private:
 	std::unique_ptr<Node> parseTypeNode();
 	std::unique_ptr<Node> parseTrailingNode(std::unique_ptr<Node>, bool);
 	std::unique_ptr<Node> parseInsNode(std::unique_ptr<Node>);
-	std::unique_ptr<Node> parseUntilNode(std::unique_ptr<Node>);
+	std::unique_ptr<Node> parseUntilNode(std::unique_ptr<Node>, bool);
 	std::unique_ptr<Node> parseCastToNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseBinOpNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseCallNode(std::unique_ptr<Node>);

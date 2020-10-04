@@ -1,41 +1,47 @@
 #ifndef CNUMBER_H
 #define CNUMBER_H
 
+#include <string>
 #include <cmath>
 
 typedef long double long_double_t;
 typedef signed long long long_int_t;
-
-enum NumberType
-{
-	DOUBLE_NUM,
-	LONG_NUM
-};
-
 class CNumber
 {
 private:
-	NumberType type;
-	long_double_t valueDouble;
-	long_int_t valueLong;
+	union
+	{
+		long_double_t valueDouble;
+		long_int_t valueLong;
+	};
+
+	CNumber(long_double_t valueDouble) : valueDouble(valueDouble), type(DOUBLE_NUM) {}
+
+	CNumber(long_int_t valueLong) : valueLong(valueLong), type(LONG_NUM) {}
 
 public:
-	inline void validate()
+	enum
+	{
+		DOUBLE_NUM,
+		LONG_NUM
+	} type;
+
+	CNumber() : valueLong(0), type(LONG_NUM) {}
+
+	static inline const CNumber Double(long_double_t valueDouble)
 	{
 		if (valueDouble == static_cast<long_int_t>(valueDouble))
-		{
-			valueLong = static_cast<long_int_t>(valueDouble);
-			type = LONG_NUM;
-		}
+			return CNumber(static_cast<long_int_t>(valueDouble));
+
+		return CNumber(static_cast<long_double_t>(valueDouble));
 	}
 
-	CNumber() : valueLong(0), valueDouble(0), type(LONG_NUM) {}
+	static inline const CNumber Long(long_double_t valueLong)
+	{
+		return CNumber(static_cast<long_int_t>(valueLong));
+	}
 
-	CNumber(long_double_t valueDouble) : valueDouble(valueDouble), valueLong(0), type(DOUBLE_NUM) { validate(); }
-
-	CNumber(long_int_t valueLong) : valueLong(valueLong), valueDouble(0), type(LONG_NUM) {}
-
-	inline NumberType getType()
+	inline int getType()
 	{
 		return type;
 	}
@@ -68,19 +74,6 @@ public:
 			break;
 		}
 		return CNumber();
-	}
-
-	inline void operator+=(long_int_t v)
-	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			valueDouble += static_cast<long_double_t>(v);
-		case LONG_NUM:
-			valueLong += v;
-		default:
-			break;
-		}
 	}
 
 	inline const CNumber operator-(const CNumber &n) const

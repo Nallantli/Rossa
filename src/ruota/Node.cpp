@@ -276,7 +276,7 @@ DefineNode::DefineNode(
 	hashcode_t key,
 	Signature ftype,
 	std::vector<std::pair<LexerTokenType, hashcode_t>> params,
-	std::vector<std::unique_ptr<Node>> body,
+	std::unique_ptr<Node> body,
 	const Token token) : Node(DEFINE_NODE,
 							  token),
 						 key(key),
@@ -286,11 +286,7 @@ DefineNode::DefineNode(
 
 std::shared_ptr<Instruction> DefineNode::genParser() const
 {
-	std::vector<std::shared_ptr<Instruction>> is;
-	for (auto &e : this->body)
-		is.push_back(e->genParser());
-	auto fbody = std::make_shared<ScopeI>(is, token);
-	return std::make_shared<DefineI>(key, ftype, params, fbody, token);
+	return std::make_shared<DefineI>(key, ftype, params, body->genParser(), token);
 }
 
 bool DefineNode::isConst() const
@@ -314,8 +310,7 @@ void DefineNode::printTree(std::string indent, bool last) const
 	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? hash.deHash(key) : "<LAMBDA>") << ", " << ftype.values.size() << "\n"
 			  << colorASCII(RESET_TEXT);
 
-	for (size_t i = 0; i < body.size(); i++)
-		body[i]->printTree(indent, i == body.size() - 1);
+	body->printTree(indent, true);
 }
 
 std::unique_ptr<Node> DefineNode::fold() const
@@ -328,22 +323,7 @@ std::unique_ptr<Node> DefineNode::fold() const
 		return nn;
 	}
 
-	std::vector<std::unique_ptr<Node>> nbody;
-	for (auto &c : body)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nbody.push_back(std::move(nn));
-		}
-		else
-		{
-			nbody.push_back(c->fold());
-		}
-	}
-	return std::make_unique<DefineNode>(key, ftype, params, std::move(nbody), token);
+	return std::make_unique<DefineNode>(key, ftype, params, body->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -1023,7 +1003,7 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "+")
 		return a->genParser();
 	if (op == "-")
-		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(CNumber(static_cast<long_int_t>(0))), token)->genParser(), a->genParser(), token);
+		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(CNumber::Long(0)), token)->genParser(), a->genParser(), token);
 	if (op == "!")
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
@@ -1414,19 +1394,23 @@ std::unique_ptr<Node> ForNode::fold() const
 UntilNode::UntilNode(
 	std::unique_ptr<Node> a,
 	std::unique_ptr<Node> b,
+	std::unique_ptr<Node> step,
+	bool inclusive,
 	const Token token) : Node(UNTIL_NODE,
 							  token),
 						 a(std::move(a)),
-						 b(std::move(b)) {}
+						 b(std::move(b)),
+						 step(std::move(step)),
+						 inclusive(inclusive) {}
 
 std::shared_ptr<Instruction> UntilNode::genParser() const
 {
-	return std::make_shared<UntilI>(a->genParser(), b->genParser(), token);
+	return std::make_shared<UntilI>(a->genParser(), b->genParser(), step->genParser(), inclusive, token);
 }
 
 bool UntilNode::isConst() const
 {
-	return a->isConst() && b->isConst();
+	return a->isConst() && b->isConst() && step->isConst();
 }
 
 void UntilNode::printTree(std::string indent, bool last) const
@@ -1446,7 +1430,8 @@ void UntilNode::printTree(std::string indent, bool last) const
 			  << colorASCII(RESET_TEXT);
 
 	a->printTree(indent, false);
-	b->printTree(indent, true);
+	b->printTree(indent, false);
+	step->printTree(indent, true);
 }
 
 std::unique_ptr<Node> UntilNode::fold() const
@@ -1459,7 +1444,7 @@ std::unique_ptr<Node> UntilNode::fold() const
 		return nn;
 	}
 
-	return std::make_unique<UntilNode>(a->fold(), b->fold(), token);
+	return std::make_unique<UntilNode>(a->fold(), b->fold(), step->fold(), inclusive, token);
 }
 
 //------------------------------------------------------------------------------------------------------

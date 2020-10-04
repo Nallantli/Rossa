@@ -28,7 +28,7 @@ static mandel class {
 		var zImag = imag;
 		var r2;
 		var i2;
-		for i in [0 until ASCII.size()] do {
+		for i in [0 .. ASCII.size()] do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
 
@@ -46,8 +46,8 @@ static mandel class {
 		var dx = (end_x - start_x) / (width - 1);
 		var dy = (end_y - start_y) / (height - 1);
 		var s = "";
-		for i in [0 until height] do {
-			for j in [0 until width] do {
+		for i in [0 .. height] do {
+			for j in [0 .. width] do {
 				s += ASCII[mandelConverger(start_x + j * dx, end_y - i * dy)];
 			}
 			s += "\n";

@@ -26,21 +26,13 @@ struct Path class {
 		ptr = (extern_call libfs._path_init(path));
 	}
 
-	filename() => {
-		return (extern_call libfs._path_filename(ptr));
-	}
+	filename() => extern_call libfs._path_filename(ptr);
 
-	up() => {
-		return this / "..";
-	}
+	up() => this / "..";
 
-	mkdirs() => {
-		extern_call libfs._path_mkdirs(ptr);
-	}
+	mkdirs() => extern_call libfs._path_mkdirs(ptr);
 
-	exists() => {
-		return (extern_call libfs._path_exists(ptr));
-	}
+	exists() => extern_call libfs._path_exists(ptr);
 
 	`=`(ref a) => {
 		if a -> Type == @Path then {
@@ -50,13 +42,9 @@ struct Path class {
 		}
 	}
 
-	`==`(ref a) => {
-		return this -> String == a -> String;
-	}
+	`==`(ref a) => this -> String == a -> String;
 
-	`!=`(ref a) => {
-		return this -> String != a -> String;
-	}
+	`!=`(ref a) => this -> String != a -> String;
 
 	`/`(ref a) => {
 		if a -> Type == @Path then {
@@ -66,9 +54,7 @@ struct Path class {
 		}
 	}
 
-	`->String`() => {
-		return (extern_call libfs._path_string(ptr));
-	}
+	`->String`() => extern_call libfs._path_string(ptr);
 }
 
 struct Writer class {
@@ -78,13 +64,9 @@ struct Writer class {
 		ptr = (extern_call libfs._writer_init(filename -> String));
 	}
 
-	isOpen() => {
-		return (extern_call libfs._writer_isOpen(ptr));
-	}
+	isOpen() => extern_call libfs._writer_isOpen(ptr);
 
-	write(ref s) => {
-		extern_call libfs._writer_write(ptr, s);
-	}
+	write(ref s) => extern_call libfs._writer_write(ptr, s);
 
 	close() => {
 		if ptr != nil then {
@@ -105,21 +87,13 @@ struct Reader class {
 		ptr = (extern_call libfs._reader_init(filename -> String));
 	}
 
-	isOpen() => {
-		return (extern_call libfs._reader_isOpen(ptr));
-	}
+	isOpen() => extern_call libfs._reader_isOpen(ptr);
 
-	read(ref n) => {
-		return (extern_call libfs._reader_read(ptr, n));
-	}
+	read(ref n) => extern_call libfs._reader_read(ptr, n);
 
-	read() => {
-		return read(1);
-	}
+	read() => read(1);
 
-	readLine() => {
-		return (extern_call libfs._reader_readLine(ptr));
-	}
+	readLine() => extern_call libfs._reader_readLine(ptr);
 
 	close() => {
 		if ptr != nil then {

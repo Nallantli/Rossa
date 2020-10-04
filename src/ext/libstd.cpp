@@ -30,7 +30,7 @@ namespace libstd
 	RUOTA_EXT_SYM(_timeMS, args, token)
 	{
 		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		return Symbol(CNumber(static_cast<long_int_t>(ms.count())));
+		return Symbol(CNumber::Long(ms.count()));
 	}
 
 	RUOTA_EXT_SYM(_rand_init, args, token)
@@ -43,14 +43,14 @@ namespace libstd
 	{
 		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer(token).get());
 		std::uniform_real_distribution<long_double_t> distribution(args[1].getNumber(token).getDouble(), args[2].getNumber(token).getDouble());
-		return Symbol(CNumber(static_cast<long_double_t>(distribution(*rng))));
+		return Symbol(CNumber::Double(distribution(*rng)));
 	}
 
 	RUOTA_EXT_SYM(_rand_nextInt, args, token)
 	{
 		auto rng = static_cast<std::default_random_engine *>(args[0].getPointer(token).get());
 		std::uniform_int_distribution<long_int_t> distribution(args[1].getNumber(token).getLong(), args[2].getNumber(token).getLong());
-		return Symbol(CNumber(static_cast<long_int_t>(distribution(*rng))));
+		return Symbol(CNumber::Long(distribution(*rng)));
 	}
 
 	RUOTA_EXT_SYM(_exit, args, token)
@@ -60,7 +60,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_system_call, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_int_t>(system(args[0].getString(token).c_str()))));
+		return Symbol(CNumber::Long(system(args[0].getString(token).c_str())));
 	}
 
 	RUOTA_EXT_SYM(_sleep, args, token)
@@ -71,58 +71,58 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_log, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::log(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::log(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_sin, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::sin(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::sin(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_cos, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::cos(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::cos(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_tan, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::tan(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::tan(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_sinh, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::sinh(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::sinh(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_cosh, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::cosh(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::cosh(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_tanh, args, token)
 	{
-		return Symbol(CNumber(static_cast<long_double_t>(std::tanh(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Double(std::tanh(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_floor, args, token)
 	{
-		if (args[0].getNumber(token).getType() == LONG_NUM)
+		if (args[0].getNumber(token).getType() == CNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber(static_cast<long_int_t>(std::floor(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Long(std::floor(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_ceil, args, token)
 	{
-		if (args[0].getNumber(token).getType() == LONG_NUM)
+		if (args[0].getNumber(token).getType() == CNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber(static_cast<long_int_t>(std::ceil(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Long(std::ceil(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_round, args, token)
 	{
-		if (args[0].getNumber(token).getType() == LONG_NUM)
+		if (args[0].getNumber(token).getType() == CNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber(static_cast<long_int_t>(std::round(args[0].getNumber(token).getDouble()))));
+		return Symbol(CNumber::Long(std::round(args[0].getNumber(token).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_input_line, args, token)
@@ -146,7 +146,7 @@ namespace libstd
 #else
 		char c = getch();
 #endif
-		return Symbol(CNumber(static_cast<long_int_t>(c)));
+		return Symbol(CNumber::Long(c));
 	}
 
 	RUOTA_EXT_SYM(_regex_match, args, token)
@@ -154,7 +154,8 @@ namespace libstd
 		std::regex r(args[0].getString(token));
 		std::string s = args[1].getString(token);
 		std::vector<Symbol> v;
-		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++){
+		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++)
+		{
 			std::string m = (*i).str();
 			v.push_back(Symbol(m));
 		}

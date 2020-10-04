@@ -3,7 +3,7 @@
 
 #include "Locale.h"
 
-#define _RUOTA_VERSION_ "v1.3.0-alpha"
+#define _RUOTA_VERSION_ "v1.4.0-alpha"
 #define RUOTA_EXT_SYM(name, args, token) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token)
 #define RUOTA_LIB_HEADER Hash hash = Hash();
 
@@ -120,7 +120,7 @@ enum LexerTokenType
 
 	TOK_LOAD = -37,
 	TOK_ALLOC = -38,
-	TOK_UNTIL = -39,
+	TOK_INNER = -39,
 	TOK_REF = -40,
 	TOK_FINAL = -41,
 	TOK_DEF_TYPE = -42,
@@ -135,7 +135,9 @@ enum LexerTokenType
 	TOK_THROW = -51,
 	TOK_CHARN = -52,
 	TOK_CHARS = -53,
-	TOK_LAMBDA = -54
+	TOK_LAMBDA = -54,
+	TOK_UNTILT = -55,
+	TOK_UNTILF = -56
 };
 
 enum SymbolType

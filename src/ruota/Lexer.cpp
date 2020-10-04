@@ -22,9 +22,11 @@ char Lexer::nextChar()
 	return c;
 }
 
-char Lexer::peekChar() const
+char Lexer::peekChar(size_t i) const
 {
-	return INPUT[INPUT_INDEX];
+	if (INPUT_INDEX + i < INPUT.size())
+		return INPUT[INPUT_INDEX + i];
+	return 0;
 }
 
 int Lexer::getToken()
@@ -36,7 +38,7 @@ int Lexer::getToken()
 	if (isalpha(last) || last == '_')
 	{
 		ID_STRING = last;
-		while (isalnum(peekChar()) || peekChar() == '_')
+		while (isalnum(peekChar(0)) || peekChar(0) == '_')
 		{
 			last = nextChar();
 			ID_STRING += last;
@@ -106,8 +108,6 @@ int Lexer::getToken()
 			return TOK_LOAD;
 		else if (ID_STRING == "alloc")
 			return TOK_ALLOC;
-		else if (ID_STRING == "until")
-			return TOK_UNTIL;
 		else if (ID_STRING == "final")
 			return TOK_FINAL;
 		else if (ID_STRING == "ref")
@@ -139,12 +139,14 @@ int Lexer::getToken()
 
 		return TOK_IDF;
 	}
-	else if (isdigit(last) || (last == '.' && isdigit(peekChar())))
+	else if (isdigit(last) || (last == '.' && isdigit(peekChar(0))))
 	{
 		std::string numStr = std::string(1, last);
 		bool flag = false;
-		while (isdigit(peekChar()) || peekChar() == '.')
+		while (isdigit(peekChar(0)) || (peekChar(0) == '.' && isdigit(peekChar(1))))
 		{
+			if (flag && peekChar(0) == '.')
+				break;
 			if (!flag)
 				flag = last == '.';
 			last = nextChar();
@@ -153,9 +155,9 @@ int Lexer::getToken()
 
 		ID_STRING = numStr;
 		if (flag)
-			NUM_VALUE = CNumber(static_cast<long_double_t>(strtold(numStr.c_str(), 0)));
+			NUM_VALUE = CNumber::Double(strtold(numStr.c_str(), 0));
 		else
-			NUM_VALUE = CNumber(static_cast<long_int_t>(strtoll(numStr.c_str(), 0, 0)));
+			NUM_VALUE = CNumber::Long(strtoll(numStr.c_str(), 0, 0));
 		return TOK_NUM;
 	}
 	else if (last == '#')
@@ -175,7 +177,7 @@ int Lexer::getToken()
 	else if (bOperators.find(std::string(1, last)) != bOperators.end())
 	{
 		std::string opStr = std::string(1, last);
-		while (bOperators.find(opStr + peekChar()) != bOperators.end())
+		while (bOperators.find(opStr + peekChar(0)) != bOperators.end())
 		{
 			last = nextChar();
 			opStr += last;
@@ -188,6 +190,12 @@ int Lexer::getToken()
 			return TOK_DEF;
 		if (ID_STRING == "::")
 			return TOK_DEF_TYPE;
+		if (ID_STRING == ".")
+			return TOK_INNER;
+		if (ID_STRING == "..")
+			return TOK_UNTILF;
+		if (ID_STRING == ".+")
+			return TOK_UNTILT;
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
@@ -195,7 +203,7 @@ int Lexer::getToken()
 	else if (uOperators.find(std::string(1, last)) != uOperators.end())
 	{
 		std::string opStr = std::string(1, last);
-		while (uOperators.find(opStr + peekChar()) != uOperators.end())
+		while (uOperators.find(opStr + peekChar(0)) != uOperators.end())
 		{
 			last = nextChar();
 			opStr += last;

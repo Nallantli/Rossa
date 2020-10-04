@@ -349,8 +349,12 @@ public:
 
 class UntilI : public BinaryI
 {
+protected:
+	const bool inclusive;
+	std::shared_ptr<Instruction> step;
+
 public:
-	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
+	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, bool, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 

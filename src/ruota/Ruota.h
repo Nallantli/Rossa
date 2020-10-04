@@ -37,7 +37,7 @@ public:
 	int getType() const;
 	size_t getDist() const;
 	size_t getLineNumber() const;
-	CNumber getValueNumber() const;
+	const CNumber getValueNumber() const;
 	const std::string &getValueString() const;
 	const std::string &getFilename() const;
 };
@@ -154,7 +154,7 @@ private:
 	size_t TOKEN_DIST;
 
 	int getToken();
-	char peekChar() const;
+	char peekChar(size_t) const;
 	char nextChar();
 	std::map<std::string, signed int> bOperators;
 	std::map<std::string, signed int> uOperators;
@@ -220,12 +220,17 @@ class Value
 
 private:
 	ValueType type;
-	std::shared_ptr<void> valuePointer;
-	signed long long valueType;
-	CNumber valueNumber;
-	bool valueBool;
-	std::vector<Symbol> valueVector;
+
+	union
+	{
+		signed long long valueType;
+		bool valueBool;
+		CNumber valueNumber;
+	};
+
 	std::string valueString;
+	std::shared_ptr<void> valuePointer;
+	std::vector<Symbol> valueVector;
 	std::map<size_t, std::map<Signature, std::shared_ptr<Function>>> valueFunction;
 	std::map<hashcode_t, Symbol> valueDictionary;
 	std::shared_ptr<Object> valueObject;
@@ -552,7 +557,7 @@ public:
 		case NUMBER:
 		{
 			std::string ret = "Symbol(NUMBER_NEW_";
-			if (d->valueNumber.getType() == DOUBLE_NUM)
+			if (d->valueNumber.getType() == CNumber::DOUBLE_NUM)
 				ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")" + (!isMutable ? ".setMutable(false)" : "");
 			else
 				ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")" + (!isMutable ? ".setMutable(false)" : "");
@@ -637,7 +642,7 @@ public:
 			throw RuotaError("Cannot change the value of a variable declared as `final`", *token);
 		if (d->type == OBJECT && d->valueObject != nullptr && d->valueObject->hasValue(Ruota::HASH_SET))
 		{
-			d->valueObject->getScope()->getVariable(Ruota::HASH_SET, token).call({b}, this, token);
+			d->valueObject->getScope()->getVariable(Ruota::HASH_SET, token).call({*b}, this, token);
 			return;
 		}
 		d->type = b->d->type;
@@ -712,7 +717,7 @@ public:
 		{
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_EQUALS))
-				return o->getScope()->getVariable(Ruota::HASH_EQUALS, token).call({b}, this, token).d->valueBool;
+				return o->getScope()->getVariable(Ruota::HASH_EQUALS, token).call({*b}, this, token).d->valueBool;
 			return o == b->d->valueObject;
 		}
 		case VECTOR:
@@ -747,7 +752,7 @@ public:
 		{
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_NEQUALS))
-				return o->getScope()->getVariable(Ruota::HASH_NEQUALS, token).call({b}, this, token).d->valueBool;
+				return o->getScope()->getVariable(Ruota::HASH_NEQUALS, token).call({*b}, this, token).d->valueBool;
 		}
 		default:
 			return !this->equals(b, token);

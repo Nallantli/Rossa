@@ -63,6 +63,8 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"-", 11},
 	{"<<", 10},
 	{">>", 10},
+	{"..", 0}, //undef
+	{".+", 0}, //undef
 	{">", 8},
 	{"<", 8},
 	{">=", 8},
@@ -72,6 +74,7 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"!==", 7},
 	{"!=", 7},
 	{"!", 0}, //undef
+	{".", 0}, //undef
 	{"&", 6},
 	{"^", 5},
 	{"|", 4},

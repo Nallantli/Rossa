@@ -45,21 +45,13 @@ var chars = ((ref x) => {
 
 # CONSOLE
 
-puts(ref s) => {
-	extern_call libstd._puts(s -> String);
-}
+puts(ref s) => extern_call libstd._puts(s -> String);
 
-putln(ref s) => {
-	puts((s -> String) + "\n");
-}
+putln(ref s) => puts((s -> String) + "\n");
 
-putln() => {
-	puts("\n");
-}
+putln() => puts("\n");
 
-system(ref s : String) => {
-	return (extern_call libstd._system_call(s));
-}
+system(ref s : String) => extern_call libstd._system_call(s);
 
 static cons class {
 	var decor = {
@@ -104,19 +96,15 @@ static cons class {
 		RESET : "0"
 	};
 
-	setDecor(ref s : String) => {
-		puts("\u001B[" + s + "m");
-	}
+	setDecor(ref s : String) => puts("\u001B[" + s + "m");
+
+	setDecor(ref n : Number) => setDecor(n -> String);
 
 	setDecor(ref v : Vector) => {
 		var s = "";
 		for c in v do {
 			setDecor(c);
 		}
-	}
-
-	setDecor(ref n : Number) => {
-		setDecor(n -> String);
 	}
 
 	moveCursor(ref x : Number, ref y : Number) => {
@@ -134,19 +122,13 @@ static cons class {
 		puts(s);
 	}
 
-	setCursor(ref x : Number, ref y : Number) => {
-		puts("\u001B[" + (y -> String) + ";" + (x -> String) + "H");
-	}
+	setCursor(ref x : Number, ref y : Number) => puts("\u001B[" + (y -> String) + ";" + (x -> String) + "H");
 }
 
 static input class {
-	line() => {
-		return (extern_call libstd._input_line());
-	}
+	line() => extern_call libstd._input_line();
 
-	char() => {
-		return (extern_call libstd._input_char());
-	}
+	char() => extern_call libstd._input_char();
 }
 
 # RANDOM
@@ -162,33 +144,19 @@ struct Random class {
 		ptr = (extern_call libstd._rand_init(seed));
 	}
 
-	nextf() => {
-		return (extern_call libstd._rand_nextFloat(ptr, 0, 1));
-	}
+	nextf() => extern_call libstd._rand_nextFloat(ptr, 0, 1);
 
-	nextf(ref max : Number) => {
-		return (extern_call libstd._rand_nextFloat(ptr, 0, max));
-	}
+	nextf(ref max : Number) => extern_call libstd._rand_nextFloat(ptr, 0, max);
 
-	nextf(ref min : Number, ref max : Number) => {
-		return (extern_call libstd._rand_nextFloat(ptr, min, max));
-	}
+	nextf(ref min : Number, ref max : Number) => extern_call libstd._rand_nextFloat(ptr, min, max);
 
-	nexti() => {
-		return (extern_call libstd._rand_nextInt(ptr, 0, 1));
-	}
+	nexti() => extern_call libstd._rand_nextInt(ptr, 0, 1);
 
-	nexti(ref max : Number) => {
-		return (extern_call libstd._rand_nextInt(ptr, 0, max));
-	}
+	nexti(ref max : Number) => extern_call libstd._rand_nextInt(ptr, 0, max);
 
-	nexti(ref min : Number, ref max : Number) => {
-		return (extern_call libstd._rand_nextInt(ptr, min, max));
-	}
+	nexti(ref min : Number, ref max : Number) => extern_call libstd._rand_nextInt(ptr, min, max);
 
-	nextb() => {
-		return nexti() -> Boolean;
-	}
+	nextb() => (nexti() -> Boolean);
 }
 
 # SYSTEM
@@ -204,13 +172,9 @@ exit(ref n : Number) => {
 # TIME
 
 static clock class {
-	milliseconds() => {
-		return (extern_call libstd._timeMS());
-	}
+	milliseconds() => extern_call libstd._timeMS();
 
-	sleep(ref ms : Number) => {
-		return (extern_call libstd._sleep(ms));
-	}
+	sleep(ref ms : Number) => extern_call libstd._sleep(ms);
 }
 
 # VECTOR
@@ -233,7 +197,7 @@ Vector::unshift(ref this, ref value) => {
 
 Vector::pop(ref this, ref count : Number) => {
 	var nv = alloc(length(this) - count);
-	for i in [0 until length(this) - count] do {
+	for i in [0 .. length(this) - count] do {
 		nv[i] = this[i];
 	}
 	refer this = nv;
@@ -241,7 +205,7 @@ Vector::pop(ref this, ref count : Number) => {
 
 Vector::shift(ref this, ref count : Number) => {
 	var nv = alloc(length(this) - count);
-	for i in [count until length(this)] do {
+	for i in [count .. length(this)] do {
 		nv[i - count] = this[i];
 	}
 	refer this = nv;
@@ -275,7 +239,7 @@ Vector::filter(ref this, ref f : Function) => {
 
 Vector::reverse(ref this) => {
 	var nv = alloc(length(this));
-	for i in [0 until length(this)] do {
+	for i in [0 .. length(this)] do {
 		nv[i] = this[length(this) - i - 1];
 	}
 	return nv;
@@ -306,7 +270,7 @@ String::unshift(ref this, ref value : Number) => {
 String::pop(ref this, ref count : Number) => {
 	var v = (this -> Vector);
 	var nv = alloc(length(v) - count);
-	for i in [0 until length(v) - count] do {
+	for i in [0 .. length(v) - count] do {
 		nv[i] = v[i];
 	}
 	refer this = join(nv);
@@ -315,7 +279,7 @@ String::pop(ref this, ref count : Number) => {
 String::shift(ref this, ref count : Number) => {
 	var v = (this -> Vector);
 	var nv = alloc(length(v) - count);
-	for i in [count until length(v)] do {
+	for i in [count .. length(v)] do {
 		nv[i - count] = v[i];
 	}
 	refer this = join(nv);
@@ -348,61 +312,33 @@ String::empty(ref this) => {
 # MATH
 
 static math class {
-	log(ref x : Number) => {
-		return (extern_call libstd._log(x));
-	}
+	log(ref x : Number) => extern_call libstd._log(x);
 
-	abs(ref x : Number) => {
-		return x < 0 ? -x : x;
-	}
+	abs(ref x : Number) => (x < 0 ? -x : x);
 
-	floor(ref x : Number) => {
-		return (extern_call libstd._floor(x));
-	}
+	floor(ref x : Number) => extern_call libstd._floor(x);
 
-	ceil(ref x : Number) => {
-		return (extern_call libstd._ceil(x));
-	}
+	ceil(ref x : Number) => extern_call libstd._ceil(x);
 
-	round(ref x : Number) => {
-		return (extern_call libstd._round(x));
-	}
+	round(ref x : Number) => extern_call libstd._round(x);
 
-	round(ref x : Number, ref place : Number) => {
-		return ((extern_call libstd._round(x * (10 ** place))) / (10 ** place));
-	}
+	round(ref x : Number, ref place : Number) => (extern_call libstd._round(x * (10 ** place))) / (10 ** place);
 
-	sin(ref x : Number) => {
-		return (extern_call libstd._sin(x));
-	}
+	sin(ref x : Number) => extern_call libstd._sin(x);
 
-	cos(ref x : Number) => {
-		return (extern_call libstd._cos(x));
-	}
+	cos(ref x : Number) => extern_call libstd._cos(x);
 
-	tan(ref x : Number) => {
-		return (extern_call libstd._tan(x));
-	}
+	tan(ref x : Number) => extern_call libstd._tan(x);
 
-	sinh(ref x : Number) => {
-		return (extern_call libstd._sinh(x));
-	}
+	sinh(ref x : Number) => extern_call libstd._sinh(x);
 
-	cosh(ref x : Number) => {
-		return (extern_call libstd._cosh(x));
-	}
+	cosh(ref x : Number) => extern_call libstd._cosh(x);
 
-	tanh(ref x : Number) => {
-		return (extern_call libstd._tanh(x));
-	}
+	tanh(ref x : Number) => extern_call libstd._tanh(x);
 }
 
 static regex class {
-	match(ref s : String, ref r : String) => {
-		return (extern_call libstd._regex_match(r, s));
-	}
+	match(ref s : String, ref r : String) => extern_call libstd._regex_match(r, s);
 
-	replace(ref s : String, ref r : String, ref x : String) => {
-		return (extern_call libstd._regex_replace(r, x, s));
-	}
+	replace(ref s : String, ref r : String, ref x : String) => extern_call libstd._regex_replace(r, x, s);
 }

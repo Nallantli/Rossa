@@ -949,14 +949,14 @@ const Symbol LengthI::evaluate(Scope *scope) const
 			else if ((c & 0xF8) == 0xF0)
 				i += 3;
 			else
-				return Symbol(CNumber(static_cast<long_int_t>(evalA.getString(&token).size())));
+				return Symbol(CNumber::Long(evalA.getString(&token).size()));
 		}
-		return Symbol(CNumber(static_cast<long_int_t>(q)));
+		return Symbol(CNumber::Long(q));
 	}
 	case DICTIONARY:
-		return Symbol(CNumber(static_cast<long_int_t>(evalA.dictionarySize(&token))));
+		return Symbol(CNumber::Long(evalA.dictionarySize(&token)));
 	case VECTOR:
-		return Symbol(CNumber(static_cast<long_int_t>(evalA.vectorSize())));
+		return Symbol(CNumber::Long(evalA.vectorSize()));
 	default:
 		throw RuotaError(_FAILURE_LENGTH_, token);
 	}
@@ -975,11 +975,11 @@ const Symbol SizeI::evaluate(Scope *scope) const
 	switch (evalA.getValueType())
 	{
 	case STRING:
-		return Symbol(CNumber(static_cast<long_int_t>(evalA.getString(&token).size())));
+		return Symbol(CNumber::Long(evalA.getString(&token).size()));
 	case DICTIONARY:
-		return Symbol(CNumber(static_cast<long_int_t>(evalA.dictionarySize(&token))));
+		return Symbol(CNumber::Long(evalA.dictionarySize(&token)));
 	case VECTOR:
-		return Symbol(CNumber(static_cast<long_int_t>(evalA.vectorSize())));
+		return Symbol(CNumber::Long(evalA.vectorSize()));
 	default:
 		throw RuotaError(_FAILURE_SIZE_, token);
 	}
@@ -1055,11 +1055,11 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		case NUMBER:
 			return evalA;
 		case NIL:
-			return Symbol(CNumber(static_cast<long_int_t>(0)));
+			return Symbol(CNumber::Long(0));
 		case STRING:
 			try
 			{
-				return Symbol(CNumber(static_cast<long_double_t>(std::stold(evalA.getString(&token)))));
+				return Symbol(CNumber::Double(std::stold(evalA.getString(&token))));
 			}
 			catch (const std::invalid_argument &e)
 			{
@@ -1219,15 +1219,24 @@ const Symbol AllocI::evaluate(Scope *scope) const
 /*class UntilI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UntilI::UntilI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(UNTIL_I, a, b, token) {}
+UntilI::UntilI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, std::shared_ptr<Instruction> step, bool inclusive, const Token token) : BinaryI(UNTIL_I, a, b, token), step(step), inclusive(inclusive) {}
 
 const Symbol UntilI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope).getNumber(&token);
 	auto evalB = b->evaluate(scope).getNumber(&token);
+	auto evalStep = step->evaluate(scope).getNumber(&token);
 	std::vector<Symbol> nv;
-	for (auto i = evalA; i < evalB; i += 1)
-		nv.push_back(Symbol(i));
+	if (inclusive)
+	{
+		for (auto i = evalA; i <= evalB; i = i + evalStep)
+			nv.push_back(Symbol(i));
+	}
+	else
+	{
+		for (auto i = evalA; i < evalB; i = i + evalStep)
+			nv.push_back(Symbol(i));
+	}
 	return Symbol(nv);
 }
 
@@ -1373,7 +1382,7 @@ const Symbol CharNI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope).getString(&token);
 	std::vector<Symbol> nv;
 	for (const unsigned char &c : evalA)
-		nv.push_back(Symbol(CNumber(static_cast<long_int_t>(c))));
+		nv.push_back(Symbol(CNumber::Long(c)));
 	return Symbol(nv);
 }
 
