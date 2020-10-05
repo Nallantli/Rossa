@@ -12,13 +12,6 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 	{
 		switch (params[i].first)
 		{
-		case TOK_FINAL:
-		{
-			auto temp = newScope.createVariable(params[i].second, token);
-			temp.set(&paramValues[i], token);
-			temp.setMutable(false);
-			break;
-		}
 		case TOK_REF:
 		{
 			newScope.createVariable(params[i].second, paramValues[i], token);
@@ -40,7 +33,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 
 	Ruota::stack_trace.pop_back();
 
-	if (!temp.canSet() || temp.getSymbolType() == ID_REFER)
+	if (temp.getSymbolType() == ID_REFER)
 	{
 		temp.setSymbolType(ID_CASUAL);
 		return temp;

@@ -23,25 +23,15 @@ extern _regex_replace in "libstd";
 
 # BASIC
 
-var alloc = ((ref x) => {
-	refer alloc(x);
-});
+var alloc = ((ref x) => alloc(x));
 
-var length = ((ref x) => {
-	refer length(x);
-});
+var length = ((ref x) => length(x));
 
-var size = ((ref x) => {
-	refer size(x);
-});
+var size = ((ref x) => size(x));
 
-var charn = ((ref x) => {
-	refer charn(x);
-});
+var charn = ((ref x) => charn(x));
 
-var chars = ((ref x) => {
-	refer chars(x);
-});
+var chars = ((ref x) => chars(x));
 
 # CONSOLE
 

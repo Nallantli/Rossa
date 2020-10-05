@@ -48,7 +48,6 @@ Ruota::Ruota(std::vector<std::string> args)
 	for (auto &s : args)
 		argv.push_back(Symbol(s));
 	auto v = Symbol(argv);
-	v.setMutable(false);
 	main.createVariable(hash.hashString("_args"), v, NULL);
 }
 

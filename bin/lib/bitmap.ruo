@@ -1,7 +1,7 @@
 load "fs.ruo";
 
 static bitmap class {
-	allocate(final height : Number, final width : Number) => {
+	allocate(ref height : Number, ref width : Number) => {
 		var image = alloc(height);
 		for i in image do {
 			i = alloc(width);
@@ -12,7 +12,7 @@ static bitmap class {
 		return image;
 	}
 
-	write(final image : Vector, final height : Number, final width : Number, final filename : String) => {
+	write(ref image : Vector, ref height : Number, ref width : Number, ref filename : String) => {
 		var f = new Writer(filename, true);
 		var widthInBytes = width * 3;
 		var paddingSize = (4 - (widthInBytes) % 4) % 4;
@@ -36,7 +36,7 @@ static bitmap class {
 		f.write(out);
 	}
 
-	createHeader(final height : Number, final stride : Number) => {
+	createHeader(ref height : Number, ref stride : Number) => {
 		var fileSize = 54 + (stride * height);
 
 		var fileHeader = [
@@ -49,7 +49,7 @@ static bitmap class {
 		return fileHeader.map((n) => chars(n)).join();
 	}
 
-	createInfo(final height : Number, final width : Number) => {
+	createInfo(ref height : Number, ref width : Number) => {
 		var infoHeader = [
 			40, 0, 0, 0,
 			width, width >> 8, width >> 16, width >> 24,

@@ -70,7 +70,6 @@ static mandel class {
 				image[height - i - 1][j] = [math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255)];
 			}
 		}
-
 		bitmap.write(image, height, width, "mandel_(" + (start_x -> String) + "_" + (end_x -> String) + "," + (start_y -> String) + "_" + (end_y -> String) + ").bmp");
 	}
 }

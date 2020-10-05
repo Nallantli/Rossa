@@ -42,7 +42,7 @@ public:
 		return CNumber(static_cast<long_int_t>(valueLong));
 	}
 
-	inline int getType()
+	inline int getType() const
 	{
 		return type;
 	}
@@ -514,7 +514,7 @@ public:
 		case LONG_NUM:
 			return static_cast<long_double_t>(valueLong);
 		default:
-			return 0;
+			return NAN;
 		}
 	}
 

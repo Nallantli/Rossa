@@ -108,8 +108,6 @@ int Lexer::getToken()
 			return TOK_LOAD;
 		else if (ID_STRING == "alloc")
 			return TOK_ALLOC;
-		else if (ID_STRING == "final")
-			return TOK_FINAL;
 		else if (ID_STRING == "ref")
 			return TOK_REF;
 		else if (ID_STRING == "break")

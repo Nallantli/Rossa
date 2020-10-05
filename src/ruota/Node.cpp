@@ -23,10 +23,7 @@ ContainerNode::ContainerNode(
 	Symbol s,
 	const Token token) : Node(CONTAINER_NODE,
 							  token),
-						 s(s)
-{
-	this->s.setMutable(false);
-}
+						 s(s) {}
 
 std::shared_ptr<Instruction> ContainerNode::genParser() const
 {

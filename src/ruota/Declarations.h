@@ -122,7 +122,7 @@ enum LexerTokenType
 	TOK_ALLOC = -38,
 	TOK_INNER = -39,
 	TOK_REF = -40,
-	TOK_FINAL = -41,
+	//TOK_FINAL = -41,
 	TOK_DEF_TYPE = -42,
 	TOK_BREAK = -43,
 	TOK_REFER = -44,

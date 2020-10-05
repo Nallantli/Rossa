@@ -9,7 +9,7 @@ const std::string &Scope::getName() const
 	return this->name;
 }
 
-Symbol &Scope::getVariable(hashcode_t key, const Token *token)
+const Symbol &Scope::getVariable(hashcode_t key, const Token *token)
 {
 	if (values.find(key) != values.end())
 		return values[key];
@@ -19,19 +19,24 @@ Symbol &Scope::getVariable(hashcode_t key, const Token *token)
 	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % hash.deHash(key)).str(), *token);
 }
 
-Symbol &Scope::createVariable(hashcode_t key, const Token *token)
+const Symbol &Scope::createVariable(hashcode_t key, const Token *token)
 {
 	values[key] = Symbol();
-	return getVariable(key, token);
+	return values[key];
 }
 
-Symbol &Scope::createVariable(hashcode_t key, const Symbol &d, const Token *token)
+const Symbol &Scope::createVariable(hashcode_t key, const Symbol &d, const Token *token)
 {
 	if (values.find(key) != values.end() && values[key].getValueType() == FUNCTION)
 		values[key].addFunctions(&d, token);
 	else
 		values[key] = d;
-	return getVariable(key, token);
+
+	return values[key];
+}
+
+void Scope::clear() {
+	values.clear();
 }
 
 Scope *Scope::getParent() const

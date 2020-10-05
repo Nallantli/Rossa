@@ -132,10 +132,13 @@ const Symbol WhileI::evaluate(Scope *scope) const
 	{
 		Scope newScope(scope, "");
 		auto temp = body->evaluate(&newScope);
-		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_REFER)
-			return temp;
-		if (temp.getSymbolType() == ID_BREAK)
-			break;
+		switch (temp.getSymbolType()){
+			case ID_REFER:
+			case ID_RETURN:
+				return temp;
+			case ID_BREAK:
+				return Symbol();
+		}
 	}
 	return Symbol();
 }
@@ -149,15 +152,18 @@ ForI::ForI(hashcode_t id, std::shared_ptr<Instruction> fors, std::shared_ptr<Ins
 const Symbol ForI::evaluate(Scope *scope) const
 {
 	auto evalFor = fors->evaluate(scope).getVector(&token);
-	for (size_t i = 0; i < evalFor.size(); i++)
+	for (auto &e : evalFor)
 	{
 		Scope newScope(scope, "");
-		newScope.createVariable(id, evalFor[i], &token);
+		newScope.createVariable(id, e, &token);
 		auto temp = body->evaluate(&newScope);
-		if (temp.getSymbolType() == ID_RETURN || temp.getSymbolType() == ID_REFER)
-			return temp;
-		if (temp.getSymbolType() == ID_BREAK)
-			break;
+		switch (temp.getSymbolType()){
+			case ID_REFER:
+			case ID_RETURN:
+				return temp;
+			case ID_BREAK:
+				return Symbol();
+		}
 	}
 	return Symbol();
 }
@@ -1211,8 +1217,7 @@ const Symbol AllocI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope).getNumber(&token).getLong();
 	if (evalA < 0)
 		throw RuotaError(_FAILURE_ALLOC_, token);
-	std::vector<Symbol> v(evalA);
-	return Symbol(v);
+	return Symbol::allocate(evalA);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1229,13 +1234,13 @@ const Symbol UntilI::evaluate(Scope *scope) const
 	std::vector<Symbol> nv;
 	if (inclusive)
 	{
-		for (auto i = evalA; i <= evalB; i = i + evalStep)
-			nv.push_back(Symbol(i));
+		for (evalA; evalA <= evalB; evalA = evalA + evalStep)
+			nv.push_back(Symbol(evalA));
 	}
 	else
 	{
-		for (auto i = evalA; i < evalB; i = i + evalStep)
-			nv.push_back(Symbol(i));
+		for (evalA; evalA < evalB; evalA = evalA + evalStep)
+			nv.push_back(Symbol(evalA));
 	}
 	return Symbol(nv);
 }

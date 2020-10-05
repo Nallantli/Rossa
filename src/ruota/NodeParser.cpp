@@ -234,7 +234,7 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 		i++;
 
 		int type = currentToken.getType();
-		if (!(type == TOK_FINAL || type == TOK_REF))
+		if (type != TOK_REF)
 			type = TOK_NIL;
 		else
 			nextToken();

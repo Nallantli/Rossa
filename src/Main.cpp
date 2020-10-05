@@ -131,11 +131,9 @@ void printError(const RuotaError &e)
 			i++;
 			switch (p.first)
 			{
-			case TOK_FINAL:
-				std::cout << "\033[" << MAGENTA_TEXT << "mfinal\033[0m ";
-				break;
 			case TOK_REF:
 				std::cout << "\033[" << MAGENTA_TEXT << "mref\033[0m ";
+				break;
 			default:
 				break;
 			}

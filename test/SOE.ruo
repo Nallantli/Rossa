@@ -1,10 +1,13 @@
-SOE(final MAX : Number) => {
+SOE(ref MAX : Number) => {
 	var start = clock.milliseconds();
 	var a = alloc(MAX);
+	putln("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
+
+	start = clock.milliseconds();
 	for e in a do {
 		e = true;
 	}
-	putln("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
+	putln("Predef Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
     var c = MAX - 2;
@@ -36,7 +39,7 @@ SOE(final MAX : Number) => {
 	return b;
 }
 
-test(final MAX : Number) => {
+test(ref MAX : Number) => {
 	var start = clock.milliseconds();
 	var result = SOE(MAX);
 	var time = clock.milliseconds() - start;

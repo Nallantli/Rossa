@@ -97,9 +97,10 @@ public:
 	Scope();
 	Scope(Scope *, const std::string &);
 	Scope *getParent() const;
-	Symbol &getVariable(hashcode_t, const Token *);
-	Symbol &createVariable(hashcode_t, const Token *);
-	Symbol &createVariable(hashcode_t, const Symbol &, const Token *);
+	void clear();
+	const Symbol &getVariable(hashcode_t, const Token *);
+	const Symbol &createVariable(hashcode_t, const Token *);
+	const Symbol &createVariable(hashcode_t, const Symbol &, const Token *);
 	const std::string &getName() const;
 	bool hasValue(hashcode_t) const;
 
@@ -240,21 +241,34 @@ public:
 	Value() : type(NIL) {}
 	Value(signed long long valueType) : type(TYPE_NAME), valueType(valueType) {}
 	Value(bool valueBool) : type(BOOLEAN_D), valueBool(valueBool) {}
-	Value(std::shared_ptr<void> valuePointer) : type(POINTER), valuePointer(valuePointer) {}
-	Value(std::shared_ptr<Object> &valueObject) : type(OBJECT), valueObject(valueObject) {}
-	Value(Signature ftype, std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
-	Value(CNumber valueNumber) : type(NUMBER), valueNumber(valueNumber) {}
-	Value(std::vector<Symbol> valueVector) : type(VECTOR), valueVector(valueVector) {}
-	Value(std::map<hashcode_t, Symbol> valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary) {}
+	Value(const std::shared_ptr<void> &valuePointer) : type(POINTER), valuePointer(valuePointer) {}
+	Value(const std::shared_ptr<Object> &valueObject) : type(OBJECT), valueObject(valueObject) {}
+	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
+	Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber) {}
+	Value(const std::vector<Symbol> &valueVector) : type(VECTOR), valueVector(valueVector) {}
+	Value(const std::map<hashcode_t, Symbol> &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary) {}
 	Value(const std::string &valueString) : type(STRING), valueString(valueString) {}
 
 	inline void clearData()
 	{
-		valueFunction.clear();
-		valueVector.clear();
-		valueDictionary.clear();
-		valuePointer = nullptr;
-		valueObject = nullptr;
+		switch (type)
+		{
+		case FUNCTION:
+			valueFunction.clear();
+			break;
+		case VECTOR:
+			valueVector.clear();
+			break;
+		case DICTIONARY:
+			valueDictionary.clear();
+			break;
+		case POINTER:
+			valuePointer = nullptr;
+			break;
+		case OBJECT:
+			valueObject = nullptr;
+			break;
+		}
 	}
 };
 
@@ -262,37 +276,35 @@ class Symbol
 {
 private:
 	SymbolType type;
-	bool isMutable;
 	Value *d;
 
 public:
-	Symbol() : type(ID_CASUAL), isMutable(true), d(new Value()) {}
+	Symbol() : type(ID_CASUAL), d(new Value()) {}
 
-	Symbol(SymbolType type) : type(type), isMutable(false), d(new Value()) {}
+	Symbol(SymbolType type) : type(type), d(new Value()) {}
 
-	Symbol(std::shared_ptr<void> valuePointer) : type(ID_CASUAL), isMutable(true), d(new Value(valuePointer)) {}
+	Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(new Value(valuePointer)) {}
 
-	Symbol(signed long long valueType) : type(ID_CASUAL), isMutable(true), d(new Value(valueType)) {}
+	Symbol(signed long long valueType) : type(ID_CASUAL), d(new Value(valueType)) {}
 
-	Symbol(CNumber valueNumber) : type(ID_CASUAL), isMutable(true), d(new Value(valueNumber)) {}
+	Symbol(const CNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber)) {}
 
-	Symbol(bool valueBool) : type(ID_CASUAL), isMutable(true), d(new Value(valueBool)) {}
+	Symbol(bool valueBool) : type(ID_CASUAL), d(new Value(valueBool)) {}
 
-	Symbol(std::vector<Symbol> valueVector) : type(ID_CASUAL), isMutable(true), d(new Value(valueVector)) {}
+	Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector)) {}
 
-	Symbol(std::shared_ptr<Object> &valueObject) : type(ID_CASUAL), isMutable(true), d(new Value(valueObject)) {}
+	Symbol(const std::shared_ptr<Object> &valueObject) : type(ID_CASUAL), d(new Value(valueObject)) {}
 
-	Symbol(Signature ftype, std::shared_ptr<Function> &valueFunction) : type(ID_CASUAL), isMutable(true), d(new Value(ftype, valueFunction)) {}
+	Symbol(const Signature &ftype, const std::shared_ptr<Function> &valueFunction) : type(ID_CASUAL), d(new Value(ftype, valueFunction)) {}
 
-	Symbol(const std::string &valueString) : type(ID_CASUAL), isMutable(true), d(new Value(valueString)) {}
+	Symbol(const std::string &valueString) : type(ID_CASUAL), d(new Value(valueString)) {}
 
-	Symbol(const std::map<hashcode_t, Symbol> valueDictionary) : type(ID_CASUAL), isMutable(true), d(new Value(valueDictionary)) {}
+	Symbol(const std::map<hashcode_t, Symbol> &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary)) {}
 
 	Symbol(const Symbol &s)
 	{
-		this->type = s.type;
-		this->isMutable = s.isMutable;
 		this->d = s.d;
+		this->type = s.type;
 		this->d->references++;
 	}
 
@@ -311,18 +323,15 @@ public:
 
 		this->d = b.d;
 		this->type = b.type;
-		this->isMutable = b.isMutable;
 		this->d->references++;
 	}
 
-	inline void setMutable(bool isMutable)
+	static inline const Symbol allocate(size_t size)
 	{
-		this->isMutable = isMutable;
-	}
-
-	inline bool canSet() const
-	{
-		return isMutable;
+		Symbol s;
+		s.d->type = VECTOR;
+		s.d->valueVector.resize(size);
+		return s;
 	}
 
 	inline SymbolType getSymbolType() const
@@ -335,21 +344,21 @@ public:
 		this->type = type;
 	}
 
-	inline CNumber getNumber(const Token *token) const
+	inline const CNumber &getNumber(const Token *token) const
 	{
 		if (d->type != NUMBER)
 			throw RuotaError(_NOT_NUMBER_, *token);
 		return d->valueNumber;
 	}
 
-	inline std::shared_ptr<void> getPointer(const Token *token) const
+	inline const std::shared_ptr<void> &getPointer(const Token *token) const
 	{
 		if (d->type != POINTER)
 			throw RuotaError(_NOT_POINTER_, *token);
 		return d->valuePointer;
 	}
 
-	inline std::map<hashcode_t, Symbol> getDictionary(const Token *token) const
+	inline const std::map<hashcode_t, Symbol> &getDictionary(const Token *token) const
 	{
 		if (d->type != DICTIONARY)
 			throw RuotaError(_NOT_DICTIONARY_, *token);
@@ -364,14 +373,14 @@ public:
 		return d->valueDictionary;
 	}
 
-	inline Symbol &indexVector(size_t i, const Token *token) const
+	inline const Symbol &indexVector(size_t i, const Token *token) const
 	{
 		if (i >= d->valueVector.size())
 			throw RuotaError((boost::format(_INDEX_OUT_OF_BOUNDS_) % d->valueVector.size() % i).str(), *token);
 		return d->valueVector[i];
 	}
 
-	inline std::vector<Symbol> getVector(const Token *token) const
+	inline const std::vector<Symbol> &getVector(const Token *token) const
 	{
 		if (d->type != VECTOR)
 			throw RuotaError(_NOT_VECTOR_, *token);
@@ -392,7 +401,7 @@ public:
 		return d->valueBool;
 	}
 
-	inline std::shared_ptr<Object> getObject(const Token *token) const
+	inline const std::shared_ptr<Object> &getObject(const Token *token) const
 	{
 		if (d->type != OBJECT)
 			throw RuotaError(_NOT_OBJECT_, *token);
@@ -411,7 +420,7 @@ public:
 		return d->valueType;
 	}
 
-	inline std::shared_ptr<Function> getFunction(std::vector<ValueType> ftypes, const Token *token) const
+	inline const std::shared_ptr<Function> &getFunction(const std::vector<ValueType> &ftypes, const Token *token) const
 	{
 		if (d->type != FUNCTION)
 			throw RuotaError(_NOT_FUNCTION_, *token);
@@ -420,7 +429,7 @@ public:
 			throw RuotaError(_FUNCTION_ARG_SIZE_FAILURE_, *token);
 
 		std::map<Signature, std::shared_ptr<Function>> foftype = d->valueFunction[ftypes.size()];
-		std::shared_ptr<Function> f = nullptr;
+		const Signature *key = NULL;
 		size_t cur_v = 0;
 		for (auto &f2 : foftype)
 		{
@@ -428,19 +437,19 @@ public:
 			if (v > cur_v)
 			{
 				cur_v = v;
-				f = f2.second;
+				key = &f2.first;
 				if (v == ftypes.size() * 2)
 					break;
 			}
 		}
 
-		if (!f)
+		if (key == NULL)
 			throw RuotaError(_FUNCTION_VALUE_NOT_EXIST_, *token);
 
-		return f;
+		return foftype[*key];
 	}
 
-	inline Symbol &indexDict(hashcode_t i) const
+	inline const Symbol &indexDict(hashcode_t i) const
 	{
 		return d->valueDictionary[i];
 	}
@@ -562,27 +571,27 @@ public:
 		switch (d->type)
 		{
 		case NIL:
-			return std::string("Symbol()") + (!isMutable ? ".setMutable(false)" : "");
+			return std::string("Symbol()");
 		case NUMBER:
 		{
 			std::string ret = "Symbol(NUMBER_NEW_";
 			if (d->valueNumber.getType() == CNumber::DOUBLE_NUM)
-				ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")" + (!isMutable ? ".setMutable(false)" : "");
+				ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")";
 			else
-				ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")" + (!isMutable ? ".setMutable(false)" : "");
+				ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")";
 			return ret + ")";
 		}
 		case STRING:
-			return "Symbol(\"" + d->valueString + "\")" + (!isMutable ? ".setMutable(false)" : "");
+			return "Symbol(\"" + d->valueString + "\")";
 		case FUNCTION:
-			return std::string("<Function>") + (!isMutable ? ".setMutable(false)" : "");
+			return std::string("<Function>");
 		case OBJECT:
-			return std::string("<Object>") + (!isMutable ? ".setMutable(false)" : "");
+			return std::string("<Object>");
 		case BOOLEAN_D:
 		{
 			std::string ret = "Symbol(";
 			ret += (d->valueBool ? "true" : "false");
-			return ret + ")" + (!isMutable ? ".setMutable(false)" : "");
+			return ret + ")";
 		}
 		case VECTOR:
 		{
@@ -595,7 +604,7 @@ public:
 				ret += d2.toCodeString();
 				i++;
 			}
-			return ret + "})" + (!isMutable ? ".setMutable(false)" : "");
+			return ret + "})";
 		}
 		case DICTIONARY:
 		{
@@ -608,24 +617,22 @@ public:
 				ret += "{" + std::to_string(e.first) + ", " + e.second.toCodeString() + "}";
 				i++;
 			}
-			return ret + "})" + (!isMutable ? ".setMutable(false)" : "");
+			return ret + "})";
 		}
 		case TYPE_NAME:
-			return std::string("Symbol(static_cast<TYPE_NAME>(") + std::to_string(d->valueType) + "))" + (!isMutable ? ".setMutable(false)" : "");
+			return std::string("Symbol(static_cast<TYPE_NAME>(") + std::to_string(d->valueType) + "))";
 		default:
 			return "undefined";
 		}
 	}
 
-	inline Symbol call(const std::vector<Symbol> &params, const Symbol *b, const Token *token) const
+	inline const Symbol call(const std::vector<Symbol> &params, const Symbol *b, const Token *token) const
 	{
 		std::vector<ValueType> ftypes;
 		for (auto &e : params)
 			ftypes.push_back(e.getValueType());
 
-		auto f = getFunction(ftypes, token);
-
-		return f->evaluate(params, b, token);
+		return getFunction(ftypes, token)->evaluate(params, b, token);
 	}
 
 	inline void addFunctions(const Symbol *b, const Token *token) const
@@ -638,15 +645,15 @@ public:
 
 	inline void set(const Symbol *b, const Token *token) const
 	{
-		if (!isMutable)
-			throw RuotaError("Cannot change the value of a variable declared as `final`", *token);
+		if (b->d == d)
+			return;
 		if (d->type == OBJECT && d->valueObject != nullptr && d->valueObject->hasValue(Ruota::HASH_SET))
 		{
 			d->valueObject->getScope()->getVariable(Ruota::HASH_SET, token).call({*b}, this, token);
 			return;
 		}
-		d->type = b->d->type;
 		d->clearData();
+		d->type = b->d->type;
 		switch (d->type)
 		{
 		case NUMBER:
@@ -670,12 +677,9 @@ public:
 		case VECTOR:
 		{
 			auto v = b->d->valueVector;
-			for (unsigned long i = 0; i < v.size(); i++)
-			{
-				auto newd = Symbol();
-				newd.set(&v[i], token);
-				d->valueVector.push_back(newd);
-			}
+			d->valueVector.resize(v.size());
+			for (size_t i = 0; i < v.size(); i++)
+				d->valueVector[i].set(&v[i], token);
 			break;
 		}
 		case DICTIONARY:
