@@ -1,3 +1,5 @@
+load "bitmap.ruo";
+
 static mandel class {
 	var ASCII = [
 		" ",
@@ -56,6 +58,21 @@ static mandel class {
 		puts(s);
 		putln("`Z` to Exit");
 	}
+
+	print(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
+		var image = bitmap.allocate(height, width);
+
+		var dx = (end_x - start_x) / (width - 1);
+		var dy = (end_y - start_y) / (height - 1);
+		for i in [0 .. height] do {
+			for j in [0 .. width] do {
+				var value = mandelConverger(start_x + j * dx, end_y - i * dy) / ASCII.size();
+				image[height - i - 1][j] = [math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255)];
+			}
+		}
+
+		bitmap.write(image, height, width, "mandel_(" + (start_x -> String) + "_" + (end_x -> String) + "," + (start_y -> String) + "_" + (end_y -> String) + ").bmp");
+	}
 }
 
 var x = -0.5;
@@ -89,6 +106,11 @@ while true do {
 		}
 		charn("z")[0] do {
 			break;
+		}
+		charn("p")[0] do {
+			putln("Printing...");
+			mandel.print(x - scale, y - scale, x + scale, y + scale, width, math.floor(height * 2.5));
+			system("cls");
 		}
 	}
 }

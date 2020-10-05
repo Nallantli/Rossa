@@ -61,7 +61,11 @@ struct Writer class {
 	var ptr;
 
 	init(ref filename) => {
-		ptr = (extern_call libfs._writer_init(filename -> String));
+		ptr = (extern_call libfs._writer_init(filename -> String, false));
+	}
+
+	init(ref filename, ref binary : Boolean) => {
+		ptr = (extern_call libfs._writer_init(filename -> String, binary));
 	}
 
 	isOpen() => extern_call libfs._writer_isOpen(ptr);
@@ -84,7 +88,11 @@ struct Reader class {
 	var ptr;
 
 	init(ref filename) => {
-		ptr = (extern_call libfs._reader_init(filename -> String));
+		ptr = (extern_call libfs._reader_init(filename -> String, false));
+	}
+
+	init(ref filename, ref binary : Boolean) => {
+		ptr = (extern_call libfs._reader_init(filename -> String, binary));
 	}
 
 	isOpen() => extern_call libfs._reader_isOpen(ptr);

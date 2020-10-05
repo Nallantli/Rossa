@@ -11,7 +11,10 @@ namespace libfs
 	{
 		auto filename = args[0].getString(token);
 		auto fstr = std::make_shared<std::ofstream>();
-		fstr->open(filename);
+		if (args[1].getBool(token))
+			fstr->open(filename, std::ios::binary);
+		else
+			fstr->open(filename, std::ios::binary);
 		return Symbol(static_cast<std::shared_ptr<void>>(fstr));
 	}
 
@@ -32,7 +35,10 @@ namespace libfs
 	{
 		auto filename = args[0].getString(token);
 		auto fstr = std::make_shared<std::ifstream>();
-		fstr->open(filename);
+		if (args[1].getBool(token))
+			fstr->open(filename, std::ios::binary);
+		else
+			fstr->open(filename, std::ios::binary);
 		return Symbol(static_cast<std::shared_ptr<void>>(fstr));
 	}
 

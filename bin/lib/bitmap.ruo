@@ -1,0 +1,69 @@
+load "fs.ruo";
+
+static bitmap class {
+	allocate(final height : Number, final width : Number) => {
+		var image = alloc(height);
+		for i in image do {
+			i = alloc(width);
+			for j in i do {
+				j = alloc(3);
+			}
+		}
+		return image;
+	}
+
+	write(final image : Vector, final height : Number, final width : Number, final filename : String) => {
+		var f = new Writer(filename, true);
+		var widthInBytes = width * 3;
+		var paddingSize = (4 - (widthInBytes) % 4) % 4;
+		var stride = widthInBytes + paddingSize;
+
+		var padding = "";
+		for i in [0 .. paddingSize] do {
+			padding += "\0";
+		}
+
+		var out = "";
+		out += createHeader(height, stride);
+		out += createInfo(height, width);
+		for i in [0 .. height] do {
+			for j in [0 .. width] do {
+				out += chars(image[i][j][2]) + chars(image[i][j][1]) + chars(image[i][j][0]);
+			}
+			out += padding;
+		}
+
+		f.write(out);
+	}
+
+	createHeader(final height : Number, final stride : Number) => {
+		var fileSize = 54 + (stride * height);
+
+		var fileHeader = [
+			charn("B")[0], charn("M")[0],
+			fileSize, fileSize >> 8, fileSize >> 16, fileSize >> 24,
+			0, 0, 0, 0,
+			54, 0, 0, 0
+		];
+
+		return fileHeader.map((n) => chars(n)).join();
+	}
+
+	createInfo(final height : Number, final width : Number) => {
+		var infoHeader = [
+			40, 0, 0, 0,
+			width, width >> 8, width >> 16, width >> 24,
+			height, height >> 8, height >> 16, height >> 24,
+			1, 0,
+			24, 0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0,
+			0,0,0,0
+		];
+
+		return infoHeader.map((n) => chars(n)).join();
+	}
+}

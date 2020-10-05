@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cmath>
+#include <sstream>
 
 typedef long double long_double_t;
 typedef signed long long long_int_t;
@@ -486,7 +487,17 @@ public:
 		switch (type)
 		{
 		case DOUBLE_NUM:
-			return std::to_string(valueDouble);
+		{
+			std::stringstream ss;
+			ss.precision(10);
+			ss << std::fixed << valueDouble;
+			std::string ret = ss.str();
+			while (ret.back() == '0')
+				ret.pop_back();
+			if (ret.back() == '.')
+				ret.pop_back();
+			return ret;
+		}
 		case LONG_NUM:
 			return std::to_string(valueLong);
 		default:
