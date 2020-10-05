@@ -31,7 +31,7 @@ std::shared_ptr<Instruction> UnaryI::getA() const
 
 CastingI::CastingI(InstructionType type, hashcode_t key, const Token token) : Instruction(type, token), key(key) {}
 
-hashcode_t CastingI::getKey() const
+const hashcode_t CastingI::getKey() const
 {
 	return key;
 }

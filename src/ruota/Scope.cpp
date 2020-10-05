@@ -2,10 +2,7 @@
 
 Scope::Scope() : parent(NULL), name("") {}
 
-Scope::Scope(Scope *parent, const std::string &name) : parent(parent)
-{
-	this->name = parent->getName() != "" ? parent->getName() + "." + name : name;
-}
+Scope::Scope(Scope *parent, const std::string &name) : parent(parent), name(parent->getName() != "" ? parent->getName() + "." + name : name) {}
 
 const std::string &Scope::getName() const
 {

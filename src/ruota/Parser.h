@@ -8,7 +8,7 @@
 class UnaryI : public Instruction
 {
 protected:
-	std::shared_ptr<Instruction> a;
+	const std::shared_ptr<Instruction> a;
 
 public:
 	UnaryI(InstructionType, std::shared_ptr<Instruction>, const Token);
@@ -18,17 +18,17 @@ public:
 class CastingI : public Instruction
 {
 protected:
-	hashcode_t key;
+	const hashcode_t key;
 
 public:
 	CastingI(InstructionType, hashcode_t, const Token);
-	hashcode_t getKey() const;
+	const hashcode_t getKey() const;
 };
 
 class BinaryI : public UnaryI
 {
 protected:
-	std::shared_ptr<Instruction> b;
+	const std::shared_ptr<Instruction> b;
 
 public:
 	BinaryI(InstructionType, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
@@ -38,7 +38,7 @@ public:
 class ContainerI : public Instruction
 {
 protected:
-	Symbol d;
+	const Symbol d;
 
 public:
 	ContainerI(const Symbol &d, const Token);
@@ -48,10 +48,10 @@ public:
 class DefineI : public Instruction
 {
 protected:
-	hashcode_t key;
-	Signature ftype;
-	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
-	std::shared_ptr<Instruction> body;
+	const hashcode_t key;
+	const Signature ftype;
+	const std::vector<std::pair<LexerTokenType, hashcode_t>> params;
+	const std::shared_ptr<Instruction> body;
 
 public:
 	DefineI(hashcode_t, Signature ftype, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
@@ -61,7 +61,7 @@ public:
 class SequenceI : public Instruction
 {
 protected:
-	std::vector<std::shared_ptr<Instruction>> children;
+	const std::vector<std::shared_ptr<Instruction>> children;
 
 public:
 	SequenceI(std::vector<std::shared_ptr<Instruction>>, const Token);
@@ -71,9 +71,9 @@ public:
 class IfElseI : public Instruction
 {
 protected:
-	std::shared_ptr<Instruction> ifs;
-	std::shared_ptr<Instruction> body;
-	std::shared_ptr<Instruction> elses;
+	const std::shared_ptr<Instruction> ifs;
+	const std::shared_ptr<Instruction> body;
+	const std::shared_ptr<Instruction> elses;
 
 public:
 	IfElseI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
@@ -83,8 +83,8 @@ public:
 class WhileI : public Instruction
 {
 protected:
-	std::shared_ptr<Instruction> whiles;
-	std::shared_ptr<Instruction> body;
+	const std::shared_ptr<Instruction> whiles;
+	const std::shared_ptr<Instruction> body;
 
 public:
 	WhileI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
@@ -94,9 +94,9 @@ public:
 class ForI : public Instruction
 {
 protected:
-	hashcode_t id;
-	std::shared_ptr<Instruction> fors;
-	std::shared_ptr<Instruction> body;
+	const hashcode_t id;
+	const std::shared_ptr<Instruction> fors;
+	const std::shared_ptr<Instruction> body;
 
 public:
 	ForI(hashcode_t, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
@@ -288,7 +288,7 @@ public:
 class ExternI : public UnaryI
 {
 protected:
-	std::string id;
+	const std::string id;
 	boost::function<const Symbol(std::vector<Symbol>, const Token *)> f;
 
 public:
@@ -313,10 +313,10 @@ public:
 class ClassI : public Instruction
 {
 protected:
-	hashcode_t key;
-	ObjectType type;
-	std::shared_ptr<Instruction> body;
-	std::shared_ptr<Instruction> extends;
+	const hashcode_t key;
+	const ObjectType type;
+	const std::shared_ptr<Instruction> body;
+	const std::shared_ptr<Instruction> extends;
 
 public:
 	ClassI(hashcode_t, ObjectType, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
@@ -351,7 +351,7 @@ class UntilI : public BinaryI
 {
 protected:
 	const bool inclusive;
-	std::shared_ptr<Instruction> step;
+	const std::shared_ptr<Instruction> step;
 
 public:
 	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, bool, const Token);
@@ -361,7 +361,7 @@ public:
 class ScopeI : public Instruction
 {
 protected:
-	std::vector<std::shared_ptr<Instruction>> children;
+	const std::vector<std::shared_ptr<Instruction>> children;
 
 public:
 	ScopeI(std::vector<std::shared_ptr<Instruction>>, const Token);
@@ -371,7 +371,7 @@ public:
 class MapI : public Instruction
 {
 protected:
-	std::map<hashcode_t, std::shared_ptr<Instruction>> children;
+	const std::map<hashcode_t, std::shared_ptr<Instruction>> children;
 
 public:
 	MapI(std::map<hashcode_t, std::shared_ptr<Instruction>>, const Token);
@@ -388,9 +388,9 @@ public:
 class SwitchI : public Instruction
 {
 protected:
-	std::shared_ptr<Instruction> switchs;
-	std::shared_ptr<Instruction> elses;
-	std::map<Symbol, std::shared_ptr<Instruction>> cases;
+	const std::shared_ptr<Instruction> switchs;
+	const std::shared_ptr<Instruction> elses;
+	const std::map<Symbol, std::shared_ptr<Instruction>> cases;
 
 public:
 	SwitchI(std::shared_ptr<Instruction>, std::map<Symbol, std::shared_ptr<Instruction>>, std::shared_ptr<Instruction>, const Token);
@@ -400,7 +400,7 @@ public:
 class TryCatchI : public BinaryI
 {
 protected:
-	hashcode_t key;
+	const hashcode_t key;
 
 public:
 	TryCatchI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, hashcode_t, const Token);

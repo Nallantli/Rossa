@@ -7,7 +7,7 @@ Node::Node(
 	const Token token) : type(type),
 						 token(token) {}
 
-NodeType Node::getType() const
+const NodeType Node::getType() const
 {
 	return type;
 }

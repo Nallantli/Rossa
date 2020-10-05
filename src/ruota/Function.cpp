@@ -2,7 +2,7 @@
 
 Function::Function(hashcode_t key, Scope *parent, std::vector<std::pair<LexerTokenType, hashcode_t>> params, std::shared_ptr<Instruction> body) : key(key), parent(parent), params(params), body(body) {}
 
-const Symbol Function::evaluate(std::vector<Symbol> &paramValues, const Symbol *thisSym, const Token *token) const
+const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Symbol *thisSym, const Token *token) const
 {
 	Ruota::stack_trace.push_back(*this);
 
@@ -66,7 +66,7 @@ Scope *Function::getParent() const
 	return parent;
 }
 
-std::vector<std::pair<LexerTokenType, hashcode_t>> Function::getParams() const
+const std::vector<std::pair<LexerTokenType, hashcode_t>> &Function::getParams() const
 {
 	return params;
 }

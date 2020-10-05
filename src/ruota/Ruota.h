@@ -12,9 +12,9 @@
 
 struct Signature
 {
-	std::vector<ValueType> values;
-	Signature(std::vector<ValueType>);
-	size_t validity(std::vector<ValueType>) const;
+	const std::vector<ValueType> values;
+	Signature(const std::vector<ValueType> &);
+	size_t validity(const std::vector<ValueType> &) const;
 	bool operator<(const Signature &) const;
 	const std::string toString() const;
 };
@@ -45,7 +45,7 @@ public:
 class RuotaError : public std::runtime_error
 {
 private:
-	Token token;
+	const Token token;
 
 public:
 	RuotaError(const std::string &error, const Token &token) : std::runtime_error(error), token(token) {}
@@ -59,7 +59,7 @@ public:
 class Instruction
 {
 protected:
-	InstructionType type;
+	const InstructionType type;
 	const Token token;
 
 public:
@@ -72,24 +72,24 @@ public:
 class Function
 {
 private:
-	std::vector<std::pair<LexerTokenType, hashcode_t>> params;
-	std::shared_ptr<Instruction> body;
+	const std::vector<std::pair<LexerTokenType, hashcode_t>> params;
+	const std::shared_ptr<Instruction> body;
 	Scope *parent;
-	hashcode_t key;
+	const hashcode_t key;
 
 public:
 	Function(hashcode_t, Scope *, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>);
-	const Symbol evaluate(std::vector<Symbol> &, const Symbol *, const Token *) const;
+	const Symbol evaluate(const std::vector<Symbol> &, const Symbol *, const Token *) const;
 	size_t getArgSize() const;
 	hashcode_t getKey() const;
 	Scope *getParent() const;
-	std::vector<std::pair<LexerTokenType, hashcode_t>> getParams() const;
+	const std::vector<std::pair<LexerTokenType, hashcode_t>> &getParams() const;
 };
 
 class Scope
 {
 private:
-	std::string name;
+	const std::string name;
 	Scope *parent;
 	std::map<hashcode_t, Symbol> values;
 
@@ -109,17 +109,17 @@ public:
 class Object
 {
 private:
-	std::string key;
-	ObjectType type;
+	const std::string key;
+	const ObjectType type;
 	std::shared_ptr<Scope> internal;
-	std::shared_ptr<Instruction> body;
+	const std::shared_ptr<Instruction> body;
 
 public:
 	Object(Scope *, ObjectType, std::shared_ptr<Instruction>, const std::string &);
 	Scope *getScope() const;
-	const Symbol instantiate(std::vector<Symbol> &, const Token *) const;
-	ObjectType getType() const;
-	std::shared_ptr<Instruction> getBody() const;
+	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
+	const ObjectType getType() const;
+	const std::shared_ptr<Instruction> getBody() const;
 	const std::string &getName() const;
 	bool hasValue(hashcode_t) const;
 
@@ -129,12 +129,12 @@ public:
 class Node
 {
 protected:
-	NodeType type;
+	const NodeType type;
 	const Token token;
 
 public:
 	Node(NodeType, const Token);
-	NodeType getType() const;
+	const NodeType getType() const;
 	const Token getToken() const;
 
 	virtual std::shared_ptr<Instruction> genParser() const = 0;
@@ -247,6 +247,15 @@ public:
 	Value(std::vector<Symbol> valueVector) : type(VECTOR), valueVector(valueVector) {}
 	Value(std::map<hashcode_t, Symbol> valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary) {}
 	Value(const std::string &valueString) : type(STRING), valueString(valueString) {}
+
+	inline void clearData()
+	{
+		valueFunction.clear();
+		valueVector.clear();
+		valueDictionary.clear();
+		valuePointer = nullptr;
+		valueObject = nullptr;
+	}
 };
 
 class Symbol
@@ -608,16 +617,7 @@ public:
 		}
 	}
 
-	inline void clearData() const
-	{
-		d->valueFunction.clear();
-		d->valueVector.clear();
-		d->valueDictionary.clear();
-		d->valuePointer = nullptr;
-		d->valueObject = nullptr;
-	}
-
-	inline Symbol call(std::vector<Symbol> params, const Symbol *b, const Token *token) const
+	inline Symbol call(const std::vector<Symbol> &params, const Symbol *b, const Token *token) const
 	{
 		std::vector<ValueType> ftypes;
 		for (auto &e : params)
@@ -636,7 +636,7 @@ public:
 				d->valueFunction[f.first][t.first] = t.second;
 	}
 
-	inline void set(Symbol *b, const Token *token) const
+	inline void set(const Symbol *b, const Token *token) const
 	{
 		if (!isMutable)
 			throw RuotaError("Cannot change the value of a variable declared as `final`", *token);
@@ -646,7 +646,7 @@ public:
 			return;
 		}
 		d->type = b->d->type;
-		clearData();
+		d->clearData();
 		switch (d->type)
 		{
 		case NUMBER:
@@ -699,7 +699,7 @@ public:
 		}
 	}
 
-	inline bool equals(Symbol *b, const Token *token) const
+	inline bool equals(const Symbol *b, const Token *token) const
 	{
 		if (d->type != b->d->type && d->type != OBJECT)
 			return false;
@@ -744,7 +744,7 @@ public:
 		}
 	}
 
-	inline bool nequals(Symbol *b, const Token *token) const
+	inline bool nequals(const Symbol *b, const Token *token) const
 	{
 		switch (d->type)
 		{
@@ -759,7 +759,7 @@ public:
 		}
 	}
 
-	inline bool pureEquals(Symbol *b, const Token *token) const
+	inline bool pureEquals(const Symbol *b, const Token *token) const
 	{
 		switch (d->type)
 		{
@@ -770,7 +770,7 @@ public:
 		}
 	}
 
-	inline bool pureNEquals(Symbol *b, const Token *token) const
+	inline bool pureNEquals(const Symbol *b, const Token *token) const
 	{
 		return !this->pureEquals(b, token);
 	}

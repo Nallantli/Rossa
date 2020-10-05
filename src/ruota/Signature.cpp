@@ -1,8 +1,8 @@
 #include "Ruota.h"
 
-Signature::Signature(std::vector<ValueType> values) : values(values) {}
+Signature::Signature(const std::vector<ValueType> &values) : values(values) {}
 
-size_t Signature::validity(std::vector<ValueType> check) const
+size_t Signature::validity(const std::vector<ValueType> &check) const
 {
 	if (values.size() == 0)
 		return 1;

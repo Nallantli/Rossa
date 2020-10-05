@@ -10,7 +10,7 @@ Scope *Object::getScope() const
 	return this->internal.get();
 }
 
-const Symbol Object::instantiate(std::vector<Symbol> &params, const Token *token) const
+const Symbol Object::instantiate(const std::vector<Symbol> &params, const Token *token) const
 {
 	if (type != STRUCT_O)
 		throw RuotaError(_FAILURE_INSTANTIATE_OBJECT_, *token);
@@ -22,7 +22,7 @@ const Symbol Object::instantiate(std::vector<Symbol> &params, const Token *token
 	return d;
 }
 
-ObjectType Object::getType() const
+const ObjectType Object::getType() const
 {
 	return this->type;
 }
@@ -37,7 +37,7 @@ bool Object::hasValue(hashcode_t key) const
 	return internal->hasValue(key);
 }
 
-std::shared_ptr<Instruction> Object::getBody() const
+const std::shared_ptr<Instruction> Object::getBody() const
 {
 	return body;
 }
