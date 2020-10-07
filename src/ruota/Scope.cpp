@@ -16,7 +16,7 @@ const Symbol &Scope::getVariable(hashcode_t key, const Token *token)
 	if (parent != NULL)
 		return parent->getVariable(key, token);
 
-	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % hash.deHash(key)).str(), *token);
+	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % MAIN_HASH.deHash(key)).str(), *token);
 }
 
 const Symbol &Scope::createVariable(hashcode_t key, const Token *token)
@@ -35,7 +35,8 @@ const Symbol &Scope::createVariable(hashcode_t key, const Symbol &d, const Token
 	return values[key];
 }
 
-void Scope::clear() {
+void Scope::clear()
+{
 	values.clear();
 }
 
@@ -47,6 +48,20 @@ Scope *Scope::getParent() const
 bool Scope::hasValue(hashcode_t key) const
 {
 	return values.find(key) != values.end();
+}
+
+Scope::Scope(const Scope &s)
+{
+	this->parent = s.parent;
+	this->name = s.name;
+	this->values = s.values;
+}
+
+void Scope::operator=(const Scope &s)
+{
+	this->parent = s.parent;
+	this->name = s.name;
+	this->values = s.values;
 }
 
 Scope::~Scope() {}

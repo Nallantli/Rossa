@@ -5,8 +5,8 @@
 #include <cmath>
 #include <sstream>
 
-typedef long double long_double_t;
-typedef signed long long long_int_t;
+typedef double long_double_t;
+typedef long long_int_t;
 class CNumber
 {
 private:
@@ -16,9 +16,21 @@ private:
 		long_int_t valueLong;
 	};
 
-	CNumber(long_double_t valueDouble) : valueDouble(valueDouble), type(DOUBLE_NUM) {}
+	inline void validate() noexcept
+	{
+		if (valueDouble == static_cast<long_int_t>(valueDouble))
+		{
+			valueLong = valueDouble;
+			type = LONG_NUM;
+		}
+	}
 
-	CNumber(long_int_t valueLong) : valueLong(valueLong), type(LONG_NUM) {}
+	CNumber(const long_double_t &valueDouble) noexcept : valueDouble(valueDouble), type(DOUBLE_NUM)
+	{
+		validate();
+	}
+
+	CNumber(const long_int_t &valueLong) noexcept : valueLong(valueLong), type(LONG_NUM) {}
 
 public:
 	enum
@@ -27,27 +39,105 @@ public:
 		LONG_NUM
 	} type;
 
-	CNumber() : valueLong(0), type(LONG_NUM) {}
+	CNumber() noexcept : valueLong(0), type(LONG_NUM) {}
 
-	static inline const CNumber Double(long_double_t valueDouble)
+	static inline const CNumber Double(const long_double_t &valueDouble) noexcept
 	{
-		if (valueDouble == static_cast<long_int_t>(valueDouble))
-			return CNumber(static_cast<long_int_t>(valueDouble));
-
-		return CNumber(static_cast<long_double_t>(valueDouble));
+		return CNumber(valueDouble);
 	}
 
-	static inline const CNumber Long(long_double_t valueLong)
+	static inline const CNumber Long(const long_int_t &valueLong) noexcept
 	{
-		return CNumber(static_cast<long_int_t>(valueLong));
+		return CNumber(valueLong);
 	}
 
-	inline int getType() const
+	inline void operator=(const CNumber &n) noexcept
 	{
-		return type;
+		type = n.type;
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			valueDouble = n.valueDouble;
+			break;
+		case LONG_NUM:
+			valueLong = n.valueLong;
+			break;
+		}
 	}
 
-	inline const CNumber operator+(const CNumber &n) const
+	inline void operator+=(const CNumber &n) noexcept
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			valueDouble += n.getDouble();
+			validate();
+			break;
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				valueDouble = static_cast<long_double_t>(valueLong) + n.valueDouble;
+				type = DOUBLE_NUM;
+				validate();
+				break;
+			case LONG_NUM:
+				valueLong += n.valueLong;
+				break;
+			}
+		}
+	}
+
+	inline void operator-=(const CNumber &n) noexcept
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			valueDouble -= n.getDouble();
+			validate();
+			break;
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				valueDouble = static_cast<long_double_t>(valueLong) - n.valueDouble;
+				type = DOUBLE_NUM;
+				validate();
+				break;
+			case LONG_NUM:
+				valueLong -= n.valueLong;
+				break;
+			}
+		}
+	}
+
+	inline long_double_t getDouble() const noexcept
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			return valueDouble;
+		case LONG_NUM:
+			return static_cast<long_double_t>(valueLong);
+		default:
+			return NAN;
+		}
+	}
+
+	inline long_int_t getLong() const noexcept
+	{
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			return static_cast<long_int_t>(valueDouble);
+		case LONG_NUM:
+			return valueLong;
+		default:
+			return 0;
+		}
+	}
+
+	inline const CNumber operator+(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -55,29 +145,24 @@ public:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(valueDouble + n.valueDouble);
+				return CNumber::Double(valueDouble + n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueDouble + static_cast<long_double_t>(n.valueLong));
-			default:
-				break;
+				return CNumber::Double(valueDouble + static_cast<long_double_t>(n.valueLong));
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(valueLong) + n.valueDouble);
+				return CNumber::Double(static_cast<long_double_t>(valueLong) + n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueLong + n.valueLong);
-			default:
-				break;
+				return CNumber::Long(valueLong + n.valueLong);
 			}
-		default:
-			break;
 		}
 		return CNumber();
 	}
 
-	inline const CNumber operator-(const CNumber &n) const
+	inline const CNumber operator-(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -85,29 +170,24 @@ public:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(valueDouble - n.valueDouble);
+				return CNumber::Double(valueDouble - n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueDouble - static_cast<long_double_t>(n.valueLong));
-			default:
-				break;
+				return CNumber::Double(valueDouble - static_cast<long_double_t>(n.valueLong));
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(valueLong) - n.valueDouble);
+				return CNumber::Double(static_cast<long_double_t>(valueLong) - n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueLong - n.valueLong);
-			default:
-				break;
+				return CNumber::Long(valueLong - n.valueLong);
 			}
-		default:
-			break;
 		}
 		return CNumber();
 	}
 
-	inline const CNumber operator*(const CNumber &n) const
+	inline const CNumber operator*(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -115,29 +195,24 @@ public:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(valueDouble * n.valueDouble);
+				return CNumber::Double(valueDouble * n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueDouble * static_cast<long_double_t>(n.valueLong));
-			default:
-				break;
+				return CNumber::Double(valueDouble * static_cast<long_double_t>(n.valueLong));
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(valueLong) * n.valueDouble);
+				return CNumber::Double(static_cast<long_double_t>(valueLong) * n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueLong * n.valueLong);
-			default:
-				break;
+				return CNumber::Long(valueLong * n.valueLong);
 			}
-		default:
-			break;
 		}
 		return CNumber();
 	}
 
-	inline const CNumber operator/(const CNumber &n) const
+	inline const CNumber operator/(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -145,29 +220,27 @@ public:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(valueDouble / n.valueDouble);
+				return CNumber::Double(valueDouble / n.valueDouble);
 			case LONG_NUM:
-				return CNumber(valueDouble / static_cast<long_double_t>(n.valueLong));
-			default:
-				break;
+				return CNumber::Double(valueDouble / static_cast<long_double_t>(n.valueLong));
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(valueLong) / n.valueDouble);
+				return CNumber::Double(static_cast<long_double_t>(valueLong) / n.valueDouble);
 			case LONG_NUM:
-				return CNumber(static_cast<long_double_t>(valueLong) / static_cast<long_double_t>(n.valueLong));
-			default:
-				break;
+				if (valueLong % n.valueLong == 0)
+					return CNumber::Long(valueLong / n.valueLong);
+				else
+					return CNumber::Double(static_cast<long_double_t>(valueLong) / static_cast<long_double_t>(n.valueLong));
 			}
-		default:
-			break;
 		}
 		return CNumber();
 	}
 
-	inline const CNumber pow(const CNumber &n) const
+	inline const CNumber pow(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -175,94 +248,48 @@ public:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(std::pow(valueDouble, n.valueDouble)));
+				return CNumber::Double(std::pow(valueDouble, n.valueDouble));
 			case LONG_NUM:
-				return CNumber(static_cast<long_double_t>(std::pow(valueDouble, static_cast<long_double_t>(n.valueLong))));
-			default:
-				break;
+				return CNumber::Double(std::pow(valueDouble, static_cast<long_double_t>(n.valueLong)));
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
 			case DOUBLE_NUM:
-				return CNumber(static_cast<long_double_t>(std::pow(static_cast<long_double_t>(valueLong), n.valueDouble)));
+				return CNumber::Double(std::pow(static_cast<long_double_t>(valueLong), n.valueDouble));
 			case LONG_NUM:
-				return CNumber(static_cast<long_double_t>(std::pow(valueLong, n.valueLong)));
-			default:
-				break;
+				return CNumber::Double(std::pow(valueLong, n.valueLong));
 			}
-		default:
-			break;
 		}
 		return CNumber();
 	}
 
-	inline const CNumber operator%(const CNumber &n) const
+	inline const CNumber operator%(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) % static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) % n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong % static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong % n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() % n.getLong());
 	}
 
-	inline bool operator==(const CNumber &n) const
+	inline bool operator==(const CNumber &n) const noexcept
 	{
+		if (type != n.type)
+			return false;
 		switch (type)
 		{
 		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return valueDouble == n.valueDouble;
-			case LONG_NUM:
-				return valueDouble == n.valueLong;
-			default:
-				break;
-			}
+			return valueDouble == n.valueDouble;
 		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return valueLong == n.valueDouble;
-			case LONG_NUM:
-				return valueLong == n.valueLong;
-			default:
-				break;
-			}
-		default:
-			break;
+			return valueLong == n.valueLong;
 		}
 		return false;
 	}
 
-	inline bool operator!=(const CNumber &n) const
+	inline bool operator!=(const CNumber &n) const noexcept
 	{
 		return !(*this == n);
 	}
 
-	inline bool operator<(const CNumber &n) const
+	inline bool operator<(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -273,9 +300,8 @@ public:
 				return valueDouble < n.valueDouble;
 			case LONG_NUM:
 				return valueDouble < n.valueLong;
-			default:
-				break;
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
@@ -283,16 +309,12 @@ public:
 				return valueLong < n.valueDouble;
 			case LONG_NUM:
 				return valueLong < n.valueLong;
-			default:
-				break;
 			}
-		default:
-			break;
 		}
 		return false;
 	}
 
-	inline bool operator>(const CNumber &n) const
+	inline bool operator>(const CNumber &n) const noexcept
 	{
 		switch (type)
 		{
@@ -303,9 +325,8 @@ public:
 				return valueDouble > n.valueDouble;
 			case LONG_NUM:
 				return valueDouble > n.valueLong;
-			default:
-				break;
 			}
+			break;
 		case LONG_NUM:
 			switch (n.type)
 			{
@@ -313,176 +334,47 @@ public:
 				return valueLong > n.valueDouble;
 			case LONG_NUM:
 				return valueLong > n.valueLong;
-			default:
-				break;
 			}
-		default:
-			break;
 		}
 		return false;
 	}
 
-	inline bool operator<=(const CNumber &n) const
+	inline bool operator<=(const CNumber &n) const noexcept
 	{
 		return !(*this > n);
 	}
 
-	inline bool operator>=(const CNumber &n) const
+	inline bool operator>=(const CNumber &n) const noexcept
 	{
 		return !(*this < n);
 	}
 
-	inline const CNumber operator&(const CNumber &n) const
+	inline const CNumber operator&(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) & static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) & n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong & static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong & n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() & n.getLong());
 	}
 
-	inline const CNumber operator|(const CNumber &n) const
+	inline const CNumber operator|(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) | static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) | n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong | static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong | n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() | n.getLong());
 	}
 
-	inline const CNumber operator^(const CNumber &n) const
+	inline const CNumber operator^(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) ^ static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) ^ n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong ^ static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong ^ n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() ^ n.getLong());
 	}
 
-	inline const CNumber operator<<(const CNumber &n) const
+	inline const CNumber operator<<(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) << static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) << n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong << static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong << n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() << n.getLong());
 	}
 
-	inline const CNumber operator>>(const CNumber &n) const
+	inline const CNumber operator>>(const CNumber &n) const noexcept
 	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) >> static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(static_cast<long_int_t>(valueDouble) >> n.valueLong);
-			default:
-				break;
-			}
-		case LONG_NUM:
-			switch (n.type)
-			{
-			case DOUBLE_NUM:
-				return CNumber(valueLong >> static_cast<long_int_t>(n.valueDouble));
-			case LONG_NUM:
-				return CNumber(valueLong >> n.valueLong);
-			default:
-				break;
-			}
-		default:
-			break;
-		}
-		return CNumber();
+		return CNumber::Long(getLong() >> n.getLong());
 	}
 
-	inline const std::string toString() const
+	inline const std::string toString() const noexcept
 	{
 		switch (type)
 		{
@@ -502,32 +394,6 @@ public:
 			return std::to_string(valueLong);
 		default:
 			return "<undefined>";
-		}
-	}
-
-	inline long_double_t getDouble() const
-	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			return valueDouble;
-		case LONG_NUM:
-			return static_cast<long_double_t>(valueLong);
-		default:
-			return NAN;
-		}
-	}
-
-	inline long_int_t getLong() const
-	{
-		switch (type)
-		{
-		case DOUBLE_NUM:
-			return static_cast<long_int_t>(valueDouble);
-		case LONG_NUM:
-			return valueLong;
-		default:
-			return 0;
 		}
 	}
 };

@@ -14,6 +14,7 @@ extern _path_append_path in "libfs";
 extern _path_append_string in "libfs";
 extern _path_exists in "libfs";
 extern _path_mkdirs in "libfs";
+extern _path_close in "libfs";
 
 struct Path class {
 	var ptr;

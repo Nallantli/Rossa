@@ -1,0 +1,194 @@
+extern _window_init in "libsdl";
+extern _window_add in "libsdl";
+extern _window_remove in "libsdl";
+extern _window_update in "libsdl";
+extern _window_register in "libsdl";
+extern _rect_init in "libsdl";
+extern _line_init in "libsdl";
+extern _point_init in "libsdl";
+extern _shape_setColor in "libsdl";
+extern _shape_setPosition in "libsdl";
+extern _event_poll in "libsdl";
+
+static Event class {
+	var NULL = 0;
+
+	var QUIT = 256;
+
+	var WINDOW = 512;
+
+	var KEY_DOWN = 768;
+	var KEY_UP = 769;
+	var TEXT_EDITING = 770;
+	var TEXT_INPUT = 771;
+	var KEYMAP_CHANGED = 772;
+
+	var MOUSE_MOTION = 1024;
+	var MOUSE_BUTTON_DOWN = 1025;
+	var MOUSE_BUTTON_UP = 1026;
+	var MOUSE_WHEEL = 1027;
+
+	var JOY_AXIS_MOTION = 1536;
+	var JOY_BALL_MOTION = 1537;
+	var JOY_HAT_MOTION = 1538;
+	var JOY_BUTTON_DOWN = 1539;
+	var JOY_BUTTON_UP = 1540;
+	var JOY_DEVICE_ADDED = 1541;
+	var JOY_DEVICE_REMOVED = 1542;
+
+	var CONTROLLER_AXIS_MOTION = 1616;
+	var CONTROLLER_BUTTON_DOWN = 1617;
+	var CONTROLLER_BUTTON_UP = 1618;
+	var CONTROLLER_DEVICE_ADDED = 1619;
+	var CONTROLLER_DEVICE_REMOVED = 1620;
+	var CONTROLLER_DEVICE_REMAPPED = 1621;
+
+	var FINGER_DOWN = 1792;
+	var FINGER_UP = 1793;
+	var FINGER_MOTION = 1794;
+
+	var DOLLAR_GESTURE = 2048;
+	var DOLLAR_RECORD = 2049;
+	var MULTI_GESTURE = 2050;
+
+	var CLIPBOARD_UPDATE = 2304;
+
+	var DROP_FILE = 4096;
+	var DROP_TEXT = 4097;
+	var DROP_BEGIN = 4098;
+	var DROP_COMPLETE = 4099;
+
+	var AUDIO_DEVICE_ADDED = 4352;
+	var AUDIO_DEVICE_REMOVED = 4353;
+
+	var SENSOR_UPDATE = 4608;
+
+	var RENDER_TARGETS_RESET = 8192;
+	var RENDER_DEVICE_RESET = 8193;
+
+	var USER_EVENT = 32768;
+
+	var LAST_EVENT = 65535;
+
+	var Win = {
+		SHOWN : 1,
+		HIDDEN : 2,
+		EXPOSED : 3,
+		MOVED : 4,
+		RESIZED : 5,
+		SIZE_CHANGED : 6,
+		MINIMIZED : 7,
+		MAXIMIZED : 8,
+		RESTORED : 9,
+		ENTER : 10,
+		LEAVE : 11,
+		FOCUS_GAINED : 12,
+		FOCUS_LOST : 13,
+		CLOSE : 14,
+		TAKE_FOCUS : 15,
+		HIT_TEST : 16
+	};
+
+	poll() => {
+		return (extern_call libsdl._event_poll());
+	}
+}
+
+static Color class {
+	var RED = { red : 255, green : 0, blue : 0, alpha : 255 };
+	var BLUE = { red : 0, green : 0, blue : 255, alpha : 255 };
+	var GREEN = { red : 0, green : 255, blue : 0, alpha : 255 };
+	var YELLOW = { red : 255, green : 255, blue : 0, alpha : 255 };
+	var MAGENTA = { red : 255, green : 0, blue : 255, alpha : 255 };
+	var CYAN = { red : 0, green : 255, blue : 255, alpha : 255 };
+	var BLACK = { red : 0, green : 0, blue : 0, alpha : 255 };
+	var WHITE = { red : 255, green : 255, blue : 255, alpha : 255 };
+
+	`()`(ref r : Number, ref g : Number, ref b : Number) => {
+		return { red : r, green : g, blue : b, alpha : 255 };
+	}
+
+	`()`(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+		return { red : r, green : g, blue : b, alpha : a };
+	}
+}
+
+static Shape class {
+	virtual Prototype class {
+		var ptr;
+
+		setColor(ref color : Dictionary) => {
+			extern_call libsdl._shape_setColor(ptr, color.red, color.green, color.blue, color.alpha);
+		}
+
+		setColor(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			extern_call libsdl._shape_setColor(ptr, r, g, b, a);
+		}
+
+		setColor(ref r : Number, ref g : Number, ref b : Number) => {
+			extern_call libsdl._shape_setColor(ptr, r, g, b, 255);
+		}
+
+		setPos(ref x : Number, ref y : Number) => {
+			extern_call libsdl._shape_setPosition(ptr, x, y);
+		}
+	}
+
+	struct Rect class : Prototype {
+		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._rect_init(x, y, width, height, r, g, b, a));
+		}
+
+		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._rect_init(x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		}
+	}
+
+	struct Line class : Prototype {
+		init(ref x1 : Number, ref y1 : Number, ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._line_init(x1, y1, x2, y2, r, g, b, a));
+		}
+
+		init(ref x1 : Number, ref y1 : Number, ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._line_init(x1, y1, x2, y2, color.red, color.green, color.blue, color.alpha));
+		}
+	}
+
+	struct Point class : Prototype {
+		init(ref x : Number, ref y : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._point_init(x, y, r, g, b, a));
+		}
+
+		init(ref x : Number, ref y : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._point_init(x, y, color.red, color.green, color.blue, color.alpha));
+		}
+	}
+}
+
+struct Window class {
+	var ptr;
+	var windowID;
+
+	init(ref title : String, ref width : Number, ref height : Number) => {
+		var data = (extern_call libsdl._window_init(title, width, height));
+		ptr = data[0];
+		windowID = data[1];
+		extern_call libsdl._window_register(windowID, this);
+	}
+
+	add(ref shape : Object) => {
+		extern_call libsdl._window_add(ptr, shape.ptr);
+	}
+
+	remove(ref shape : Object) => {
+		extern_call libsdl._window_remove(ptr, shape.ptr);
+	}
+
+	update() => {
+		return (extern_call libsdl._window_update(ptr));
+	}
+
+	close() => {
+		ptr = nil;
+	}
+}

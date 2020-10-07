@@ -1,0 +1,178 @@
+load "sdl.ruo";
+
+static snake_game class {
+	var height;
+	var width;
+	var scale;
+	var speed = 80;
+	var LOST = false;
+	var direction;
+	var newDir;
+	var posX;
+	var posY;
+	var size;
+	var rand;
+	var cache;
+	var buffer;
+	var w;
+
+	refresh() => {
+		if !LOST then {
+			direction = newDir;
+
+			switch direction in {
+				0 do {
+					posX = (posX + 1 + width) % width;
+				}
+				1 do {
+					posX = (posX - 1 + width) % width;
+				}
+				2 do {
+					posY = (posY + 1 + height) % height;
+				}
+				3 do {
+					posY = (posY - 1 + height) % height;
+				}
+			}
+
+			if cache[posX][posY] == -1 then {
+				size += 1;
+				setApple();
+			} elseif cache[posX][posY] > 0 then {
+				LOST = true;
+				putln("You Lost!");
+			}
+
+			cache[posX][posY] = size;
+		}
+
+		for x in [0 .. width] do {
+			for y in [0 .. height] do {
+				if cache[x][y] > 0 then {
+					buffer[x][y].setColor(0, math.min(128 + cache[x][y] * 2, 255), math.max(128 - cache[x][y] * 2, 0));
+				} elseif cache[x][y] < 0 then {
+					buffer[x][y].setColor(Color.RED);
+				} else {
+					buffer[x][y].setColor(Color.BLACK);
+				}
+			}
+		}
+
+		for x in cache do {
+			for y in x do {
+				if y > 0 then {
+					y -= 1;
+				}
+			}
+		}
+
+		w.update();
+	}
+
+	setApple() => {
+		var x;
+		var y;
+		while true do {
+			x = rand.nexti(0, width - 1);
+			y = rand.nexti(0, height - 1);
+			if cache[x][y] == 0 then {
+				break;
+			}
+		}
+		cache[x][y] = -1;
+	}
+
+	reset() => {
+		LOST = false;
+		direction = 0;
+		newDir = 0;
+		posX = 5;
+		posY = 5;
+		size = 1;
+		for x in cache do {
+			for y in x do {
+				y = 0;
+			}
+		}
+		setApple();
+	}
+
+	evaluateKeys() => {
+		var e = Event.poll();
+		if e.type == Event.QUIT then {
+			exit();
+		} elseif e.type == Event.KEY_DOWN then {
+			switch chars(e.keysym.sym) in {
+				"w" do {
+					if direction != 2 then {
+						newDir = 3;
+					}
+				}
+				"s" do {
+					if direction != 3 then {
+						newDir = 2;
+					}
+				}
+				"a" do {
+					if direction != 0 then {
+						newDir = 1;
+					}
+				}
+				"d" do {
+					if direction != 1 then {
+						newDir = 0;
+					}
+				}
+				"1" do {
+					speed = 160;
+				}
+				"2" do {
+					speed = 120;
+				}
+				"3" do {
+					speed = 80;
+				}
+				"4" do {
+					speed = 0;
+				}
+				" " do {
+					reset();
+				}
+			}
+		}
+	}
+
+	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+		this.width = width;
+		this.height = height;
+		this.scale = scale;
+
+		rand = new Random();
+
+		cache = alloc(width).map((e) => alloc(height));
+		buffer = alloc(width).map((e) => alloc(height));
+
+		w = new Window("Snake", width * scale, height * scale);
+
+		for x in [0 .. width] do {
+			for y in [0 .. height] do {
+				buffer[x][y] = new Shape.Rect(x * scale, y * scale, scale, scale, Color.BLACK);
+				w.add(buffer[x][y]);
+			}
+		}
+
+		reset();
+
+		var start = clock.milliseconds();
+		while true do {
+			evaluateKeys();
+			var lapse = clock.milliseconds() - start;
+			if lapse > speed then {
+				start = clock.milliseconds();
+				refresh();
+			}
+		}
+	}
+}
+
+snake_game(30, 20, 20);

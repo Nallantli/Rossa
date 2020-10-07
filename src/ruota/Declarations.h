@@ -3,9 +3,9 @@
 
 #include "Locale.h"
 
-#define _RUOTA_VERSION_ "v1.4.2-alpha"
-#define RUOTA_EXT_SYM(name, args, token) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token)
-#define RUOTA_LIB_HEADER Hash hash = Hash();
+#define _RUOTA_VERSION_ "v1.4.3-alpha"
+#define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
+#define RUOTA_LIB_HEADER Hash MAIN_HASH = Hash();
 
 #include <vector>
 #include <string>
@@ -37,7 +37,7 @@ struct Hash
 	}
 };
 
-extern Hash hash;
+extern Hash MAIN_HASH;
 
 struct Signature;
 class Token;
@@ -258,33 +258,33 @@ enum NodeType
 inline std::string getTypeString(signed long long i)
 {
 	if (i >= 0)
-		return hash.deHash(i);
+		return MAIN_HASH.deHash(i);
 	else
 	{
-		switch (static_cast<ValueType>(i))
+		switch (i)
 		{
-			case NIL:
-				return "Nil";
-			case NUMBER:
-				return "Number";
-			case STRING:
-				return "String";
-			case BOOLEAN_D:
-				return "Boolean";
-			case VECTOR:
-				return "Vector";
-			case FUNCTION:
-				return "Function";
-			case DICTIONARY:
-				return "Dictionary";
-			case OBJECT:
-				return "Object";
-			case POINTER:
-				return "Pointer";
-			case TYPE_NAME:
-				return "Type";
-			default:
-				return "<error-type>";
+		case NIL:
+			return "Nil";
+		case NUMBER:
+			return "Number";
+		case STRING:
+			return "String";
+		case BOOLEAN_D:
+			return "Boolean";
+		case VECTOR:
+			return "Vector";
+		case FUNCTION:
+			return "Function";
+		case DICTIONARY:
+			return "Dictionary";
+		case OBJECT:
+			return "Object";
+		case POINTER:
+			return "Pointer";
+		case TYPE_NAME:
+			return "Type";
+		default:
+			return "<error-type>";
 		}
 	}
 }

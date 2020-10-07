@@ -289,7 +289,7 @@ class ExternI : public UnaryI
 {
 protected:
 	const std::string id;
-	boost::function<const Symbol(std::vector<Symbol>, const Token *)> f;
+	boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)> f;
 
 public:
 	ExternI(const std::string &, std::shared_ptr<Instruction> a, const Token);

@@ -213,7 +213,7 @@ void IDNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "ID : " << hash.deHash(key) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "ID : " << MAIN_HASH.deHash(key) << "\n"
 			  << colorASCII(RESET_TEXT);
 }
 
@@ -237,7 +237,7 @@ const std::string BIDNode::getKey() const
 
 std::shared_ptr<Instruction> BIDNode::genParser() const
 {
-	return std::make_shared<VariableI>(hash.hashString(key), token);
+	return std::make_shared<VariableI>(MAIN_HASH.hashString(key), token);
 }
 
 bool BIDNode::isConst() const
@@ -304,7 +304,7 @@ void DefineNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? hash.deHash(key) : "<LAMBDA>") << ", " << ftype.values.size() << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? MAIN_HASH.deHash(key) : "<LAMBDA>") << ", " << ftype.values.size() << "\n"
 			  << colorASCII(RESET_TEXT);
 
 	body->printTree(indent, true);
@@ -430,7 +430,7 @@ void ClassNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CLASS : " << hash.deHash(key) << ", " << std::to_string(type) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CLASS : " << MAIN_HASH.deHash(key) << ", " << std::to_string(type) << "\n"
 			  << colorASCII(RESET_TEXT);
 	if (extends != nullptr)
 		extends->printTree(indent, false);
@@ -493,7 +493,7 @@ void VarNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VAR : " << hash.deHash(key) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VAR : " << MAIN_HASH.deHash(key) << "\n"
 			  << colorASCII(RESET_TEXT);
 }
 
@@ -1351,7 +1351,7 @@ void ForNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "FOR : " << hash.deHash(id) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "FOR : " << MAIN_HASH.deHash(id) << "\n"
 			  << colorASCII(RESET_TEXT);
 	fors->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
@@ -1641,7 +1641,7 @@ void TryCatchNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "TRY_CATCH : " << hash.deHash(key) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "TRY_CATCH : " << MAIN_HASH.deHash(key) << "\n"
 			  << colorASCII(RESET_TEXT);
 
 	trys->printTree(indent, false);

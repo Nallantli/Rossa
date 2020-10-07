@@ -17,6 +17,7 @@ extern _input_char in "libstd";
 extern _rand_init in "libstd";
 extern _rand_nextFloat in "libstd";
 extern _rand_nextInt in "libstd";
+extern _rand_close in "libstd";
 extern _system_call in "libstd";
 extern _regex_match in "libstd";
 extern _regex_replace in "libstd";
@@ -313,6 +314,10 @@ static math class {
 	round(ref x : Number) => extern_call libstd._round(x);
 
 	round(ref x : Number, ref place : Number) => (extern_call libstd._round(x * (10 ** place))) / (10 ** place);
+
+	min(ref a : Number, ref b : Number) => (a < b ? a : b);
+
+	max(ref a : Number, ref b : Number) => (a > b ? a : b);
 
 	sin(ref x : Number) => extern_call libstd._sin(x);
 

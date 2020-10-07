@@ -9,6 +9,10 @@ BOOST_PATH_WIN=C:/Program Files/boost
 BOOST_VERSION_WIN=1_73
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
+SDL_PATH_WIN=C:/SDL2/x86_64-w64-mingw32
+SDL_FLAGS_WIN=-I"$(SDL_PATH_WIN)/include" -L"$(SDL_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2
+SDL_FLAGS=-lSDL2
+
 CFLAGS_WIN=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
 CFLAGS=-O3 -lboost_filesystem -lboost_system --std=gnu++17 -ldl
 LFLAGS_WIN=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
@@ -31,9 +35,9 @@ win: bin/ruota.exe plugins-win
 
 nix: bin/ruota plugins-nix
 
-plugins-win: bin/lib/libstd.dll bin/lib/libfs.dll bin/lib/libnet.dll
+plugins-win: bin/lib/libstd.dll bin/lib/libfs.dll bin/lib/libnet.dll bin/lib/libsdl.dll
 
-plugins-nix: bin/lib/libstd.so bin/lib/libfs.so bin/lib/libnet.so
+plugins-nix: bin/lib/libstd.so bin/lib/libfs.so bin/lib/libnet.so bin/lib/libsdl.so
 
 bin/lib/libstd.dll: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.dll src/ext/libstd.cpp $(LFLAGS_WIN)
@@ -44,6 +48,9 @@ bin/lib/libfs.dll: src/ext/libfs.cpp
 bin/lib/libnet.dll: src/ext/libnet.cpp
 	$(CC) -o bin/lib/libnet.dll src/ext/libnet.cpp $(LFLAGS_WIN) $(LIBNET_FLAGS_WIN)
 
+bin/lib/libsdl.dll: src/ext/libsdl.cpp
+	$(CC) -o bin/lib/libsdl.dll src/ext/libsdl.cpp $(LFLAGS_WIN) $(SDL_FLAGS_WIN)
+
 bin/lib/libstd.so: src/ext/libstd.cpp
 	$(CC) -o bin/lib/libstd.so src/ext/libstd.cpp $(LFLAGS)
 
@@ -52,6 +59,9 @@ bin/lib/libfs.so: src/ext/libfs.cpp
 
 bin/lib/libnet.so: src/ext/libnet.cpp
 	$(CC) -o bin/lib/libnet.so src/ext/libnet.cpp $(LFLAGS) $(LIBNET_FLAGS_NIX)
+
+bin/lib/libsdl.so: src/ext/libsdl.cpp
+	$(CC) -o bin/lib/libsdl.so src/ext/libsdl.cpp $(LFLAGS) $(SDL_FLAGS)
 
 bin/ruota.exe: $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(WINDIR)/Token.o $(WINDIR)/Signature.o
 	$(CC) -o bin/ruota.exe $(WINDIR)/Main.o $(WINDIR)/Ruota.o $(WINDIR)/Node.o $(WINDIR)/NodeParser.o $(WINDIR)/Lexer.o $(WINDIR)/Parser.o $(WINDIR)/Scope.o $(WINDIR)/Function.o $(WINDIR)/Object.o $(WINDIR)/Token.o $(WINDIR)/Signature.o $(CFLAGS_WIN)

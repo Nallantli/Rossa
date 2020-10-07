@@ -1,0 +1,92 @@
+load "sdl.ruo";
+
+var x = -0.5;
+var y = 0;
+var scale = 1;
+var width = 64;
+var height = 64;
+
+var windowScale = 10;
+
+var window = new Window("Mandelbrot", width * windowScale, height * windowScale);
+
+var cache = alloc(width).map((e) => alloc(height));
+var buffer = alloc(width).map((e) => alloc(height));
+
+for x in [0 .. width] do {
+	for y in [0 .. height] do {
+		buffer[x][y] = new Shape.Rect(x * windowScale, y * windowScale, windowScale, windowScale, Color.BLACK);
+		cache[x][y] = 0;
+		window.add(buffer[x][y]);
+	}
+}
+
+static mandel class {
+	var precision = 64;
+
+	mandelConverger(ref real : Number, ref imag : Number) => {
+		var zReal = real;
+		var zImag = imag;
+		var r2;
+		var i2;
+		for i in [0 .. precision] do {
+			r2 = zReal * zReal;
+			i2 = zImag * zImag;
+
+			if r2 + i2 > 4 then {
+				return i;
+			}
+
+			zImag = 2.0 * zReal * zImag + imag;
+			zReal = r2 - i2 + real;
+		}
+		return precision;
+	}
+
+	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
+		var dx = (end_x - start_x) / (width - 1);
+		var dy = (end_y - start_y) / (height - 1);
+		for i in [0 .. width] do {
+			for j in [0 .. height] do {
+				var v = mandelConverger(start_x + i * dx, end_y - j * dy);
+				if cache[i][j] != v then {
+					cache[i][j] = v;
+					var value = v / precision;
+					buffer[i][j].setColor(math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255), 255);
+				}
+			}
+		}
+
+		window.update();
+	}
+}
+
+while true do {
+	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
+	var e;
+	while (e = Event.poll()).type != Event.KEY_DOWN do {
+		if (e.type == Event.QUIT) then {
+			exit();
+		}
+	}
+	switch chars(e.keysym.sym) in {
+		"w" do {
+			y += 2 / height * scale;
+		}
+		"s" do {
+			y -= 2 / height * scale;
+		}
+		"a" do {
+			x -= 6 / width * scale;
+		}
+		"d" do {
+			x += 6 / width * scale;
+		}
+		"q" do {
+			scale = math.min(scale * 2, 4);
+		}
+		"e" do {
+			scale /= 2;
+		}
+	}
+}

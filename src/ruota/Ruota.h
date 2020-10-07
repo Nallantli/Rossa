@@ -89,7 +89,7 @@ public:
 class Scope
 {
 private:
-	const std::string name;
+	std::string name;
 	Scope *parent;
 	std::map<hashcode_t, Symbol> values;
 
@@ -103,6 +103,9 @@ public:
 	const Symbol &createVariable(hashcode_t, const Symbol &, const Token *);
 	const std::string &getName() const;
 	bool hasValue(hashcode_t) const;
+
+	Scope(const Scope &);
+	void operator=(const Scope &);
 
 	~Scope();
 };
@@ -351,11 +354,11 @@ public:
 		return d->valueNumber;
 	}
 
-	inline const std::shared_ptr<void> &getPointer(const Token *token) const
+	inline void *getPointer(const Token *token) const
 	{
 		if (d->type != POINTER)
 			throw RuotaError(_NOT_POINTER_, *token);
-		return d->valuePointer;
+		return d->valuePointer.get();
 	}
 
 	inline const std::map<hashcode_t, Symbol> &getDictionary(const Token *token) const
@@ -526,7 +529,7 @@ public:
 			{
 				if (i > 0)
 					ret += ", ";
-				ret += "\"" + hash.deHash(e.first) + "\" : " + e.second.toString(token);
+				ret += "\"" + MAIN_HASH.deHash(e.first) + "\" : " + e.second.toString(token);
 				i++;
 			}
 			return ret + "}";
@@ -556,7 +559,7 @@ public:
 			case POINTER:
 				return "Type::Pointer";
 			default:
-				return "Type::@" + hash.deHash(d->valueType);
+				return "Type::@" + MAIN_HASH.deHash(d->valueType);
 			}
 		}
 		default:
@@ -575,7 +578,7 @@ public:
 		case NUMBER:
 		{
 			std::string ret = "Symbol(NUMBER_NEW_";
-			if (d->valueNumber.getType() == CNumber::DOUBLE_NUM)
+			if (d->valueNumber.type == CNumber::DOUBLE_NUM)
 				ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")";
 			else
 				ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")";
@@ -687,7 +690,6 @@ public:
 			auto v = b->d->valueDictionary;
 			for (auto &e : v)
 			{
-
 				if (e.second.d->type == NIL)
 					continue;
 				auto newd = Symbol();

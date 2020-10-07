@@ -36,7 +36,7 @@ std::unique_ptr<Node> NodeParser::parseBoolNode()
 
 std::unique_ptr<Node> NodeParser::parseIDNode()
 {
-	auto n = std::make_unique<IDNode>(hash.hashString(currentToken.getValueString()), currentToken);
+	auto n = std::make_unique<IDNode>(MAIN_HASH.hashString(currentToken.getValueString()), currentToken);
 	nextToken();
 	return n;
 }
@@ -99,7 +99,7 @@ std::unique_ptr<Node> NodeParser::parseCallBuiltNode()
 	auto marker = currentToken;
 	nextToken();
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != '(')
-		return std::make_unique<IDNode>(hash.hashString(temp), marker);
+		return std::make_unique<IDNode>(MAIN_HASH.hashString(temp), marker);
 	nextToken();
 	auto arg = parseEquNode();
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != ')')
@@ -286,7 +286,7 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 			nextToken();
 		}
 
-		args.push_back({static_cast<LexerTokenType>(type), hash.hashString(arg)});
+		args.push_back({static_cast<LexerTokenType>(type), MAIN_HASH.hashString(arg)});
 		types.push_back(ftype);
 
 		if (currentToken.getType() == NULL_TOK)
@@ -347,7 +347,7 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
-	auto key = hash.hashString(currentToken.getValueString());
+	auto key = MAIN_HASH.hashString(currentToken.getValueString());
 	nextToken();
 
 	auto sig = parseSigNode(ftype);
@@ -519,7 +519,7 @@ std::unique_ptr<Node> NodeParser::parseTypeNode()
 		typestr += ".";
 		nextToken();
 	}
-	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(hash.hashString(typestr))), currentToken);
+	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(MAIN_HASH.hashString(typestr))), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a, bool inclusive)
@@ -608,7 +608,7 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 		return parseIDNode();
 	case TOK_VAR:
 		nextToken();
-		ret = std::make_unique<VarNode>(hash.hashString(currentToken.getValueString()), currentToken);
+		ret = std::make_unique<VarNode>(MAIN_HASH.hashString(currentToken.getValueString()), currentToken);
 		nextToken();
 		return ret;
 	case TOK_STR_LIT:
@@ -740,7 +740,7 @@ std::unique_ptr<Node> NodeParser::parseMapNode()
 		nextToken();
 		if (auto b = parseEquNode())
 		{
-			std::pair<hashcode_t, std::unique_ptr<Node>> p = {hash.hashString(key), std::move(b)};
+			std::pair<hashcode_t, std::unique_ptr<Node>> p = {MAIN_HASH.hashString(key), std::move(b)};
 			args.push_back(std::move(p));
 		}
 		else
@@ -1046,7 +1046,7 @@ std::unique_ptr<Node> NodeParser::parseTryCatchNode()
 
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_IDF)
 		return logErrorN(_EXPECTED_IDF_, currentToken);
-	hashcode_t key = hash.hashString(currentToken.getValueString());
+	hashcode_t key = MAIN_HASH.hashString(currentToken.getValueString());
 	nextToken();
 
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_THEN)
@@ -1112,7 +1112,7 @@ std::unique_ptr<Node> NodeParser::parseForNode()
 {
 
 	nextToken();
-	auto id = hash.hashString(currentToken.getValueString());
+	auto id = MAIN_HASH.hashString(currentToken.getValueString());
 	nextToken();
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_IN)
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "in").str(), currentToken);
@@ -1172,7 +1172,7 @@ std::unique_ptr<Node> NodeParser::parseClassNode()
 
 	auto type = currentToken.getType();
 	nextToken();
-	auto key = hash.hashString(currentToken.getValueString());
+	auto key = MAIN_HASH.hashString(currentToken.getValueString());
 	nextToken();
 	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_CLASS)
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "class").str(), currentToken);

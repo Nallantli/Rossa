@@ -70,10 +70,8 @@ const Symbol DefineI::evaluate(Scope *scope) const
 	if (key > 0)
 	{
 		auto d = Symbol(ftype, f);
-		scope->createVariable(key, d, &token);
-		return d;
+		return scope->createVariable(key, d, &token);
 	}
-
 	return Symbol(ftype, f);
 }
 
@@ -128,16 +126,19 @@ WhileI::WhileI(std::shared_ptr<Instruction> whiles, std::shared_ptr<Instruction>
 
 const Symbol WhileI::evaluate(Scope *scope) const
 {
+	Scope newScope(scope, "");
 	while (whiles->evaluate(scope).getBool(&token))
 	{
-		Scope newScope(scope, "");
 		auto temp = body->evaluate(&newScope);
-		switch (temp.getSymbolType()){
-			case ID_REFER:
-			case ID_RETURN:
-				return temp;
-			case ID_BREAK:
-				return Symbol();
+		switch (temp.getSymbolType())
+		{
+		case ID_REFER:
+		case ID_RETURN:
+			return temp;
+		case ID_BREAK:
+			return Symbol();
+		default:
+			newScope.clear();
 		}
 	}
 	return Symbol();
@@ -152,17 +153,20 @@ ForI::ForI(hashcode_t id, std::shared_ptr<Instruction> fors, std::shared_ptr<Ins
 const Symbol ForI::evaluate(Scope *scope) const
 {
 	auto evalFor = fors->evaluate(scope).getVector(&token);
+	Scope newScope(scope, "");
 	for (auto &e : evalFor)
 	{
-		Scope newScope(scope, "");
 		newScope.createVariable(id, e, &token);
 		auto temp = body->evaluate(&newScope);
-		switch (temp.getSymbolType()){
-			case ID_REFER:
-			case ID_RETURN:
-				return temp;
-			case ID_BREAK:
-				return Symbol();
+		switch (temp.getSymbolType())
+		{
+		case ID_REFER:
+		case ID_RETURN:
+			return temp;
+		case ID_BREAK:
+			return Symbol();
+		default:
+			newScope.clear();
 		}
 	}
 	return Symbol();
@@ -189,8 +193,7 @@ DeclareI::DeclareI(hashcode_t key, const Token token) : CastingI(DECLARE, key, t
 
 const Symbol DeclareI::evaluate(Scope *scope) const
 {
-	auto d = scope->createVariable(key, &token);
-	return d;
+	return scope->createVariable(key, &token);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -206,7 +209,9 @@ const Symbol IndexI::evaluate(Scope *scope) const
 	switch (evalA.getValueType())
 	{
 	case DICTIONARY:
-		return evalA.indexDict(hash.hashString(evalB.getString(&token)));
+		if (evalB.getValueType() == NUMBER)
+			return evalA.indexDict(MAIN_HASH.hashString(evalB.toString(&token)));
+		return evalA.indexDict(MAIN_HASH.hashString(evalB.getString(&token)));
 	case VECTOR:
 		return evalA.indexVector(evalB.getNumber(&token).getLong(), &token);
 	case OBJECT:
@@ -215,8 +220,9 @@ const Symbol IndexI::evaluate(Scope *scope) const
 		if (o->hasValue(Ruota::HASH_INDEX))
 			return o->getScope()->getVariable(Ruota::HASH_INDEX, &token).call({evalB}, &evalA, &token);
 	}
+	default:
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "[]").str(), token);
 	}
-	throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "[]").str(), token);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -232,7 +238,7 @@ const Symbol InnerI::evaluate(Scope *scope) const
 	{
 	case DICTIONARY:
 		if (b->getType() == VARIABLE)
-			evalA.indexDict(hash.hashString(b->evaluate(scope).getString(&token)));
+			return evalA.indexDict(((VariableI *)b.get())->getKey());
 		throw RuotaError(_CANNOT_ENTER_DICTIONARY_, token);
 	case OBJECT:
 	{
@@ -244,7 +250,6 @@ const Symbol InnerI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError(_CANNOT_INDEX_VALUE_, token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -378,7 +383,6 @@ const Symbol AddI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "+").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -429,7 +433,6 @@ const Symbol SubI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "-").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -457,7 +460,6 @@ const Symbol MulI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "*").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -485,7 +487,6 @@ const Symbol DivI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "/").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -513,7 +514,6 @@ const Symbol ModI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "%").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -543,7 +543,6 @@ const Symbol PowI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "**").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -573,10 +572,9 @@ const Symbol LessI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_LESS))
 			return o->getScope()->getVariable(Ruota::HASH_LESS, &token).call({evalB}, &evalA, &token).getBool(&token);
-		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<").str(), token);
 	}
 	default:
-		return evalA.toString(&token) < evalB.toString(&token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<").str(), token);
 	}
 }
 
@@ -607,10 +605,9 @@ const Symbol MoreI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_MORE))
 			return o->getScope()->getVariable(Ruota::HASH_MORE, &token).call({evalB}, &evalA, &token).getBool(&token);
-		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">").str(), token);
 	}
 	default:
-		return evalA.toString(&token) > evalB.toString(&token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">").str(), token);
 	}
 }
 
@@ -641,10 +638,9 @@ const Symbol ELessI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_ELESS))
 			return o->getScope()->getVariable(Ruota::HASH_ELESS, &token).call({evalB}, &evalA, &token).getBool(&token);
-		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<=").str(), token);
 	}
 	default:
-		return evalA.toString(&token) <= evalB.toString(&token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<=").str(), token);
 	}
 }
 
@@ -678,7 +674,7 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">=").str(), token);
 	}
 	default:
-		return evalA.toString(&token) >= evalB.toString(&token);
+		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">=").str(), token);
 	}
 }
 
@@ -767,7 +763,6 @@ const Symbol BOrI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "|").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -795,7 +790,6 @@ const Symbol BXOrI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "^").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -818,14 +812,11 @@ const Symbol BAndI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_AND))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_B_AND, &token).call({evalB}, &evalA, &token);
-		}
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "&").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -853,7 +844,6 @@ const Symbol BShiftLeftI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<<").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -881,7 +871,6 @@ const Symbol BShiftRightI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">>").str(), token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -925,7 +914,7 @@ ExternI::ExternI(const std::string &id, std::shared_ptr<Instruction> a, const To
 
 const Symbol ExternI::evaluate(Scope *scope) const
 {
-	return f(a->evaluate(scope).getVector(&token), &token);
+	return f(a->evaluate(scope).getVector(&token), &token, MAIN_HASH);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -966,7 +955,6 @@ const Symbol LengthI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError(_FAILURE_LENGTH_, token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -989,7 +977,6 @@ const Symbol SizeI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError(_FAILURE_SIZE_, token);
 	}
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1013,7 +1000,7 @@ const Symbol ClassI::evaluate(Scope *scope) const
 		temp.push_back(eb);
 		nbody = std::make_shared<ScopeI>(temp, token);
 	}
-	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, nbody, hash.deHash(key));
+	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, nbody, MAIN_HASH.deHash(key));
 	if (type == STATIC_O)
 		body->evaluate(o->getScope());
 	auto d = Symbol(o);
@@ -1112,7 +1099,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 			auto v = evalA.getVector(&token);
 			std::map<hashcode_t, Symbol> nd;
 			for (size_t i = 0; i < v.size(); i++)
-				nd[hash.hashString(std::to_string(i))] = v[i];
+				nd[MAIN_HASH.hashString(std::to_string(i))] = v[i];
 			return Symbol(nd);
 		}
 		case OBJECT:
@@ -1135,7 +1122,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 			auto dict = evalA.getDictionary(&token);
 			std::vector<Symbol> nv;
 			for (auto &e : dict)
-				nv.push_back(Symbol({{Ruota::HASH_KEY, Symbol(hash.deHash(e.first))}, {Ruota::HASH_VALUE, e.second}}));
+				nv.push_back(Symbol({{Ruota::HASH_KEY, Symbol(MAIN_HASH.deHash(e.first))}, {Ruota::HASH_VALUE, e.second}}));
 			return Symbol(nv);
 		}
 		case OBJECT:
@@ -1195,7 +1182,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		if (a != OBJECT)
 			return Symbol(static_cast<signed long long>(a));
 		else
-			return Symbol(static_cast<signed long long>(hash.hashString(evalA.getObject(&token)->getName())));
+			return Symbol(static_cast<signed long long>(MAIN_HASH.hashString(evalA.getObject(&token)->getName())));
 	}
 	case NIL:
 		return Symbol();
@@ -1203,7 +1190,6 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		break;
 	}
 	throw RuotaError(_FAILURE_CONVERT_, token);
-	return Symbol();
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1234,12 +1220,12 @@ const Symbol UntilI::evaluate(Scope *scope) const
 	std::vector<Symbol> nv;
 	if (inclusive)
 	{
-		for (evalA; evalA <= evalB; evalA = evalA + evalStep)
+		for (evalA; evalA <= evalB; evalA += evalStep)
 			nv.push_back(Symbol(evalA));
 	}
 	else
 	{
-		for (evalA; evalA < evalB; evalA = evalA + evalStep)
+		for (evalA; evalA < evalB; evalA += evalStep)
 			nv.push_back(Symbol(evalA));
 	}
 	return Symbol(nv);
@@ -1415,5 +1401,4 @@ const Symbol CharSI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError(_FAILURE_TO_STR_, token);
 	}
-	return Symbol();
 }

@@ -122,7 +122,7 @@ void printError(const RuotaError &e)
 		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
 		if (f.getParent()->getName() != "")
 			std::cout << f.getParent()->getName() << ".";
-		std::cout << hash.deHash(f.getKey()) << "(\033[0m";
+		std::cout << MAIN_HASH.deHash(f.getKey()) << "(\033[0m";
 		size_t i = 0;
 		for (auto &p : f.getParams())
 		{
@@ -137,7 +137,7 @@ void printError(const RuotaError &e)
 			default:
 				break;
 			}
-			std::cout << hash.deHash(p.second);
+			std::cout << MAIN_HASH.deHash(p.second);
 		}
 		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m)\033[0m\n";
 		Ruota::stack_trace.pop_back();
