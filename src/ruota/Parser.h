@@ -278,6 +278,13 @@ public:
 	const Symbol evaluate(Scope *) const override;
 };
 
+class ConstSetI : public BinaryI
+{
+public:
+	ConstSetI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
+	const Symbol evaluate(Scope *) const override;
+};
+
 class ReturnI : public UnaryI
 {
 public:

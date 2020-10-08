@@ -139,6 +139,23 @@ int Lexer::getToken()
 	}
 	else if (isdigit(last) || (last == '.' && isdigit(peekChar(0))))
 	{
+		if (last == '0' && (peekChar(0) == 'x' || peekChar(0) == 'X')) {
+			last = nextChar();
+			std::string t = std::string(1, last);
+			std::string numStr = "";
+			while (isalnum(peekChar(0))) {
+				last = nextChar();
+				numStr += last;
+			}
+			ID_STRING = "0" + t + numStr;
+			unsigned int x;
+			std::stringstream ss;
+			ss << std::hex << numStr;
+			ss >> x;
+			NUM_VALUE = CNumber::Long(x);
+			return TOK_NUM;
+		}
+
 		std::string numStr = std::string(1, last);
 		bool flag = false;
 		while (isdigit(peekChar(0)) || (peekChar(0) == '.' && isdigit(peekChar(1))))

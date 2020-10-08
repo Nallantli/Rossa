@@ -32,7 +32,6 @@ There will be no downloadable binaries during the alpha stage - however everythi
 ```sh
 git clone https://github.com/Nallantli/Ruota
 cd Ruota
-make dirs
 make
 ```
 

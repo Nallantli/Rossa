@@ -20,14 +20,14 @@ namespace libfs
 
 	RUOTA_EXT_SYM(_writer_close, args, token, hash)
 	{
-		auto fstr = (std::ofstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ofstream *>(args[0].getPointer(token));
 		fstr->close();
 		return Symbol();
 	}
 
 	RUOTA_EXT_SYM(_writer_isOpen, args, token, hash)
 	{
-		auto fstr = (std::ofstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ofstream *>(args[0].getPointer(token));
 		return Symbol(fstr->is_open());
 	}
 
@@ -44,20 +44,20 @@ namespace libfs
 
 	RUOTA_EXT_SYM(_reader_close, args, token, hash)
 	{
-		auto fstr = (std::ifstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ifstream *>(args[0].getPointer(token));
 		fstr->close();
 		return Symbol();
 	}
 
 	RUOTA_EXT_SYM(_reader_isOpen, args, token, hash)
 	{
-		auto fstr = (std::ifstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ifstream *>(args[0].getPointer(token));
 		return Symbol(fstr->is_open());
 	}
 
 	RUOTA_EXT_SYM(_reader_readLine, args, token, hash)
 	{
-		auto fstr = (std::ifstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ifstream *>(args[0].getPointer(token));
 		std::string line;
 		if (std::getline(*fstr, line))
 			return Symbol(line);
@@ -66,7 +66,7 @@ namespace libfs
 
 	RUOTA_EXT_SYM(_reader_read, args, token, hash)
 	{
-		auto fstr = (std::ifstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ifstream *>(args[0].getPointer(token));
 		std::string line = "";
 		char c;
 		for (size_t i = 0; i < args[1].getNumber(token).getLong(); i++)
@@ -81,7 +81,7 @@ namespace libfs
 
 	RUOTA_EXT_SYM(_writer_write, args, token, hash)
 	{
-		auto fstr = (std::ofstream *)args[0].getPointer(token);
+		auto fstr = reinterpret_cast<std::ofstream *>(args[0].getPointer(token));
 		*fstr << args[1].getString(token);
 		return Symbol();
 	}
@@ -95,39 +95,39 @@ namespace libfs
 
 	RUOTA_EXT_SYM(_path_filename, args, token, hash)
 	{
-		auto path = (boost::filesystem::path *)args[0].getPointer(token);
+		auto path = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
 		return Symbol(path->filename().string());
 	}
 
 	RUOTA_EXT_SYM(_path_string, args, token, hash)
 	{
-		auto path = (boost::filesystem::path *)args[0].getPointer(token);
+		auto path = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
 		return Symbol(boost::filesystem::weakly_canonical(*path).string());
 	}
 
 	RUOTA_EXT_SYM(_path_mkdirs, args, token, hash)
 	{
-		auto path = (boost::filesystem::path *)args[0].getPointer(token);
+		auto path = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
 		boost::filesystem::create_directories(*path);
 		return Symbol();
 	}
 
 	RUOTA_EXT_SYM(_path_exists, args, token, hash)
 	{
-		auto path = (boost::filesystem::path *)args[0].getPointer(token);
+		auto path = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
 		return Symbol(boost::filesystem::exists(path->string()));
 	}
 
 	RUOTA_EXT_SYM(_path_append_path, args, token, hash)
 	{
-		auto path1 = (boost::filesystem::path *)args[0].getPointer(token);
-		auto path2 = (boost::filesystem::path *)args[1].getPointer(token);
+		auto path1 = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
+		auto path2 = reinterpret_cast<boost::filesystem::path *>(args[1].getPointer(token));
 		return Symbol((*path1 / *path2).string());
 	}
 
 	RUOTA_EXT_SYM(_path_append_string, args, token, hash)
 	{
-		auto path1 = (boost::filesystem::path *)args[0].getPointer(token);
+		auto path1 = reinterpret_cast<boost::filesystem::path *>(args[0].getPointer(token));
 		auto path2 = args[1].getString(token);
 		return Symbol((*path1 / path2).string());
 	}

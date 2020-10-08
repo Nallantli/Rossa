@@ -357,11 +357,11 @@ class SwitchNode : public Node
 {
 private:
 	std::unique_ptr<Node> switchs;
-	std::map<Symbol, std::unique_ptr<Node>> cases;
+	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> cases;
 	std::unique_ptr<Node> elses;
 
 public:
-	SwitchNode(std::unique_ptr<Node>, std::map<Symbol, std::unique_ptr<Node>>, const Token);
+	SwitchNode(std::unique_ptr<Node>, std::map<std::unique_ptr<Node>, std::unique_ptr<Node>>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	void setElse(std::unique_ptr<Node>);
 	bool isConst() const override;

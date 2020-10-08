@@ -238,7 +238,7 @@ const Symbol InnerI::evaluate(Scope *scope) const
 	{
 	case DICTIONARY:
 		if (b->getType() == VARIABLE)
-			return evalA.indexDict(((VariableI *)b.get())->getKey());
+			return evalA.indexDict(reinterpret_cast<VariableI *>(b.get())->getKey());
 		throw RuotaError(_CANNOT_ENTER_DICTIONARY_, token);
 	case OBJECT:
 	{
@@ -265,15 +265,15 @@ const Symbol CallI::evaluate(Scope *scope) const
 	{
 	case INNER:
 	{
-		auto evalA = ((InnerI *)a.get())->getA()->evaluate(scope);
+		auto evalA = reinterpret_cast<InnerI *>(a.get())->getA()->evaluate(scope);
 		switch (evalA.getValueType())
 		{
 		case OBJECT:
 		{
-			auto bb = ((InnerI *)a.get())->getB();
-			if (bb->getType() == VARIABLE && evalA.getObject(&token)->hasValue(((VariableI *)bb.get())->getKey()))
+			auto bb = reinterpret_cast<InnerI *>(a.get())->getB();
+			if (bb->getType() == VARIABLE && evalA.getObject(&token)->hasValue(reinterpret_cast<VariableI *>(bb.get())->getKey()))
 			{
-				auto evalB = ((InnerI *)a.get())->getB()->evaluate(evalA.getObject(&token)->getScope());
+				auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(&token)->getScope());
 
 				if (evalB.getValueType() == OBJECT)
 				{
@@ -290,8 +290,8 @@ const Symbol CallI::evaluate(Scope *scope) const
 		}
 		case DICTIONARY:
 		{
-			auto bb = ((InnerI *)a.get())->getB();
-			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(((VariableI *)bb.get())->getKey()))
+			auto bb = reinterpret_cast<InnerI *>(a.get())->getB();
+			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(reinterpret_cast<VariableI *>(bb.get())->getKey()))
 			{
 				auto evalB = a->evaluate(scope);
 
@@ -310,7 +310,7 @@ const Symbol CallI::evaluate(Scope *scope) const
 		}
 		}
 
-		auto evalB = ((InnerI *)a.get())->getB()->evaluate(scope);
+		auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope);
 		std::vector<Symbol> params;
 		params.push_back(evalA);
 		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
@@ -376,9 +376,7 @@ const Symbol AddI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_ADD))
-		{
 			return o->getScope()->getVariable(Ruota::HASH_ADD, &token).call({evalB}, &evalA, &token);
-		}
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "+").str(), token);
@@ -883,7 +881,21 @@ const Symbol SetI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	evalA.set(&evalB, &token);
+	evalA.set(&evalB, &token, false);
+	return evalA;
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ConstSetI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ConstSetI::ConstSetI(std::shared_ptr<Instruction> a, std::shared_ptr<Instruction> b, const Token token) : BinaryI(SET, a, b, token) {}
+
+const Symbol ConstSetI::evaluate(Scope *scope) const
+{
+	auto evalA = a->evaluate(scope);
+	auto evalB = b->evaluate(scope);
+	evalA.set(&evalB, &token, true);
 	return evalA;
 }
 
@@ -934,7 +946,7 @@ const Symbol LengthI::evaluate(Scope *scope) const
 		int c, i, ix, q;
 		for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
 		{
-			c = (unsigned char)str[i];
+			c = static_cast<unsigned char>(str[i]);
 			if (c >= 0 && c <= 127)
 				i += 0;
 			else if ((c & 0xE0) == 0xC0)
@@ -1140,7 +1152,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 			int c, i, ix, q, s;
 			for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++)
 			{
-				c = (unsigned char)str[i];
+				c = static_cast<unsigned char>(str[i]);
 				if (c >= 0 && c <= 127)
 				{
 					i += 0;

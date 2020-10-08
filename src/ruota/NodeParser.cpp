@@ -17,7 +17,6 @@ void NodeParser::nextToken()
 		currentToken = this->tokens.at(index++);
 	else
 		currentToken = Token();
-	//return currentToken;
 }
 
 std::unique_ptr<Node> NodeParser::parseNumNode()
@@ -94,7 +93,7 @@ std::unique_ptr<Node> NodeParser::parseTrailingNode(std::unique_ptr<Node> ret, b
 
 std::unique_ptr<Node> NodeParser::parseCallBuiltNode()
 {
-	LexerTokenType t = (LexerTokenType)currentToken.getType();
+	LexerTokenType t = static_cast<LexerTokenType>(currentToken.getType());
 	std::string temp = currentToken.getValueString();
 	auto marker = currentToken;
 	nextToken();
@@ -137,11 +136,11 @@ std::unique_ptr<Node> NodeParser::parseCallNode(std::unique_ptr<Node> a)
 	std::unique_ptr<Node> ret;
 	if (a->getType() == INS_NODE)
 	{
-		auto a_a = ((InsNode *)a.get())->getCallee();
-		auto a_b = ((InsNode *)a.get())->getArg();
+		auto a_a = reinterpret_cast<InsNode *>(a.get())->getCallee();
+		auto a_b = reinterpret_cast<InsNode *>(a.get())->getArg();
 		if (a_b->getType() == BID_NODE)
 		{
-			auto nkey = (BIDNode *)a_b.get();
+			auto nkey = reinterpret_cast<BIDNode *>(a_b.get());
 			std::string key = nkey->getKey();
 			/*if (!args.empty())
 				return logErrorN("Built in functions take a single argument", currentToken);*/
@@ -398,8 +397,8 @@ std::unique_ptr<Node> NodeParser::parseNewNode()
 	auto body = parseUnitNode();
 	if (body->getType() != CALL_NODE)
 		return logErrorN(_EXPECTED_OBJECT_NAME_, currentToken);
-	auto object = ((CallNode *)body.get())->getCallee();
-	auto params = std::make_unique<VectorNode>(std::move(((CallNode *)body.get())->getArgs()), false, currentToken);
+	auto object = reinterpret_cast<CallNode *>(body.get())->getCallee();
+	auto params = std::make_unique<VectorNode>(std::move(reinterpret_cast<CallNode *>(body.get())->getArgs()), false, currentToken);
 
 	return std::make_unique<NewNode>(std::move(object), std::move(params), currentToken);
 }
@@ -571,9 +570,9 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 			else
 			{
 				auto oldToken = current->getToken();
-				auto oldOp = ((BinOpNode *)current.get())->getOp();
-				auto current_a = ((BinOpNode *)current.get())->getA();
-				auto current_b = ((BinOpNode *)current.get())->getB();
+				auto oldOp = reinterpret_cast<BinOpNode *>(current.get())->getOp();
+				auto current_a = reinterpret_cast<BinOpNode *>(current.get())->getA();
+				auto current_b = reinterpret_cast<BinOpNode *>(current.get())->getB();
 				current = std::make_unique<BinOpNode>(
 					oldOp,
 					std::move(current_a),
@@ -755,7 +754,7 @@ std::unique_ptr<Node> NodeParser::parseMapNode()
 std::unique_ptr<Node> NodeParser::parseSwitchNode()
 {
 	nextToken();
-	std::map<Symbol, std::unique_ptr<Node>> cases;
+	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> cases;
 	auto switchs = parseEquNode();
 	if (!switchs)
 		return logErrorN((boost::format(_EXPECTED_AFTER_) % "switch").str(), currentToken);
@@ -771,12 +770,6 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 		auto c = parseUnitNode();
 		if (!c)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
-		if (!c->isConst())
-			return logErrorN(_MUST_BE_CONST_, currentToken);
-
-		auto i = c->genParser();
-		Scope scope;
-		auto value = i->evaluate(&scope);
 
 		if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_DO)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "do").str(), currentToken);
@@ -799,7 +792,7 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 		nextToken();
 
-		cases[value] = std::make_unique<VectorNode>(std::move(body), true, currentToken);
+		cases[std::move(c)] = std::make_unique<VectorNode>(std::move(body), true, currentToken);
 
 		if (currentToken.getType() == NULL_TOK)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);

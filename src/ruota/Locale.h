@@ -64,7 +64,7 @@
 #endif
 
 #ifdef _LOCALE_ITA_
-#define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\Diritto d'autore 2020 - BSD 3-Clause Licenza\nAutori:\n * Benjamin Park / parkbenjamin2@gmail.com"
+#define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\nDiritto d'autore 2020 - BSD 3-Clause Licenza\nAutori:\n * Benjamin Park / parkbenjamin2@gmail.com"
 #define _RUOTA_INTERPRETER_START_ "Ruota " _RUOTA_VERSION_ " Interprete"
 #define _STANDARD_LIBRARY_LOADED_ "Libreria Standard è Caricata"
 #define _STANDARD_LIBRARY_LOAD_FAIL_ "Caricamento di Libreria Standard è Bocciato: "

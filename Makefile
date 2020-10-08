@@ -5,11 +5,11 @@ CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_
 WINDIR=build\\win\\$(locale)
 NIXDIR=build/nix/$(locale)
 
-BOOST_PATH_WIN=C:/Program Files/boost
+BOOST_PATH_WIN=C:\\boost
 BOOST_VERSION_WIN=1_73
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
-SDL_PATH_WIN=C:/SDL2/x86_64-w64-mingw32
+SDL_PATH_WIN=C:\\SDL2\\x86_64-w64-mingw32
 SDL_FLAGS_WIN=-I"$(SDL_PATH_WIN)/include" -L"$(SDL_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2
 SDL_FLAGS=-lSDL2
 
@@ -22,13 +22,35 @@ LIBNET_FLAGS_WIN=-lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
 LIBNET_FLAGS_NIX=-lboost_system
 
 ifeq ($(OS),Windows_NT)
-all: win
-dirs:
-	mkdir $(WINDIR)
+
+dir_target = $(WINDIR)-$(wildcard $(WINDIR))
+dir_present = $(WINDIR)-$(WINDIR)
+dir_absent = $(WINDIR)-
+
+all: | $(dir_target)
+
+$(dir_present): win
+
+$(dir_absent): $(WINDIR) win
+
+$(WINDIR):
+	mkdir $@
+
 else
-all: nix
-dirs:
-	mkdir -p $(NIXDIR)
+
+dir_target = $(NIXDIR)-$(wildcard $(NIXDIR))
+dir_present = $(NIXDIR)-$(NIXDIR)
+dir_absent = $(NIXDIR)-
+
+all: | $(dir_target)
+
+$(dir_present): nix
+
+$(dir_absent): $(NIXDIR) nix
+
+$(NIXDIR):
+	mkdir -p $@
+
 endif
 
 win: bin/ruota.exe plugins-win

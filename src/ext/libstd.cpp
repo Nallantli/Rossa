@@ -72,7 +72,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_sleep, args, token, hash)
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds((long long)args[0].getNumber(token).getLong()));
+		std::this_thread::sleep_for(std::chrono::milliseconds(args[0].getNumber(token).getLong()));
 		return Symbol();
 	}
 

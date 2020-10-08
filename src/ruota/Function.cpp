@@ -20,7 +20,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 		default:
 		{
 			auto temp = newScope.createVariable(params[i].second, token);
-			temp.set(&paramValues[i], token);
+			temp.set(&paramValues[i], token, false);
 			break;
 		}
 		}
@@ -40,7 +40,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 	}
 
 	auto ret = Symbol();
-	ret.set(&temp, token);
+	ret.set(&temp, token, false);
 	return ret;
 }
 

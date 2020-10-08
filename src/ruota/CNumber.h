@@ -6,7 +6,7 @@
 #include <sstream>
 
 typedef double long_double_t;
-typedef long long_int_t;
+typedef long long int long_int_t;
 class CNumber
 {
 private:

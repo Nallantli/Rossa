@@ -905,9 +905,6 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == ">>=")
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token), token);
 
-	if (op == "=")
-		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
-
 	if (op == "<")
 		return std::make_shared<LessI>(a->genParser(), b->genParser(), token);
 	if (op == ">")
@@ -929,8 +926,14 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "||")
 		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
+	if (op == "=")
+	{
+		if (b->isConst())
+			return std::make_shared<ConstSetI>(a->genParser(), b->genParser(), token);
+		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
+	}
+
 	throw RuotaError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);
-	return nullptr;
 }
 
 const std::string &BinOpNode::getOp() const
@@ -1521,7 +1524,7 @@ std::unique_ptr<Node> MapNode::fold() const
 
 SwitchNode::SwitchNode(
 	std::unique_ptr<Node> switchs,
-	std::map<Symbol, std::unique_ptr<Node>> cases,
+	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> cases,
 	const Token token) : Node(SWITCH_NODE,
 							  token),
 						 switchs(std::move(switchs)),
@@ -1532,7 +1535,11 @@ std::shared_ptr<Instruction> SwitchNode::genParser() const
 	std::map<Symbol, std::shared_ptr<Instruction>> is;
 	for (auto &e : this->cases)
 	{
-		is[e.first] = e.second->genParser();
+		if (!e.first->isConst())
+			throw RuotaError(_MUST_BE_CONST_, token);
+		Scope temp;
+		auto key = e.first->genParser()->evaluate(&temp);
+		is[key] = e.second->genParser();
 	}
 	if (elses)
 		return std::make_shared<SwitchI>(switchs->genParser(), is, elses->genParser(), token);
@@ -1586,19 +1593,12 @@ std::unique_ptr<Node> SwitchNode::fold() const
 		return nn;
 	}
 
-	std::map<Symbol, std::unique_ptr<Node>> ncases;
+	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> ncases;
 	for (auto &c : cases)
 	{
-		if (c.second->isConst())
-		{
-			auto i = c.second->genParser();
-			Scope scope;
-			ncases[c.first] = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-		}
-		else
-		{
-			ncases[c.first] = c.second->fold();
-		}
+		auto key = c.first->fold();
+		auto value = c.second->fold();
+		ncases[std::move(key)] = std::move(value);
 	}
 	auto ret = std::make_unique<SwitchNode>(switchs->fold(), std::move(ncases), token);
 	if (elses)

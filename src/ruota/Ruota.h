@@ -646,7 +646,7 @@ public:
 				d->valueFunction[f.first][t.first] = t.second;
 	}
 
-	inline void set(const Symbol *b, const Token *token) const
+	inline void set(const Symbol *b, const Token *token, const bool &isConst) const
 	{
 		if (b->d == d)
 			return;
@@ -680,26 +680,35 @@ public:
 		case VECTOR:
 		{
 			auto v = b->d->valueVector;
+			if (isConst) {
+				d->valueVector = v;
+				break;
+			}
 			d->valueVector.resize(v.size());
 			for (size_t i = 0; i < v.size(); i++)
-				d->valueVector[i].set(&v[i], token);
+				d->valueVector[i].set(&v[i], token, isConst);
 			break;
 		}
 		case DICTIONARY:
 		{
 			auto v = b->d->valueDictionary;
+			if (isConst) {
+				d->valueDictionary = v;
+				break;
+			}
 			for (auto &e : v)
 			{
 				if (e.second.d->type == NIL)
 					continue;
 				auto newd = Symbol();
-				newd.set(&e.second, token);
+				newd.set(&e.second, token, isConst);
 				d->valueDictionary[e.first] = newd;
 			}
 			break;
 		}
 		case TYPE_NAME:
 			d->valueType = b->d->valueType;
+			break;
 		default:
 			break;
 		}
