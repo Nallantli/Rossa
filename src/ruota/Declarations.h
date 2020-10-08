@@ -3,7 +3,7 @@
 
 #include "Locale.h"
 
-#define _RUOTA_VERSION_ "v1.4.4-alpha"
+#define _RUOTA_VERSION_ "v1.5.0-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
 #define RUOTA_LIB_HEADER Hash MAIN_HASH = Hash();
 

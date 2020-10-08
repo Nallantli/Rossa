@@ -1182,7 +1182,7 @@ std::unique_ptr<Node> NodeParser::parseExternNode()
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
 	nextToken();
 
-	rlib::loadFunction(currentFile.parent_path(), libname, fname);
+	rlib::loadFunction(currentFile.parent_path(), libname, fname, &currentToken);
 	return std::make_unique<ContainerNode>(Symbol(), currentToken);
 }
 
@@ -1232,7 +1232,7 @@ std::unique_ptr<Node> NodeParser::parseLoadNode()
 	std::string filename = currentToken.getValueString();
 	nextToken();
 
-	auto path = rdir::findFile(currentFile.parent_path(), filename);
+	auto path = rdir::findFile(currentFile.parent_path(), filename, &currentToken);
 
 	if (std::find(rdir::loaded.begin(), rdir::loaded.end(), path) != rdir::loaded.end())
 	{

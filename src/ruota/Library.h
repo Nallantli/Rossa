@@ -10,7 +10,7 @@ namespace rdir
 {
 	extern std::vector<boost::filesystem::path> loaded;
 
-	inline boost::filesystem::path findFile(boost::filesystem::path currentDir, const std::string &filename)
+	inline boost::filesystem::path findFile(boost::filesystem::path currentDir, const std::string &filename, const Token * token)
 	{
 		auto currentDirCheck = currentDir / filename;
 		if (boost::filesystem::exists(currentDirCheck))
@@ -18,7 +18,7 @@ namespace rdir
 		auto libDirCheck = boost::dll::program_location().parent_path() / "lib" / filename;
 		if (boost::filesystem::exists(libDirCheck))
 			return libDirCheck;
-		throw std::runtime_error("File `" + filename + "` cannot be found");
+		throw RuotaError((boost::format(_FILE_NOT_FOUND_) % filename).str(), *token);
 	}
 } // namespace rdir
 
@@ -26,7 +26,7 @@ namespace rlib
 {
 	extern std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> loaded;
 
-	inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname)
+	inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname, const Token * token)
 	{
 		std::string libname = rawlibname;
 
@@ -40,7 +40,7 @@ namespace rlib
 		if (loaded.find(search) != loaded.end())
 			return;
 
-		loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(rdir::findFile(currentDir, libname), fname);
+		loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(rdir::findFile(currentDir, libname, token), fname);
 	}
 } // namespace rlib
 
