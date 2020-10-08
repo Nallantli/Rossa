@@ -518,7 +518,7 @@ std::unique_ptr<Node> NodeParser::parseTypeNode()
 		typestr += ".";
 		nextToken();
 	}
-	return std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(MAIN_HASH.hashString(typestr))), currentToken);
+	return std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(MAIN_HASH.hashString(typestr))), currentToken);
 }
 
 std::unique_ptr<Node> NodeParser::parseUntilNode(std::unique_ptr<Node> a, bool inclusive)
@@ -630,43 +630,43 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 	case '{':
 		return parseMapNode();
 	case TOK_NIL_NAME:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NIL)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(NIL)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_NUMBER:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(NUMBER)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(NUMBER)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_STRING:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(STRING)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(STRING)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_BOOLEAN:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(BOOLEAN_D)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(BOOLEAN_D)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_VECTOR:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(VECTOR)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(VECTOR)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_DICTIONARY:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(DICTIONARY)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(DICTIONARY)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_OBJECT:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(OBJECT)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(OBJECT)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_FUNCTION:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(FUNCTION)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(FUNCTION)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_TYPE_NAME:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(TYPE_NAME)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(TYPE_NAME)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_POINTER:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<signed long long>(POINTER)), currentToken);
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(POINTER)), currentToken);
 		nextToken();
 		return ret;
 	default:
@@ -767,6 +767,10 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 
 	while (currentToken.getType() != NULL_TOK && currentToken.getType() != '}')
 	{
+		if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_CASE)
+			return logErrorN((boost::format(_EXPECTED_ERROR_) % "case").str(), currentToken);
+		nextToken();
+
 		auto c = parseUnitNode();
 		if (!c)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
@@ -776,23 +780,37 @@ std::unique_ptr<Node> NodeParser::parseSwitchNode()
 		nextToken();
 
 		if (currentToken.getType() == NULL_TOK || currentToken.getType() != '{')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
-		nextToken();
-		std::vector<std::unique_ptr<Node>> body;
-		while (currentToken.getType() != NULL_TOK)
 		{
-			if (currentToken.getType() == '}')
-				break;
-			if (auto e = parseExprNode())
-				body.push_back(std::move(e));
-			else
-				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
-		}
-		if (currentToken.getType() == NULL_TOK || currentToken.getType() != '}')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
-		nextToken();
+			auto eq = parseEquNode();
 
-		cases[std::move(c)] = std::make_unique<VectorNode>(std::move(body), true, currentToken);
+			if (!eq)
+				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+
+			if (currentToken.getType() == NULL_TOK || currentToken.getType() != ';')
+				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+			nextToken();
+
+			cases[std::move(c)] = std::move(eq);
+		}
+		else
+		{
+			nextToken();
+			std::vector<std::unique_ptr<Node>> body;
+			while (currentToken.getType() != NULL_TOK)
+			{
+				if (currentToken.getType() == '}')
+					break;
+				if (auto e = parseExprNode())
+					body.push_back(std::move(e));
+				else
+					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+			}
+			if (currentToken.getType() == NULL_TOK || currentToken.getType() != '}')
+				return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			nextToken();
+
+			cases[std::move(c)] = std::make_unique<VectorNode>(std::move(body), true, currentToken);
+		}
 
 		if (currentToken.getType() == NULL_TOK)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
@@ -972,7 +990,12 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 	nextToken();
 
-	auto ret = std::make_unique<IfElseNode>(std::move(ifs), std::make_unique<VectorNode>(std::move(body), true, currentToken), marker);
+	std::unique_ptr<IfElseNode> ret;
+
+	if (body.size() != 1)
+		ret = std::make_unique<IfElseNode>(std::move(ifs), std::make_unique<VectorNode>(std::move(body), true, currentToken), marker);
+	else
+		ret = std::make_unique<IfElseNode>(std::move(ifs), std::move(body[0]), marker);
 
 	if (currentToken.getType() == NULL_TOK)
 		return ret;
@@ -999,7 +1022,10 @@ std::unique_ptr<Node> NodeParser::parseIfElseNode()
 		if (currentToken.getType() == NULL_TOK || currentToken.getType() != '}')
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 		nextToken();
-		ret->setElse(std::make_unique<VectorNode>(std::move(elses), true, currentToken));
+		if (elses.size() != 1)
+			ret->setElse(std::make_unique<VectorNode>(std::move(elses), true, currentToken));
+		else
+			ret->setElse(std::move(elses[0]));
 		return ret;
 	}
 	case TOK_ELSEIF:

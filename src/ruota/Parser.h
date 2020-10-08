@@ -11,7 +11,7 @@ protected:
 	const std::shared_ptr<Instruction> a;
 
 public:
-	UnaryI(InstructionType, std::shared_ptr<Instruction>, const Token);
+	UnaryI(const InstructionType &, std::shared_ptr<Instruction>, const Token);
 	std::shared_ptr<Instruction> getA() const;
 };
 
@@ -21,7 +21,7 @@ protected:
 	const hashcode_t key;
 
 public:
-	CastingI(InstructionType, hashcode_t, const Token);
+	CastingI(const InstructionType &, const hashcode_t &, const Token);
 	const hashcode_t getKey() const;
 };
 
@@ -31,7 +31,7 @@ protected:
 	const std::shared_ptr<Instruction> b;
 
 public:
-	BinaryI(InstructionType, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
+	BinaryI(const InstructionType &, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	std::shared_ptr<Instruction> getB() const;
 };
 
@@ -54,7 +54,7 @@ protected:
 	const std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(hashcode_t, Signature ftype, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
+	DefineI(const hashcode_t &, const Signature &, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -99,21 +99,21 @@ protected:
 	const std::shared_ptr<Instruction> body;
 
 public:
-	ForI(hashcode_t, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
+	ForI(const hashcode_t &, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class VariableI : public CastingI
 {
 public:
-	VariableI(hashcode_t, const Token);
+	VariableI(const hashcode_t &, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class DeclareI : public CastingI
 {
 public:
-	DeclareI(hashcode_t, const Token);
+	DeclareI(const hashcode_t &, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -343,7 +343,7 @@ protected:
 	ValueType convert;
 
 public:
-	CastToI(std::shared_ptr<Instruction>, ValueType, const Token);
+	CastToI(std::shared_ptr<Instruction>, const ValueType &, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -361,7 +361,7 @@ protected:
 	const std::shared_ptr<Instruction> step;
 
 public:
-	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, bool, const Token);
+	UntilI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const bool &, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -397,10 +397,11 @@ class SwitchI : public Instruction
 protected:
 	const std::shared_ptr<Instruction> switchs;
 	const std::shared_ptr<Instruction> elses;
-	const std::map<Symbol, std::shared_ptr<Instruction>> cases;
+	const std::map<Symbol, std::shared_ptr<Instruction>> cases_solved;
+	const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> cases_unsolved;
 
 public:
-	SwitchI(std::shared_ptr<Instruction>, std::map<Symbol, std::shared_ptr<Instruction>>, std::shared_ptr<Instruction>, const Token);
+	SwitchI(std::shared_ptr<Instruction>, std::map<Symbol, std::shared_ptr<Instruction>>, std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>>, std::shared_ptr<Instruction>, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -410,7 +411,7 @@ protected:
 	const hashcode_t key;
 
 public:
-	TryCatchI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, hashcode_t, const Token);
+	TryCatchI(std::shared_ptr<Instruction>, std::shared_ptr<Instruction>, const hashcode_t &, const Token);
 	const Symbol evaluate(Scope *) const override;
 };
 

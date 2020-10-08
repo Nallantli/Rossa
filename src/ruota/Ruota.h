@@ -63,7 +63,7 @@ protected:
 	const Token token;
 
 public:
-	Instruction(InstructionType, const Token);
+	Instruction(const InstructionType &, const Token);
 	virtual const Symbol evaluate(Scope *) const = 0;
 	InstructionType getType() const;
 	virtual ~Instruction();
@@ -78,7 +78,7 @@ private:
 	const hashcode_t key;
 
 public:
-	Function(hashcode_t, Scope *, std::vector<std::pair<LexerTokenType, hashcode_t>>, std::shared_ptr<Instruction>);
+	Function(const hashcode_t &, Scope *, const std::vector<std::pair<LexerTokenType, hashcode_t>> &, const std::shared_ptr<Instruction> &);
 	const Symbol evaluate(const std::vector<Symbol> &, const Symbol *, const Token *) const;
 	size_t getArgSize() const;
 	hashcode_t getKey() const;
@@ -98,11 +98,11 @@ public:
 	Scope(Scope *, const std::string &);
 	Scope *getParent() const;
 	void clear();
-	const Symbol &getVariable(hashcode_t, const Token *);
-	const Symbol &createVariable(hashcode_t, const Token *);
-	const Symbol &createVariable(hashcode_t, const Symbol &, const Token *);
+	const Symbol &getVariable(const hashcode_t &, const Token *);
+	const Symbol &createVariable(const hashcode_t &, const Token *);
+	const Symbol &createVariable(const hashcode_t &, const Symbol &, const Token *);
 	const std::string &getName() const;
-	bool hasValue(hashcode_t) const;
+	bool hasValue(const hashcode_t &) const;
 
 	Scope(const Scope &);
 	void operator=(const Scope &);
@@ -115,11 +115,11 @@ class Object
 private:
 	const std::string key;
 	const ObjectType type;
-	std::shared_ptr<Scope> internal;
+	const std::shared_ptr<Scope> internal;
 	const std::shared_ptr<Instruction> body;
 
 public:
-	Object(Scope *, ObjectType, std::shared_ptr<Instruction>, const std::string &);
+	Object(Scope *, ObjectType, const std::shared_ptr<Instruction> &, const std::string &);
 	Scope *getScope() const;
 	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
 	const ObjectType getType() const;
@@ -157,9 +157,9 @@ private:
 	size_t INPUT_INDEX;
 	size_t TOKEN_DIST;
 
-	int getToken();
-	char peekChar(size_t) const;
-	char nextChar();
+	const int getToken();
+	const char peekChar(const size_t &) const;
+	const char nextChar();
 	std::map<std::string, signed int> bOperators;
 	std::map<std::string, signed int> uOperators;
 
@@ -227,7 +227,7 @@ private:
 
 	union
 	{
-		signed long long valueType;
+		object_type_t valueType;
 		bool valueBool;
 		CNumber valueNumber;
 	};
@@ -242,8 +242,8 @@ private:
 
 public:
 	Value() : type(NIL) {}
-	Value(signed long long valueType) : type(TYPE_NAME), valueType(valueType) {}
-	Value(bool valueBool) : type(BOOLEAN_D), valueBool(valueBool) {}
+	Value(const object_type_t &valueType) : type(TYPE_NAME), valueType(valueType) {}
+	Value(const bool &valueBool) : type(BOOLEAN_D), valueBool(valueBool) {}
 	Value(const std::shared_ptr<void> &valuePointer) : type(POINTER), valuePointer(valuePointer) {}
 	Value(const std::shared_ptr<Object> &valueObject) : type(OBJECT), valueObject(valueObject) {}
 	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
@@ -284,15 +284,15 @@ private:
 public:
 	Symbol() : type(ID_CASUAL), d(new Value()) {}
 
-	Symbol(SymbolType type) : type(type), d(new Value()) {}
+	Symbol(const SymbolType &type) : type(type), d(new Value()) {}
 
 	Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(new Value(valuePointer)) {}
 
-	Symbol(signed long long valueType) : type(ID_CASUAL), d(new Value(valueType)) {}
+	Symbol(const object_type_t &valueType) : type(ID_CASUAL), d(new Value(valueType)) {}
 
 	Symbol(const CNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber)) {}
 
-	Symbol(bool valueBool) : type(ID_CASUAL), d(new Value(valueBool)) {}
+	Symbol(const bool &valueBool) : type(ID_CASUAL), d(new Value(valueBool)) {}
 
 	Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector)) {}
 
@@ -416,7 +416,7 @@ public:
 		return d->type;
 	}
 
-	inline signed long long getTypeName(const Token *token) const
+	inline object_type_t getTypeName(const Token *token) const
 	{
 		if (d->type != TYPE_NAME)
 			throw RuotaError(_NOT_TYPE_, *token);
@@ -680,7 +680,8 @@ public:
 		case VECTOR:
 		{
 			auto v = b->d->valueVector;
-			if (isConst) {
+			if (isConst)
+			{
 				d->valueVector = v;
 				break;
 			}
@@ -692,7 +693,8 @@ public:
 		case DICTIONARY:
 		{
 			auto v = b->d->valueDictionary;
-			if (isConst) {
+			if (isConst)
+			{
 				d->valueDictionary = v;
 				break;
 			}
@@ -788,6 +790,16 @@ public:
 	inline bool pureNEquals(const Symbol *b, const Token *token) const
 	{
 		return !this->pureEquals(b, token);
+	}
+
+	inline bool operator==(const Symbol &b) const
+	{
+		return this->equals(&b, NULL);
+	}
+
+	inline bool operator!=(const Symbol &b) const
+	{
+		return this->nequals(&b, NULL);
 	}
 
 	inline bool operator<(const Symbol &b) const

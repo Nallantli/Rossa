@@ -7,7 +7,7 @@ Lexer::Lexer(
 	std::map<std::string, signed int> uOperators) : bOperators(bOperators),
 													uOperators(uOperators) {}
 
-char Lexer::nextChar()
+const char Lexer::nextChar()
 {
 	auto c = INPUT[INPUT_INDEX++];
 	if (c == '\n')
@@ -22,14 +22,14 @@ char Lexer::nextChar()
 	return c;
 }
 
-char Lexer::peekChar(size_t i) const
+const char Lexer::peekChar(const size_t &i) const
 {
 	if (INPUT_INDEX + i < INPUT.size())
 		return INPUT[INPUT_INDEX + i];
 	return 0;
 }
 
-int Lexer::getToken()
+const int Lexer::getToken()
 {
 	static int last;
 	while (isspace(last = nextChar()))
@@ -132,6 +132,8 @@ int Lexer::getToken()
 			return TOK_CHARN;
 		else if (ID_STRING == "chars")
 			return TOK_CHARS;
+		else if (ID_STRING == "case")
+			return TOK_CASE;
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -139,11 +141,13 @@ int Lexer::getToken()
 	}
 	else if (isdigit(last) || (last == '.' && isdigit(peekChar(0))))
 	{
-		if (last == '0' && (peekChar(0) == 'x' || peekChar(0) == 'X')) {
+		if (last == '0' && (peekChar(0) == 'x' || peekChar(0) == 'X'))
+		{
 			last = nextChar();
 			std::string t = std::string(1, last);
 			std::string numStr = "";
-			while (isalnum(peekChar(0))) {
+			while (isalnum(peekChar(0)))
+			{
 				last = nextChar();
 				numStr += last;
 			}

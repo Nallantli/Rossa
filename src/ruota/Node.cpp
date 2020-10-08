@@ -1243,12 +1243,19 @@ WhileNode::WhileNode(
 
 std::shared_ptr<Instruction> WhileNode::genParser() const
 {
-	std::vector<std::shared_ptr<Instruction>> is;
-	for (auto &e : this->body)
-		is.push_back(e->genParser());
-	auto bodyI = std::make_shared<ScopeI>(is, token);
+	if (body.size() != 1)
+	{
+		std::vector<std::shared_ptr<Instruction>> is;
+		for (auto &e : this->body)
+			is.push_back(e->genParser());
+		auto bodyI = std::make_shared<ScopeI>(is, token);
 
-	return std::make_shared<WhileI>(whiles->genParser(), bodyI, token);
+		return std::make_shared<WhileI>(whiles->genParser(), bodyI, token);
+	}
+	else
+	{
+		return std::make_shared<WhileI>(whiles->genParser(), body[0]->genParser(), token);
+	}
 }
 
 bool WhileNode::isConst() const
@@ -1323,12 +1330,19 @@ ForNode::ForNode(
 
 std::shared_ptr<Instruction> ForNode::genParser() const
 {
-	std::vector<std::shared_ptr<Instruction>> is;
-	for (auto &e : this->body)
-		is.push_back(e->genParser());
-	auto bodyI = std::make_shared<ScopeI>(is, token);
+	if (body.size() != 1)
+	{
+		std::vector<std::shared_ptr<Instruction>> is;
+		for (auto &e : this->body)
+			is.push_back(e->genParser());
+		auto bodyI = std::make_shared<ScopeI>(is, token);
 
-	return std::make_shared<ForI>(id, fors->genParser(), bodyI, token);
+		return std::make_shared<ForI>(id, fors->genParser(), bodyI, token);
+	}
+	else
+	{
+		return std::make_shared<ForI>(id, fors->genParser(), body[0]->genParser(), token);
+	}
 }
 
 bool ForNode::isConst() const
@@ -1532,18 +1546,24 @@ SwitchNode::SwitchNode(
 
 std::shared_ptr<Instruction> SwitchNode::genParser() const
 {
-	std::map<Symbol, std::shared_ptr<Instruction>> is;
+	std::map<Symbol, std::shared_ptr<Instruction>> cases_solved;
+	std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> cases_unsolved;
 	for (auto &e : this->cases)
 	{
-		if (!e.first->isConst())
-			throw RuotaError(_MUST_BE_CONST_, token);
-		Scope temp;
-		auto key = e.first->genParser()->evaluate(&temp);
-		is[key] = e.second->genParser();
+		if (e.first->isConst())
+		{
+			Scope temp;
+			auto key = e.first->genParser()->evaluate(&temp);
+			cases_solved[key] = e.second->genParser();
+		}
+		else
+		{
+			cases_unsolved[e.first->genParser()] = e.second->genParser();
+		}
 	}
 	if (elses)
-		return std::make_shared<SwitchI>(switchs->genParser(), is, elses->genParser(), token);
-	return std::make_shared<SwitchI>(switchs->genParser(), is, nullptr, token);
+		return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, elses->genParser(), token);
+	return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, nullptr, token);
 }
 
 void SwitchNode::setElse(std::unique_ptr<Node> elses)
@@ -1569,7 +1589,7 @@ void SwitchNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "MAP"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "SWITCH"
 			  << "\n"
 			  << colorASCII(RESET_TEXT);
 	switchs->printTree(indent, cases.empty());

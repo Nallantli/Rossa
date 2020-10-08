@@ -1,6 +1,6 @@
 #include "Ruota.h"
 
-Object::Object(Scope *parent, ObjectType type, std::shared_ptr<Instruction> body, const std::string &key) : body(body), type(type), key(key), internal(std::make_shared<Scope>(parent, key)) {}
+Object::Object(Scope *parent, ObjectType type, const std::shared_ptr<Instruction> &body, const std::string &key) : body(body), type(type), key(key), internal(std::make_shared<Scope>(parent, key)) {}
 
 Scope *Object::getScope() const
 {

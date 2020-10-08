@@ -21,16 +21,16 @@ static snake_game class {
 			direction = newDir;
 
 			switch direction in {
-				0 do {
+				case 0 do {
 					posX = (posX + 1 + width) % width;
 				}
-				1 do {
+				case 1 do {
 					posX = (posX - 1 + width) % width;
 				}
-				2 do {
+				case 2 do {
 					posY = (posY + 1 + height) % height;
 				}
-				3 do {
+				case 3 do {
 					posY = (posY - 1 + height) % height;
 				}
 			}
@@ -103,41 +103,31 @@ static snake_game class {
 			exit();
 		} elseif e.type == Event.KEY_DOWN then {
 			switch chars(e.keysym.sym) in {
-				"w" do {
+				case "w" do {
 					if direction != 2 then {
 						newDir = 3;
 					}
 				}
-				"s" do {
+				case "s" do {
 					if direction != 3 then {
 						newDir = 2;
 					}
 				}
-				"a" do {
+				case "a" do {
 					if direction != 0 then {
 						newDir = 1;
 					}
 				}
-				"d" do {
+				case "d" do {
 					if direction != 1 then {
 						newDir = 0;
 					}
 				}
-				"1" do {
-					speed = 160;
-				}
-				"2" do {
-					speed = 120;
-				}
-				"3" do {
-					speed = 80;
-				}
-				"4" do {
-					speed = 0;
-				}
-				" " do {
-					reset();
-				}
+				case "1" do speed = 160;
+				case "2" do speed = 120;
+				case "3" do speed = 80;
+				case "4" do speed = 0;
+				case " " do reset();
 			}
 		}
 	}

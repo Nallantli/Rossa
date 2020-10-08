@@ -13,6 +13,7 @@
 #include <boost/config.hpp>
 
 typedef unsigned long long hashcode_t;
+typedef signed long long object_type_t;
 
 struct Hash
 {
@@ -122,7 +123,7 @@ enum LexerTokenType
 	TOK_ALLOC = -38,
 	TOK_INNER = -39,
 	TOK_REF = -40,
-	//TOK_FINAL = -41,
+	TOK_CASE = -41,
 	TOK_DEF_TYPE = -42,
 	TOK_BREAK = -43,
 	TOK_REFER = -44,
@@ -255,7 +256,7 @@ enum NodeType
 	THROW_NODE
 };
 
-inline std::string getTypeString(signed long long i)
+inline std::string getTypeString(const object_type_t &i)
 {
 	if (i >= 0)
 		return MAIN_HASH.deHash(i);

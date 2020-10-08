@@ -70,23 +70,11 @@ while true do {
 		}
 	}
 	switch chars(e.keysym.sym) in {
-		"w" do {
-			y += 2 / height * scale;
-		}
-		"s" do {
-			y -= 2 / height * scale;
-		}
-		"a" do {
-			x -= 6 / width * scale;
-		}
-		"d" do {
-			x += 6 / width * scale;
-		}
-		"q" do {
-			scale = math.min(scale * 2, 4);
-		}
-		"e" do {
-			scale /= 2;
-		}
+		case "w" do y += 2 / height * scale;
+		case "s" do y -= 2 / height * scale;
+		case "a" do x -= 6 / width * scale;
+		case "d" do x += 6 / width * scale;
+		case "q" do scale = math.min(scale * 2, 4);
+		case "e" do	scale /= 2;
 	}
 }
