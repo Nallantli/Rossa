@@ -143,7 +143,6 @@ namespace libstd
 	{
 #ifdef __unix__
 		struct termios oldattr, newattr;
-		int ch;
 		tcgetattr(0, &oldattr);
 		newattr = oldattr;
 		newattr.c_lflag &= ~(ICANON | ECHO);

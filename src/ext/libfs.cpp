@@ -67,9 +67,10 @@ namespace libfs
 	RUOTA_EXT_SYM(_reader_read, args, token, hash)
 	{
 		auto fstr = reinterpret_cast<std::ifstream *>(args[0].getPointer(token));
+		size_t max = args[1].getNumber(token).getLong();
 		std::string line = "";
 		char c;
-		for (size_t i = 0; i < args[1].getNumber(token).getLong(); i++)
+		for (size_t i = 0; i < max; i++)
 		{
 			if (fstr->get(c))
 				line += c;

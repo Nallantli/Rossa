@@ -120,8 +120,8 @@ void printError(const RuotaError &e)
 		auto f = Ruota::stack_trace.back();
 		printc(" ^ ", MAGENTA_TEXT);
 		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
-		if (f.getParent()->getName() != "")
-			std::cout << f.getParent()->getName() << ".";
+		if (MAIN_HASH.deHash(f.getParent()->getHashedKey()) != "")
+			std::cout << MAIN_HASH.deHash(f.getParent()->getHashedKey()) << ".";
 		std::cout << MAIN_HASH.deHash(f.getKey()) << "(\033[0m";
 		size_t i = 0;
 		for (auto &p : f.getParams())
@@ -244,7 +244,7 @@ int main(int argc, char const *argv[])
 					while (!code.empty())
 						moveback(code, 1);
 				}
-				else if (c == '\b' | c == 127)
+				else if (c == '\b' || c == 127)
 					moveback(code, 1);
 				else
 				{

@@ -2,11 +2,11 @@
 
 Token::Token() : filename("nil"),
 				 line(""),
+				 lineNumber(0),
 				 distance(0),
 				 valueString(""),
 				 valueNumber(CNumber()),
-				 type(NULL_TOK),
-				 lineNumber(0) {}
+				 type(NULL_TOK) {}
 
 Token::Token(
 	const std::string &filename,
@@ -17,9 +17,9 @@ Token::Token(
 	CNumber valueNumber,
 	int type) : filename(filename),
 				line(line),
+				lineNumber(lineNumber),
 				distance(distance),
 				valueString(valueString),
-				lineNumber(lineNumber),
 				valueNumber(valueNumber),
 				type(type)
 {

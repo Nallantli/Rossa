@@ -1,12 +1,34 @@
 #include "Ruota.h"
 
-Scope::Scope() : parent(NULL), name("") {}
+Scope::Scope() : parent(NULL), name_trace({}) {}
 
-Scope::Scope(Scope *parent, const std::string &name) : parent(parent), name(parent->getName() != "" ? parent->getName() + "." + name : name) {}
-
-const std::string &Scope::getName() const
+Scope::Scope(Scope *parent, const hashcode_t &key) : parent(parent)
 {
-	return this->name;
+	name_trace = parent->name_trace;
+	if (key != 0)
+	{
+		name_trace.push_back(key);
+
+		size_t i = 0;
+		std::string path = "";
+		for (auto &p : name_trace)
+		{
+			if (i++ > 0)
+				path += ".";
+			path += MAIN_HASH.deHash(p);
+		}
+
+		hashed_key = MAIN_HASH.hashString(path);
+	}
+	else
+	{
+		hashed_key = parent->hashed_key;
+	}
+}
+
+const hashcode_t Scope::getHashedKey() const
+{
+	return hashed_key;
 }
 
 const Symbol &Scope::getVariable(const hashcode_t &key, const Token *token)
@@ -49,19 +71,3 @@ bool Scope::hasValue(const hashcode_t &key) const
 {
 	return values.find(key) != values.end();
 }
-
-Scope::Scope(const Scope &s)
-{
-	this->parent = s.parent;
-	this->name = s.name;
-	this->values = s.values;
-}
-
-void Scope::operator=(const Scope &s)
-{
-	this->parent = s.parent;
-	this->name = s.name;
-	this->values = s.values;
-}
-
-Scope::~Scope() {}

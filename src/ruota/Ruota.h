@@ -1,6 +1,7 @@
 #ifndef RUOTA_H
 #define RUOTA_H
 
+#include "Locale.h"
 #include "Declarations.h"
 #include "CNumber.h"
 
@@ -12,9 +13,9 @@
 
 struct Signature
 {
-	const std::vector<ValueType> values;
-	Signature(const std::vector<ValueType> &);
-	size_t validity(const std::vector<ValueType> &) const;
+	const std::vector<object_type_t> values;
+	Signature(const std::vector<object_type_t> &);
+	size_t validity(const std::vector<Symbol> &) const;
 	bool operator<(const Signature &) const;
 	const std::string toString() const;
 };
@@ -23,12 +24,12 @@ class Token
 {
 private:
 	std::string filename;
-	std::string valueString;
 	std::string line;
+	size_t lineNumber;
+	size_t distance;
+	std::string valueString;
 	CNumber valueNumber;
 	int type;
-	size_t distance;
-	size_t lineNumber;
 
 public:
 	Token();
@@ -63,7 +64,7 @@ protected:
 	const Token token;
 
 public:
-	Instruction(const InstructionType &, const Token);
+	Instruction(const InstructionType &, const Token &);
 	virtual const Symbol evaluate(Scope *) const = 0;
 	InstructionType getType() const;
 	virtual ~Instruction();
@@ -72,10 +73,10 @@ public:
 class Function
 {
 private:
+	const hashcode_t key;
+	Scope *parent;
 	const std::vector<std::pair<LexerTokenType, hashcode_t>> params;
 	const std::shared_ptr<Instruction> body;
-	Scope *parent;
-	const hashcode_t key;
 
 public:
 	Function(const hashcode_t &, Scope *, const std::vector<std::pair<LexerTokenType, hashcode_t>> &, const std::shared_ptr<Instruction> &);
@@ -89,43 +90,42 @@ public:
 class Scope
 {
 private:
-	std::string name;
 	Scope *parent;
+	std::vector<hashcode_t> name_trace;
 	std::map<hashcode_t, Symbol> values;
+	hashcode_t hashed_key;
 
 public:
 	Scope();
-	Scope(Scope *, const std::string &);
+	Scope(Scope *, const hashcode_t &);
 	Scope *getParent() const;
 	void clear();
 	const Symbol &getVariable(const hashcode_t &, const Token *);
 	const Symbol &createVariable(const hashcode_t &, const Token *);
 	const Symbol &createVariable(const hashcode_t &, const Symbol &, const Token *);
-	const std::string &getName() const;
+	const hashcode_t getHashedKey() const;
 	bool hasValue(const hashcode_t &) const;
-
-	Scope(const Scope &);
-	void operator=(const Scope &);
-
-	~Scope();
 };
 
 class Object
 {
 private:
-	const std::string key;
 	const ObjectType type;
-	const std::shared_ptr<Scope> internal;
 	const std::shared_ptr<Instruction> body;
+	const hashcode_t key;
+	std::vector<object_type_t> extensions;
+	const std::shared_ptr<Scope> internal;
 
 public:
-	Object(Scope *, ObjectType, const std::shared_ptr<Instruction> &, const std::string &);
+	Object(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const std::vector<object_type_t> &);
+	Object(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const Object *);
 	Scope *getScope() const;
 	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
 	const ObjectType getType() const;
 	const std::shared_ptr<Instruction> getBody() const;
-	const std::string &getName() const;
-	bool hasValue(hashcode_t) const;
+	const hashcode_t getHashedKey() const;
+	bool hasValue(const hashcode_t &) const;
+	bool extendsObject(const hashcode_t &) const;
 
 	~Object();
 };
@@ -271,6 +271,8 @@ public:
 		case OBJECT:
 			valueObject = nullptr;
 			break;
+		default:
+			return;
 		}
 	}
 };
@@ -416,6 +418,13 @@ public:
 		return d->type;
 	}
 
+	inline object_type_t getAugValueType() const
+	{
+		if (d->type == OBJECT)
+			return d->valueObject->getHashedKey();
+		return d->type;
+	}
+
 	inline object_type_t getTypeName(const Token *token) const
 	{
 		if (d->type != TYPE_NAME)
@@ -423,20 +432,24 @@ public:
 		return d->valueType;
 	}
 
-	inline const std::shared_ptr<Function> &getFunction(const std::vector<ValueType> &ftypes, const Token *token) const
+	inline const std::shared_ptr<Function> &getFunction(const std::vector<Symbol> &params, const Token *token) const
 	{
 		if (d->type != FUNCTION)
 			throw RuotaError(_NOT_FUNCTION_, *token);
 
-		if (d->valueFunction.find(ftypes.size()) == d->valueFunction.end())
+		if (d->valueFunction.find(params.size()) == d->valueFunction.end())
 			throw RuotaError(_FUNCTION_ARG_SIZE_FAILURE_, *token);
 
-		std::map<Signature, std::shared_ptr<Function>> foftype = d->valueFunction[ftypes.size()];
+		std::vector<object_type_t> ftypes;
+		for (auto &e : params)
+			ftypes.push_back(e.getAugValueType());
+
+		std::map<Signature, std::shared_ptr<Function>> foftype = d->valueFunction[params.size()];
 		const Signature *key = NULL;
 		size_t cur_v = 0;
 		for (auto &f2 : foftype)
 		{
-			size_t v = f2.first.validity(ftypes);
+			size_t v = f2.first.validity(params);
 			if (v > cur_v)
 			{
 				cur_v = v;
@@ -631,11 +644,7 @@ public:
 
 	inline const Symbol call(const std::vector<Symbol> &params, const Symbol *b, const Token *token) const
 	{
-		std::vector<ValueType> ftypes;
-		for (auto &e : params)
-			ftypes.push_back(e.getValueType());
-
-		return getFunction(ftypes, token)->evaluate(params, b, token);
+		return getFunction(params, token)->evaluate(params, b, token);
 	}
 
 	inline void addFunctions(const Symbol *b, const Token *token) const

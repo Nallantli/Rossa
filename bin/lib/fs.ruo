@@ -14,7 +14,6 @@ extern _path_append_path in "libfs";
 extern _path_append_string in "libfs";
 extern _path_exists in "libfs";
 extern _path_mkdirs in "libfs";
-extern _path_close in "libfs";
 
 struct Path class {
 	var ptr;
@@ -23,7 +22,7 @@ struct Path class {
 		ptr = (extern_call libfs._path_init("."));
 	}
 
-	init(ref path) => {
+	init(ref path : String) => {
 		ptr = (extern_call libfs._path_init(path));
 	}
 
@@ -35,12 +34,12 @@ struct Path class {
 
 	exists() => extern_call libfs._path_exists(ptr);
 
+	`=`(ref a : @Path) => {
+		this.ptr = a.ptr;
+	}
+
 	`=`(ref a) => {
-		if a -> Type == @Path then {
-			this.ptr = a.ptr;
-		} else {
-			init(a -> String);
-		}
+		init(a -> String);
 	}
 
 	`==`(ref a) => this -> String == a -> String;
@@ -71,7 +70,7 @@ struct Writer class {
 
 	isOpen() => extern_call libfs._writer_isOpen(ptr);
 
-	write(ref s) => extern_call libfs._writer_write(ptr, s);
+	write(ref s : String) => extern_call libfs._writer_write(ptr, s);
 
 	close() => {
 		if ptr != nil then {
@@ -98,7 +97,7 @@ struct Reader class {
 
 	isOpen() => extern_call libfs._reader_isOpen(ptr);
 
-	read(ref n) => extern_call libfs._reader_read(ptr, n);
+	read(ref n : Number) => extern_call libfs._reader_read(ptr, n);
 
 	read() => read(1);
 

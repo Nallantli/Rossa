@@ -3,13 +3,13 @@
 #include <fstream>
 
 NodeParser::NodeParser(
-	std::vector<Token> tokens,
-	std::map<std::string, signed int> bOperators,
-	std::map<std::string, signed int> uOperators,
-	boost::filesystem::path currentFile) : tokens(tokens),
-										   bOperators(bOperators),
-										   uOperators(uOperators),
-										   currentFile(currentFile) {}
+	const std::vector<Token> &tokens,
+	const std::map<std::string, signed int> &bOperators,
+	const std::map<std::string, signed int> &uOperators,
+	const boost::filesystem::path &currentFile) : tokens(tokens),
+												  bOperators(bOperators),
+												  uOperators(uOperators),
+												  currentFile(currentFile) {}
 
 void NodeParser::nextToken()
 {
@@ -219,7 +219,7 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 	nextToken();
 
 	std::vector<std::pair<LexerTokenType, hashcode_t>> args;
-	std::vector<ValueType> types;
+	std::vector<object_type_t> types;
 
 	int i = 0;
 	while (currentToken.getType() != NULL_TOK && currentToken.getType() != ')')
@@ -246,7 +246,7 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		ValueType ftype = NIL;
+		object_type_t ftype = NIL;
 		if (currentToken.getType() != NULL_TOK && currentToken.getType() == ':')
 		{
 			nextToken();
@@ -254,35 +254,59 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 			{
 			case TOK_BOOLEAN:
 				ftype = BOOLEAN_D;
+				nextToken();
 				break;
 			case TOK_NUMBER:
 				ftype = NUMBER;
+				nextToken();
 				break;
 			case TOK_VECTOR:
 				ftype = VECTOR;
+				nextToken();
 				break;
 			case TOK_STRING:
 				ftype = STRING;
+				nextToken();
 				break;
 			case TOK_DICTIONARY:
 				ftype = DICTIONARY;
+				nextToken();
 				break;
 			case TOK_OBJECT:
 				ftype = OBJECT;
+				nextToken();
 				break;
 			case TOK_FUNCTION:
 				ftype = FUNCTION;
+				nextToken();
 				break;
 			case TOK_POINTER:
 				ftype = POINTER;
+				nextToken();
 				break;
 			case TOK_TYPE_NAME:
 				ftype = TYPE_NAME;
+				nextToken();
 				break;
+			case '@':
+			{
+				nextToken();
+				std::string typestr = "";
+				while (currentToken.getType() != NULL_TOK && currentToken.getType() == TOK_IDF)
+				{
+					typestr += currentToken.getValueString();
+					nextToken();
+					if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_INNER)
+						break;
+					typestr += ".";
+					nextToken();
+				}
+				ftype = MAIN_HASH.hashString(typestr);
+				break;
+			}
 			default:
 				return logErrorSN(_EXPECTED_BASE_TYPE_, currentToken);
 			}
-			nextToken();
 		}
 
 		args.push_back({static_cast<LexerTokenType>(type), MAIN_HASH.hashString(arg)});
@@ -344,7 +368,7 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 		nextToken();
 	}
 
-	if (currentToken.getType() == NULL_TOK || currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS)
+	if (currentToken.getType() == NULL_TOK || (currentToken.getType() != TOK_IDF && currentToken.getType() != '~' && currentToken.getType() != TOK_LENGTH && currentToken.getType() != TOK_SIZE && currentToken.getType() != TOK_ALLOC && currentToken.getType() != TOK_CHARN && currentToken.getType() != TOK_CHARS))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = MAIN_HASH.hashString(currentToken.getValueString());
 	nextToken();
@@ -550,7 +574,7 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 	while (currentToken.getType() != NULL_TOK && bOperators.find(currentToken.getValueString()) != bOperators.end())
 	{
 		std::string opStr = currentToken.getValueString();
-		int prec = bOperators[opStr];
+		int prec = bOperators.at(opStr);
 
 		auto marker = currentToken;
 
@@ -581,7 +605,7 @@ std::unique_ptr<Node> NodeParser::parseBinOpNode(std::unique_ptr<Node> a)
 						std::move(current_b),
 						std::move(b), marker),
 					oldToken);
-				pastPrec = bOperators[oldOp];
+				pastPrec = bOperators.at(oldOp);
 			}
 		}
 		else

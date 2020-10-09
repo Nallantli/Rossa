@@ -6,7 +6,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 {
 	Ruota::stack_trace.push_back(*this);
 
-	Scope newScope(parent, "");
+	Scope newScope(parent, 0);
 
 	for (size_t i = 0; i < params.size(); i++)
 	{

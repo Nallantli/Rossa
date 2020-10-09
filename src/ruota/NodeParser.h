@@ -7,12 +7,13 @@
 class NodeParser
 {
 private:
-	boost::filesystem::path currentFile;
-	std::map<std::string, signed int> bOperators;
-	std::map<std::string, signed int> uOperators;
+	const std::vector<Token> tokens;
+	const std::map<std::string, signed int> bOperators;
+	const std::map<std::string, signed int> uOperators;
+	const boost::filesystem::path currentFile;
+
 	unsigned int index = 0;
 	Token currentToken;
-	std::vector<Token> tokens;
 	void nextToken();
 	std::unique_ptr<Node> parseNumNode();
 	std::unique_ptr<Node> parseBoolNode();
@@ -54,7 +55,7 @@ private:
 	std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> logErrorSN(const std::string &, const Token);
 
 public:
-	NodeParser(std::vector<Token>, std::map<std::string, signed int>, std::map<std::string, signed int>, boost::filesystem::path);
+	NodeParser(const std::vector<Token> &, const std::map<std::string, signed int> &, const std::map<std::string, signed int> &, const boost::filesystem::path &);
 	std::unique_ptr<Node> parse();
 	static std::shared_ptr<Instruction> genParser(std::unique_ptr<Node>);
 };

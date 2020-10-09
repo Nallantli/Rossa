@@ -1,13 +1,22 @@
 extern _window_init in "libsdl";
-extern _window_add in "libsdl";
-extern _window_remove in "libsdl";
-extern _window_update in "libsdl";
+extern _window_getRenderer in "libsdl";
+extern _renderer_add in "libsdl";
+extern _renderer_remove in "libsdl";
+extern _renderer_update in "libsdl";
 extern _window_register in "libsdl";
 extern _rect_init in "libsdl";
 extern _line_init in "libsdl";
 extern _point_init in "libsdl";
+extern _image_init in "libsdl";
+extern _area_init in "libsdl";
+extern _area_add in "libsdl";
+extern _area_remove in "libsdl";
 extern _shape_setColor in "libsdl";
 extern _shape_setPosition in "libsdl";
+extern _sizable_setSize in "libsdl";
+extern _sizable_setWidth in "libsdl";
+extern _sizable_setHeight in "libsdl";
+extern _rotatable_setAngle in "libsdl";
 extern _event_poll in "libsdl";
 
 static Event class {
@@ -111,6 +120,49 @@ static Color class {
 	`()`(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
 		return { red : r, green : g, blue : b, alpha : a };
 	}
+
+	HSL(ref h : Number, ref s : Number, ref l : Number) => HSL(h, s, l, 0xff);
+
+	HSL(ref h : Number, ref s : Number, ref l : Number, ref a : Number) => {
+		var hueToRgb = (ref p : Number, ref q : Number, t : Number) => {
+			if t < 0 then {
+				t += 1;
+			} elseif t > 1 then {
+				t -= 1;
+			}
+			if t < 1/6 then {
+				return p + (q - p) * 6 * t;
+			}
+			if t < 1/2 then {
+				return q;
+			}
+			if t < 2/3 then {
+				return p + (q - p) * (2/3 - t) * 6;
+			}
+			return p;
+		};
+		var r;
+		var g;
+		var b;
+		if s == 0 then {
+			r = l;
+			g = l;
+			b = l;
+		} else {
+			var q = (l < 0.5 ? (l * (1 + s)) : (l + s - l * s));
+			var p = 2 * l - q;
+			r = hueToRgb(p, q, h + 1/3);
+			g = hueToRgb(p, q, h);
+			b = hueToRgb(p, q, h - 1/3);
+		}
+		r *= 256;
+		g *= 256;
+		b *= 256;
+		r = math.floor(r > 255 ? 255 : r);
+		g = math.floor(g > 255 ? 255 : g);
+		b = math.floor(b > 255 ? 255 : b);
+		return { red : r, green : g, blue : b, alpha : a };
+	}
 }
 
 static Shape class {
@@ -134,7 +186,27 @@ static Shape class {
 		}
 	}
 
-	struct Rect class : Prototype {
+	virtual Sizable class : Prototype {
+		setSize(ref width : Number, ref height : Number) => {
+			extern_call libsdl._sizable_setSize(ptr, width, height);
+		}
+
+		setWidth(ref width : Number) => {
+			extern_call libsdl._sizable_setWidth(ptr, width);
+		}
+
+		setHeight(ref height : Number) => {
+			extern_call libsdl._sizable_setHeight(ptr, height);
+		}
+	}
+
+	virtual Rotatable class : Sizable {
+		setAngle(ref angle : Number) => {
+			extern_call libsdl._rotatable_setAngle(ptr, angle);
+		}
+	}
+
+	struct Rect class : Sizable {
 		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
 			ptr = (extern_call libsdl._rect_init(x, y, width, height, r, g, b, a));
 		}
@@ -163,11 +235,72 @@ static Shape class {
 			ptr = (extern_call libsdl._point_init(x, y, color.red, color.green, color.blue, color.alpha));
 		}
 	}
+
+	struct Image class : Rotatable {
+		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, 0xff, 0xff, 0xff));
+		}
+
+		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, r, g, b, a));
+		}
+
+		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		}
+	}
+
+	struct Area class : Rotatable {
+		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+			ptr = (extern_call libsdl._area_init(x, y, width, height, 0xff, 0xff, 0xff));
+		}
+
+		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._image_init(x, y, width, height, r, g, b, a));
+		}
+
+		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._image_init(x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		}
+
+		add(ref shape : @Shape.Prototype) => {
+			extern_call libsdl._area_add(ptr, shape.ptr);
+			refer shape;
+		}
+
+		remove(ref shape : @Shape.Prototype) => {
+			extern_call libsdl._area_remove(ptr, shape.ptr);
+			refer shape;
+		}
+	}
 }
 
 struct Window class {
+	struct Renderer class {
+		var ptr;
+
+		init(ref ptr : Pointer) => {
+			this.ptr = ptr;
+		}
+
+		add(ref shape : @Shape.Prototype) => {
+			extern_call libsdl._renderer_add(ptr, shape.ptr);
+			refer shape;
+		}
+
+		remove(ref shape : @Shape.Prototype) => {
+			extern_call libsdl._renderer_remove(ptr, shape.ptr);
+			refer shape;
+		}
+
+		update() => {
+			extern_call libsdl._renderer_update(ptr);
+		}
+	}
+
 	var ptr;
 	var windowID;
+	var renderer;
 
 	init(ref title : String, ref width : Number, ref height : Number) => {
 		var data = (extern_call libsdl._window_init(title, width, height));
@@ -176,19 +309,15 @@ struct Window class {
 		extern_call libsdl._window_register(windowID, this);
 	}
 
-	add(ref shape : Object) => {
-		extern_call libsdl._window_add(ptr, shape.ptr);
-	}
-
-	remove(ref shape : Object) => {
-		extern_call libsdl._window_remove(ptr, shape.ptr);
-	}
-
-	update() => {
-		return (extern_call libsdl._window_update(ptr));
+	getRenderer() => {
+		if renderer == nil then {
+			renderer = new Renderer(extern_call libsdl._window_getRenderer(ptr));
+		}
+		return renderer;
 	}
 
 	close() => {
 		ptr = nil;
+		renderer = nil;
 	}
 }

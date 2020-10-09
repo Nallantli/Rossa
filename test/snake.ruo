@@ -15,6 +15,7 @@ static snake_game class {
 	var cache;
 	var buffer;
 	var w;
+	var r;
 
 	refresh() => {
 		if !LOST then {
@@ -66,7 +67,7 @@ static snake_game class {
 			}
 		}
 
-		w.update();
+		r.update();
 	}
 
 	setApple() => {
@@ -143,11 +144,12 @@ static snake_game class {
 		buffer = alloc(width).map((e) => alloc(height));
 
 		w = new Window("Snake", width * scale, height * scale);
+		r = w.getRenderer();
 
 		for x in [0 .. width] do {
 			for y in [0 .. height] do {
 				buffer[x][y] = new Shape.Rect(x * scale, y * scale, scale, scale, Color.BLACK);
-				w.add(buffer[x][y]);
+				r.add(buffer[x][y]);
 			}
 		}
 

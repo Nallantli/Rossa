@@ -10,7 +10,7 @@ namespace rdir
 {
 	extern std::vector<boost::filesystem::path> loaded;
 
-	inline boost::filesystem::path findFile(boost::filesystem::path currentDir, const std::string &filename, const Token * token)
+	inline boost::filesystem::path findFile(boost::filesystem::path currentDir, const std::string &filename, const Token *token)
 	{
 		auto currentDirCheck = currentDir / filename;
 		if (boost::filesystem::exists(currentDirCheck))
@@ -26,7 +26,7 @@ namespace rlib
 {
 	extern std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> loaded;
 
-	inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname, const Token * token)
+	inline void loadFunction(boost::filesystem::path currentDir, const std::string &rawlibname, const std::string &fname, const Token *token)
 	{
 		std::string libname = rawlibname;
 
@@ -40,7 +40,14 @@ namespace rlib
 		if (loaded.find(search) != loaded.end())
 			return;
 
-		loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(rdir::findFile(currentDir, libname, token), fname);
+		try
+		{
+			loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(rdir::findFile(currentDir, libname, token), fname);
+		}
+		catch (const boost::wrapexcept<boost::system::system_error> &e)
+		{
+			throw RuotaError((boost::format("Error loading `%1%`: %2%") % search % e.what()).str(), *token);
+		}
 	}
 } // namespace rlib
 

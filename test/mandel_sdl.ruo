@@ -9,6 +9,7 @@ var height = 64;
 var windowScale = 10;
 
 var window = new Window("Mandelbrot", width * windowScale, height * windowScale);
+var renderer = window.getRenderer();
 
 var cache = alloc(width).map((e) => alloc(height));
 var buffer = alloc(width).map((e) => alloc(height));
@@ -17,7 +18,7 @@ for x in [0 .. width] do {
 	for y in [0 .. height] do {
 		buffer[x][y] = new Shape.Rect(x * windowScale, y * windowScale, windowScale, windowScale, Color.BLACK);
 		cache[x][y] = 0;
-		window.add(buffer[x][y]);
+		renderer.add(buffer[x][y]);
 	}
 }
 
@@ -57,7 +58,7 @@ static mandel class {
 			}
 		}
 
-		window.update();
+		renderer.update();
 	}
 }
 

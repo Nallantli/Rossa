@@ -1,0 +1,32 @@
+load "sdl.ruo";
+
+var w = new Window("Image Test", 800, 600);
+var r = w.getRenderer();
+var i1 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 0, 200, 200));
+var i2 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 200, 200, 200));
+var i3 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 400, 200, 200));
+var i4 = r.add(new Shape.Image("docs/logo/Logo-Solid.png", 200, 0, 600, 600));
+
+var hue = 0;
+var r1 = 0;
+var r2 = 0;
+var r3 = 0;
+
+r.update();
+
+var start = clock.milliseconds();
+while Event.poll().type != Event.QUIT do {
+	var lapse = clock.milliseconds() - start;
+	if lapse > 10 then {
+		start = clock.milliseconds();
+		hue = (hue + 0.1) % 360;
+		r1 = (r1 + 1) % 360;
+		r2 = (r2 + 0.5) % 360;
+		r3 = (r3 + 0.25) % 360;
+		i4.setColor(Color.HSL(hue / 360, 1, 0.5));
+		i1.setAngle(r1);
+		i2.setAngle(r2);
+		i3.setAngle(r3);
+		r.update();
+	}
+}

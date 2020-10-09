@@ -267,7 +267,27 @@ public:
 
 	inline const CNumber operator%(const CNumber &n) const noexcept
 	{
-		return CNumber::Long(getLong() % n.getLong());
+		switch (type)
+		{
+		case DOUBLE_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return CNumber::Double(std::fmod(valueDouble, n.valueDouble));
+			case LONG_NUM:
+				return CNumber::Double(std::fmod(valueDouble, static_cast<long_double_t>(n.valueLong)));
+			}
+			break;
+		case LONG_NUM:
+			switch (n.type)
+			{
+			case DOUBLE_NUM:
+				return CNumber::Double(std::fmod(static_cast<long_double_t>(valueLong), n.valueDouble));
+			case LONG_NUM:
+				return CNumber::Long(valueLong % n.valueLong);
+			}
+		}
+		return CNumber();
 	}
 
 	inline bool operator==(const CNumber &n) const noexcept
