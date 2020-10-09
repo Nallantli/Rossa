@@ -1,7 +1,7 @@
 #ifndef DECLARATIONS_H
 #define DECLARATIONS_H
 
-#define _RUOTA_VERSION_ "v1.5.1-alpha"
+#define _RUOTA_VERSION_ "v1.6.0-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
 #define RUOTA_LIB_HEADER Hash MAIN_HASH = Hash();
 
@@ -211,7 +211,8 @@ enum InstructionType
 	B_OR,
 	B_XOR,
 	B_SH_L,
-	B_SH_R
+	B_SH_R,
+	DECLARE_VARS_I
 };
 
 enum ObjectType

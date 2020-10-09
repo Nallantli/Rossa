@@ -189,11 +189,14 @@ const Symbol VariableI::evaluate(Scope *scope) const
 /*class DeclareI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeclareI::DeclareI(const hashcode_t &key, const Token &token) : CastingI(DECLARE, key, token) {}
+DeclareI::DeclareI(const hashcode_t &key, const object_type_t &vtype, const std::shared_ptr<Instruction> &a, const bool &isConst, const Token &token) : CastingI(DECLARE, key, token), vtype(vtype), a(a), isConst(isConst) {}
 
 const Symbol DeclareI::evaluate(Scope *scope) const
 {
-	return scope->createVariable(key, &token);
+	auto v = scope->createVariable(key, &token);
+	auto evalA = a->evaluate(scope);
+	v.set(&evalA, &token, isConst);
+	return v;
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -877,27 +880,13 @@ const Symbol BShiftRightI::evaluate(Scope *scope) const
 /*class SetI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SetI::SetI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(SET, a, b, token) {}
+SetI::SetI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const bool &isConst, const Token &token) : BinaryI(SET, a, b, token), isConst(isConst) {}
 
 const Symbol SetI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
 	auto evalB = b->evaluate(scope);
-	evalA.set(&evalB, &token, false);
-	return evalA;
-}
-
-/*-------------------------------------------------------------------------------------------------------*/
-/*class ConstSetI                                                                                      */
-/*-------------------------------------------------------------------------------------------------------*/
-
-ConstSetI::ConstSetI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(SET, a, b, token) {}
-
-const Symbol ConstSetI::evaluate(Scope *scope) const
-{
-	auto evalA = a->evaluate(scope);
-	auto evalB = b->evaluate(scope);
-	evalA.set(&evalB, &token, true);
+	evalA.set(&evalB, &token, isConst);
 	return evalA;
 }
 
@@ -1425,4 +1414,18 @@ const Symbol CharSI::evaluate(Scope *scope) const
 	default:
 		throw RuotaError(_FAILURE_TO_STR_, token);
 	}
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class DeclareVarsI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+DeclareVarsI::DeclareVarsI(const std::vector<hashcode_t> &keys, const Token &token) : Instruction(DECLARE_VARS_I, token), keys(keys) {}
+
+const Symbol DeclareVarsI::evaluate(Scope *scope) const
+{
+	std::vector<Symbol> newvs;
+	for (auto &k : keys)
+		newvs.push_back(scope->createVariable(k, &token));
+	return Symbol(newvs);
 }

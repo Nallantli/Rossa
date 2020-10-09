@@ -81,6 +81,7 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"||", 2},
 	{"=", -1},
 	{"->", 0},
+	{":=", -1},
 	{"**=", -1},
 	{"*=", -1},
 	{"/=", -1},

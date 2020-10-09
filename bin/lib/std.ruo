@@ -24,15 +24,15 @@ extern _regex_replace in "libstd";
 
 # BASIC
 
-var alloc = ((ref x) => alloc(x));
+alloc := ((ref x) => alloc(x));
 
-var length = ((ref x) => length(x));
+length := ((ref x) => length(x));
 
-var size = ((ref x) => size(x));
+size := ((ref x) => size(x));
 
-var charn = ((ref x) => charn(x));
+charn := ((ref x) => charn(x));
 
-var chars = ((ref x) => chars(x));
+chars := ((ref x) => chars(x));
 
 # CONSOLE
 
@@ -45,7 +45,7 @@ putln() => puts("\n");
 system(ref s : String) => extern_call libstd._system_call(s);
 
 static cons class {
-	var decor = {
+	decor := {
 		FG_BLACK : "30",
 		FG_RED : "31",
 		FG_GREEN : "32",
@@ -92,14 +92,14 @@ static cons class {
 	setDecor(ref n : Number) => setDecor(n -> String);
 
 	setDecor(ref v : Vector) => {
-		var s = "";
+		s := "";
 		for c in v do {
 			setDecor(c);
 		}
 	}
 
 	moveCursor(ref x : Number, ref y : Number) => {
-		var s = "";
+		s := "";
 		if x < 0 then {
 			s += "\u001B[" + (math.abs(x) -> String) + "D";
 		} else {
@@ -171,7 +171,7 @@ static clock class {
 # VECTOR
 
 Vector::join(ref this) => {
-	var s = "";
+	s := "";
 	for e in this do {
 		s += (e -> String);
 	}
@@ -187,7 +187,7 @@ Vector::unshift(ref this, ref value) => {
 }
 
 Vector::pop(ref this, ref count : Number) => {
-	var nv = alloc(length(this) - count);
+	nv := alloc(length(this) - count);
 	for i in [0 .. length(this) - count] do {
 		nv[i] = this[i];
 	}
@@ -195,7 +195,7 @@ Vector::pop(ref this, ref count : Number) => {
 }
 
 Vector::shift(ref this, ref count : Number) => {
-	var nv = alloc(length(this) - count);
+	nv := alloc(length(this) - count);
 	for i in [count .. length(this)] do {
 		nv[i - count] = this[i];
 	}
@@ -211,7 +211,7 @@ Vector::shift(ref this) => {
 }
 
 Vector::map(ref this, ref f : Function) => {
-	var nv = this;
+	nv := this;
 	for e in nv do {
 		e = f(e);
 	}
@@ -219,7 +219,7 @@ Vector::map(ref this, ref f : Function) => {
 }
 
 Vector::filter(ref this, ref f : Function) => {
-	var nv = [];
+	nv := [];
 	for e in this do {
 		if f(e) then {
 			nv += [e];
@@ -229,7 +229,7 @@ Vector::filter(ref this, ref f : Function) => {
 }
 
 Vector::reverse(ref this) => {
-	var nv = alloc(length(this));
+	nv := alloc(length(this));
 	for i in [0 .. length(this)] do {
 		nv[i] = this[length(this) - i - 1];
 	}
@@ -259,8 +259,8 @@ String::unshift(ref this, ref value : Number) => {
 }
 
 String::pop(ref this, ref count : Number) => {
-	var v = (this -> Vector);
-	var nv = alloc(length(v) - count);
+	v := (this -> Vector);
+	nv := alloc(length(v) - count);
 	for i in [0 .. length(v) - count] do {
 		nv[i] = v[i];
 	}
@@ -268,8 +268,8 @@ String::pop(ref this, ref count : Number) => {
 }
 
 String::shift(ref this, ref count : Number) => {
-	var v = (this -> Vector);
-	var nv = alloc(length(v) - count);
+	v := (this -> Vector);
+	nv := alloc(length(v) - count);
 	for i in [count .. length(v)] do {
 		nv[i - count] = v[i];
 	}

@@ -1,7 +1,7 @@
 load "bitmap.ruo";
 
 static mandel class {
-	var ASCII = [
+	ASCII := [
 		" ",
 		" ",
 		".",
@@ -26,10 +26,9 @@ static mandel class {
 	];
 
 	mandelConverger(ref real : Number, ref imag : Number) => {
-		var zReal = real;
-		var zImag = imag;
-		var r2;
-		var i2;
+		zReal := real;
+		zImag := imag;
+		var r2, i2;
 		for i in [0 .. ASCII.size()] do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
@@ -45,9 +44,9 @@ static mandel class {
 	}
 
 	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
-		var dx = (end_x - start_x) / (width - 1);
-		var dy = (end_y - start_y) / (height - 1);
-		var s = "";
+		dx := (end_x - start_x) / (width - 1);
+		dy := (end_y - start_y) / (height - 1);
+		s := "";
 		for i in [0 .. height] do {
 			for j in [0 .. width] do {
 				s += ASCII[mandelConverger(start_x + j * dx, end_y - i * dy)];
@@ -60,13 +59,13 @@ static mandel class {
 	}
 
 	print(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
-		var image = bitmap.allocate(height, width);
+		image := bitmap.allocate(height, width);
 
-		var dx = (end_x - start_x) / (width - 1);
-		var dy = (end_y - start_y) / (height - 1);
+		dx := (end_x - start_x) / (width - 1);
+		dy := (end_y - start_y) / (height - 1);
 		for i in [0 .. height] do {
 			for j in [0 .. width] do {
-				var value = mandelConverger(start_x + j * dx, end_y - i * dy) / ASCII.size();
+				value := mandelConverger(start_x + j * dx, end_y - i * dy) / ASCII.size();
 				image[height - i - 1][j] = [math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255)];
 			}
 		}
@@ -74,11 +73,11 @@ static mandel class {
 	}
 }
 
-var x = -0.5;
-var y = 0;
-var scale = 1;
-var width = 120;
-var height = 40;
+x := -0.5;
+y := 0;
+scale := 1;
+width := 120;
+height := 40;
 
 system("cls");
 

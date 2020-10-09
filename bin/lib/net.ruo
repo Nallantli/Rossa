@@ -16,11 +16,10 @@ static net class {
 		}
 	}
 
-	var __DEFAULT_NET_SERVICE__ = new Service();
+	__DEFAULT_NET_SERVICE__ := new Service();
 
 	struct Socket class {
-		var ptr;
-		var service;
+		var ptr, service;
 
 		init(ref ip : String, ref port : Number) => {
 			ptr = (extern_call libnet._socket_init(ip, port -> Number, __DEFAULT_NET_SERVICE__.ptr));
@@ -67,8 +66,7 @@ static net class {
 	}
 
 	struct Server class {
-		var ptr;
-		var service;
+		var ptr, service;
 
 		init(ref port : Number) => {
 			ptr = (extern_call libnet._server_init(port -> Number, __DEFAULT_NET_SERVICE__.ptr));

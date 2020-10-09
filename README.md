@@ -89,13 +89,13 @@ Basic File/Folder Output:
 ```ruota
 load "fs.ruo";
 
-var p = new Path();
+p := new Path();
 p = p / "Example";
 if !p.exists() then {
 	p.mkdirs();
 }
 
-var io = new FileIO(p / "example.txt");
+io := new FileIO(p / "example.txt");
 io.write("Hello World");
 io.close();
 ```
@@ -129,6 +129,7 @@ Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
 `a && b`|Yes|No|Logical And|Left|3
 `a || b`|Yes|No|Logical Or|Left|2
 `a = b`|Yes|~|Value Assignment|Right|1
+`a := b`|No|~|Variable Declaration and Assignment|Right|1
 `a[b]`|Yes|~|Indexing|~|~
 `a(b,...)`|Yes|~|Function Calling|~|~
 `!a`|No**|~|Unary Logical Negation|~|~

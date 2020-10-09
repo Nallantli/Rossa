@@ -1,6 +1,6 @@
 SOE(ref MAX : Number) => {
-	var start = clock.milliseconds();
-	var a = alloc(MAX);
+	start := clock.milliseconds();
+	a := alloc(MAX);
 	putln("Alloc Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
@@ -10,10 +10,10 @@ SOE(ref MAX : Number) => {
 	putln("Predef Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
-    var c = MAX - 2;
+    c := MAX - 2;
 	for i in [2 .. (MAX ** 0.5)] do {
 		if a[i] then {
-			var n = i ** 2;
+			n := i ** 2;
 			while n < MAX do {
 			    if a[n] then {
 			        c -= 1;
@@ -26,8 +26,8 @@ SOE(ref MAX : Number) => {
 	putln("Algo Time: " + ((clock.milliseconds() - start) -> String) + "ms");
 
 	start = clock.milliseconds();
-	var b = alloc(c);
-	var j = 0;
+	b := alloc(c);
+	j := 0;
 	for i in [2 .. MAX] do {
 		if a[i] then {
 			b[j] = i;
@@ -40,9 +40,9 @@ SOE(ref MAX : Number) => {
 }
 
 test(ref MAX : Number) => {
-	var start = clock.milliseconds();
-	var result = SOE(MAX);
-	var time = clock.milliseconds() - start;
+	start := clock.milliseconds();
+	result := SOE(MAX);
+	time := clock.milliseconds() - start;
 
 	putln((result.length() -> String) + " Primes found for numbers below " + (MAX -> String));
 	putln("Total Time: " + (time -> String) + "ms");

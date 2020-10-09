@@ -112,8 +112,13 @@ public:
 
 class DeclareI : public CastingI
 {
+protected:
+	const object_type_t vtype;
+	const std::shared_ptr<Instruction> a;
+	const bool isConst;
+
 public:
-	DeclareI(const hashcode_t &, const Token &);
+	DeclareI(const hashcode_t &, const object_type_t &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -273,15 +278,10 @@ public:
 
 class SetI : public BinaryI
 {
+protected:
+const bool isConst;
 public:
-	SetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-	const Symbol evaluate(Scope *) const override;
-};
-
-class ConstSetI : public BinaryI
-{
-public:
-	ConstSetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
+	SetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -447,6 +447,16 @@ class CharSI : public UnaryI
 {
 public:
 	CharSI(const std::shared_ptr<Instruction> &, const Token &);
+	const Symbol evaluate(Scope *) const override;
+};
+
+class DeclareVarsI : public Instruction
+{
+protected:
+	const std::vector<hashcode_t> keys;
+
+public:
+	DeclareVarsI(const std::vector<hashcode_t> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 

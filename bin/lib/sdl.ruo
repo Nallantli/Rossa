@@ -20,66 +20,51 @@ extern _rotatable_setAngle in "libsdl";
 extern _event_poll in "libsdl";
 
 static Event class {
-	var NULL = 0;
+	NULL := 0;
+	QUIT := 256;
+	WINDOW := 512;
+	KEY_DOWN := 768;
+	KEY_UP := 769;
+	TEXT_EDITING := 770;
+	TEXT_INPUT := 771;
+	KEYMAP_CHANGED := 772;
+	MOUSE_MOTION := 1024;
+	MOUSE_BUTTON_DOWN := 1025;
+	MOUSE_BUTTON_UP := 1026;
+	MOUSE_WHEEL := 1027;
+	JOY_AXIS_MOTION := 1536;
+	JOY_BALL_MOTION := 1537;
+	JOY_HAT_MOTION := 1538;
+	JOY_BUTTON_DOWN := 1539;
+	JOY_BUTTON_UP := 1540;
+	JOY_DEVICE_ADDED := 1541;
+	JOY_DEVICE_REMOVED := 1542;
+	CONTROLLER_AXIS_MOTION := 1616;
+	CONTROLLER_BUTTON_DOWN := 1617;
+	CONTROLLER_BUTTON_UP := 1618;
+	CONTROLLER_DEVICE_ADDED := 1619;
+	CONTROLLER_DEVICE_REMOVED := 1620;
+	CONTROLLER_DEVICE_REMAPPED := 1621;
+	FINGER_DOWN := 1792;
+	FINGER_UP := 1793;
+	FINGER_MOTION := 1794;
+	DOLLAR_GESTURE := 2048;
+	DOLLAR_RECORD := 2049;
+	MULTI_GESTURE := 2050;
+	CLIPBOARD_UPDATE := 2304;
+	DROP_FILE := 4096;
+	DROP_TEXT := 4097;
+	DROP_BEGIN := 4098;
+	DROP_COMPLETE := 4099;
+	AUDIO_DEVICE_ADDED := 4352;
+	AUDIO_DEVICE_REMOVED := 4353;
+	SENSOR_UPDATE := 4608;
+	RENDER_TARGETS_RESET := 8192;
+	RENDER_DEVICE_RESET := 8193;
+	USER_EVENT := 32768;
+	LAST_EVENT := 65535;
 
-	var QUIT = 256;
-
-	var WINDOW = 512;
-
-	var KEY_DOWN = 768;
-	var KEY_UP = 769;
-	var TEXT_EDITING = 770;
-	var TEXT_INPUT = 771;
-	var KEYMAP_CHANGED = 772;
-
-	var MOUSE_MOTION = 1024;
-	var MOUSE_BUTTON_DOWN = 1025;
-	var MOUSE_BUTTON_UP = 1026;
-	var MOUSE_WHEEL = 1027;
-
-	var JOY_AXIS_MOTION = 1536;
-	var JOY_BALL_MOTION = 1537;
-	var JOY_HAT_MOTION = 1538;
-	var JOY_BUTTON_DOWN = 1539;
-	var JOY_BUTTON_UP = 1540;
-	var JOY_DEVICE_ADDED = 1541;
-	var JOY_DEVICE_REMOVED = 1542;
-
-	var CONTROLLER_AXIS_MOTION = 1616;
-	var CONTROLLER_BUTTON_DOWN = 1617;
-	var CONTROLLER_BUTTON_UP = 1618;
-	var CONTROLLER_DEVICE_ADDED = 1619;
-	var CONTROLLER_DEVICE_REMOVED = 1620;
-	var CONTROLLER_DEVICE_REMAPPED = 1621;
-
-	var FINGER_DOWN = 1792;
-	var FINGER_UP = 1793;
-	var FINGER_MOTION = 1794;
-
-	var DOLLAR_GESTURE = 2048;
-	var DOLLAR_RECORD = 2049;
-	var MULTI_GESTURE = 2050;
-
-	var CLIPBOARD_UPDATE = 2304;
-
-	var DROP_FILE = 4096;
-	var DROP_TEXT = 4097;
-	var DROP_BEGIN = 4098;
-	var DROP_COMPLETE = 4099;
-
-	var AUDIO_DEVICE_ADDED = 4352;
-	var AUDIO_DEVICE_REMOVED = 4353;
-
-	var SENSOR_UPDATE = 4608;
-
-	var RENDER_TARGETS_RESET = 8192;
-	var RENDER_DEVICE_RESET = 8193;
-
-	var USER_EVENT = 32768;
-
-	var LAST_EVENT = 65535;
-
-	var Win = {
+	Win := {
 		SHOWN : 1,
 		HIDDEN : 2,
 		EXPOSED : 3,
@@ -104,14 +89,14 @@ static Event class {
 }
 
 static Color class {
-	var RED = { red : 0xff, green : 0x00, blue : 0x00, alpha : 0xff };
-	var BLUE = { red : 0x00, green : 0x00, blue : 0xff, alpha : 0xff };
-	var GREEN = { red : 0x00, green : 0xff, blue : 0x00, alpha : 0xff };
-	var YELLOW = { red : 0xff, green : 0xff, blue : 0x00, alpha : 0xff };
-	var MAGENTA = { red : 0xff, green : 0x00, blue : 0xff, alpha : 0xff };
-	var CYAN = { red : 0x00, green : 0xff, blue : 0xff, alpha : 0xff };
-	var BLACK = { red : 0x00, green : 0x00, blue : 0x00, alpha : 0xff };
-	var WHITE = { red : 0xff, green : 0xff, blue : 0xff, alpha : 0xff };
+	RED := { red : 0xff, green : 0x00, blue : 0x00, alpha : 0xff };
+	BLUE := { red : 0x00, green : 0x00, blue : 0xff, alpha : 0xff };
+	GREEN := { red : 0x00, green : 0xff, blue : 0x00, alpha : 0xff };
+	YELLOW := { red : 0xff, green : 0xff, blue : 0x00, alpha : 0xff };
+	MAGENTA := { red : 0xff, green : 0x00, blue : 0xff, alpha : 0xff };
+	CYAN := { red : 0x00, green : 0xff, blue : 0xff, alpha : 0xff };
+	BLACK := { red : 0x00, green : 0x00, blue : 0x00, alpha : 0xff };
+	WHITE := { red : 0xff, green : 0xff, blue : 0xff, alpha : 0xff };
 
 	`()`(ref r : Number, ref g : Number, ref b : Number) => {
 		return { red : r, green : g, blue : b, alpha : 0xff };
@@ -124,7 +109,7 @@ static Color class {
 	HSL(ref h : Number, ref s : Number, ref l : Number) => HSL(h, s, l, 0xff);
 
 	HSL(ref h : Number, ref s : Number, ref l : Number, ref a : Number) => {
-		var hueToRgb = (ref p : Number, ref q : Number, t : Number) => {
+		hueToRgb(ref p : Number, ref q : Number, t : Number) => {
 			if t < 0 then {
 				t += 1;
 			} elseif t > 1 then {
@@ -140,17 +125,15 @@ static Color class {
 				return p + (q - p) * (2/3 - t) * 6;
 			}
 			return p;
-		};
-		var r;
-		var g;
-		var b;
+		}
+		var r, g, b;
 		if s == 0 then {
 			r = l;
 			g = l;
 			b = l;
 		} else {
-			var q = (l < 0.5 ? (l * (1 + s)) : (l + s - l * s));
-			var p = 2 * l - q;
+			q := (l < 0.5 ? (l * (1 + s)) : (l + s - l * s));
+			p := 2 * l - q;
 			r = hueToRgb(p, q, h + 1/3);
 			g = hueToRgb(p, q, h);
 			b = hueToRgb(p, q, h - 1/3);
@@ -298,12 +281,10 @@ struct Window class {
 		}
 	}
 
-	var ptr;
-	var windowID;
-	var renderer;
+	var ptr, windowID, renderer;
 
 	init(ref title : String, ref width : Number, ref height : Number) => {
-		var data = (extern_call libsdl._window_init(title, width, height));
+		data := (extern_call libsdl._window_init(title, width, height));
 		ptr = data[0];
 		windowID = data[1];
 		extern_call libsdl._window_register(windowID, this);

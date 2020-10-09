@@ -1,22 +1,22 @@
 load "sdl.ruo";
 
-var w = new Window("Image Test", 800, 600);
-var r = w.getRenderer();
-var i1 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 0, 200, 200));
-var i2 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 200, 200, 200));
-var i3 = r.add(new Shape.Image("docs/logo/Logo.png", 0, 400, 200, 200));
-var i4 = r.add(new Shape.Image("docs/logo/Logo-Solid.png", 200, 0, 600, 600));
+w := new Window("Image Test", 800, 600);
+r := w.getRenderer();
+i1 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 0, 200, 200));
+i2 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 200, 200, 200));
+i3 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 400, 200, 200));
+i4 := r.add(new Shape.Image("docs/logo/Logo-Solid.png", 200, 0, 600, 600));
 
-var hue = 0;
-var r1 = 0;
-var r2 = 0;
-var r3 = 0;
+hue := 0;
+r1 := 0;
+r2 := 0;
+r3 := 0;
 
 r.update();
 
-var start = clock.milliseconds();
+start := clock.milliseconds();
 while Event.poll().type != Event.QUIT do {
-	var lapse = clock.milliseconds() - start;
+	lapse := clock.milliseconds() - start;
 	if lapse > 10 then {
 		start = clock.milliseconds();
 		hue = (hue + 0.1) % 360;

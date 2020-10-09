@@ -1,18 +1,18 @@
 load "sdl.ruo";
 
-var x = -0.5;
-var y = 0;
-var scale = 1;
-var width = 64;
-var height = 64;
+x := -0.5;
+y := 0;
+scale := 1;
+width := 64;
+height := 64;
 
-var windowScale = 10;
+windowScale := 10;
 
-var window = new Window("Mandelbrot", width * windowScale, height * windowScale);
-var renderer = window.getRenderer();
+window := new Window("Mandelbrot", width * windowScale, height * windowScale);
+renderer := window.getRenderer();
 
-var cache = alloc(width).map((e) => alloc(height));
-var buffer = alloc(width).map((e) => alloc(height));
+cache := alloc(width).map((e) => alloc(height));
+buffer := alloc(width).map((e) => alloc(height));
 
 for x in [0 .. width] do {
 	for y in [0 .. height] do {
@@ -23,13 +23,12 @@ for x in [0 .. width] do {
 }
 
 static mandel class {
-	var precision = 64;
+	precision := 64;
 
 	mandelConverger(ref real : Number, ref imag : Number) => {
-		var zReal = real;
-		var zImag = imag;
-		var r2;
-		var i2;
+		zReal := real;
+		zImag := imag;
+		var r2, i2;
 		for i in [0 .. precision] do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
@@ -45,14 +44,14 @@ static mandel class {
 	}
 
 	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
-		var dx = (end_x - start_x) / (width - 1);
-		var dy = (end_y - start_y) / (height - 1);
+		dx := (end_x - start_x) / (width - 1);
+		dy := (end_y - start_y) / (height - 1);
 		for i in [0 .. width] do {
 			for j in [0 .. height] do {
-				var v = mandelConverger(start_x + i * dx, end_y - j * dy);
+				v := mandelConverger(start_x + i * dx, end_y - j * dy);
 				if cache[i][j] != v then {
 					cache[i][j] = v;
-					var value = v / precision;
+					value := v / precision;
 					buffer[i][j].setColor(math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255), 255);
 				}
 			}
@@ -64,8 +63,7 @@ static mandel class {
 
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
-	var e;
-	while (e = Event.poll()).type != Event.KEY_DOWN do {
+	while (e := Event.poll()).type != Event.KEY_DOWN do {
 		if (e.type == Event.QUIT) then {
 			exit();
 		}

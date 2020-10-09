@@ -1,21 +1,22 @@
 load "sdl.ruo";
 
 static snake_game class {
-	var height;
-	var width;
-	var scale;
-	var speed = 80;
-	var LOST = false;
-	var direction;
-	var newDir;
-	var posX;
-	var posY;
-	var size;
-	var rand;
-	var cache;
-	var buffer;
-	var w;
-	var r;
+	var	height,
+		width,
+		scale,
+		direction,
+		newDir,
+		posX,
+		posY,
+		snake_size,
+		rand,
+		cache,
+		buffer,
+		w,
+		r,
+		LOST;
+
+	speed := 80;
 
 	refresh() => {
 		if !LOST then {
@@ -37,14 +38,14 @@ static snake_game class {
 			}
 
 			if cache[posX][posY] == -1 then {
-				size += 1;
+				snake_size += 1;
 				setApple();
 			} elseif cache[posX][posY] > 0 then {
 				LOST = true;
 				putln("You Lost!");
 			}
 
-			cache[posX][posY] = size;
+			cache[posX][posY] = snake_size;
 		}
 
 		for x in [0 .. width] do {
@@ -71,8 +72,7 @@ static snake_game class {
 	}
 
 	setApple() => {
-		var x;
-		var y;
+		var x, y;
 		while true do {
 			x = rand.nexti(0, width - 1);
 			y = rand.nexti(0, height - 1);
@@ -89,7 +89,7 @@ static snake_game class {
 		newDir = 0;
 		posX = 5;
 		posY = 5;
-		size = 1;
+		snake_size = 1;
 		for x in cache do {
 			for y in x do {
 				y = 0;
@@ -99,7 +99,7 @@ static snake_game class {
 	}
 
 	evaluateKeys() => {
-		var e = Event.poll();
+		e := Event.poll();
 		if e.type == Event.QUIT then {
 			exit();
 		} elseif e.type == Event.KEY_DOWN then {
@@ -155,10 +155,10 @@ static snake_game class {
 
 		reset();
 
-		var start = clock.milliseconds();
+		start := clock.milliseconds();
 		while true do {
 			evaluateKeys();
-			var lapse = clock.milliseconds() - start;
+			lapse := clock.milliseconds() - start;
 			if lapse > speed then {
 				start = clock.milliseconds();
 				refresh();

@@ -1,12 +1,12 @@
 load "net.ruo";
 
-var server = new net.Server(9999);
+server := new net.Server(9999);
 putln("Server Created");
 var data;
 
 while data != "exit\n" do {
 	putln("Waiting for Connection...");
-	var socket = server.accept();
+	socket := server.accept();
 	putln("Connected");
 
 	while true do {

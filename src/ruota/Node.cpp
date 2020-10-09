@@ -465,14 +465,14 @@ std::unique_ptr<Node> ClassNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 VarNode::VarNode(
-	hashcode_t key,
+	std::vector<hashcode_t> keys,
 	const Token token) : Node(VAR_NODE,
 							  token),
-						 key(key) {}
+						 keys(keys) {}
 
 std::shared_ptr<Instruction> VarNode::genParser() const
 {
-	return std::make_shared<DeclareI>(key, token);
+	return std::make_shared<DeclareVarsI>(keys, token);
 }
 
 bool VarNode::isConst() const
@@ -493,13 +493,13 @@ void VarNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VAR : " << MAIN_HASH.deHash(key) << "\n"
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VAR : " << keys.size() << "\n"
 			  << colorASCII(RESET_TEXT);
 }
 
 std::unique_ptr<Node> VarNode::fold() const
 {
-	return std::make_unique<VarNode>(key, token);
+	return std::make_unique<VarNode>(keys, token);
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -883,27 +883,27 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 		return std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token);
 
 	if (op == "+=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<AddI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<AddI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "-=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<SubI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<SubI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "*=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<MulI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<MulI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "/=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<DivI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<DivI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "%=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<ModI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<ModI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "**=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<PowI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<PowI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "|=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BOrI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BOrI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "&=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BAndI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BAndI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "^=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BXOrI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BXOrI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == "<<=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == ">>=")
-		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token), token);
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token), false, token);
 
 	if (op == "<")
 		return std::make_shared<LessI>(a->genParser(), b->genParser(), token);
@@ -927,10 +927,17 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
 	if (op == "=")
+		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
+	if (op == ":=")
 	{
-		if (b->isConst())
-			return std::make_shared<ConstSetI>(a->genParser(), b->genParser(), token);
-		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
+		if (a->getType() != ID_NODE && a->getType() != BID_NODE)
+			throw RuotaError("Only variables may be declared with `:=`", token);
+		hashcode_t t;
+		if (a->getType() == ID_NODE)
+			t = ((IDNode *)a.get())->getKey();
+		else
+			t = MAIN_HASH.hashString(((BIDNode *)a.get())->getKey());
+		return std::make_shared<DeclareI>(t, 0, b->genParser(), b->isConst(), token);
 	}
 
 	throw RuotaError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);

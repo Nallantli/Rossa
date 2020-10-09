@@ -123,10 +123,10 @@ public:
 class VarNode : public Node
 {
 private:
-	hashcode_t key;
+	std::vector<hashcode_t> keys;
 
 public:
-	VarNode(hashcode_t, const Token);
+	VarNode(std::vector<hashcode_t>, const Token);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;

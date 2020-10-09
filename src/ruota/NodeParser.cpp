@@ -629,11 +629,6 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 		return parseNumNode();
 	case TOK_IDF:
 		return parseIDNode();
-	case TOK_VAR:
-		nextToken();
-		ret = std::make_unique<VarNode>(MAIN_HASH.hashString(currentToken.getValueString()), currentToken);
-		nextToken();
-		return ret;
 	case TOK_STR_LIT:
 		ret = std::make_unique<ContainerNode>(Symbol(currentToken.getValueString()), currentToken);
 		nextToken();
@@ -881,7 +876,6 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 		return nullptr;
 	case TOK_NUM:
 	case TOK_IDF:
-	case TOK_VAR:
 	case TOK_TRUE:
 	case TOK_FALSE:
 	case TOK_NIL:
@@ -1319,6 +1313,31 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 	case TOK_STATIC:
 	case TOK_VIRTUAL:
 		return parseClassNode();
+	case TOK_VAR:
+	{
+		auto marker = currentToken;
+		nextToken();
+		int i = 0;
+		std::vector<hashcode_t> v;
+		while (currentToken.getType() != NULL_TOK)
+		{
+			if (i++ > 0)
+			{
+				if (currentToken.getType() != ',')
+					return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				nextToken();
+			}
+			if (currentToken.getType() != TOK_IDF)
+				return logErrorN(_EXPECTED_IDF_, currentToken);
+			v.push_back(MAIN_HASH.hashString(currentToken.getValueString()));
+			nextToken();
+			if (currentToken.getType() == ';') {
+				nextToken();
+				return std::make_unique<VarNode>(v, marker);
+			}
+		}
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+	}
 	case TOK_THROW:
 	{
 		auto marker = currentToken;
