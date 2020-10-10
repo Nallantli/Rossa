@@ -714,25 +714,46 @@ std::unique_ptr<Node> NodeParser::parseVectorNode()
 {
 	nextToken();
 	std::vector<std::unique_ptr<Node>> args;
+	std::vector<std::unique_ptr<Node>> curr;
+	bool flag = false;
 	int i = 0;
 	while (currentToken.getType() != NULL_TOK && currentToken.getType() != ']')
 	{
+		int delim = ',';
+
 		if (i > 0)
 		{
-			if (currentToken.getType() == NULL_TOK || currentToken.getType() != ',')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+			if (currentToken.getType() != ',' && currentToken.getType() != ';')
+				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",` `;").str(), currentToken);
+			delim = currentToken.getType();
 			nextToken();
 		}
 		i++;
+
+		if (delim == ';')
+		{
+			flag = true;
+			args.push_back(std::make_unique<VectorNode>(std::move(curr), false, currentToken));
+			curr.clear();
+		}
+
 		if (auto b = parseEquNode())
-			args.push_back(std::move(b));
+			curr.push_back(std::move(b));
 		else
 			return nullptr;
 		if (currentToken.getType() == NULL_TOK)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "]").str(), currentToken);
 	}
 	nextToken();
-	return std::make_unique<VectorNode>(std::move(args), false, currentToken);
+	if (flag)
+	{
+		args.push_back(std::make_unique<VectorNode>(std::move(curr), false, currentToken));
+		return std::make_unique<VectorNode>(std::move(args), false, currentToken);
+	}
+	else
+	{
+		return std::make_unique<VectorNode>(std::move(curr), false, currentToken);
+	}
 }
 
 std::unique_ptr<Node> NodeParser::parseMapNode()
@@ -1331,7 +1352,8 @@ std::unique_ptr<Node> NodeParser::parseExprNode()
 				return logErrorN(_EXPECTED_IDF_, currentToken);
 			v.push_back(MAIN_HASH.hashString(currentToken.getValueString()));
 			nextToken();
-			if (currentToken.getType() == ';') {
+			if (currentToken.getType() == ';')
+			{
 				nextToken();
 				return std::make_unique<VarNode>(v, marker);
 			}

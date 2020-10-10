@@ -14,7 +14,7 @@ size_t Signature::validity(const std::vector<Symbol> &check) const
 		if (values[i] == NIL && values[i] != vt)
 			v += 1;
 		else if (values[i] == vt)
-			v += 2;
+			v += 3;
 		else if (check[i].getValueType() == OBJECT)
 		{
 			if (check[i].getObject(NULL)->extendsObject(values[i]))

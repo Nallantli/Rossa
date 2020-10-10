@@ -41,7 +41,7 @@ static net class {
 		}
 
 		`<<`(ref data) => {
-			send(data);
+			this.send(data);
 			refer this;
 		}
 

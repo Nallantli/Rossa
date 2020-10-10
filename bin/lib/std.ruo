@@ -170,57 +170,57 @@ static clock class {
 
 # ARRAY
 
-Array::join(ref this) => {
+Array::join(ref a) => {
 	s := "";
-	for e in this do {
+	for e in a do {
 		s += (e -> String);
 	}
 	return s;
 }
 
-Array::push(ref this, ref value) => {
-	refer this += [value];
+Array::push(ref a, ref value) => {
+	refer a += [value];
 }
 
-Array::unshift(ref this, ref value) => {
-	refer this = [value] + this;
+Array::unshift(ref a, ref value) => {
+	refer a = [value] + a;
 }
 
-Array::pop(ref this, ref count : Number) => {
-	nv := alloc(length(this) - count);
-	for i in 0 .. (length(this) - count) do {
-		nv[i] = this[i];
+Array::pop(ref a, ref count : Number) => {
+	nv := alloc(length(a) - count);
+	for i in 0 .. (length(a) - count) do {
+		nv[i] = a[i];
 	}
-	refer this = nv;
+	refer a = nv;
 }
 
-Array::shift(ref this, ref count : Number) => {
-	nv := alloc(length(this) - count);
-	for i in count .. length(this) do {
-		nv[i - count] = this[i];
+Array::shift(ref a, ref count : Number) => {
+	nv := alloc(length(a) - count);
+	for i in count .. length(a) do {
+		nv[i - count] = a[i];
 	}
-	refer this = nv;
+	refer a = nv;
 }
 
-Array::pop(ref this) => {
-	refer pop(this, 1);
+Array::pop(ref a) => {
+	refer pop(a, 1);
 }
 
-Array::shift(ref this) => {
-	refer shift(this, 1);
+Array::shift(ref a) => {
+	refer shift(a, 1);
 }
 
-Array::map(ref this, ref f : Function) => {
-	nv := this;
+Array::map(ref a, ref f : Function) => {
+	nv := a;
 	for e in nv do {
 		e = f(e);
 	}
 	return nv;
 }
 
-Array::filter(ref this, ref f : Function) => {
+Array::filter(ref a, ref f : Function) => {
 	nv := [];
-	for e in this do {
+	for e in a do {
 		if f(e) then {
 			nv += [e];
 		}
@@ -228,89 +228,79 @@ Array::filter(ref this, ref f : Function) => {
 	return nv;
 }
 
-Array::reverse(ref this) => {
-	nv := alloc(length(this));
-	for i in 0 .. length(this) do {
-		nv[i] = this[length(this) - i - 1];
+Array::reverse(ref a) => {
+	nv := alloc(length(a));
+	for i in 0 .. length(a) do {
+		nv[i] = a[length(a) - i - 1];
 	}
 	return nv;
 }
 
-Array::back(ref this) => {
-	refer this[size(this) - 1];
+Array::back(ref a) => {
+	refer a[size(a) - 1];
 }
 
-Array::front(ref this) => {
-	refer this[0];
+Array::front(ref a) => {
+	refer a[0];
 }
 
-Array::empty(ref this) => {
-	return size(this) == 0;
+Array::empty(ref a) => {
+	return size(a) == 0;
 }
 
 # STRING
 
-String::push(ref this, ref value : Number) => {
-	refer this += chars(value);
+String::push(ref s, ref value : Number) => {
+	refer s += chars(value);
 }
 
-String::unshift(ref this, ref value : Number) => {
-	refer this = chars(value) + this;
+String::unshift(ref s, ref value : Number) => {
+	refer s = chars(value) + s;
 }
 
-String::pop(ref this, ref count : Number) => {
-	v := (this -> Array);
-	nv := alloc(length(v) - count);
-	for i in 0 .. (length(v) - count) do {
-		nv[i] = v[i];
-	}
-	refer this = join(nv);
+String::pop(ref s, ref count : Number) => {
+	refer s = (s -> Array).pop(count).join();
 }
 
-String::shift(ref this, ref count : Number) => {
-	v := (this -> Array);
-	nv := alloc(length(v) - count);
-	for i in count .. length(v) do {
-		nv[i - count] = v[i];
-	}
-	refer this = join(nv);
+String::shift(ref s, ref count : Number) => {
+	refer s = (s -> Array).shift(count).join();
 }
 
-String::pop(ref this) => {
-	refer this = pop(this, 1);
+String::pop(ref s) => {
+	refer s = pop(s, 1);
 }
 
-String::shift(ref this) => {
-	refer this = shift(this, 1);
+String::shift(ref s) => {
+	refer s = shift(s, 1);
 }
 
-String::reverse(ref this) => {
-	return (this -> Array).reverse().join();
+String::reverse(ref s) => {
+	return (s -> Array).reverse().join();
 }
 
-String::back(ref this) => {
-	return (this -> Array).back();
+String::back(ref s) => {
+	return (s -> Array).back();
 }
 
-String::front(ref this) => {
-	return (this -> Array).front();
+String::front(ref s) => {
+	return (s -> Array).front();
 }
 
-String::empty(ref this) => {
-	return this(size) == 0;
+String::empty(ref s) => {
+	return size(s) == 0;
 }
 
 # MATH
 
 static math class {
 	EPS := (() => {
-		eps := 0.5;
+		eps := 1;
 		var prev;
 		while (1 + eps) != 1 do {
 			prev = eps;
 			eps /= 2;
 		}
-		return eps;
+		return prev;
 	})();
 
 	log(ref x : Number) => extern_call libstd._log(x);

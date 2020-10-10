@@ -80,34 +80,47 @@ private:
 
 public:
 	Function(const hashcode_t &, Scope *, const std::vector<std::pair<LexerTokenType, hashcode_t>> &, const std::shared_ptr<Instruction> &);
-	const Symbol evaluate(const std::vector<Symbol> &, const Symbol *, const Token *) const;
+	const Symbol evaluate(const std::vector<Symbol> &, const Token *) const;
 	size_t getArgSize() const;
 	hashcode_t getKey() const;
 	Scope *getParent() const;
 	const std::vector<std::pair<LexerTokenType, hashcode_t>> &getParams() const;
 };
 
-class Scope
+class Scope : public std::enable_shared_from_this<Scope>
 {
 private:
 	Scope *parent;
-	std::vector<hashcode_t> name_trace;
-	std::map<hashcode_t, Symbol> values;
+	const ObjectType type;
+	const std::shared_ptr<Instruction> body;
 	hashcode_t hashed_key;
+	std::vector<object_type_t> name_trace;
+	std::vector<object_type_t> extensions;
+	std::map<hashcode_t, Symbol> values;
+	void traceName(const hashcode_t &);
 
 public:
 	Scope();
 	Scope(Scope *, const hashcode_t &);
+	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const Scope *);
+	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const std::vector<object_type_t> &);
 	Scope *getParent() const;
+	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
 	void clear();
+	const Symbol getThis(const Token *);
+	const bool extendsObject(const hashcode_t &) const;
+	const ObjectType getType() const;
+	const std::shared_ptr<Instruction> getBody() const;
 	const Symbol &getVariable(const hashcode_t &, const Token *);
 	const Symbol &createVariable(const hashcode_t &, const Token *);
 	const Symbol &createVariable(const hashcode_t &, const Symbol &, const Token *);
 	const hashcode_t getHashedKey() const;
 	bool hasValue(const hashcode_t &) const;
+
+	~Scope();
 };
 
-class Object
+/*class Object
 {
 private:
 	const ObjectType type;
@@ -128,7 +141,7 @@ public:
 	bool extendsObject(const hashcode_t &) const;
 
 	~Object();
-};
+}; */
 
 class Node
 {
@@ -238,7 +251,7 @@ private:
 	std::vector<Symbol> valueVector;
 	std::map<size_t, std::map<Signature, std::shared_ptr<Function>>> valueFunction;
 	std::map<hashcode_t, Symbol> valueDictionary;
-	std::shared_ptr<Object> valueObject;
+	std::shared_ptr<Scope> valueObject;
 	unsigned long long references = 1;
 
 public:
@@ -246,7 +259,7 @@ public:
 	Value(const object_type_t &valueType) : type(TYPE_NAME), valueType(valueType) {}
 	Value(const bool &valueBool) : type(BOOLEAN_D), valueBool(valueBool) {}
 	Value(const std::shared_ptr<void> &valuePointer) : type(POINTER), valuePointer(valuePointer) {}
-	Value(const std::shared_ptr<Object> &valueObject) : type(OBJECT), valueObject(valueObject) {}
+	Value(const std::shared_ptr<Scope> &valueObject) : type(OBJECT), valueObject(valueObject) {}
 	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
 	Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber) {}
 	Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector) {}
@@ -299,7 +312,7 @@ public:
 
 	Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector)) {}
 
-	Symbol(const std::shared_ptr<Object> &valueObject) : type(ID_CASUAL), d(new Value(valueObject)) {}
+	Symbol(const std::shared_ptr<Scope> &valueObject) : type(ID_CASUAL), d(new Value(valueObject)) {}
 
 	Symbol(const Signature &ftype, const std::shared_ptr<Function> &valueFunction) : type(ID_CASUAL), d(new Value(ftype, valueFunction)) {}
 
@@ -407,11 +420,11 @@ public:
 		return d->valueBool;
 	}
 
-	inline const std::shared_ptr<Object> &getObject(const Token *token) const
+	inline Scope *getObject(const Token *token) const
 	{
 		if (d->type != OBJECT)
 			throw RuotaError(_NOT_OBJECT_, *token);
-		return d->valueObject;
+		return d->valueObject.get();
 	}
 
 	inline ValueType getValueType() const
@@ -515,7 +528,7 @@ public:
 		{
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_TO_STRING))
-				return o->getScope()->getVariable(Ruota::HASH_TO_STRING, token).call({}, this, token).getString(token);
+				return o->getVariable(Ruota::HASH_TO_STRING, token).call({}, token).getString(token);
 			return "<Object>";
 		}
 		case POINTER:
@@ -643,9 +656,9 @@ public:
 		}
 	}
 
-	inline const Symbol call(const std::vector<Symbol> &params, const Symbol *b, const Token *token) const
+	inline const Symbol call(const std::vector<Symbol> &params, const Token *token) const
 	{
-		return getFunction(params, token)->evaluate(params, b, token);
+		return getFunction(params, token)->evaluate(params, token);
 	}
 
 	inline void addFunctions(const Symbol *b, const Token *token) const
@@ -660,9 +673,9 @@ public:
 	{
 		if (b->d == d)
 			return;
-		if (d->type == OBJECT && d->valueObject != nullptr && d->valueObject->hasValue(Ruota::HASH_SET))
+		if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Ruota::HASH_SET))
 		{
-			d->valueObject->getScope()->getVariable(Ruota::HASH_SET, token).call({*b}, this, token);
+			d->valueObject->getVariable(Ruota::HASH_SET, token).call({*b}, token);
 			return;
 		}
 		d->clearData();
@@ -744,7 +757,7 @@ public:
 		{
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_EQUALS))
-				return o->getScope()->getVariable(Ruota::HASH_EQUALS, token).call({*b}, this, token).d->valueBool;
+				return o->getVariable(Ruota::HASH_EQUALS, token).call({*b}, token).d->valueBool;
 			return o == b->d->valueObject;
 		}
 		case ARRAY:
@@ -779,7 +792,7 @@ public:
 		{
 			auto o = d->valueObject;
 			if (o->hasValue(Ruota::HASH_NEQUALS))
-				return o->getScope()->getVariable(Ruota::HASH_NEQUALS, token).call({*b}, this, token).d->valueBool;
+				return o->getVariable(Ruota::HASH_NEQUALS, token).call({*b}, token).d->valueBool;
 		}
 		default:
 			return !this->equals(b, token);

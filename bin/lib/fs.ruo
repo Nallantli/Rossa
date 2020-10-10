@@ -39,7 +39,7 @@ struct Path class {
 	}
 
 	`=`(ref a) => {
-		init(a -> String);
+		this.init(a -> String);
 	}
 
 	`==`(ref a) => this -> String == a -> String;

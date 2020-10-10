@@ -2,7 +2,7 @@
 
 Function::Function(const hashcode_t &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hashcode_t>> &params, const std::shared_ptr<Instruction> &body) : key(key), parent(parent), params(params), body(body) {}
 
-const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Symbol *thisSym, const Token *token) const
+const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token) const
 {
 	Ruota::stack_trace.push_back(*this);
 
@@ -25,9 +25,6 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Sy
 		}
 		}
 	}
-
-	if (thisSym != NULL)
-		newScope.createVariable(Ruota::HASH_THIS, *thisSym, token);
 
 	auto temp = body->evaluate(&newScope);
 

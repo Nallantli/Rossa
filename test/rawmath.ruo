@@ -1,0 +1,46 @@
+EPSILON := (() => {
+	eps := 1;
+	var prev;
+	while (1 + eps) != 1 do {
+		prev = eps;
+		eps /= 2;
+	}
+	return prev;
+})();
+
+FACT(ref x : Number) => {
+	if x > 1 then {
+		return x * FACT(x - 1);
+	}
+	return x;
+}
+
+POW(ref x : Number, ref p : Number) => {
+	e := 1;
+	for i in 0 .. p do {
+		e *= x;
+	}
+	return e;
+}
+
+COS(ref x : Number) => {
+	c := 1;
+	i := 1;
+	while true do {
+		c += (val := POW(-1, i) * POW(x, 2 * i) / FACT(2 * i));
+		if math.abs(val) < EPSILON then {
+			break;
+		}
+		i += 1;
+	}
+	return c;
+}
+
+TRPZD(ref a : Number, ref b : Number, ref n : Number) => {
+	h := (b - a) / n;
+	sum := COS(a) + COS(b);
+	for k in 1 .. n do {
+		sum += 2 * COS(a + (k - 1) * h);
+	}
+	return h / 2 * sum;
+}

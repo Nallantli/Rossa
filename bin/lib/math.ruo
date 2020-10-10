@@ -1,167 +1,148 @@
-struct Vector class {
+struct Matrix class {
 	var a;
 
 	init(ref a : Array) => {
-		this.a = a;
+		if (a[0] -> Type) != Array then {
+			this.init([a]);
+		} else {
+			last := a[0].size();
+			for e in a do {
+				if e.size() != last then {
+					throw "Matrix is not properly defined by array: " + (a -> String);
+				}
+			}
+			this.a = a;
+		}
+	}
+
+	`=`(ref m : @Matrix) => {
+		this.a = m.a;
 	}
 
 	`=`(ref a : Array) => {
-		this.a = a;
+		this.init(a);
 	}
 
-	`=`(ref v : @Vector) => {
-		`=`(v.a);
-	}
-
-	`+`(ref v : Array) => {
-		if a.size() != v.size() then {
-			throw "Cannot add Vectors of unequal lengths";
-		}
-
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] += v[i];
-		}
-
-		return new Vector(nv);
-	}
-
-	`+`(ref v : @Vector) => {
-		return `+`(v.a);
-	}
-
-	`+`(ref v : Number) => {
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] += v;
-		}
-
-		return new Vector(nv);
-	}
-
-	`-`(ref v : Array) => {
-		if a.size() != v.size() then {
-			throw "Cannot add Vectors of unequal lengths";
-		}
-
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] -= v[i];
-		}
-
-		return new Vector(nv);
-	}
-
-	`-`(ref v : @Vector) => {
-		return `-`(v.a);
-	}
-
-	`-`(ref v : Number) => {
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] -= v;
-		}
-
-		return new Vector(nv);
-	}
-
-	`*`(ref v : Array) => {
-		if a.size() != v.size() then {
-			throw "Cannot add Vectors of unequal lengths";
-		}
-
-		val := 0;
-		for i in 0 .. a.size() do {
-			val += a[i] * v[i];
-		}
-
-		return val;
-	}
-
-	`*`(ref v : @Vector) => {
-		return `*`(v.a);
-	}
-
-	`*`(ref v : Number) => {
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] *= v;
-		}
-
-		return new Vector(nv);
-	}
-
-	inverse() => {
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] = 1 / nv[i];
-		}
-
-		return new Vector(nv);
-	}
-
-	`/`(ref v : Array) => {
-		return `*`((new Vector(v)).inverse());
-	}
-
-	`/`(ref v : @Vector) => {
-		return `*`(v.inverse());
-	}
-
-	`/`(ref v : Number) => {
-		nv := a;
-		for i in 0 .. a.size() do {
-			nv[i] /= v;
-		}
-
-		return new Vector(nv);
-	}
-
-	`[]`(ref i : Number) => {
-		return a[i];
-	}
-
-	`->String`() => {
-		s := "<";
-		i := 0;
-		for e in a do {
-			if (i += 1) > 1 then {
-				s += ", ";
+	`+`(ref n : Number) => {
+		nm := a;
+		for r in nm do {
+			for c in r do {
+				c += n;
 			}
-			s += e -> String;
 		}
-		return s + ">";
+		return new Matrix(nm);
 	}
+
+	`-`(ref n : Number) => `+`(-n);
+
+	`*`(ref n : Number) => {
+		nm := a;
+		for r in nm do {
+			for c in r do {
+				c *= n;
+			}
+		}
+		return new Matrix(nm);
+	}
+
+	`+`(ref m : @Matrix) => {
+		if m.a.size() != a.size() || m.a[0].size() != a[0].size() then {
+			throw "Cannot conduct arithmatic on matrices of different sizes";
+		}
+
+		nm := a;
+
+		for i in 0 .. nm.size() do {
+			for j in 0 .. nm[0].size() do {
+				nm += m.a[i][j];
+			}
+		}
+
+		return new Matrix(nm);
+	}
+
+	`+`(ref m : Array) => `+`(new Matrix(m));
+
+	`-`(ref m : @Matrix) => `+`(m * -1);
+
+	`-`(ref m : Array) => `-`(new Matrix(m));
+
+	`*`(ref m : @Matrix) => {
+		if a.size() != m.a[0].size() then {
+			throw "Cannot multiply these Matrices";
+		}
+
+		nm := alloc(m.a.size()).map((e) => alloc(a[0].size()));
+
+		for i in 0 .. nm.size() do {
+			for j in 0 .. nm[0].size() do {
+				nm[i][j] = 0;
+				for k in 0 .. m.a[0].size() do {
+					nm[i][j] += a[k][j] * m.a[i][k];
+				}
+			}
+		}
+
+		return new Matrix(nm);
+	}
+
+	`*`(ref m : Array) => `*`(new Matrix(m));
+
+	det() => {
+		if a.size() != a[0].size() then {
+			throw "Determinants are undefined for non-square Matrices";
+		}
+
+		if a.size() == 2 then {
+			return a[0][0] * a[1][1] - a[1][0] * a[0][1];
+		}
+
+		sum := 0;
+		for i in 0 .. a.size() do {
+			nm := alloc(a.size() - 1).map((e) => alloc(a.size() - 1));
+			y := 0;
+			for j in 1 .. a.size() do {
+				x := 0;
+				for k in 0 .. a.size() do {
+					if k != i then {
+						nm[x][y] = a[k][j];
+						x += 1;
+					}
+				}
+				y += 1;
+			}
+			sum += (new Matrix(nm)).det() * ((-1) ** i) * a[i][0];
+		}
+		return sum;
+	}
+
+	`()`(ref i : Number) => new Matrix([a[i]]);
+
+	`()`(ref i, ref j) => {
+		if j == nil then {
+			return new Matrix([a[i]]);
+		}
+		if i == nil then {
+			col := [];
+			for k in 0 .. a.size() do {
+				col += [[a[k][j]]];
+			}
+			return new Matrix(col);
+		}
+		return new Matrix([[a[i][j]]];
+	}
+
+	`->Array`() => a;
+
+	`->String`() => (a -> String);
 }
 
-`+`(ref a : Number, ref b : @Vector) => {
-	return b + a;
-}
+`+`(ref n : Number, ref m : @Matrix) => m + n;
+`-`(ref n : Number, ref m : @Matrix) => m - n;
+`*`(ref n : Number, ref m : @Matrix) => m * n;
+`+`(ref a : Array, ref m : @Matrix) => new Matrix(a) + m;
+`-`(ref a : Array, ref m : @Matrix) => new Matrix(a) - m;
+`*`(ref a : Array, ref m : @Matrix) => new Matrix(a) * m;
 
-`+`(ref a : Array, ref b : @Vector) => {
-	return new Vector(a) + b;
-}
-
-`*`(ref a : Number, ref b : @Vector) => {
-	return b * a;
-}
-
-`*`(ref a : Array, ref b : @Vector) => {
-	return new Vector(a) * b;
-}
-
-`-`(ref a : Number, ref b : @Vector) => {
-	return b * -1 + a;
-}
-
-`-`(ref a : Array, ref b : @Vector) => {
-	return new Vector(a) - b;
-}
-
-`/`(ref a : Number, ref b : @Vector) => {
-	return b.inverse() * a;
-}
-
-`/`(ref a : Array, ref b : @Vector) => {
-	return new Vector(a) / b;
-}
+v := new Matrix([2,1,0]);
+m := new Matrix([1,0;-1,-3;2,1]);

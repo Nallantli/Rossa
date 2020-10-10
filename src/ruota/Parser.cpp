@@ -180,9 +180,9 @@ VariableI::VariableI(const hashcode_t &key, const Token &token) : CastingI(VARIA
 
 const Symbol VariableI::evaluate(Scope *scope) const
 {
-	auto d = scope->getVariable(key, &token);
-	return d;
-	return Symbol();
+	if (key == Ruota::HASH_THIS)
+		return scope->getThis(&token);
+	return scope->getVariable(key, &token);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -211,7 +211,7 @@ const Symbol IndexI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_INDEX))
-		return scope->getVariable(Ruota::HASH_INDEX, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_INDEX, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -225,7 +225,7 @@ const Symbol IndexI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_INDEX))
-			return o->getScope()->getVariable(Ruota::HASH_INDEX, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_INDEX, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "[]").str(), token);
@@ -252,7 +252,7 @@ const Symbol InnerI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->getType() != STATIC_O && o->getType() != INSTANCE_O)
 			throw RuotaError(_CANNOT_INDEX_OBJECT_, token);
-		return b->evaluate(o->getScope());
+		return b->evaluate(o);
 	}
 	default:
 		throw RuotaError(_CANNOT_INDEX_VALUE_, token);
@@ -277,63 +277,31 @@ const Symbol CallI::evaluate(Scope *scope) const
 		{
 		case OBJECT:
 		{
-			auto bb = reinterpret_cast<InnerI *>(a.get())->getB();
-			if (bb->getType() == VARIABLE && evalA.getObject(&token)->hasValue(reinterpret_cast<VariableI *>(bb.get())->getKey()))
-			{
-				auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(&token)->getScope());
-
-				if (evalB.getValueType() == OBJECT)
-				{
-					auto o = evalB.getObject(&token);
-					if (o->hasValue(Ruota::HASH_CALL))
-					{
-						return o->getScope()->getVariable(Ruota::HASH_CALL, &token).call(args, &evalB, &token);
-					}
-				}
-
-				return evalB.call(args, &evalA, &token);
-			}
-			break;
+			auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(&token));
+			return evalB.call(args, &token);
 		}
 		case DICTIONARY:
 		{
-			auto bb = reinterpret_cast<InnerI *>(a.get())->getB();
-			if (bb->getType() == VARIABLE && evalA.hasDictionaryKey(reinterpret_cast<VariableI *>(bb.get())->getKey()))
-			{
-				auto evalB = a->evaluate(scope);
-
-				if (evalB.getValueType() == OBJECT)
-				{
-					auto o = evalB.getObject(&token);
-					if (o->hasValue(Ruota::HASH_CALL))
-					{
-						return o->getScope()->getVariable(Ruota::HASH_CALL, &token).call(args, &evalB, &token);
-					}
-				}
-
-				return evalB.call(args, &evalA, &token);
-			}
-			break;
+			auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope);
+			return evalB.call(args, &token);
 		}
 		default:
-			break;
-		}
-
-		auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope);
-		std::vector<Symbol> params;
-		params.push_back(evalA);
-		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
-
-		if (evalB.getValueType() == OBJECT)
 		{
-			auto o = evalB.getObject(&token);
-			if (o->hasValue(Ruota::HASH_CALL))
-			{
-				return o->getScope()->getVariable(Ruota::HASH_CALL, &token).call(args, &evalB, &token);
-			}
-		}
+			auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope);
+			std::vector<Symbol> params;
+			params.push_back(evalA);
+			params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-		return evalB.call(params, NULL, &token);
+			if (evalB.getValueType() == OBJECT)
+			{
+				auto o = evalB.getObject(&token);
+				if (o->hasValue(Ruota::HASH_CALL))
+					return o->getVariable(Ruota::HASH_CALL, &token).call(args, &token);
+			}
+
+			return evalB.call(params, &token);
+		}
+		}
 	}
 	default:
 	{
@@ -343,15 +311,10 @@ const Symbol CallI::evaluate(Scope *scope) const
 		{
 			auto o = evalA.getObject(&token);
 			if (o->hasValue(Ruota::HASH_CALL))
-			{
-				return o->getScope()->getVariable(Ruota::HASH_CALL, &token).call(args, &evalA, &token);
-			}
+				return o->getVariable(Ruota::HASH_CALL, &token).call(args, &token);
 		}
 
-		if (args.size() > 0)
-			return evalA.call(args, NULL, &token);
-		else
-			return evalA.call(args, NULL, &token);
+		return evalA.call(args, &token);
 	}
 	}
 }
@@ -368,7 +331,7 @@ const Symbol AddI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_ADD))))
-		return scope->getVariable(Ruota::HASH_ADD, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_ADD, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -387,7 +350,7 @@ const Symbol AddI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_ADD))
-			return o->getScope()->getVariable(Ruota::HASH_ADD, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_ADD, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "+").str(), token);
@@ -406,7 +369,7 @@ const Symbol SubI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_SUB))))
-		return scope->getVariable(Ruota::HASH_SUB, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_SUB, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -438,7 +401,7 @@ const Symbol SubI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_SUB))
 		{
-			return o->getScope()->getVariable(Ruota::HASH_SUB, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_SUB, &token).call({evalB}, &token);
 		}
 	}
 	default:
@@ -458,7 +421,7 @@ const Symbol MulI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_MUL))))
-		return scope->getVariable(Ruota::HASH_MUL, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_MUL, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -468,7 +431,7 @@ const Symbol MulI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_MUL))
-			return o->getScope()->getVariable(Ruota::HASH_MUL, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_MUL, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "*").str(), token);
@@ -487,7 +450,7 @@ const Symbol DivI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_DIV))))
-		return scope->getVariable(Ruota::HASH_DIV, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_DIV, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -497,7 +460,7 @@ const Symbol DivI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_DIV))
-			return o->getScope()->getVariable(Ruota::HASH_DIV, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_DIV, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "/").str(), token);
@@ -516,7 +479,7 @@ const Symbol ModI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_MOD))))
-		return scope->getVariable(Ruota::HASH_MOD, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_MOD, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -526,7 +489,7 @@ const Symbol ModI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_MOD))
-			return o->getScope()->getVariable(Ruota::HASH_MOD, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_MOD, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "%").str(), token);
@@ -545,7 +508,7 @@ const Symbol PowI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_POW))))
-		return scope->getVariable(Ruota::HASH_POW, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_POW, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -556,7 +519,7 @@ const Symbol PowI::evaluate(Scope *scope) const
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_POW))
 		{
-			return o->getScope()->getVariable(Ruota::HASH_POW, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_POW, &token).call({evalB}, &token);
 		}
 	}
 	default:
@@ -576,7 +539,7 @@ const Symbol LessI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_LESS))))
-		return scope->getVariable(Ruota::HASH_LESS, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_LESS, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -592,7 +555,7 @@ const Symbol LessI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_LESS))
-			return o->getScope()->getVariable(Ruota::HASH_LESS, &token).call({evalB}, &evalA, &token).getBool(&token);
+			return o->getVariable(Ruota::HASH_LESS, &token).call({evalB}, &token).getBool(&token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<").str(), token);
@@ -611,7 +574,7 @@ const Symbol MoreI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_MORE))))
-		return scope->getVariable(Ruota::HASH_SUB, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_SUB, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -627,7 +590,7 @@ const Symbol MoreI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_MORE))
-			return o->getScope()->getVariable(Ruota::HASH_MORE, &token).call({evalB}, &evalA, &token).getBool(&token);
+			return o->getVariable(Ruota::HASH_MORE, &token).call({evalB}, &token).getBool(&token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">").str(), token);
@@ -646,7 +609,7 @@ const Symbol ELessI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_ELESS))))
-		return scope->getVariable(Ruota::HASH_ELESS, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_ELESS, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -662,7 +625,7 @@ const Symbol ELessI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_ELESS))
-			return o->getScope()->getVariable(Ruota::HASH_ELESS, &token).call({evalB}, &evalA, &token).getBool(&token);
+			return o->getVariable(Ruota::HASH_ELESS, &token).call({evalB}, &token).getBool(&token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<=").str(), token);
@@ -681,7 +644,7 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_EMORE))))
-		return scope->getVariable(Ruota::HASH_EMORE, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_EMORE, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -697,7 +660,7 @@ const Symbol EMoreI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_EMORE))
-			return o->getScope()->getVariable(Ruota::HASH_EMORE, &token).call({evalB}, &evalA, &token).getBool(&token);
+			return o->getVariable(Ruota::HASH_EMORE, &token).call({evalB}, &token).getBool(&token);
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">=").str(), token);
 	}
 	default:
@@ -717,7 +680,7 @@ const Symbol EqualsI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_EQUALS))
-		return scope->getVariable(Ruota::HASH_EQUALS, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_EQUALS, &token).call({evalA, evalB}, &token);
 
 	return Symbol(evalA.equals(&evalB, &token));
 }
@@ -734,7 +697,7 @@ const Symbol NEqualsI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_NEQUALS))
-		return scope->getVariable(Ruota::HASH_NEQUALS, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_NEQUALS, &token).call({evalA, evalB}, &token);
 
 	return Symbol(evalA.nequals(&evalB, &token));
 }
@@ -785,7 +748,7 @@ const Symbol BOrI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_B_OR))))
-		return scope->getVariable(Ruota::HASH_B_OR, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_B_OR, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -795,7 +758,7 @@ const Symbol BOrI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_OR))
-			return o->getScope()->getVariable(Ruota::HASH_B_OR, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_B_OR, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "|").str(), token);
@@ -814,7 +777,7 @@ const Symbol BXOrI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_B_XOR))))
-		return scope->getVariable(Ruota::HASH_B_XOR, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_B_XOR, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -824,7 +787,7 @@ const Symbol BXOrI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_XOR))
-			return o->getScope()->getVariable(Ruota::HASH_B_XOR, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_B_XOR, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "^").str(), token);
@@ -843,7 +806,7 @@ const Symbol BAndI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_B_AND))))
-		return scope->getVariable(Ruota::HASH_B_AND, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_B_AND, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -853,7 +816,7 @@ const Symbol BAndI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_AND))
-			return o->getScope()->getVariable(Ruota::HASH_B_AND, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_B_AND, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "&").str(), token);
@@ -872,7 +835,7 @@ const Symbol BShiftLeftI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_B_SH_L))))
-		return scope->getVariable(Ruota::HASH_B_SH_L, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_B_SH_L, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -882,7 +845,7 @@ const Symbol BShiftLeftI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_SH_L))
-			return o->getScope()->getVariable(Ruota::HASH_B_SH_L, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_B_SH_L, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "<<").str(), token);
@@ -901,7 +864,7 @@ const Symbol BShiftRightI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_B_SH_R))))
-		return scope->getVariable(Ruota::HASH_B_SH_R, &token).call({evalA, evalB}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_B_SH_R, &token).call({evalA, evalB}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -911,7 +874,7 @@ const Symbol BShiftRightI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_B_SH_R))
-			return o->getScope()->getVariable(Ruota::HASH_B_SH_R, &token).call({evalB}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_B_SH_R, &token).call({evalB}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % ">>").str(), token);
@@ -930,9 +893,20 @@ const Symbol SetI::evaluate(Scope *scope) const
 	auto evalB = b->evaluate(scope);
 
 	if (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_SET))
-		return scope->getVariable(Ruota::HASH_SET, &token).call({evalA, evalB}, NULL, &token);
-
-	evalA.set(&evalB, &token, isConst);
+	{
+		try
+		{
+			return scope->getVariable(Ruota::HASH_SET, &token).call({evalA, evalB}, &token);
+		}
+		catch (const RuotaError &e)
+		{
+			evalA.set(&evalB, &token, isConst);
+		}
+	}
+	else
+	{
+		evalA.set(&evalB, &token, isConst);
+	}
 	return evalA;
 }
 
@@ -1037,12 +1011,12 @@ ClassI::ClassI(hashcode_t key, ObjectType type, const std::shared_ptr<Instructio
 const Symbol ClassI::evaluate(Scope *scope) const
 {
 	std::shared_ptr<Instruction> nbody = body;
-	Object *ex = NULL;
+	Scope *ex = NULL;
 	if (extends)
 	{
 		auto e = extends->evaluate(scope);
 		auto eo = e.getObject(&token);
-		ex = eo.get();
+		ex = eo;
 		if (eo->getType() == STATIC_O)
 			throw RuotaError(_FAILURE_EXTEND_, token);
 		auto eb = eo->getBody();
@@ -1051,9 +1025,9 @@ const Symbol ClassI::evaluate(Scope *scope) const
 		temp.push_back(eb);
 		nbody = std::make_shared<ScopeI>(temp, token);
 	}
-	std::shared_ptr<Object> o = std::make_shared<Object>(scope, type, nbody, key, ex);
+	auto o = std::make_shared<Scope>(scope, type, nbody, key, ex);
 	if (type == STATIC_O)
-		body->evaluate(o->getScope());
+		body->evaluate(o.get());
 	auto d = Symbol(o);
 	scope->createVariable(key, d, &token);
 	return d;
@@ -1113,7 +1087,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		{
 			auto o = evalA.getObject(&token);
 			if (o->hasValue(Ruota::HASH_TO_NUMBER))
-				return o->getScope()->getVariable(Ruota::HASH_TO_NUMBER, &token).call({}, &evalA, &token);
+				return o->getVariable(Ruota::HASH_TO_NUMBER, &token).call({}, &token);
 			break;
 		}
 		default:
@@ -1134,7 +1108,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		{
 			auto o = evalA.getObject(&token);
 			if (o->hasValue(Ruota::HASH_TO_BOOLEAN))
-				return o->getScope()->getVariable(Ruota::HASH_TO_BOOLEAN, &token).call({}, &evalA, &token);
+				return o->getVariable(Ruota::HASH_TO_BOOLEAN, &token).call({}, &token);
 			break;
 		}
 		default:
@@ -1157,7 +1131,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		{
 			auto o = evalA.getObject(&token);
 			if (o->hasValue(Ruota::HASH_TO_DICTIONARY))
-				return o->getScope()->getVariable(Ruota::HASH_TO_DICTIONARY, &token).call({}, &evalA, &token);
+				return o->getVariable(Ruota::HASH_TO_DICTIONARY, &token).call({}, &token);
 			break;
 		}
 		default:
@@ -1180,7 +1154,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		{
 			auto o = evalA.getObject(&token);
 			if (o->hasValue(Ruota::HASH_TO_VECTOR))
-				return o->getScope()->getVariable(Ruota::HASH_TO_VECTOR, &token).call({}, &evalA, &token);
+				return o->getVariable(Ruota::HASH_TO_VECTOR, &token).call({}, &token);
 			break;
 		}
 		case STRING:
@@ -1270,7 +1244,7 @@ const Symbol UntilI::evaluate(Scope *scope) const
 	auto evalStep = step->evaluate(scope);
 
 	if (evalA.getValueType() != evalB.getValueType() && (evalA.getValueType() != OBJECT || (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_RANGE))))
-		return scope->getVariable(Ruota::HASH_RANGE, &token).call({evalA, evalB, evalStep}, NULL, &token);
+		return scope->getVariable(Ruota::HASH_RANGE, &token).call({evalA, evalB, evalStep}, &token);
 
 	switch (evalA.getValueType())
 	{
@@ -1296,7 +1270,7 @@ const Symbol UntilI::evaluate(Scope *scope) const
 	{
 		auto o = evalA.getObject(&token);
 		if (o->hasValue(Ruota::HASH_RANGE))
-			return o->getScope()->getVariable(Ruota::HASH_RANGE, &token).call({evalB, evalStep}, &evalA, &token);
+			return o->getVariable(Ruota::HASH_RANGE, &token).call({evalB, evalStep}, &token);
 	}
 	default:
 		throw RuotaError((boost::format(_OPERATOR_UNDECLARED_TYPE_) % "..").str(), token);
