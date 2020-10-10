@@ -4,6 +4,7 @@
 #include <string>
 #include <cmath>
 #include <sstream>
+#include <limits>
 
 typedef double long_double_t;
 typedef long long int long_int_t;
@@ -401,7 +402,7 @@ public:
 		case DOUBLE_NUM:
 		{
 			std::stringstream ss;
-			ss.precision(10);
+			ss.precision(std::numeric_limits<long_double_t>::digits10);
 			ss << std::fixed << valueDouble;
 			std::string ret = ss.str();
 			while (ret.back() == '0')

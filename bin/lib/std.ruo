@@ -303,6 +303,16 @@ String::empty(ref this) => {
 # MATH
 
 static math class {
+	EPS := (() => {
+		eps := 0.5;
+		var prev;
+		while (1 + eps) != 1 do {
+			prev = eps;
+			eps /= 2;
+		}
+		return eps;
+	})();
+
 	log(ref x : Number) => extern_call libstd._log(x);
 
 	abs(ref x : Number) => (x < 0 ? -x : x);

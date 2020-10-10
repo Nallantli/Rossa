@@ -90,6 +90,7 @@ while true do {
 		case "d" do x += 6 / width * scale;
 		case "q" do scale = math.min(scale * 2, 4);
 		case "e" do	scale /= 2;
+		case "z" do { break; }
 		case "p" do {
 			putln("Printing...");
 			mandel.print(x - scale, y - scale, x + scale, y + scale, width, math.floor(height * 2.5));
