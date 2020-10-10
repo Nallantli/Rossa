@@ -279,7 +279,8 @@ public:
 class SetI : public BinaryI
 {
 protected:
-const bool isConst;
+	const bool isConst;
+
 public:
 	SetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
 	const Symbol evaluate(Scope *) const override;

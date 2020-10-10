@@ -12,22 +12,22 @@ static bitmap class {
 		return image;
 	}
 
-	write(ref image : Vector, ref height : Number, ref width : Number, ref filename : String) => {
+	write(ref image : Array, ref height : Number, ref width : Number, ref filename : String) => {
 		f := new Writer(filename, true);
 		widthInBytes := width * 3;
 		paddingSize := (4 - (widthInBytes) % 4) % 4;
 		stride := widthInBytes + paddingSize;
 
 		padding := "";
-		for i in [0 .. paddingSize] do {
+		for i in 0 .. paddingSize do {
 			padding += "\0";
 		}
 
 		out := "";
 		out += createHeader(height, stride);
 		out += createInfo(height, width);
-		for i in [0 .. height] do {
-			for j in [0 .. width] do {
+		for i in 0 .. height do {
+			for j in 0 .. width do {
 				out += chars(image[i][j][2]) + chars(image[i][j][1]) + chars(image[i][j][0]);
 			}
 			out += padding;

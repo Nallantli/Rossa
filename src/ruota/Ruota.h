@@ -206,6 +206,7 @@ public:
 	static hashcode_t HASH_NEQUALS;
 	static hashcode_t HASH_SET;
 	static hashcode_t HASH_CALL;
+	static hashcode_t HASH_RANGE;
 
 	static hashcode_t HASH_TO_STRING;
 	static hashcode_t HASH_TO_NUMBER;
@@ -248,7 +249,7 @@ public:
 	Value(const std::shared_ptr<Object> &valueObject) : type(OBJECT), valueObject(valueObject) {}
 	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
 	Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber) {}
-	Value(const std::vector<Symbol> &valueVector) : type(VECTOR), valueVector(valueVector) {}
+	Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector) {}
 	Value(const std::map<hashcode_t, Symbol> &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary) {}
 	Value(const std::string &valueString) : type(STRING), valueString(valueString) {}
 
@@ -259,7 +260,7 @@ public:
 		case FUNCTION:
 			valueFunction.clear();
 			break;
-		case VECTOR:
+		case ARRAY:
 			valueVector.clear();
 			break;
 		case DICTIONARY:
@@ -334,7 +335,7 @@ public:
 	static inline const Symbol allocate(size_t size)
 	{
 		Symbol s;
-		s.d->type = VECTOR;
+		s.d->type = ARRAY;
 		s.d->valueVector.resize(size);
 		return s;
 	}
@@ -387,7 +388,7 @@ public:
 
 	inline const std::vector<Symbol> &getVector(const Token *token) const
 	{
-		if (d->type != VECTOR)
+		if (d->type != ARRAY)
 			throw RuotaError(_NOT_VECTOR_, *token);
 		return d->valueVector;
 	}
@@ -521,7 +522,7 @@ public:
 			return "<Pointer>";
 		case BOOLEAN_D:
 			return d->valueBool ? "true" : "false";
-		case VECTOR:
+		case ARRAY:
 		{
 			std::string ret = "[";
 			unsigned int i = 0;
@@ -563,8 +564,8 @@ public:
 				return "Type::Object";
 			case BOOLEAN_D:
 				return "Type::Boolean";
-			case VECTOR:
-				return "Type::Vector";
+			case ARRAY:
+				return "Type::Array";
 			case DICTIONARY:
 				return "Type::Dictionary";
 			case TYPE_NAME:
@@ -609,7 +610,7 @@ public:
 			ret += (d->valueBool ? "true" : "false");
 			return ret + ")";
 		}
-		case VECTOR:
+		case ARRAY:
 		{
 			std::string ret = "Symbol({";
 			unsigned int i = 0;
@@ -686,7 +687,7 @@ public:
 		case POINTER:
 			d->valuePointer = b->d->valuePointer;
 			break;
-		case VECTOR:
+		case ARRAY:
 		{
 			auto v = b->d->valueVector;
 			if (isConst)
@@ -746,7 +747,7 @@ public:
 				return o->getScope()->getVariable(Ruota::HASH_EQUALS, token).call({*b}, this, token).d->valueBool;
 			return o == b->d->valueObject;
 		}
-		case VECTOR:
+		case ARRAY:
 		{
 			auto bv = b->d->valueVector;
 			if (d->valueVector.size() != bv.size())

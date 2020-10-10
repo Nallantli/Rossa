@@ -260,8 +260,8 @@ std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> NodePar
 				ftype = NUMBER;
 				nextToken();
 				break;
-			case TOK_VECTOR:
-				ftype = VECTOR;
+			case TOK_ARRAY:
+				ftype = ARRAY;
 				nextToken();
 				break;
 			case TOK_STRING:
@@ -338,8 +338,8 @@ std::unique_ptr<Node> NodeParser::parseDefineNode()
 		case TOK_NUMBER:
 			ftype = NUMBER;
 			break;
-		case TOK_VECTOR:
-			ftype = VECTOR;
+		case TOK_ARRAY:
+			ftype = ARRAY;
 			break;
 		case TOK_STRING:
 			ftype = STRING;
@@ -499,8 +499,8 @@ std::unique_ptr<Node> NodeParser::parseCastToNode(std::unique_ptr<Node> a)
 	case TOK_NUMBER:
 		convert = NUMBER;
 		break;
-	case TOK_VECTOR:
-		convert = VECTOR;
+	case TOK_ARRAY:
+		convert = ARRAY;
 		break;
 	case TOK_STRING:
 		convert = STRING;
@@ -664,8 +664,8 @@ std::unique_ptr<Node> NodeParser::parseBaseNode()
 		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(BOOLEAN_D)), currentToken);
 		nextToken();
 		return ret;
-	case TOK_VECTOR:
-		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(VECTOR)), currentToken);
+	case TOK_ARRAY:
+		ret = std::make_unique<ContainerNode>(Symbol(static_cast<object_type_t>(ARRAY)), currentToken);
 		nextToken();
 		return ret;
 	case TOK_DICTIONARY:
@@ -887,7 +887,7 @@ std::unique_ptr<Node> NodeParser::parseUnitNode()
 	case TOK_NUMBER:
 	case TOK_STRING:
 	case TOK_BOOLEAN:
-	case TOK_VECTOR:
+	case TOK_ARRAY:
 	case TOK_DICTIONARY:
 	case TOK_OBJECT:
 	case TOK_FUNCTION:

@@ -98,7 +98,7 @@ void VectorNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VECTOR : " << scoped
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "ARRAY : " << scoped
 			  << "\n"
 			  << colorASCII(RESET_TEXT);
 
@@ -118,19 +118,7 @@ std::unique_ptr<Node> VectorNode::fold() const
 
 	std::vector<std::unique_ptr<Node>> nargs;
 	for (auto &c : args)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nargs.push_back(std::move(nn));
-		}
-		else
-		{
-			nargs.push_back(c->fold());
-		}
-	}
+		nargs.push_back(c->fold());
 	return std::make_unique<VectorNode>(std::move(nargs), scoped, token);
 }
 
@@ -442,19 +430,7 @@ std::unique_ptr<Node> ClassNode::fold() const
 {
 	std::vector<std::unique_ptr<Node>> nbody;
 	for (auto &c : body)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nbody.push_back(std::move(nn));
-		}
-		else
-		{
-			nbody.push_back(c->fold());
-		}
-	}
+		nbody.push_back(c->fold());
 
 	if (extends)
 		return std::make_unique<ClassNode>(key, type, std::move(nbody), extends->fold(), token);
@@ -561,19 +537,7 @@ std::unique_ptr<Node> CallNode::fold() const
 {
 	std::vector<std::unique_ptr<Node>> nargs;
 	for (auto &c : args)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nargs.push_back(std::move(nn));
-		}
-		else
-		{
-			nargs.push_back(c->fold());
-		}
-	}
+		nargs.push_back(c->fold());
 
 	return std::make_unique<CallNode>(callee->fold(), std::move(nargs), token);
 }
@@ -624,19 +588,7 @@ std::unique_ptr<Node> ExternCallNode::fold() const
 {
 	std::vector<std::unique_ptr<Node>> nargs;
 	for (auto &c : args)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nargs.push_back(std::move(nn));
-		}
-		else
-		{
-			nargs.push_back(c->fold());
-		}
-	}
+		nargs.push_back(c->fold());
 
 	return std::make_unique<ExternCallNode>(id, std::move(nargs), token);
 }
@@ -960,7 +912,13 @@ std::unique_ptr<Node> BinOpNode::getB()
 
 bool BinOpNode::isConst() const
 {
-	return a->isConst() && b->isConst();
+	if (a->isConst() && b->isConst()) {
+		Scope temp;
+		if (a->genParser()->evaluate(&temp).getValueType() != b->genParser()->evaluate(&temp).getValueType())
+			return false;
+		return true;
+	}
+	return false;
 }
 
 void BinOpNode::printTree(std::string indent, bool last) const
@@ -986,10 +944,14 @@ std::unique_ptr<Node> BinOpNode::fold() const
 {
 	if (isConst())
 	{
-		auto i = genParser();
 		Scope scope;
-		auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-		return nn;
+		auto evalA = a->genParser()->evaluate(&scope);
+		auto evalB = b->genParser()->evaluate(&scope);
+		if (evalA.getValueType() == evalB.getValueType())
+		{
+			auto nn = std::make_unique<ContainerNode>(genParser()->evaluate(&scope), token);
+			return nn;
+		}
 	}
 
 	return std::make_unique<BinOpNode>(op, a->fold(), b->fold(), token);
@@ -1307,19 +1269,7 @@ std::unique_ptr<Node> WhileNode::fold() const
 
 	std::vector<std::unique_ptr<Node>> nbody;
 	for (auto &c : body)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nbody.push_back(std::move(nn));
-		}
-		else
-		{
-			nbody.push_back(c->fold());
-		}
-	}
+		nbody.push_back(c->fold());
 	return std::make_unique<WhileNode>(whiles->fold(), std::move(nbody), token);
 }
 
@@ -1394,19 +1344,7 @@ std::unique_ptr<Node> ForNode::fold() const
 
 	std::vector<std::unique_ptr<Node>> nbody;
 	for (auto &c : body)
-	{
-		if (c->isConst())
-		{
-			auto i = c->genParser();
-			Scope scope;
-			auto nn = std::make_unique<ContainerNode>(i->evaluate(&scope), token);
-			nbody.push_back(std::move(nn));
-		}
-		else
-		{
-			nbody.push_back(c->fold());
-		}
-	}
+		nbody.push_back(c->fold());
 	return std::make_unique<ForNode>(id, fors->fold(), std::move(nbody), token);
 }
 
@@ -1526,18 +1464,7 @@ std::unique_ptr<Node> MapNode::fold() const
 
 	std::vector<std::pair<hashcode_t, std::unique_ptr<Node>>> nargs;
 	for (auto &c : args)
-	{
-		if (c.second->isConst())
-		{
-			auto i = c.second->genParser();
-			Scope scope;
-			nargs.push_back({c.first, std::make_unique<ContainerNode>(i->evaluate(&scope), token)});
-		}
-		else
-		{
-			nargs.push_back({c.first, c.second->fold()});
-		}
-	}
+		nargs.push_back({c.first, c.second->fold()});
 	return std::make_unique<MapNode>(std::move(nargs), token);
 }
 
@@ -1622,11 +1549,7 @@ std::unique_ptr<Node> SwitchNode::fold() const
 
 	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> ncases;
 	for (auto &c : cases)
-	{
-		auto key = c.first->fold();
-		auto value = c.second->fold();
-		ncases[std::move(key)] = std::move(value);
-	}
+		ncases[c.first->fold()] = c.second->fold();
 	auto ret = std::make_unique<SwitchNode>(switchs->fold(), std::move(ncases), token);
 	if (elses)
 		ret->setElse(elses->fold());

@@ -91,7 +91,7 @@ static cons class {
 
 	setDecor(ref n : Number) => setDecor(n -> String);
 
-	setDecor(ref v : Vector) => {
+	setDecor(ref v : Array) => {
 		s := "";
 		for c in v do {
 			setDecor(c);
@@ -168,9 +168,9 @@ static clock class {
 	sleep(ref ms : Number) => extern_call libstd._sleep(ms);
 }
 
-# VECTOR
+# ARRAY
 
-Vector::join(ref this) => {
+Array::join(ref this) => {
 	s := "";
 	for e in this do {
 		s += (e -> String);
@@ -178,39 +178,39 @@ Vector::join(ref this) => {
 	return s;
 }
 
-Vector::push(ref this, ref value) => {
+Array::push(ref this, ref value) => {
 	refer this += [value];
 }
 
-Vector::unshift(ref this, ref value) => {
+Array::unshift(ref this, ref value) => {
 	refer this = [value] + this;
 }
 
-Vector::pop(ref this, ref count : Number) => {
+Array::pop(ref this, ref count : Number) => {
 	nv := alloc(length(this) - count);
-	for i in [0 .. length(this) - count] do {
+	for i in 0 .. (length(this) - count) do {
 		nv[i] = this[i];
 	}
 	refer this = nv;
 }
 
-Vector::shift(ref this, ref count : Number) => {
+Array::shift(ref this, ref count : Number) => {
 	nv := alloc(length(this) - count);
-	for i in [count .. length(this)] do {
+	for i in count .. length(this) do {
 		nv[i - count] = this[i];
 	}
 	refer this = nv;
 }
 
-Vector::pop(ref this) => {
+Array::pop(ref this) => {
 	refer pop(this, 1);
 }
 
-Vector::shift(ref this) => {
+Array::shift(ref this) => {
 	refer shift(this, 1);
 }
 
-Vector::map(ref this, ref f : Function) => {
+Array::map(ref this, ref f : Function) => {
 	nv := this;
 	for e in nv do {
 		e = f(e);
@@ -218,7 +218,7 @@ Vector::map(ref this, ref f : Function) => {
 	return nv;
 }
 
-Vector::filter(ref this, ref f : Function) => {
+Array::filter(ref this, ref f : Function) => {
 	nv := [];
 	for e in this do {
 		if f(e) then {
@@ -228,23 +228,23 @@ Vector::filter(ref this, ref f : Function) => {
 	return nv;
 }
 
-Vector::reverse(ref this) => {
+Array::reverse(ref this) => {
 	nv := alloc(length(this));
-	for i in [0 .. length(this)] do {
+	for i in 0 .. length(this) do {
 		nv[i] = this[length(this) - i - 1];
 	}
 	return nv;
 }
 
-Vector::back(ref this) => {
+Array::back(ref this) => {
 	refer this[size(this) - 1];
 }
 
-Vector::front(ref this) => {
+Array::front(ref this) => {
 	refer this[0];
 }
 
-Vector::empty(ref this) => {
+Array::empty(ref this) => {
 	return size(this) == 0;
 }
 
@@ -259,18 +259,18 @@ String::unshift(ref this, ref value : Number) => {
 }
 
 String::pop(ref this, ref count : Number) => {
-	v := (this -> Vector);
+	v := (this -> Array);
 	nv := alloc(length(v) - count);
-	for i in [0 .. length(v) - count] do {
+	for i in 0 .. (length(v) - count) do {
 		nv[i] = v[i];
 	}
 	refer this = join(nv);
 }
 
 String::shift(ref this, ref count : Number) => {
-	v := (this -> Vector);
+	v := (this -> Array);
 	nv := alloc(length(v) - count);
-	for i in [count .. length(v)] do {
+	for i in count .. length(v) do {
 		nv[i - count] = v[i];
 	}
 	refer this = join(nv);
@@ -285,15 +285,15 @@ String::shift(ref this) => {
 }
 
 String::reverse(ref this) => {
-	return (this -> Vector).reverse().join();
+	return (this -> Array).reverse().join();
 }
 
 String::back(ref this) => {
-	return (this -> Vector).back();
+	return (this -> Array).back();
 }
 
 String::front(ref this) => {
-	return (this -> Vector).front();
+	return (this -> Array).front();
 }
 
 String::empty(ref this) => {

@@ -14,8 +14,8 @@ renderer := window.getRenderer();
 cache := alloc(width).map((e) => alloc(height));
 buffer := alloc(width).map((e) => alloc(height));
 
-for x in [0 .. width] do {
-	for y in [0 .. height] do {
+for x in 0 .. width do {
+	for y in 0 .. height do {
 		buffer[x][y] = new Shape.Rect(x * windowScale, y * windowScale, windowScale, windowScale, Color.BLACK);
 		cache[x][y] = 0;
 		renderer.add(buffer[x][y]);
@@ -29,7 +29,7 @@ static mandel class {
 		zReal := real;
 		zImag := imag;
 		var r2, i2;
-		for i in [0 .. precision] do {
+		for i in 0 .. precision do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
 
@@ -46,8 +46,8 @@ static mandel class {
 	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
 		dx := (end_x - start_x) / (width - 1);
 		dy := (end_y - start_y) / (height - 1);
-		for i in [0 .. width] do {
-			for j in [0 .. height] do {
+		for i in 0 .. width do {
+			for j in 0 .. height do {
 				v := mandelConverger(start_x + i * dx, end_y - j * dy);
 				if cache[i][j] != v then {
 					cache[i][j] = v;

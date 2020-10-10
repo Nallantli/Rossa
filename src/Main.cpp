@@ -302,7 +302,7 @@ int main(int argc, char const *argv[])
 				try
 				{
 					auto value = wrapper.runCode(std::move(comp), tree);
-					if (value.getValueType() == VECTOR)
+					if (value.getValueType() == ARRAY)
 					{
 						if (value.vectorSize() != 1)
 						{

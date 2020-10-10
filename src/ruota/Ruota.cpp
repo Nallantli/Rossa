@@ -35,11 +35,12 @@ hashcode_t Ruota::HASH_EQUALS = MAIN_HASH.hashString("==");
 hashcode_t Ruota::HASH_NEQUALS = MAIN_HASH.hashString("!=");
 hashcode_t Ruota::HASH_SET = MAIN_HASH.hashString("=");
 hashcode_t Ruota::HASH_CALL = MAIN_HASH.hashString("()");
+hashcode_t Ruota::HASH_RANGE = MAIN_HASH.hashString("..");
 
 hashcode_t Ruota::HASH_TO_STRING = MAIN_HASH.hashString("->String");
 hashcode_t Ruota::HASH_TO_NUMBER = MAIN_HASH.hashString("->Number");
 hashcode_t Ruota::HASH_TO_BOOLEAN = MAIN_HASH.hashString("->Boolean");
-hashcode_t Ruota::HASH_TO_VECTOR = MAIN_HASH.hashString("->Vector");
+hashcode_t Ruota::HASH_TO_VECTOR = MAIN_HASH.hashString("->Array");
 hashcode_t Ruota::HASH_TO_DICTIONARY = MAIN_HASH.hashString("->Dictionary");
 
 Ruota::Ruota(std::vector<std::string> args)

@@ -48,8 +48,8 @@ static snake_game class {
 			cache[posX][posY] = snake_size;
 		}
 
-		for x in [0 .. width] do {
-			for y in [0 .. height] do {
+		for x in 0 .. width do {
+			for y in 0 .. height do {
 				if cache[x][y] > 0 then {
 					buffer[x][y].setColor(0, math.min(128 + cache[x][y] * 2, 255), math.max(128 - cache[x][y] * 2, 0));
 				} elseif cache[x][y] < 0 then {
@@ -146,8 +146,8 @@ static snake_game class {
 		w = new Window("Snake", width * scale, height * scale);
 		r = w.getRenderer();
 
-		for x in [0 .. width] do {
-			for y in [0 .. height] do {
+		for x in 0 .. width do {
+			for y in 0 .. height do {
 				buffer[x][y] = new Shape.Rect(x * scale, y * scale, scale, scale, Color.BLACK);
 				r.add(buffer[x][y]);
 			}

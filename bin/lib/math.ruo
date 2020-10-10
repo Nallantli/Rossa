@@ -1,0 +1,167 @@
+struct Vector class {
+	var a;
+
+	init(ref a : Array) => {
+		this.a = a;
+	}
+
+	`=`(ref a : Array) => {
+		this.a = a;
+	}
+
+	`=`(ref v : @Vector) => {
+		`=`(v.a);
+	}
+
+	`+`(ref v : Array) => {
+		if a.size() != v.size() then {
+			throw "Cannot add Vectors of unequal lengths";
+		}
+
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] += v[i];
+		}
+
+		return new Vector(nv);
+	}
+
+	`+`(ref v : @Vector) => {
+		return `+`(v.a);
+	}
+
+	`+`(ref v : Number) => {
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] += v;
+		}
+
+		return new Vector(nv);
+	}
+
+	`-`(ref v : Array) => {
+		if a.size() != v.size() then {
+			throw "Cannot add Vectors of unequal lengths";
+		}
+
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] -= v[i];
+		}
+
+		return new Vector(nv);
+	}
+
+	`-`(ref v : @Vector) => {
+		return `-`(v.a);
+	}
+
+	`-`(ref v : Number) => {
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] -= v;
+		}
+
+		return new Vector(nv);
+	}
+
+	`*`(ref v : Array) => {
+		if a.size() != v.size() then {
+			throw "Cannot add Vectors of unequal lengths";
+		}
+
+		val := 0;
+		for i in 0 .. a.size() do {
+			val += a[i] * v[i];
+		}
+
+		return val;
+	}
+
+	`*`(ref v : @Vector) => {
+		return `*`(v.a);
+	}
+
+	`*`(ref v : Number) => {
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] *= v;
+		}
+
+		return new Vector(nv);
+	}
+
+	inverse() => {
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] = 1 / nv[i];
+		}
+
+		return new Vector(nv);
+	}
+
+	`/`(ref v : Array) => {
+		return `*`((new Vector(v)).inverse());
+	}
+
+	`/`(ref v : @Vector) => {
+		return `*`(v.inverse());
+	}
+
+	`/`(ref v : Number) => {
+		nv := a;
+		for i in 0 .. a.size() do {
+			nv[i] /= v;
+		}
+
+		return new Vector(nv);
+	}
+
+	`[]`(ref i : Number) => {
+		return a[i];
+	}
+
+	`->String`() => {
+		s := "<";
+		i := 0;
+		for e in a do {
+			if (i += 1) > 1 then {
+				s += ", ";
+			}
+			s += e -> String;
+		}
+		return s + ">";
+	}
+}
+
+`+`(ref a : Number, ref b : @Vector) => {
+	return b + a;
+}
+
+`+`(ref a : Array, ref b : @Vector) => {
+	return new Vector(a) + b;
+}
+
+`*`(ref a : Number, ref b : @Vector) => {
+	return b * a;
+}
+
+`*`(ref a : Array, ref b : @Vector) => {
+	return new Vector(a) * b;
+}
+
+`-`(ref a : Number, ref b : @Vector) => {
+	return b * -1 + a;
+}
+
+`-`(ref a : Array, ref b : @Vector) => {
+	return new Vector(a) - b;
+}
+
+`/`(ref a : Number, ref b : @Vector) => {
+	return b.inverse() * a;
+}
+
+`/`(ref a : Array, ref b : @Vector) => {
+	return new Vector(a) / b;
+}

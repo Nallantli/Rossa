@@ -11,7 +11,7 @@ SOE(ref MAX : Number) => {
 
 	start = clock.milliseconds();
     c := MAX - 2;
-	for i in [2 .. (MAX ** 0.5)] do {
+	for i in 2 .. (MAX ** 0.5) do {
 		if a[i] then {
 			n := i ** 2;
 			while n < MAX do {
@@ -28,7 +28,7 @@ SOE(ref MAX : Number) => {
 	start = clock.milliseconds();
 	b := alloc(c);
 	j := 0;
-	for i in [2 .. MAX] do {
+	for i in 2 .. MAX do {
 		if a[i] then {
 			b[j] = i;
 			j += 1;

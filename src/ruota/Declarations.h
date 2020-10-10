@@ -101,7 +101,7 @@ enum LexerTokenType
 
 	TOK_NUMBER = -21,
 	TOK_STRING = -22,
-	TOK_VECTOR = -23,
+	TOK_ARRAY = -23,
 	TOK_BOOLEAN = -24,
 	TOK_EXTERN_CALL = -25,
 
@@ -153,7 +153,7 @@ enum ValueType
 	NUMBER = -2,
 	BOOLEAN_D = -3,
 	STRING = -4,
-	VECTOR = -5,
+	ARRAY = -5,
 	FUNCTION = -6,
 	DICTIONARY = -7,
 	OBJECT = -8,
@@ -271,8 +271,8 @@ inline std::string getTypeString(const object_type_t &i)
 			return "String";
 		case BOOLEAN_D:
 			return "Boolean";
-		case VECTOR:
-			return "Vector";
+		case ARRAY:
+			return "Array";
 		case FUNCTION:
 			return "Function";
 		case DICTIONARY:

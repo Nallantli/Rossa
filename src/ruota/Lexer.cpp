@@ -76,8 +76,8 @@ const int Lexer::getToken()
 			return TOK_NUMBER;
 		else if (ID_STRING == "String")
 			return TOK_STRING;
-		else if (ID_STRING == "Vector")
-			return TOK_VECTOR;
+		else if (ID_STRING == "Array")
+			return TOK_ARRAY;
 		else if (ID_STRING == "Boolean")
 			return TOK_BOOLEAN;
 		else if (ID_STRING == "Dictionary")
