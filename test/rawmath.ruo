@@ -1,11 +1,9 @@
 EPSILON := (() => {
 	eps := 1;
-	var prev;
-	while (1 + eps) != 1 do {
-		prev = eps;
+	while (1 + eps / 2) != 1 do {
 		eps /= 2;
 	}
-	return prev;
+	return eps;
 })();
 
 FACT(ref x : Number) => {

@@ -73,9 +73,9 @@ FizzBuzz:
 for i in [1 until 100] do {
 	if i % 3 == 0 && i % 5 == 0 then {
 		putln("FizzBuzz");
-	} elseif i % 3 == 0 then {
+	} elif i % 3 == 0 then {
 		putln("Fizz");
-	} elseif i % 5 == 0 then {
+	} elif i % 5 == 0 then {
 		putln("Buzz");
 	} else {
 		putln(i);
@@ -134,8 +134,8 @@ Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
 `a[b]`|Yes|~|Indexing|~|~
 `a(b,...)`|Yes|~|Function Calling|~|~
 `!a`|No**|~|Unary Logical Negation|~|~
-`+a`|No|~|Unary Addition (Superfluous in most cases)|~|~
-`-a`|No|~|Unary Negation|~|~
+`+a`|No**|~|Unary Addition (Superfluous in most cases)|~|~
+`-a`|No**|~|Unary Negation|~|~
 
 _\* Can be used in compound-assignment operators, i.e. `a += b`. This is functionally equivalent to `a = a + b`._
 

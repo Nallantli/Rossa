@@ -17,7 +17,6 @@ extern _input_char in "libstd";
 extern _rand_init in "libstd";
 extern _rand_nextFloat in "libstd";
 extern _rand_nextInt in "libstd";
-extern _rand_close in "libstd";
 extern _system_call in "libstd";
 extern _regex_match in "libstd";
 extern _regex_replace in "libstd";
@@ -290,17 +289,23 @@ String::empty(ref s) => {
 	return size(s) == 0;
 }
 
+String::`[]`(ref s, ref i : Number) => {
+	return (s -> Array)[i];
+}
+
+String::`..`(ref a, ref b : String) => {
+	return [charn(a)[0] .. charn(b)[0]];
+}
+
 # MATH
 
 static math class {
-	EPS := (() => {
+	EPSILON := (() => {
 		eps := 1;
-		var prev;
-		while (1 + eps) != 1 do {
-			prev = eps;
+		while (1 + eps / 2) != 1 do {
 			eps /= 2;
 		}
-		return prev;
+		return eps;
 	})();
 
 	log(ref x : Number) => extern_call libstd._log(x);

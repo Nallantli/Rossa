@@ -41,23 +41,22 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_rand_nextFloat, args, token, hash)
 	{
-		auto rng = reinterpret_cast<std::default_random_engine *>(args[0].getPointer(token));
+		auto rng = COERCE_PTR(
+			args[0].getPointer(token),
+			std::default_random_engine);
+
 		std::uniform_real_distribution<long_double_t> distribution(args[1].getNumber(token).getDouble(), args[2].getNumber(token).getDouble());
 		return Symbol(CNumber::Double(distribution(*rng)));
 	}
 
 	RUOTA_EXT_SYM(_rand_nextInt, args, token, hash)
 	{
-		auto rng = reinterpret_cast<std::default_random_engine *>(args[0].getPointer(token));
+		auto rng = COERCE_PTR(
+			args[0].getPointer(token),
+			std::default_random_engine);
+
 		std::uniform_int_distribution<long_int_t> distribution(args[1].getNumber(token).getLong(), args[2].getNumber(token).getLong());
 		return Symbol(CNumber::Long(distribution(*rng)));
-	}
-
-	RUOTA_EXT_SYM(_rand_close, args, token, hash)
-	{
-		auto rng = reinterpret_cast<std::default_random_engine *>(args[0].getPointer(token));
-		delete rng;
-		return Symbol();
 	}
 
 	RUOTA_EXT_SYM(_exit, args, token, hash)
@@ -134,7 +133,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_input_line, args, token, hash)
 	{
-		std::string line;
+		string line;
 		std::getline(std::cin, line);
 		return Symbol(line);
 	}
@@ -158,11 +157,10 @@ namespace libstd
 	RUOTA_EXT_SYM(_regex_match, args, token, hash)
 	{
 		std::regex r(args[0].getString(token));
-		std::string s = args[1].getString(token);
+		string s = args[1].getString(token);
 		std::vector<Symbol> v;
-		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++)
-		{
-			std::string m = (*i).str();
+		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++) {
+			string m = (*i).str();
 			v.push_back(Symbol(m));
 		}
 		return Symbol(v);
@@ -171,8 +169,8 @@ namespace libstd
 	RUOTA_EXT_SYM(_regex_replace, args, token, hash)
 	{
 		std::regex r(args[0].getString(token));
-		std::string rpl = args[1].getString(token);
-		std::string s = args[2].getString(token);
+		string rpl = args[1].getString(token);
+		string s = args[2].getString(token);
 		return Symbol(std::regex_replace(s, r, rpl));
 	}
-} // namespace libstd
+}

@@ -32,7 +32,7 @@ static snake_game class {
 			if cache[posX][posY] == -1 then {
 				snake_size += 1;
 				setApple();
-			} elseif cache[posX][posY] > 0 then {
+			} elif cache[posX][posY] > 0 then {
 				LOST = true;
 				putln("You Lost!");
 			}
@@ -43,9 +43,9 @@ static snake_game class {
 		for x in 0 .. width do {
 			for y in 0 .. height do {
 				if cache[x][y] > 0 then {
-					buffer[x][y].setColor(0, math.min(128 + cache[x][y] * 2, 255), math.max(128 - cache[x][y] * 2, 0));
-				} elseif cache[x][y] < 0 then {
-					buffer[x][y].setColor(Color.RED);
+					buffer[x][y].setColor(Color.HSL((cache[x][y] % 90) / 90, 1, 0.5));
+				} elif cache[x][y] < 0 then {
+					buffer[x][y].setColor(Color.WHITE);
 				} else {
 					buffer[x][y].setColor(Color.BLACK);
 				}
@@ -94,33 +94,33 @@ static snake_game class {
 		e := Event.poll();
 		if e.type == Event.QUIT then {
 			exit();
-		} elseif e.type == Event.KEY_DOWN then {
-			switch chars(e.keysym.sym) in {
-				case "w" do {
+		} elif e.type == Event.KEY_DOWN then {
+			switch e.keysym.sym in {
+				case 'w' do {
 					if direction != 2 then {
 						newDir = 3;
 					}
 				}
-				case "s" do {
+				case 's' do {
 					if direction != 3 then {
 						newDir = 2;
 					}
 				}
-				case "a" do {
+				case 'a' do {
 					if direction != 0 then {
 						newDir = 1;
 					}
 				}
-				case "d" do {
+				case 'd' do {
 					if direction != 1 then {
 						newDir = 0;
 					}
 				}
-				case "1" do speed = 160;
-				case "2" do speed = 120;
-				case "3" do speed = 80;
-				case "4" do speed = 0;
-				case " " do reset();
+				case '1' do speed = 160;
+				case '2' do speed = 120;
+				case '3' do speed = 80;
+				case '4' do speed = 0;
+				case ' ' do reset();
 			}
 		}
 	}

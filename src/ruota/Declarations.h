@@ -1,28 +1,31 @@
 #ifndef DECLARATIONS_H
 #define DECLARATIONS_H
 
-#define _RUOTA_VERSION_ "v1.6.3-alpha"
+#define _RUOTA_VERSION_ "v1.6.4-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
 #define RUOTA_LIB_HEADER Hash MAIN_HASH = Hash();
+#define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <boost/config.hpp>
 
-typedef unsigned long long hashcode_t;
-typedef signed long long object_type_t;
+typedef unsigned long long hash_ull;
+typedef unsigned long long refc_ull;
+typedef signed long long type_sll;
+typedef std::basic_string<char> string;
 
 struct Hash
 {
-	std::vector<std::string> variable_hash;
+	std::vector<string> variable_hash;
 
 	Hash()
 	{
 		variable_hash.push_back("<LAMBDA>");
 	}
 
-	inline hashcode_t hashString(const std::string &key)
+	inline hash_ull hashString(const string &key)
 	{
 		if (std::find(variable_hash.begin(), variable_hash.end(), key) != variable_hash.end())
 			return std::distance(variable_hash.begin(), std::find(variable_hash.begin(), variable_hash.end(), key));
@@ -30,7 +33,7 @@ struct Hash
 		return variable_hash.size() - 1;
 	}
 
-	inline std::string deHash(hashcode_t code)
+	inline string deHash(const hash_ull &code)
 	{
 		return variable_hash[code];
 	}
@@ -43,7 +46,6 @@ class Token;
 class Instruction;
 class Function;
 class Scope;
-//class Object;
 class Node;
 class Lexer;
 class Ruota;
@@ -229,7 +231,6 @@ enum NodeType
 	ENTRY_NODE,
 	CALL_NODE,
 	CALL_BUILT_NODE,
-	INDEX_NODE,
 	UN_OP_NODE,
 	BIN_OP_NODE,
 	INS_NODE,
@@ -255,39 +256,5 @@ enum NodeType
 	TRY_CATCH_NODE,
 	THROW_NODE
 };
-
-inline std::string getTypeString(const object_type_t &i)
-{
-	if (i >= 0)
-		return MAIN_HASH.deHash(i);
-	else
-	{
-		switch (i)
-		{
-		case NIL:
-			return "Nil";
-		case NUMBER:
-			return "Number";
-		case STRING:
-			return "String";
-		case BOOLEAN_D:
-			return "Boolean";
-		case ARRAY:
-			return "Array";
-		case FUNCTION:
-			return "Function";
-		case DICTIONARY:
-			return "Dictionary";
-		case OBJECT:
-			return "Object";
-		case POINTER:
-			return "Pointer";
-		case TYPE_NAME:
-			return "Type";
-		default:
-			return "<error-type>";
-		}
-	}
-}
 
 #endif

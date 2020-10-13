@@ -18,11 +18,11 @@ public:
 class CastingI : public Instruction
 {
 protected:
-	const hashcode_t key;
+	const hash_ull key;
 
 public:
-	CastingI(const InstructionType &, const hashcode_t &, const Token &);
-	const hashcode_t getKey() const;
+	CastingI(const InstructionType &, const hash_ull &, const Token &);
+	const hash_ull getKey() const;
 };
 
 class BinaryI : public UnaryI
@@ -48,13 +48,13 @@ public:
 class DefineI : public Instruction
 {
 protected:
-	const hashcode_t key;
+	const hash_ull key;
 	const Signature ftype;
-	const std::vector<std::pair<LexerTokenType, hashcode_t>> params;
+	const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 	const std::shared_ptr<Instruction> body;
 
 public:
-	DefineI(const hashcode_t &, const Signature &, std::vector<std::pair<LexerTokenType, hashcode_t>>, const std::shared_ptr<Instruction> &, const Token &);
+	DefineI(const hash_ull &, const Signature &, std::vector<std::pair<LexerTokenType, hash_ull>>, const std::shared_ptr<Instruction> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -94,31 +94,31 @@ public:
 class ForI : public Instruction
 {
 protected:
-	const hashcode_t id;
+	const hash_ull id;
 	const std::shared_ptr<Instruction> fors;
 	const std::shared_ptr<Instruction> body;
 
 public:
-	ForI(const hashcode_t &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
+	ForI(const hash_ull &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class VariableI : public CastingI
 {
 public:
-	VariableI(const hashcode_t &, const Token &);
+	VariableI(const hash_ull &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class DeclareI : public CastingI
 {
 protected:
-	const object_type_t vtype;
+	const type_sll vtype;
 	const std::shared_ptr<Instruction> a;
 	const bool isConst;
 
 public:
-	DeclareI(const hashcode_t &, const object_type_t &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
+	DeclareI(const hash_ull &, const type_sll &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -296,11 +296,11 @@ public:
 class ExternI : public UnaryI
 {
 protected:
-	const std::string id;
+	const string id;
 	boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)> f;
 
 public:
-	ExternI(const std::string &, const std::shared_ptr<Instruction> &a, const Token &);
+	ExternI(const string &, const std::shared_ptr<Instruction> &a, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -321,13 +321,13 @@ public:
 class ClassI : public Instruction
 {
 protected:
-	const hashcode_t key;
+	const hash_ull key;
 	const ObjectType type;
 	const std::shared_ptr<Instruction> body;
 	const std::shared_ptr<Instruction> extends;
 
 public:
-	ClassI(hashcode_t, ObjectType, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
+	ClassI(const hash_ull &, const ObjectType &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -372,17 +372,17 @@ protected:
 	const std::vector<std::shared_ptr<Instruction>> children;
 
 public:
-	ScopeI(std::vector<std::shared_ptr<Instruction>>, const Token &);
+	ScopeI(const std::vector<std::shared_ptr<Instruction>> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class MapI : public Instruction
 {
 protected:
-	const std::map<hashcode_t, std::shared_ptr<Instruction>> children;
+	const std::map<hash_ull, std::shared_ptr<Instruction>> children;
 
 public:
-	MapI(std::map<hashcode_t, std::shared_ptr<Instruction>>, const Token &);
+	MapI(const std::map<hash_ull, std::shared_ptr<Instruction>> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -402,17 +402,17 @@ protected:
 	const std::shared_ptr<Instruction> elses;
 
 public:
-	SwitchI(const std::shared_ptr<Instruction> &, std::map<Symbol, std::shared_ptr<Instruction>>, std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>>, const std::shared_ptr<Instruction> &, const Token &);
+	SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, std::shared_ptr<Instruction>> &, const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> &, const std::shared_ptr<Instruction> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
 class TryCatchI : public BinaryI
 {
 protected:
-	const hashcode_t key;
+	const hash_ull key;
 
 public:
-	TryCatchI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const hashcode_t &, const Token &);
+	TryCatchI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const hash_ull &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 
@@ -454,10 +454,10 @@ public:
 class DeclareVarsI : public Instruction
 {
 protected:
-	const std::vector<hashcode_t> keys;
+	const std::vector<hash_ull> keys;
 
 public:
-	DeclareVarsI(const std::vector<hashcode_t> &, const Token &);
+	DeclareVarsI(const std::vector<hash_ull> &, const Token &);
 	const Symbol evaluate(Scope *) const override;
 };
 

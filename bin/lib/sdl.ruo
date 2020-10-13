@@ -112,7 +112,7 @@ static Color class {
 		hueToRgb(ref p : Number, ref q : Number, t : Number) => {
 			if t < 0 then {
 				t += 1;
-			} elseif t > 1 then {
+			} elif t > 1 then {
 				t -= 1;
 			}
 			if t < 1/6 then {
@@ -220,16 +220,16 @@ static Shape class {
 	}
 
 	struct Image class : Rotatable {
-		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
-			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, 0xff, 0xff, 0xff));
+		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+			ptr = (extern_call libsdl._image_init(path, x, y, width, height, 0xff, 0xff, 0xff));
 		}
 
-		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, r, g, b, a));
+		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._image_init(path, x, y, width, height, r, g, b, a));
 		}
 
-		init(ref path, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._image_init(path -> String, x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._image_init(path, x, y, width, height, color.red, color.green, color.blue, color.alpha));
 		}
 	}
 

@@ -1,36 +1,36 @@
 #include "Ruota.h"
 
 Token::Token() : filename("nil"),
-				 line(""),
-				 lineNumber(0),
-				 distance(0),
-				 valueString(""),
-				 valueNumber(CNumber()),
-				 type(NULL_TOK) {}
+line(""),
+lineNumber(0),
+distance(0),
+valueString(""),
+valueNumber(CNumber()),
+type(NULL_TOK)
+{}
 
 Token::Token(
-	const std::string &filename,
-	const std::string &line,
+	const string &filename,
+	const string &line,
 	size_t lineNumber,
 	size_t distance,
-	const std::string &valueString,
+	const string &valueString,
 	CNumber valueNumber,
 	int type) : filename(filename),
-				line(line),
-				lineNumber(lineNumber),
-				distance(distance),
-				valueString(valueString),
-				valueNumber(valueNumber),
-				type(type)
+	line(line),
+	lineNumber(lineNumber),
+	distance(distance),
+	valueString(valueString),
+	valueNumber(valueNumber),
+	type(type)
 {
-	while (!this->line.empty() && isspace(this->line[0]))
-	{
+	while (!this->line.empty() && isspace(this->line[0])) {
 		this->line = this->line.substr(1);
 		this->distance--;
 	}
 }
 
-const std::string &Token::getLine() const
+const string &Token::getLine() const
 {
 	return this->line;
 }
@@ -55,12 +55,12 @@ const CNumber Token::getValueNumber() const
 	return this->valueNumber;
 }
 
-const std::string &Token::getValueString() const
+const string &Token::getValueString() const
 {
 	return this->valueString;
 }
 
-const std::string &Token::getFilename() const
+const string &Token::getFilename() const
 {
 	return this->filename;
 }

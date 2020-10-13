@@ -13,34 +13,35 @@
 
 struct Signature
 {
-	const std::vector<object_type_t> values;
-	Signature(const std::vector<object_type_t> &);
+	const std::vector<type_sll> values;
+	Signature(const std::vector<type_sll> &);
 	size_t validity(const std::vector<Symbol> &) const;
 	bool operator<(const Signature &) const;
-	const std::string toString() const;
+	const string toString() const;
+	const string getTypeString(const type_sll &) const;
 };
 
 class Token
 {
 private:
-	std::string filename;
-	std::string line;
+	string filename;
+	string line;
 	size_t lineNumber;
 	size_t distance;
-	std::string valueString;
+	string valueString;
 	CNumber valueNumber;
 	int type;
 
 public:
 	Token();
-	Token(const std::string &, const std::string &, size_t, size_t, const std::string &, CNumber, int);
-	const std::string &getLine() const;
+	Token(const string &, const string &, size_t, size_t, const string &, CNumber, int);
+	const string &getLine() const;
 	int getType() const;
 	size_t getDist() const;
 	size_t getLineNumber() const;
 	const CNumber getValueNumber() const;
-	const std::string &getValueString() const;
-	const std::string &getFilename() const;
+	const string &getValueString() const;
+	const string &getFilename() const;
 };
 
 class RuotaError : public std::runtime_error
@@ -49,7 +50,8 @@ private:
 	const Token token;
 
 public:
-	RuotaError(const std::string &error, const Token &token) : std::runtime_error(error), token(token) {}
+	RuotaError(const string &error, const Token &token) : std::runtime_error(error), token(token)
+	{}
 
 	const Token &getToken() const
 	{
@@ -73,18 +75,18 @@ public:
 class Function
 {
 private:
-	const hashcode_t key;
+	const hash_ull key;
 	Scope *parent;
-	const std::vector<std::pair<LexerTokenType, hashcode_t>> params;
+	const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 	const std::shared_ptr<Instruction> body;
 
 public:
-	Function(const hashcode_t &, Scope *, const std::vector<std::pair<LexerTokenType, hashcode_t>> &, const std::shared_ptr<Instruction> &);
+	Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &);
 	const Symbol evaluate(const std::vector<Symbol> &, const Token *) const;
 	size_t getArgSize() const;
-	hashcode_t getKey() const;
+	hash_ull getKey() const;
 	Scope *getParent() const;
-	const std::vector<std::pair<LexerTokenType, hashcode_t>> &getParams() const;
+	const std::vector<std::pair<LexerTokenType, hash_ull>> &getParams() const;
 };
 
 class Scope : public std::enable_shared_from_this<Scope>
@@ -93,55 +95,32 @@ private:
 	Scope *parent;
 	const ObjectType type;
 	const std::shared_ptr<Instruction> body;
-	hashcode_t hashed_key;
-	std::vector<object_type_t> name_trace;
-	std::vector<object_type_t> extensions;
-	std::map<hashcode_t, Symbol> values;
-	void traceName(const hashcode_t &);
+	hash_ull hashed_key;
+	std::vector<type_sll> name_trace;
+	std::vector<type_sll> extensions;
+	std::map<hash_ull, Symbol> values;
+	void traceName(const hash_ull &);
 
 public:
 	Scope();
-	Scope(Scope *, const hashcode_t &);
-	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const Scope *);
-	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const std::vector<object_type_t> &);
+	Scope(Scope *, const hash_ull &);
+	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const Scope *, const std::vector<type_sll> &);
+	Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::vector<type_sll> &);
 	Scope *getParent() const;
 	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
 	void clear();
 	const Symbol getThis(const Token *);
-	const bool extendsObject(const hashcode_t &) const;
+	const bool extendsObject(const type_sll &) const;
 	const ObjectType getType() const;
 	const std::shared_ptr<Instruction> getBody() const;
-	const Symbol &getVariable(const hashcode_t &, const Token *);
-	const Symbol &createVariable(const hashcode_t &, const Token *);
-	const Symbol &createVariable(const hashcode_t &, const Symbol &, const Token *);
-	const hashcode_t getHashedKey() const;
-	bool hasValue(const hashcode_t &) const;
+	const Symbol &getVariable(const hash_ull &, const Token *);
+	const Symbol &createVariable(const hash_ull &, const Token *);
+	const Symbol &createVariable(const hash_ull &, const Symbol &, const Token *);
+	const hash_ull getHashedKey() const;
+	bool hasValue(const hash_ull &) const;
 
 	~Scope();
 };
-
-/*class Object
-{
-private:
-	const ObjectType type;
-	const std::shared_ptr<Instruction> body;
-	const hashcode_t key;
-	std::vector<object_type_t> extensions;
-	const std::shared_ptr<Scope> internal;
-
-public:
-	Object(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const std::vector<object_type_t> &);
-	Object(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hashcode_t &, const Object *);
-	Scope *getScope() const;
-	const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
-	const ObjectType getType() const;
-	const std::shared_ptr<Instruction> getBody() const;
-	const hashcode_t getHashedKey() const;
-	bool hasValue(const hashcode_t &) const;
-	bool extendsObject(const hashcode_t &) const;
-
-	~Object();
-}; */
 
 class Node
 {
@@ -150,42 +129,42 @@ protected:
 	const Token token;
 
 public:
-	Node(NodeType, const Token);
+	Node(const NodeType &, const Token &);
 	const NodeType getType() const;
 	const Token getToken() const;
 
 	virtual std::shared_ptr<Instruction> genParser() const = 0;
 	virtual bool isConst() const = 0;
-	virtual void printTree(std::string, bool) const = 0;
+	virtual void printTree(string, bool) const = 0;
 	virtual std::unique_ptr<Node> fold() const = 0;
 };
 
 class Lexer
 {
 private:
-	std::string ID_STRING;
+	string ID_STRING;
 	size_t LINE_INDEX;
 	CNumber NUM_VALUE;
-	std::string INPUT;
+	string INPUT;
 	size_t INPUT_INDEX;
 	size_t TOKEN_DIST;
 
 	const int getToken();
 	const char peekChar(const size_t &) const;
 	const char nextChar();
-	std::map<std::string, signed int> bOperators;
-	std::map<std::string, signed int> uOperators;
+	std::map<string, signed int> bOperators;
+	std::map<string, signed int> uOperators;
 
 public:
-	Lexer(std::map<std::string, signed int>, std::map<std::string, signed int>);
-	std::vector<Token> lexString(const std::string &, const std::string &);
+	Lexer(std::map<string, signed int>, std::map<string, signed int>);
+	std::vector<Token> lexString(const string &, const string &);
 };
 
 class Ruota
 {
 private:
-	static const std::map<std::string, signed int> bOperators;
-	static const std::map<std::string, signed int> uOperators;
+	static const std::map<string, signed int> bOperators;
+	static const std::map<string, signed int> uOperators;
 	Scope main;
 
 public:
@@ -193,42 +172,42 @@ public:
 
 	static std::vector<Function> stack_trace;
 
-	static hashcode_t HASH_THIS;
-	static hashcode_t HASH_INIT;
-	static hashcode_t HASH_KEY;
-	static hashcode_t HASH_VALUE;
-	static hashcode_t HASH_DELETER;
+	static hash_ull HASH_THIS;
+	static hash_ull HASH_INIT;
+	static hash_ull HASH_KEY;
+	static hash_ull HASH_VALUE;
+	static hash_ull HASH_DELETER;
 
-	static hashcode_t HASH_ADD;
-	static hashcode_t HASH_SUB;
-	static hashcode_t HASH_MUL;
-	static hashcode_t HASH_DIV;
-	static hashcode_t HASH_MOD;
-	static hashcode_t HASH_POW;
-	static hashcode_t HASH_B_AND;
-	static hashcode_t HASH_B_OR;
-	static hashcode_t HASH_B_XOR;
-	static hashcode_t HASH_B_SH_L;
-	static hashcode_t HASH_B_SH_R;
-	static hashcode_t HASH_LESS;
-	static hashcode_t HASH_MORE;
-	static hashcode_t HASH_ELESS;
-	static hashcode_t HASH_EMORE;
-	static hashcode_t HASH_INDEX;
-	static hashcode_t HASH_EQUALS;
-	static hashcode_t HASH_NEQUALS;
-	static hashcode_t HASH_SET;
-	static hashcode_t HASH_CALL;
-	static hashcode_t HASH_RANGE;
+	static hash_ull HASH_ADD;
+	static hash_ull HASH_SUB;
+	static hash_ull HASH_MUL;
+	static hash_ull HASH_DIV;
+	static hash_ull HASH_MOD;
+	static hash_ull HASH_POW;
+	static hash_ull HASH_B_AND;
+	static hash_ull HASH_B_OR;
+	static hash_ull HASH_B_XOR;
+	static hash_ull HASH_B_SH_L;
+	static hash_ull HASH_B_SH_R;
+	static hash_ull HASH_LESS;
+	static hash_ull HASH_MORE;
+	static hash_ull HASH_ELESS;
+	static hash_ull HASH_EMORE;
+	static hash_ull HASH_INDEX;
+	static hash_ull HASH_EQUALS;
+	static hash_ull HASH_NEQUALS;
+	static hash_ull HASH_SET;
+	static hash_ull HASH_CALL;
+	static hash_ull HASH_RANGE;
 
-	static hashcode_t HASH_TO_STRING;
-	static hashcode_t HASH_TO_NUMBER;
-	static hashcode_t HASH_TO_BOOLEAN;
-	static hashcode_t HASH_TO_VECTOR;
-	static hashcode_t HASH_TO_DICTIONARY;
+	static hash_ull HASH_TO_STRING;
+	static hash_ull HASH_TO_NUMBER;
+	static hash_ull HASH_TO_BOOLEAN;
+	static hash_ull HASH_TO_VECTOR;
+	static hash_ull HASH_TO_DICTIONARY;
 
-	Ruota(std::vector<std::string>);
-	std::unique_ptr<Node> compileCode(const std::string &, boost::filesystem::path) const;
+	Ruota(std::vector<string>);
+	std::unique_ptr<Node> compileCode(const string &, boost::filesystem::path) const;
 	const Symbol runCode(std::unique_ptr<Node>, bool);
 };
 
@@ -241,52 +220,61 @@ private:
 
 	union
 	{
-		object_type_t valueType;
+		type_sll valueType;
 		bool valueBool;
 		CNumber valueNumber;
 	};
 
-	std::string valueString;
+	string valueString;
 	std::shared_ptr<void> valuePointer;
 	std::vector<Symbol> valueVector;
 	std::map<size_t, std::map<Signature, std::shared_ptr<Function>>> valueFunction;
-	std::map<hashcode_t, Symbol> valueDictionary;
+	std::map<hash_ull, Symbol> valueDictionary;
 	std::shared_ptr<Scope> valueObject;
-	unsigned long long references = 1;
+	refc_ull references = 1;
 
 public:
-	Value() : type(NIL) {}
-	Value(const object_type_t &valueType) : type(TYPE_NAME), valueType(valueType) {}
-	Value(const bool &valueBool) : type(BOOLEAN_D), valueBool(valueBool) {}
-	Value(const std::shared_ptr<void> &valuePointer) : type(POINTER), valuePointer(valuePointer) {}
-	Value(const std::shared_ptr<Scope> &valueObject) : type(OBJECT), valueObject(valueObject) {}
-	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({{function->getArgSize(), {{ftype, function}}}}) {}
-	Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber) {}
-	Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector) {}
-	Value(const std::map<hashcode_t, Symbol> &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary) {}
-	Value(const std::string &valueString) : type(STRING), valueString(valueString) {}
+	Value() : type(NIL)
+	{}
+	Value(const type_sll &valueType) : type(TYPE_NAME), valueType(valueType)
+	{}
+	Value(const bool &valueBool) : type(BOOLEAN_D), valueBool(valueBool)
+	{}
+	Value(const std::shared_ptr<void> &valuePointer) : type(POINTER), valuePointer(valuePointer)
+	{}
+	Value(const std::shared_ptr<Scope> &valueObject) : type(OBJECT), valueObject(valueObject)
+	{}
+	Value(const Signature &ftype, const std::shared_ptr<Function> &function) : type(FUNCTION), valueFunction({ {function->getArgSize(), {{ftype, function}}} })
+	{}
+	Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber)
+	{}
+	Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector)
+	{}
+	Value(const std::map<hash_ull, Symbol> &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary)
+	{}
+	Value(const string &valueString) : type(STRING), valueString(valueString)
+	{}
 
 	inline void clearData()
 	{
-		switch (type)
-		{
-		case FUNCTION:
-			valueFunction.clear();
-			break;
-		case ARRAY:
-			valueVector.clear();
-			break;
-		case DICTIONARY:
-			valueDictionary.clear();
-			break;
-		case POINTER:
-			valuePointer = nullptr;
-			break;
-		case OBJECT:
-			valueObject = nullptr;
-			break;
-		default:
-			return;
+		switch (type) {
+			case FUNCTION:
+				valueFunction.clear();
+				break;
+			case ARRAY:
+				valueVector.clear();
+				break;
+			case DICTIONARY:
+				valueDictionary.clear();
+				break;
+			case POINTER:
+				valuePointer = nullptr;
+				break;
+			case OBJECT:
+				valueObject = nullptr;
+				break;
+			default:
+				return;
 		}
 	}
 };
@@ -298,27 +286,38 @@ private:
 	Value *d;
 
 public:
-	Symbol() : type(ID_CASUAL), d(new Value()) {}
+	Symbol() : type(ID_CASUAL), d(new Value())
+	{}
 
-	Symbol(const SymbolType &type) : type(type), d(new Value()) {}
+	Symbol(const SymbolType &type) : type(type), d(new Value())
+	{}
 
-	Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(new Value(valuePointer)) {}
+	Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(new Value(valuePointer))
+	{}
 
-	Symbol(const object_type_t &valueType) : type(ID_CASUAL), d(new Value(valueType)) {}
+	Symbol(const type_sll &valueType) : type(ID_CASUAL), d(new Value(valueType))
+	{}
 
-	Symbol(const CNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber)) {}
+	Symbol(const CNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber))
+	{}
 
-	Symbol(const bool &valueBool) : type(ID_CASUAL), d(new Value(valueBool)) {}
+	Symbol(const bool &valueBool) : type(ID_CASUAL), d(new Value(valueBool))
+	{}
 
-	Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector)) {}
+	Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector))
+	{}
 
-	Symbol(const std::shared_ptr<Scope> &valueObject) : type(ID_CASUAL), d(new Value(valueObject)) {}
+	Symbol(const std::shared_ptr<Scope> &valueObject) : type(ID_CASUAL), d(new Value(valueObject))
+	{}
 
-	Symbol(const Signature &ftype, const std::shared_ptr<Function> &valueFunction) : type(ID_CASUAL), d(new Value(ftype, valueFunction)) {}
+	Symbol(const Signature &ftype, const std::shared_ptr<Function> &valueFunction) : type(ID_CASUAL), d(new Value(ftype, valueFunction))
+	{}
 
-	Symbol(const std::string &valueString) : type(ID_CASUAL), d(new Value(valueString)) {}
+	Symbol(const string &valueString) : type(ID_CASUAL), d(new Value(valueString))
+	{}
 
-	Symbol(const std::map<hashcode_t, Symbol> &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary)) {}
+	Symbol(const std::map<hash_ull, Symbol> &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary))
+	{}
 
 	Symbol(const Symbol &s)
 	{
@@ -377,13 +376,12 @@ public:
 		return d->valuePointer.get();
 	}
 
-	inline const std::map<hashcode_t, Symbol> &getDictionary(const Token *token) const
+	inline const std::map<hash_ull, Symbol> &getDictionary(const Token *token) const
 	{
 		if (d->type != DICTIONARY)
 			throw RuotaError(_NOT_DICTIONARY_, *token);
 		auto iter = d->valueDictionary.begin();
-		for (; iter != d->valueDictionary.end();)
-		{
+		for (; iter != d->valueDictionary.end();) {
 			if (iter->second.d->type == NIL)
 				iter = d->valueDictionary.erase(iter);
 			else
@@ -392,7 +390,7 @@ public:
 		return d->valueDictionary;
 	}
 
-	inline const Symbol &indexVector(size_t i, const Token *token) const
+	inline const Symbol &indexVector(const size_t &i, const Token *token) const
 	{
 		if (i >= d->valueVector.size())
 			throw RuotaError((boost::format(_INDEX_OUT_OF_BOUNDS_) % d->valueVector.size() % i).str(), *token);
@@ -406,7 +404,7 @@ public:
 		return d->valueVector;
 	}
 
-	inline const std::string &getString(const Token *token) const
+	inline const string &getString(const Token *token) const
 	{
 		if (d->type != STRING)
 			throw RuotaError(_NOT_STRING_, *token);
@@ -432,14 +430,14 @@ public:
 		return d->type;
 	}
 
-	inline object_type_t getAugValueType() const
+	inline type_sll getAugValueType() const
 	{
 		if (d->type == OBJECT)
 			return d->valueObject->getHashedKey();
 		return d->type;
 	}
 
-	inline object_type_t getTypeName(const Token *token) const
+	inline type_sll getTypeName(const Token *token) const
 	{
 		if (d->type != TYPE_NAME)
 			throw RuotaError(_NOT_TYPE_, *token);
@@ -454,18 +452,16 @@ public:
 		if (d->valueFunction.find(params.size()) == d->valueFunction.end())
 			throw RuotaError(_FUNCTION_ARG_SIZE_FAILURE_, *token);
 
-		std::vector<object_type_t> ftypes;
+		std::vector<type_sll> ftypes;
 		for (auto &e : params)
 			ftypes.push_back(e.getAugValueType());
 
 		std::map<Signature, std::shared_ptr<Function>> foftype = d->valueFunction[params.size()];
 		const Signature *key = NULL;
 		size_t cur_v = 0;
-		for (auto &f2 : foftype)
-		{
+		for (auto &f2 : foftype) {
 			size_t v = f2.first.validity(params);
-			if (v > cur_v)
-			{
+			if (v > cur_v) {
 				cur_v = v;
 				key = &f2.first;
 				if (v == ftypes.size() * 2)
@@ -479,12 +475,12 @@ public:
 		return foftype[*key];
 	}
 
-	inline const Symbol &indexDict(hashcode_t i) const
+	inline const Symbol &indexDict(const hash_ull &i) const
 	{
 		return d->valueDictionary[i];
 	}
 
-	inline bool hasDictionaryKey(hashcode_t key) const
+	inline bool hasDictionaryKey(const hash_ull &key) const
 	{
 		return d->valueDictionary.find(key) != d->valueDictionary.end();
 	}
@@ -499,160 +495,151 @@ public:
 		return getDictionary(token).size();
 	}
 
-	inline const std::string toString(const Token *token) const
+	inline const string toString(const Token *token) const
 	{
-		switch (d->type)
-		{
-		case NIL:
-			return "nil";
-		case NUMBER:
-			return d->valueNumber.toString();
-		case STRING:
-			return "\"" + d->valueString + "\"";
-		case FUNCTION:
-		{
-			std::string ret = "<Function:{";
-			size_t i = 0;
-			for (auto &e : d->valueFunction)
+		switch (d->type) {
+			case NIL:
+				return "nil";
+			case NUMBER:
+				return d->valueNumber.toString();
+			case STRING:
+				return "\"" + d->valueString + "\"";
+			case FUNCTION:
 			{
-				for (auto &t : e.second)
-				{
-					if (i++ > 0)
+				string ret = "<Function:{";
+				size_t i = 0;
+				for (auto &e : d->valueFunction) {
+					for (auto &t : e.second) {
+						if (i++ > 0)
+							ret += ", ";
+						ret += t.first.toString();
+					}
+				}
+				return ret + "}>";
+			}
+			case OBJECT:
+			{
+				auto o = d->valueObject;
+				if (o->hasValue(Ruota::HASH_TO_STRING))
+					return o->getVariable(Ruota::HASH_TO_STRING, token).call({}, token).getString(token);
+				return "<Object>";
+			}
+			case POINTER:
+				return "<Pointer>";
+			case BOOLEAN_D:
+				return d->valueBool ? "true" : "false";
+			case ARRAY:
+			{
+				string ret = "[";
+				unsigned int i = 0;
+				for (auto &d2 : d->valueVector) {
+					if (i > 0)
 						ret += ", ";
-					ret += t.first.toString();
+					ret += d2.toString(token);
+					i++;
+				}
+				return ret + "]";
+			}
+			case DICTIONARY:
+			{
+				string ret = "{";
+				unsigned int i = 0;
+				for (auto &e : getDictionary(token)) {
+					if (i > 0)
+						ret += ", ";
+					ret += "\"" + MAIN_HASH.deHash(e.first) + "\" : " + e.second.toString(token);
+					i++;
+				}
+				return ret + "}";
+			}
+			case TYPE_NAME:
+			{
+				switch (d->valueType) {
+					case NIL:
+						return "Type::Nil";
+					case NUMBER:
+						return "Type::Number";
+					case STRING:
+						return "Type::String";
+					case FUNCTION:
+						return "Type::Function";
+					case OBJECT:
+						return "Type::Object";
+					case BOOLEAN_D:
+						return "Type::Boolean";
+					case ARRAY:
+						return "Type::Array";
+					case DICTIONARY:
+						return "Type::Dictionary";
+					case TYPE_NAME:
+						return "Type::Type";
+					case POINTER:
+						return "Type::Pointer";
+					default:
+						return "Type::@" + MAIN_HASH.deHash(d->valueType);
 				}
 			}
-			return ret + "}>";
-		}
-		case OBJECT:
-		{
-			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_TO_STRING))
-				return o->getVariable(Ruota::HASH_TO_STRING, token).call({}, token).getString(token);
-			return "<Object>";
-		}
-		case POINTER:
-			return "<Pointer>";
-		case BOOLEAN_D:
-			return d->valueBool ? "true" : "false";
-		case ARRAY:
-		{
-			std::string ret = "[";
-			unsigned int i = 0;
-			for (auto &d2 : d->valueVector)
-			{
-				if (i > 0)
-					ret += ", ";
-				ret += d2.toString(token);
-				i++;
-			}
-			return ret + "]";
-		}
-		case DICTIONARY:
-		{
-			std::string ret = "{";
-			unsigned int i = 0;
-			for (auto &e : getDictionary(token))
-			{
-				if (i > 0)
-					ret += ", ";
-				ret += "\"" + MAIN_HASH.deHash(e.first) + "\" : " + e.second.toString(token);
-				i++;
-			}
-			return ret + "}";
-		}
-		case TYPE_NAME:
-		{
-			switch (d->valueType)
-			{
-			case NIL:
-				return "Type::Nil";
-			case NUMBER:
-				return "Type::Number";
-			case STRING:
-				return "Type::String";
-			case FUNCTION:
-				return "Type::Function";
-			case OBJECT:
-				return "Type::Object";
-			case BOOLEAN_D:
-				return "Type::Boolean";
-			case ARRAY:
-				return "Type::Array";
-			case DICTIONARY:
-				return "Type::Dictionary";
-			case TYPE_NAME:
-				return "Type::Type";
-			case POINTER:
-				return "Type::Pointer";
 			default:
-				return "Type::@" + MAIN_HASH.deHash(d->valueType);
-			}
-		}
-		default:
-			return "undefined";
+				return "undefined";
 		}
 	}
 
-	inline const std::string toCodeString() const
+	inline const string toCodeString() const
 	{
 		if (type == ID_BREAK)
 			return "<BREAK>";
-		switch (d->type)
-		{
-		case NIL:
-			return std::string("Symbol()");
-		case NUMBER:
-		{
-			std::string ret = "Symbol(NUMBER_NEW_";
-			if (d->valueNumber.type == CNumber::DOUBLE_NUM)
-				ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")";
-			else
-				ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")";
-			return ret + ")";
-		}
-		case STRING:
-			return "Symbol(\"" + d->valueString + "\")";
-		case FUNCTION:
-			return std::string("<Function>");
-		case OBJECT:
-			return std::string("<Object>");
-		case BOOLEAN_D:
-		{
-			std::string ret = "Symbol(";
-			ret += (d->valueBool ? "true" : "false");
-			return ret + ")";
-		}
-		case ARRAY:
-		{
-			std::string ret = "Symbol({";
-			unsigned int i = 0;
-			for (auto &d2 : d->valueVector)
+		switch (d->type) {
+			case NIL:
+				return string("Symbol()");
+			case NUMBER:
 			{
-				if (i > 0)
-					ret += ", ";
-				ret += d2.toCodeString();
-				i++;
+				string ret = "Symbol(NUMBER_NEW_";
+				if (d->valueNumber.type == CNumber::DOUBLE_NUM)
+					ret += "DOUBLE(" + std::to_string(d->valueNumber.getDouble()) + ")";
+				else
+					ret += "LONG(" + std::to_string(d->valueNumber.getLong()) + ")";
+				return ret + ")";
 			}
-			return ret + "})";
-		}
-		case DICTIONARY:
-		{
-			std::string ret = "Symbol({";
-			unsigned int i = 0;
-			for (auto &e : d->valueDictionary)
+			case STRING:
+				return "Symbol(\"" + d->valueString + "\")";
+			case FUNCTION:
+				return string("<Function>");
+			case OBJECT:
+				return string("<Object>");
+			case BOOLEAN_D:
 			{
-				if (i > 0)
-					ret += ", ";
-				ret += "{" + std::to_string(e.first) + ", " + e.second.toCodeString() + "}";
-				i++;
+				string ret = "Symbol(";
+				ret += (d->valueBool ? "true" : "false");
+				return ret + ")";
 			}
-			return ret + "})";
-		}
-		case TYPE_NAME:
-			return std::string("Symbol(static_cast<TYPE_NAME>(") + std::to_string(d->valueType) + "))";
-		default:
-			return "undefined";
+			case ARRAY:
+			{
+				string ret = "Symbol({";
+				unsigned int i = 0;
+				for (auto &d2 : d->valueVector) {
+					if (i > 0)
+						ret += ", ";
+					ret += d2.toCodeString();
+					i++;
+				}
+				return ret + "})";
+			}
+			case DICTIONARY:
+			{
+				string ret = "Symbol({";
+				unsigned int i = 0;
+				for (auto &e : d->valueDictionary) {
+					if (i > 0)
+						ret += ", ";
+					ret += "{" + std::to_string(e.first) + ", " + e.second.toCodeString() + "}";
+					i++;
+				}
+				return ret + "})";
+			}
+			case TYPE_NAME:
+				return string("Symbol(static_cast<TYPE_NAME>(") + std::to_string(d->valueType) + "))";
+			default:
+				return "undefined";
 		}
 	}
 
@@ -673,69 +660,64 @@ public:
 	{
 		if (b->d == d)
 			return;
-		if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Ruota::HASH_SET))
-		{
-			d->valueObject->getVariable(Ruota::HASH_SET, token).call({*b}, token);
+		if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Ruota::HASH_SET)) {
+			d->valueObject->getVariable(Ruota::HASH_SET, token).call({ *b }, token);
 			return;
 		}
 		d->clearData();
 		d->type = b->d->type;
-		switch (d->type)
-		{
-		case NUMBER:
-			d->valueNumber = b->d->valueNumber;
-			break;
-		case BOOLEAN_D:
-			d->valueBool = b->d->valueBool;
-			break;
-		case STRING:
-			d->valueString = b->d->valueString;
-			break;
-		case FUNCTION:
-			d->valueFunction = b->d->valueFunction;
-			break;
-		case OBJECT:
-			d->valueObject = b->d->valueObject;
-			break;
-		case POINTER:
-			d->valuePointer = b->d->valuePointer;
-			break;
-		case ARRAY:
-		{
-			auto v = b->d->valueVector;
-			if (isConst)
+		switch (d->type) {
+			case NUMBER:
+				d->valueNumber = b->d->valueNumber;
+				break;
+			case BOOLEAN_D:
+				d->valueBool = b->d->valueBool;
+				break;
+			case STRING:
+				d->valueString = b->d->valueString;
+				break;
+			case FUNCTION:
+				d->valueFunction = b->d->valueFunction;
+				break;
+			case OBJECT:
+				d->valueObject = b->d->valueObject;
+				break;
+			case POINTER:
+				d->valuePointer = b->d->valuePointer;
+				break;
+			case ARRAY:
 			{
-				d->valueVector = v;
+				auto v = b->d->valueVector;
+				if (isConst) {
+					d->valueVector = v;
+					break;
+				}
+				d->valueVector.resize(v.size());
+				for (size_t i = 0; i < v.size(); i++)
+					d->valueVector[i].set(&v[i], token, isConst);
 				break;
 			}
-			d->valueVector.resize(v.size());
-			for (size_t i = 0; i < v.size(); i++)
-				d->valueVector[i].set(&v[i], token, isConst);
-			break;
-		}
-		case DICTIONARY:
-		{
-			auto v = b->d->valueDictionary;
-			if (isConst)
+			case DICTIONARY:
 			{
-				d->valueDictionary = v;
+				auto v = b->d->valueDictionary;
+				if (isConst) {
+					d->valueDictionary = v;
+					break;
+				}
+				for (auto &e : v) {
+					if (e.second.d->type == NIL)
+						continue;
+					auto newd = Symbol();
+					newd.set(&e.second, token, isConst);
+					d->valueDictionary[e.first] = newd;
+				}
 				break;
 			}
-			for (auto &e : v)
-			{
-				if (e.second.d->type == NIL)
-					continue;
-				auto newd = Symbol();
-				newd.set(&e.second, token, isConst);
-				d->valueDictionary[e.first] = newd;
-			}
-			break;
-		}
-		case TYPE_NAME:
-			d->valueType = b->d->valueType;
-			break;
-		default:
-			break;
+			case TYPE_NAME:
+				d->valueType = b->d->valueType;
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -743,70 +725,66 @@ public:
 	{
 		if (d->type != b->d->type && d->type != OBJECT)
 			return false;
-		switch (d->type)
-		{
-		case NIL:
-			return true;
-		case NUMBER:
-			return d->valueNumber == b->d->valueNumber;
-		case BOOLEAN_D:
-			return d->valueBool == b->d->valueBool;
-		case STRING:
-			return d->valueString == b->d->valueString;
-		case OBJECT:
-		{
-			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_EQUALS))
-				return o->getVariable(Ruota::HASH_EQUALS, token).call({*b}, token).d->valueBool;
-			return o == b->d->valueObject;
-		}
-		case ARRAY:
-		{
-			auto bv = b->d->valueVector;
-			if (d->valueVector.size() != bv.size())
-				return false;
-			for (unsigned long i = 0; i < d->valueVector.size(); i++)
-				if (!d->valueVector[i].equals(&bv[i], token))
-					return false;
-			return true;
-		}
-		case DICTIONARY:
-			for (auto &e : d->valueDictionary)
+		switch (d->type) {
+			case NIL:
+				return true;
+			case NUMBER:
+				return d->valueNumber == b->d->valueNumber;
+			case BOOLEAN_D:
+				return d->valueBool == b->d->valueBool;
+			case STRING:
+				return d->valueString == b->d->valueString;
+			case OBJECT:
 			{
-				if (!e.second.equals(&b->d->valueDictionary[e.first], token))
-					return false;
+				auto o = d->valueObject;
+				if (o->hasValue(Ruota::HASH_EQUALS))
+					return o->getVariable(Ruota::HASH_EQUALS, token).call({ *b }, token).d->valueBool;
+				return o == b->d->valueObject;
 			}
-			return true;
-		case TYPE_NAME:
-			return d->valueType == b->d->valueType;
-		default:
-			return false;
+			case ARRAY:
+			{
+				auto bv = b->d->valueVector;
+				if (d->valueVector.size() != bv.size())
+					return false;
+				for (unsigned long i = 0; i < d->valueVector.size(); i++)
+					if (!d->valueVector[i].equals(&bv[i], token))
+						return false;
+				return true;
+			}
+			case DICTIONARY:
+				for (auto &e : d->valueDictionary) {
+					if (!e.second.equals(&b->d->valueDictionary[e.first], token))
+						return false;
+				}
+				return true;
+			case TYPE_NAME:
+				return d->valueType == b->d->valueType;
+			default:
+				return false;
 		}
 	}
 
 	inline bool nequals(const Symbol *b, const Token *token) const
 	{
-		switch (d->type)
-		{
-		case OBJECT:
-		{
-			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_NEQUALS))
-				return o->getVariable(Ruota::HASH_NEQUALS, token).call({*b}, token).d->valueBool;
-		}
-		default:
-			return !this->equals(b, token);
+		switch (d->type) {
+			case OBJECT:
+			{
+				auto o = d->valueObject;
+				if (o->hasValue(Ruota::HASH_NEQUALS))
+					return o->getVariable(Ruota::HASH_NEQUALS, token).call({ *b }, token).d->valueBool;
+			}
+			default:
+				return !this->equals(b, token);
 		}
 	}
 
 	inline bool pureEquals(const Symbol *b, const Token *token) const
 	{
-		switch (d->type)
-		{
-		case OBJECT:
-			return d->valueObject == b->d->valueObject;
-		default:
-			return this->equals(b, token);
+		switch (d->type) {
+			case OBJECT:
+				return d->valueObject == b->d->valueObject;
+			default:
+				return this->equals(b, token);
 		}
 	}
 

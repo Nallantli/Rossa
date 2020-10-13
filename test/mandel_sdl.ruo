@@ -68,12 +68,12 @@ while true do {
 			exit();
 		}
 	}
-	switch chars(e.keysym.sym) in {
-		case "w" do y += 2 / height * scale;
-		case "s" do y -= 2 / height * scale;
-		case "a" do x -= 6 / width * scale;
-		case "d" do x += 6 / width * scale;
-		case "q" do scale = math.min(scale * 2, 4);
-		case "e" do	scale /= 2;
+	switch e.keysym.sym in {
+		case 'w' do y += 2 / height * scale;
+		case 's' do y -= 2 / height * scale;
+		case 'a' do x -= 6 / width * scale;
+		case 'd' do x += 6 / width * scale;
+		case 'q' do scale = math.min(scale * 2, 4);
+		case 'e' do	scale /= 2;
 	}
 }

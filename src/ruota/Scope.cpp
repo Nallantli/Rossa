@@ -1,36 +1,37 @@
 #include "Ruota.h"
 
-Scope::Scope() : parent(NULL), type(SCOPE_O), hashed_key(0), name_trace({}) {}
+Scope::Scope() : parent(NULL), type(SCOPE_O), hashed_key(0), name_trace({})
+{}
 
-Scope::Scope(Scope *parent, const hashcode_t &key) : parent(parent), type(SCOPE_O)
+Scope::Scope(Scope *parent, const hash_ull &key) : parent(parent), type(SCOPE_O)
 {
 	traceName(key);
 }
 
-Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hashcode_t &key, const Scope *ex) : parent(parent), type(type), body(body)
+Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &key, const Scope *ex, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body)
 {
-	if (ex != NULL)
-	{
-		extensions = ex->extensions;
-		extensions.push_back(ex->getHashedKey());
+	if (ex != NULL) {
+		this->extensions = ex->extensions;
+		this->extensions.push_back(ex->getHashedKey());
+	} else {
+		this->extensions = extensions;
 	}
 	traceName(key);
 }
 
-Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hashcode_t &hashed_key, const std::vector<object_type_t> &extensions) : parent(parent), type(type), body(body), hashed_key(hashed_key), extensions(extensions) {}
+Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body), hashed_key(hashed_key), extensions(extensions)
+{}
 
-void Scope::traceName(const hashcode_t &key)
+void Scope::traceName(const hash_ull &key)
 {
-	std::string path = "";
+	string path = "";
 	if (parent != NULL)
 		name_trace = parent->name_trace;
-	if (key != 0)
-	{
+	if (key != 0) {
 		name_trace.push_back(key);
 
 		size_t i = 0;
-		for (auto &p : name_trace)
-		{
+		for (auto &p : name_trace) {
 			if (i++ > 0)
 				path += ".";
 			path += MAIN_HASH.deHash(p);
@@ -52,12 +53,12 @@ const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *
 	return d;
 }
 
-const hashcode_t Scope::getHashedKey() const
+const hash_ull Scope::getHashedKey() const
 {
 	return hashed_key;
 }
 
-const Symbol &Scope::getVariable(const hashcode_t &key, const Token *token)
+const Symbol &Scope::getVariable(const hash_ull &key, const Token *token)
 {
 	if (values.find(key) != values.end())
 		return values[key];
@@ -67,13 +68,13 @@ const Symbol &Scope::getVariable(const hashcode_t &key, const Token *token)
 	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % MAIN_HASH.deHash(key)).str(), *token);
 }
 
-const Symbol &Scope::createVariable(const hashcode_t &key, const Token *token)
+const Symbol &Scope::createVariable(const hash_ull &key, const Token *token)
 {
 	values[key] = Symbol();
 	return values[key];
 }
 
-const Symbol &Scope::createVariable(const hashcode_t &key, const Symbol &d, const Token *token)
+const Symbol &Scope::createVariable(const hash_ull &key, const Symbol &d, const Token *token)
 {
 	if (values.find(key) != values.end() && values[key].getValueType() == FUNCTION)
 		values[key].addFunctions(&d, token);
@@ -93,7 +94,7 @@ Scope *Scope::getParent() const
 	return this->parent;
 }
 
-const bool Scope::extendsObject(const hashcode_t &ex) const
+const bool Scope::extendsObject(const type_sll &ex) const
 {
 	return std::find(extensions.begin(), extensions.end(), ex) != extensions.end();
 }
@@ -118,15 +119,14 @@ const Symbol Scope::getThis(const Token *token)
 	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token);
 }
 
-bool Scope::hasValue(const hashcode_t &key) const
+bool Scope::hasValue(const hash_ull &key) const
 {
 	return values.find(key) != values.end();
 }
 
 Scope::~Scope()
 {
-	if (hasValue(Ruota::HASH_DELETER))
-	{
+	if (hasValue(Ruota::HASH_DELETER)) {
 		values[Ruota::HASH_DELETER].call({}, NULL);
 	}
 }

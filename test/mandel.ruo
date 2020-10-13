@@ -83,15 +83,15 @@ system("cls");
 
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
-	switch chars(input.char()) in {
-		case "w" do y += 2 / height * scale;
-		case "s" do y -= 2 / height * scale;
-		case "a" do x -= 6 / width * scale;
-		case "d" do x += 6 / width * scale;
-		case "q" do scale = math.min(scale * 2, 4);
-		case "e" do	scale /= 2;
-		case "z" do { break; }
-		case "p" do {
+	switch input.char() in {
+		case 'w' do y += 2 / height * scale;
+		case 's' do y -= 2 / height * scale;
+		case 'a' do x -= 6 / width * scale;
+		case 'd' do x += 6 / width * scale;
+		case 'q' do scale = math.min(scale * 2, 4);
+		case 'e' do	scale /= 2;
+		case 'z' do { break; }
+		case 'p' do {
 			putln("Printing...");
 			mandel.print(x - scale, y - scale, x + scale, y + scale, width * 2, math.floor(height * 5));
 			system("cls");

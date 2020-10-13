@@ -8,8 +8,8 @@ class NodeParser
 {
 private:
 	const std::vector<Token> tokens;
-	const std::map<std::string, signed int> bOperators;
-	const std::map<std::string, signed int> uOperators;
+	const std::map<string, signed int> bOperators;
+	const std::map<string, signed int> uOperators;
 	const boost::filesystem::path currentFile;
 
 	unsigned int index = 0;
@@ -30,7 +30,7 @@ private:
 	std::unique_ptr<Node> parseIfElseNode();
 	std::unique_ptr<Node> parseWhileNode();
 	std::unique_ptr<Node> parseForNode();
-	std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> parseSigNode(ValueType start);
+	std::pair<Signature, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(ValueType start);
 	std::unique_ptr<Node> parseDefineNode();
 	std::unique_ptr<Node> parseLambdaNode();
 	std::unique_ptr<Node> parseExternNode();
@@ -51,11 +51,11 @@ private:
 	std::unique_ptr<Node> parseIndexNode(std::unique_ptr<Node>);
 	std::unique_ptr<Node> parseThenNode(std::unique_ptr<Node>);
 
-	std::unique_ptr<Node> logErrorN(const std::string &, const Token);
-	std::pair<Signature, std::vector<std::pair<LexerTokenType, hashcode_t>>> logErrorSN(const std::string &, const Token);
+	std::unique_ptr<Node> logErrorN(const string &, const Token);
+	std::pair<Signature, std::vector<std::pair<LexerTokenType, hash_ull>>> logErrorSN(const string &, const Token);
 
 public:
-	NodeParser(const std::vector<Token> &, const std::map<std::string, signed int> &, const std::map<std::string, signed int> &, const boost::filesystem::path &);
+	NodeParser(const std::vector<Token> &, const std::map<string, signed int> &, const std::map<string, signed int> &, const boost::filesystem::path &);
 	std::unique_ptr<Node> parse();
 	static std::shared_ptr<Instruction> genParser(std::unique_ptr<Node>);
 };
