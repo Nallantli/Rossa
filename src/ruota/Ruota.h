@@ -136,7 +136,7 @@ public:
 	virtual std::shared_ptr<Instruction> genParser() const = 0;
 	virtual bool isConst() const = 0;
 	virtual void printTree(string, bool) const = 0;
-	virtual std::unique_ptr<Node> fold() const = 0;
+	virtual std::shared_ptr<Node> fold() const = 0;
 };
 
 class Lexer
@@ -207,8 +207,8 @@ public:
 	static hash_ull HASH_TO_DICTIONARY;
 
 	Ruota(std::vector<string>);
-	std::unique_ptr<Node> compileCode(const string &, boost::filesystem::path) const;
-	const Symbol runCode(std::unique_ptr<Node>, bool);
+	std::shared_ptr<Node> compileCode(const string &, boost::filesystem::path) const;
+	const Symbol runCode(std::shared_ptr<Node>, bool);
 };
 
 class Value

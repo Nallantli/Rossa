@@ -18,22 +18,22 @@ public:
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class VectorNode : public Node
 {
 private:
-	const std::vector<std::unique_ptr<Node>> args;
+	const std::vector<std::shared_ptr<Node>> args;
 	bool scoped;
 
 public:
-	VectorNode(std::vector<std::unique_ptr<Node>>, bool, const Token &);
+	VectorNode(std::vector<std::shared_ptr<Node>>, bool, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
-	const std::vector<std::unique_ptr<Node>> &getChildren();
+	std::shared_ptr<Node> fold() const override;
+	const std::vector<std::shared_ptr<Node>> &getChildren();
 };
 
 class BreakNode : public Node
@@ -43,7 +43,7 @@ public:
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class IDNode : public Node
@@ -57,7 +57,7 @@ public:
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class BIDNode : public Node
@@ -71,7 +71,7 @@ public:
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class DefineNode : public Node
@@ -80,28 +80,28 @@ private:
 	hash_ull key;
 	Signature ftype;
 	std::vector<std::pair<LexerTokenType, hash_ull>> params;
-	std::unique_ptr<Node> body;
+	std::shared_ptr<Node> body;
 
 public:
-	DefineNode(hash_ull, Signature, std::vector<std::pair<LexerTokenType, hash_ull>>, std::unique_ptr<Node>, const Token &);
+	DefineNode(hash_ull, Signature, std::vector<std::pair<LexerTokenType, hash_ull>>, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class NewNode : public Node
 {
 private:
-	std::unique_ptr<Node> object;
-	std::unique_ptr<Node> params;
+	std::shared_ptr<Node> object;
+	std::shared_ptr<Node> params;
 
 public:
-	NewNode(std::unique_ptr<Node>, std::unique_ptr<Node>, const Token &);
+	NewNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ClassNode : public Node
@@ -109,15 +109,15 @@ class ClassNode : public Node
 private:
 	hash_ull key;
 	int type;
-	std::vector<std::unique_ptr<Node>> body;
-	std::unique_ptr<Node> extends;
+	std::vector<std::shared_ptr<Node>> body;
+	std::shared_ptr<Node> extends;
 
 public:
-	ClassNode(hash_ull, int, std::vector<std::unique_ptr<Node>>, std::unique_ptr<Node>, const Token &);
+	ClassNode(hash_ull, int, std::vector<std::shared_ptr<Node>>, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class VarNode : public Node
@@ -130,257 +130,272 @@ public:
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class CallNode : public Node
 {
 private:
-	std::unique_ptr<Node> callee;
-	std::vector<std::unique_ptr<Node>> args;
+	std::shared_ptr<Node> callee;
+	std::vector<std::shared_ptr<Node>> args;
 
 public:
-	CallNode(std::unique_ptr<Node>, std::vector<std::unique_ptr<Node>>, const Token &);
+	CallNode(std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
-	std::unique_ptr<Node> getCallee();
-	std::vector<std::unique_ptr<Node>> getArgs();
+	std::shared_ptr<Node> getCallee();
+	std::vector<std::shared_ptr<Node>> getArgs();
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ExternCallNode : public Node
 {
 private:
 	string id;
-	std::vector<std::unique_ptr<Node>> args;
+	std::vector<std::shared_ptr<Node>> args;
 
 public:
-	ExternCallNode(const string &, std::vector<std::unique_ptr<Node>>, const Token &);
+	ExternCallNode(const string &, std::vector<std::shared_ptr<Node>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class CallBuiltNode : public Node
 {
 private:
 	LexerTokenType t;
-	std::unique_ptr<Node> arg;
+	std::shared_ptr<Node> arg;
 
 public:
-	CallBuiltNode(LexerTokenType, std::unique_ptr<Node>, const Token &);
+	CallBuiltNode(LexerTokenType, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ReturnNode : public Node
 {
 private:
-	std::unique_ptr<Node> a;
+	std::shared_ptr<Node> a;
 
 public:
-	ReturnNode(std::unique_ptr<Node>, const Token &);
+	ReturnNode(std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ReferNode : public Node
 {
 private:
-	std::unique_ptr<Node> a;
+	std::shared_ptr<Node> a;
 
 public:
-	ReferNode(std::unique_ptr<Node>, const Token &);
+	ReferNode(std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class BinOpNode : public Node
 {
 private:
 	string op;
-	std::unique_ptr<Node> a;
-	std::unique_ptr<Node> b;
+	std::shared_ptr<Node> a;
+	std::shared_ptr<Node> b;
 
 public:
-	BinOpNode(const string &, std::unique_ptr<Node>, std::unique_ptr<Node>, const Token &);
+	BinOpNode(const string &, std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	const string &getOp() const;
-	std::unique_ptr<Node> getA();
-	std::unique_ptr<Node> getB();
+	std::shared_ptr<Node> getA() const;
+	std::shared_ptr<Node> getB() const;
+	void setA(std::shared_ptr<Node>);
+	void setB(std::shared_ptr<Node>);
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class UnOpNode : public Node
 {
 private:
 	string op;
-	std::unique_ptr<Node> a;
+	std::shared_ptr<Node> a;
 
 public:
-	UnOpNode(const string &, std::unique_ptr<Node>, const Token &);
+	UnOpNode(const string &, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
+};
+
+class ParenNode : public Node
+{
+private:
+	std::shared_ptr<Node> a;
+
+public:
+	ParenNode(std::shared_ptr<Node>, const Token &);
+	std::shared_ptr<Instruction> genParser() const override;
+	bool isConst() const override;
+	void printTree(string, bool) const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class CastToNode : public Node
 {
 private:
 	ValueType convert;
-	std::unique_ptr<Node> a;
+	std::shared_ptr<Node> a;
 
 public:
-	CastToNode(ValueType, std::unique_ptr<Node>, const Token &);
+	CastToNode(ValueType, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class InsNode : public Node
 {
 private:
-	std::unique_ptr<Node> callee;
-	std::unique_ptr<Node> arg;
+	std::shared_ptr<Node> callee;
+	std::shared_ptr<Node> arg;
 
 public:
-	InsNode(std::unique_ptr<Node>, std::unique_ptr<Node>, const Token &);
+	InsNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
-	std::unique_ptr<Node> getCallee();
-	std::unique_ptr<Node> getArg();
+	std::shared_ptr<Node> getCallee();
+	std::shared_ptr<Node> getArg();
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class IfElseNode : public Node
 {
 private:
-	std::unique_ptr<Node> ifs;
-	std::unique_ptr<Node> body;
-	std::unique_ptr<Node> elses = nullptr;
+	std::shared_ptr<Node> ifs;
+	std::shared_ptr<Node> body;
+	std::shared_ptr<Node> elses = nullptr;
 
 public:
-	IfElseNode(std::unique_ptr<Node>, std::unique_ptr<Node>, const Token &);
-	void setElse(std::unique_ptr<Node>);
+	IfElseNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
+	void setElse(std::shared_ptr<Node>);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class WhileNode : public Node
 {
 private:
-	std::unique_ptr<Node> whiles;
-	std::vector<std::unique_ptr<Node>> body;
+	std::shared_ptr<Node> whiles;
+	std::vector<std::shared_ptr<Node>> body;
 
 public:
-	WhileNode(std::unique_ptr<Node>, std::vector<std::unique_ptr<Node>>, const Token &);
+	WhileNode(std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ForNode : public Node
 {
 private:
 	hash_ull id;
-	std::unique_ptr<Node> fors;
-	std::vector<std::unique_ptr<Node>> body;
+	std::shared_ptr<Node> fors;
+	std::vector<std::shared_ptr<Node>> body;
 
 public:
-	ForNode(hash_ull, std::unique_ptr<Node>, std::vector<std::unique_ptr<Node>>, const Token &);
+	ForNode(hash_ull, std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class UntilNode : public Node
 {
 private:
-	std::unique_ptr<Node> a;
-	std::unique_ptr<Node> b;
-	std::unique_ptr<Node> step = nullptr;
+	std::shared_ptr<Node> a;
+	std::shared_ptr<Node> b;
+	std::shared_ptr<Node> step = nullptr;
 	bool inclusive;
 
 public:
-	UntilNode(std::unique_ptr<Node>, std::unique_ptr<Node>, std::unique_ptr<Node>, bool, const Token &);
+	UntilNode(std::shared_ptr<Node>, std::shared_ptr<Node>, std::shared_ptr<Node>, bool, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class MapNode : public Node
 {
 private:
-	std::vector<std::pair<hash_ull, std::unique_ptr<Node>>> args;
+	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> args;
 
 public:
-	MapNode(std::vector<std::pair<hash_ull, std::unique_ptr<Node>>>, const Token &);
+	MapNode(std::vector<std::pair<hash_ull, std::shared_ptr<Node>>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class SwitchNode : public Node
 {
 private:
-	std::unique_ptr<Node> switchs;
-	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> cases;
-	std::unique_ptr<Node> elses;
+	std::shared_ptr<Node> switchs;
+	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases;
+	std::shared_ptr<Node> elses;
 
 public:
-	SwitchNode(std::unique_ptr<Node>, std::map<std::unique_ptr<Node>, std::unique_ptr<Node>>, const Token &);
+	SwitchNode(std::shared_ptr<Node>, std::map<std::shared_ptr<Node>, std::shared_ptr<Node>>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
-	void setElse(std::unique_ptr<Node>);
+	void setElse(std::shared_ptr<Node>);
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class TryCatchNode : public Node
 {
 private:
-	std::unique_ptr<Node> trys;
-	std::unique_ptr<Node> catchs;
+	std::shared_ptr<Node> trys;
+	std::shared_ptr<Node> catchs;
 	hash_ull key;
 
 public:
-	TryCatchNode(std::unique_ptr<Node>, std::unique_ptr<Node>, hash_ull, const Token &);
+	TryCatchNode(std::shared_ptr<Node>, std::shared_ptr<Node>, hash_ull, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 class ThrowNode : public Node
 {
 private:
-	std::unique_ptr<Node> throws;
+	std::shared_ptr<Node> throws;
 
 public:
-	ThrowNode(std::unique_ptr<Node>, const Token &);
+	ThrowNode(std::shared_ptr<Node>, const Token &);
 	std::shared_ptr<Instruction> genParser() const override;
 	bool isConst() const override;
 	void printTree(string, bool) const override;
-	std::unique_ptr<Node> fold() const override;
+	std::shared_ptr<Node> fold() const override;
 };
 
 #endif

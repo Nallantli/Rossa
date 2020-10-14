@@ -200,6 +200,9 @@ public:
 
 	inline const CNumber operator/(const CNumber &n) const noexcept
 	{
+		if (n.getDouble() == 0)
+			return CNumber::Long(0);
+
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {

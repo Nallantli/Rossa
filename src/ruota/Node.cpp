@@ -51,7 +51,7 @@ void ContainerNode::printTree(string indent, bool last) const
 		<< " : " << s.getValueType() << ", " << s.toCodeString() << "\n"
 		<< colorASCII(RESET_TEXT);
 }
-std::unique_ptr<Node> ContainerNode::fold() const
+std::shared_ptr<Node> ContainerNode::fold() const
 {
 	return std::make_unique<ContainerNode>(s, token);
 }
@@ -59,11 +59,11 @@ std::unique_ptr<Node> ContainerNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 VectorNode::VectorNode(
-	std::vector<std::unique_ptr<Node>> args,
+	std::vector<std::shared_ptr<Node>> args,
 	bool scoped,
 	const Token &token) : Node(VECTOR_NODE,
 		token),
-	args(std::move(args)),
+	args(args),
 	scoped(scoped)
 {}
 
@@ -103,7 +103,7 @@ void VectorNode::printTree(string indent, bool last) const
 		args[i]->printTree(indent, i == args.size() - 1);
 }
 
-std::unique_ptr<Node> VectorNode::fold() const
+std::shared_ptr<Node> VectorNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -111,15 +111,15 @@ std::unique_ptr<Node> VectorNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 	}
 
-	std::vector<std::unique_ptr<Node>> nargs;
+	std::vector<std::shared_ptr<Node>> nargs;
 	for (auto &c : args)
 		nargs.push_back(c->fold());
-	return std::make_unique<VectorNode>(std::move(nargs), scoped, token);
+	return std::make_unique<VectorNode>(nargs, scoped, token);
 }
 
-const std::vector<std::unique_ptr<Node>> &VectorNode::getChildren()
+const std::vector<std::shared_ptr<Node>> &VectorNode::getChildren()
 {
-	return std::move(args);
+	return args;
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ void BreakNode::printTree(string indent, bool last) const
 		<< colorASCII(RESET_TEXT);
 }
 
-std::unique_ptr<Node> BreakNode::fold() const
+std::shared_ptr<Node> BreakNode::fold() const
 {
 	return std::make_unique<ContainerNode>(Symbol(ID_BREAK), token);
 }
@@ -196,7 +196,7 @@ void IDNode::printTree(string indent, bool last) const
 		<< colorASCII(RESET_TEXT);
 }
 
-std::unique_ptr<Node> IDNode::fold() const
+std::shared_ptr<Node> IDNode::fold() const
 {
 	return std::make_unique<IDNode>(key, token);
 }
@@ -239,7 +239,7 @@ void BIDNode::printTree(string indent, bool last) const
 		<< colorASCII(RESET_TEXT);
 }
 
-std::unique_ptr<Node> BIDNode::fold() const
+std::shared_ptr<Node> BIDNode::fold() const
 {
 	return std::make_unique<BIDNode>(key, token);
 }
@@ -250,13 +250,13 @@ DefineNode::DefineNode(
 	hash_ull key,
 	Signature ftype,
 	std::vector<std::pair<LexerTokenType, hash_ull>> params,
-	std::unique_ptr<Node> body,
+	std::shared_ptr<Node> body,
 	const Token &token) : Node(DEFINE_NODE,
 		token),
 	key(key),
 	ftype(ftype),
 	params(params),
-	body(std::move(body))
+	body(body)
 {}
 
 std::shared_ptr<Instruction> DefineNode::genParser() const
@@ -285,7 +285,7 @@ void DefineNode::printTree(string indent, bool last) const
 	body->printTree(indent, true);
 }
 
-std::unique_ptr<Node> DefineNode::fold() const
+std::shared_ptr<Node> DefineNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -299,12 +299,12 @@ std::unique_ptr<Node> DefineNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 NewNode::NewNode(
-	std::unique_ptr<Node> object,
-	std::unique_ptr<Node> params,
+	std::shared_ptr<Node> object,
+	std::shared_ptr<Node> params,
 	const Token &token) : Node(NEW_NODE,
 		token),
-	object(std::move(object)),
-	params(std::move(params))
+	object(object),
+	params(params)
 {}
 
 std::shared_ptr<Instruction> NewNode::genParser() const
@@ -335,7 +335,7 @@ void NewNode::printTree(string indent, bool last) const
 	params->printTree(indent, true);
 }
 
-std::unique_ptr<Node> NewNode::fold() const
+std::shared_ptr<Node> NewNode::fold() const
 {
 	return std::make_unique<NewNode>(object->fold(), params->fold(), token);
 }
@@ -345,14 +345,14 @@ std::unique_ptr<Node> NewNode::fold() const
 ClassNode::ClassNode(
 	hash_ull key,
 	int type,
-	std::vector<std::unique_ptr<Node>> body,
-	std::unique_ptr<Node> extends,
+	std::vector<std::shared_ptr<Node>> body,
+	std::shared_ptr<Node> extends,
 	const Token &token) : Node(CLASS_NODE,
 		token),
 	key(key),
 	type(type),
-	body(std::move(body)),
-	extends(std::move(extends))
+	body(body),
+	extends(extends)
 {}
 
 std::shared_ptr<Instruction> ClassNode::genParser() const
@@ -406,16 +406,16 @@ void ClassNode::printTree(string indent, bool last) const
 		body[i]->printTree(indent, i == body.size() - 1);
 }
 
-std::unique_ptr<Node> ClassNode::fold() const
+std::shared_ptr<Node> ClassNode::fold() const
 {
-	std::vector<std::unique_ptr<Node>> nbody;
+	std::vector<std::shared_ptr<Node>> nbody;
 	for (auto &c : body)
 		nbody.push_back(c->fold());
 
 	if (extends)
-		return std::make_unique<ClassNode>(key, type, std::move(nbody), extends->fold(), token);
+		return std::make_unique<ClassNode>(key, type, nbody, extends->fold(), token);
 	else
-		return std::make_unique<ClassNode>(key, type, std::move(nbody), nullptr, token);
+		return std::make_unique<ClassNode>(key, type, nbody, nullptr, token);
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -451,7 +451,7 @@ void VarNode::printTree(string indent, bool last) const
 		<< colorASCII(RESET_TEXT);
 }
 
-std::unique_ptr<Node> VarNode::fold() const
+std::shared_ptr<Node> VarNode::fold() const
 {
 	return std::make_unique<VarNode>(keys, token);
 }
@@ -459,12 +459,12 @@ std::unique_ptr<Node> VarNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 CallNode::CallNode(
-	std::unique_ptr<Node> callee,
-	std::vector<std::unique_ptr<Node>> args,
+	std::shared_ptr<Node> callee,
+	std::vector<std::shared_ptr<Node>> args,
 	const Token &token) : Node(CALL_NODE,
 		token),
-	callee(std::move(callee)),
-	args(std::move(args))
+	callee(callee),
+	args(args)
 {}
 
 std::shared_ptr<Instruction> CallNode::genParser() const
@@ -476,14 +476,14 @@ std::shared_ptr<Instruction> CallNode::genParser() const
 	return std::make_shared<CallI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
 }
 
-std::unique_ptr<Node> CallNode::getCallee()
+std::shared_ptr<Node> CallNode::getCallee()
 {
-	return std::move(callee);
+	return (callee);
 }
 
-std::vector<std::unique_ptr<Node>> CallNode::getArgs()
+std::vector<std::shared_ptr<Node>> CallNode::getArgs()
 {
-	return std::move(args);
+	return (args);
 }
 
 bool CallNode::isConst() const
@@ -509,24 +509,24 @@ void CallNode::printTree(string indent, bool last) const
 		args[i]->printTree(indent, i == args.size() - 1);
 }
 
-std::unique_ptr<Node> CallNode::fold() const
+std::shared_ptr<Node> CallNode::fold() const
 {
-	std::vector<std::unique_ptr<Node>> nargs;
+	std::vector<std::shared_ptr<Node>> nargs;
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<CallNode>(callee->fold(), std::move(nargs), token);
+	return std::make_unique<CallNode>(callee->fold(), nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ExternCallNode::ExternCallNode(
 	const string &id,
-	std::vector<std::unique_ptr<Node>> args,
+	std::vector<std::shared_ptr<Node>> args,
 	const Token &token) : Node(EXTERN_CALL_NODE,
 		token),
 	id(id),
-	args(std::move(args))
+	args(args)
 {}
 
 std::shared_ptr<Instruction> ExternCallNode::genParser() const
@@ -558,24 +558,24 @@ void ExternCallNode::printTree(string indent, bool last) const
 		args[i]->printTree(indent, i == args.size() - 1);
 }
 
-std::unique_ptr<Node> ExternCallNode::fold() const
+std::shared_ptr<Node> ExternCallNode::fold() const
 {
-	std::vector<std::unique_ptr<Node>> nargs;
+	std::vector<std::shared_ptr<Node>> nargs;
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<ExternCallNode>(id, std::move(nargs), token);
+	return std::make_unique<ExternCallNode>(id, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 CallBuiltNode::CallBuiltNode(
 	LexerTokenType t,
-	std::unique_ptr<Node> arg,
+	std::shared_ptr<Node> arg,
 	const Token &token) : Node(CALL_BUILT_NODE,
 		token),
 	t(t),
-	arg(std::move(arg))
+	arg(arg)
 {}
 
 std::shared_ptr<Instruction> CallBuiltNode::genParser() const
@@ -620,7 +620,7 @@ void CallBuiltNode::printTree(string indent, bool last) const
 	arg->printTree(indent, true);
 }
 
-std::unique_ptr<Node> CallBuiltNode::fold() const
+std::shared_ptr<Node> CallBuiltNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -634,10 +634,10 @@ std::unique_ptr<Node> CallBuiltNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReturnNode::ReturnNode(
-	std::unique_ptr<Node> a,
+	std::shared_ptr<Node> a,
 	const Token &token) : Node(REFER_NODE,
 		token),
-	a(std::move(a))
+	a(a)
 {}
 
 std::shared_ptr<Instruction> ReturnNode::genParser() const
@@ -666,7 +666,7 @@ void ReturnNode::printTree(string indent, bool last) const
 	a->printTree(indent, true);
 }
 
-std::unique_ptr<Node> ReturnNode::fold() const
+std::shared_ptr<Node> ReturnNode::fold() const
 {
 	return std::make_unique<ReturnNode>(a->fold(), token);
 }
@@ -674,10 +674,10 @@ std::unique_ptr<Node> ReturnNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReferNode::ReferNode(
-	std::unique_ptr<Node> a,
+	std::shared_ptr<Node> a,
 	const Token &token) : Node(RETURN_NODE,
 		token),
-	a(std::move(a))
+	a(a)
 {}
 
 std::shared_ptr<Instruction> ReferNode::genParser() const
@@ -705,7 +705,7 @@ void ReferNode::printTree(string indent, bool last) const
 	a->printTree(indent, true);
 }
 
-std::unique_ptr<Node> ReferNode::fold() const
+std::shared_ptr<Node> ReferNode::fold() const
 {
 	return std::make_unique<ReferNode>(a->fold(), token);
 }
@@ -714,13 +714,13 @@ std::unique_ptr<Node> ReferNode::fold() const
 
 BinOpNode::BinOpNode(
 	const string &op,
-	std::unique_ptr<Node> a,
-	std::unique_ptr<Node> b,
+	std::shared_ptr<Node> a,
+	std::shared_ptr<Node> b,
 	const Token &token) : Node(BIN_OP_NODE,
 		token),
 	op(op),
-	a(std::move(a)),
-	b(std::move(b))
+	a(a),
+	b(b)
 {}
 
 std::shared_ptr<Instruction> BinOpNode::genParser() const
@@ -816,15 +816,25 @@ const string &BinOpNode::getOp() const
 	return op;
 }
 
-std::unique_ptr<Node> BinOpNode::getA()
+std::shared_ptr<Node> BinOpNode::getA() const
 {
-	return std::move(a);
+	return a;
 };
 
-std::unique_ptr<Node> BinOpNode::getB()
+std::shared_ptr<Node> BinOpNode::getB() const
 {
-	return std::move(b);
+	return b;
 };
+
+void BinOpNode::setA(std::shared_ptr<Node> a)
+{
+	this->a = (a);
+}
+
+void BinOpNode::setB(std::shared_ptr<Node> b)
+{
+	this->b = (b);
+}
 
 bool BinOpNode::isConst() const
 {
@@ -856,7 +866,7 @@ void BinOpNode::printTree(string indent, bool last) const
 	b->printTree(indent, true);
 }
 
-std::unique_ptr<Node> BinOpNode::fold() const
+std::shared_ptr<Node> BinOpNode::fold() const
 {
 	if (isConst()) {
 		Scope scope;
@@ -872,11 +882,11 @@ std::unique_ptr<Node> BinOpNode::fold() const
 
 UnOpNode::UnOpNode(
 	const string &op,
-	std::unique_ptr<Node> a,
+	std::shared_ptr<Node> a,
 	const Token &token) : Node(UN_OP_NODE,
 		token),
 	op(op),
-	a(std::move(a))
+	a(a)
 {}
 
 std::shared_ptr<Instruction> UnOpNode::genParser() const
@@ -912,7 +922,7 @@ void UnOpNode::printTree(string indent, bool last) const
 	a->printTree(indent, true);
 }
 
-std::unique_ptr<Node> UnOpNode::fold() const
+std::shared_ptr<Node> UnOpNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -925,13 +935,58 @@ std::unique_ptr<Node> UnOpNode::fold() const
 
 //------------------------------------------------------------------------------------------------------
 
+ParenNode::ParenNode(
+	std::shared_ptr<Node> a,
+	const Token &token) : Node(PAREN_NODE,
+		token),
+	a(a)
+{}
+
+std::shared_ptr<Instruction> ParenNode::genParser() const
+{
+	return a->genParser();
+}
+
+bool ParenNode::isConst() const
+{
+	return a->isConst();
+}
+
+void ParenNode::printTree(string indent, bool last) const
+{
+	std::cout << indent;
+	if (last) {
+		std::cout << "└─";
+		indent += "  ";
+	} else {
+		std::cout << "├─";
+		indent += "│ ";
+	}
+	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "PAREN\n"
+		<< colorASCII(RESET_TEXT);
+	a->printTree(indent, true);
+}
+
+std::shared_ptr<Node> ParenNode::fold() const
+{
+	if (isConst()) {
+		auto i = genParser();
+		Scope scope;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+	}
+
+	return std::make_unique<ParenNode>(a->fold(), token);
+}
+
+//------------------------------------------------------------------------------------------------------
+
 CastToNode::CastToNode(
 	ValueType convert,
-	std::unique_ptr<Node> a,
+	std::shared_ptr<Node> a,
 	const Token &token) : Node(CAST_TO_NODE,
 		token),
 	convert(convert),
-	a(std::move(a))
+	a(a)
 {}
 
 std::shared_ptr<Instruction> CastToNode::genParser() const
@@ -959,7 +1014,7 @@ void CastToNode::printTree(string indent, bool last) const
 	a->printTree(indent, true);
 }
 
-std::unique_ptr<Node> CastToNode::fold() const
+std::shared_ptr<Node> CastToNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -973,12 +1028,12 @@ std::unique_ptr<Node> CastToNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 InsNode::InsNode(
-	std::unique_ptr<Node> callee,
-	std::unique_ptr<Node> arg,
+	std::shared_ptr<Node> callee,
+	std::shared_ptr<Node> arg,
 	const Token &token) : Node(INS_NODE,
 		token),
-	callee(std::move(callee)),
-	arg(std::move(arg))
+	callee(callee),
+	arg(arg)
 {}
 
 std::shared_ptr<Instruction> InsNode::genParser() const
@@ -986,14 +1041,14 @@ std::shared_ptr<Instruction> InsNode::genParser() const
 	return std::make_shared<InnerI>(callee->genParser(), arg->genParser(), token);
 }
 
-std::unique_ptr<Node> InsNode::getCallee()
+std::shared_ptr<Node> InsNode::getCallee()
 {
-	return std::move(callee);
+	return (callee);
 }
 
-std::unique_ptr<Node> InsNode::getArg()
+std::shared_ptr<Node> InsNode::getArg()
 {
-	return std::move(arg);
+	return (arg);
 }
 
 bool InsNode::isConst() const
@@ -1017,7 +1072,7 @@ void InsNode::printTree(string indent, bool last) const
 	arg->printTree(indent, true);
 }
 
-std::unique_ptr<Node> InsNode::fold() const
+std::shared_ptr<Node> InsNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1031,17 +1086,17 @@ std::unique_ptr<Node> InsNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 IfElseNode::IfElseNode(
-	std::unique_ptr<Node> ifs,
-	std::unique_ptr<Node> body,
+	std::shared_ptr<Node> ifs,
+	std::shared_ptr<Node> body,
 	const Token &token) : Node(IF_ELSE_NODE,
 		token),
-	ifs(std::move(ifs)),
-	body(std::move(body))
+	ifs(ifs),
+	body(body)
 {}
 
-void IfElseNode::setElse(std::unique_ptr<Node> elses)
+void IfElseNode::setElse(std::shared_ptr<Node> elses)
 {
-	this->elses = std::move(elses);
+	this->elses = (elses);
 }
 
 std::shared_ptr<Instruction> IfElseNode::genParser() const
@@ -1081,7 +1136,7 @@ void IfElseNode::printTree(string indent, bool last) const
 		elses->printTree(indent, true);
 }
 
-std::unique_ptr<Node> IfElseNode::fold() const
+std::shared_ptr<Node> IfElseNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1098,12 +1153,12 @@ std::unique_ptr<Node> IfElseNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 WhileNode::WhileNode(
-	std::unique_ptr<Node> whiles,
-	std::vector<std::unique_ptr<Node>> body,
+	std::shared_ptr<Node> whiles,
+	std::vector<std::shared_ptr<Node>> body,
 	const Token &token) : Node(WHILE_NODE,
 		token),
-	whiles(std::move(whiles)),
-	body(std::move(body))
+	whiles(whiles),
+	body(body)
 {}
 
 std::shared_ptr<Instruction> WhileNode::genParser() const
@@ -1147,7 +1202,7 @@ void WhileNode::printTree(string indent, bool last) const
 		body[i]->printTree(indent, i == body.size() - 1);
 }
 
-std::unique_ptr<Node> WhileNode::fold() const
+std::shared_ptr<Node> WhileNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1155,23 +1210,23 @@ std::unique_ptr<Node> WhileNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 	}
 
-	std::vector<std::unique_ptr<Node>> nbody;
+	std::vector<std::shared_ptr<Node>> nbody;
 	for (auto &c : body)
 		nbody.push_back(c->fold());
-	return std::make_unique<WhileNode>(whiles->fold(), std::move(nbody), token);
+	return std::make_unique<WhileNode>(whiles->fold(), nbody, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ForNode::ForNode(
 	hash_ull id,
-	std::unique_ptr<Node> fors,
-	std::vector<std::unique_ptr<Node>> body,
+	std::shared_ptr<Node> fors,
+	std::vector<std::shared_ptr<Node>> body,
 	const Token &token) : Node(FOR_NODE,
 		token),
 	id(id),
-	fors(std::move(fors)),
-	body(std::move(body))
+	fors(fors),
+	body(body)
 {}
 
 std::shared_ptr<Instruction> ForNode::genParser() const
@@ -1215,7 +1270,7 @@ void ForNode::printTree(string indent, bool last) const
 		body[i]->printTree(indent, i == body.size() - 1);
 }
 
-std::unique_ptr<Node> ForNode::fold() const
+std::shared_ptr<Node> ForNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1223,24 +1278,24 @@ std::unique_ptr<Node> ForNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 	}
 
-	std::vector<std::unique_ptr<Node>> nbody;
+	std::vector<std::shared_ptr<Node>> nbody;
 	for (auto &c : body)
 		nbody.push_back(c->fold());
-	return std::make_unique<ForNode>(id, fors->fold(), std::move(nbody), token);
+	return std::make_unique<ForNode>(id, fors->fold(), nbody, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 UntilNode::UntilNode(
-	std::unique_ptr<Node> a,
-	std::unique_ptr<Node> b,
-	std::unique_ptr<Node> step,
+	std::shared_ptr<Node> a,
+	std::shared_ptr<Node> b,
+	std::shared_ptr<Node> step,
 	bool inclusive,
 	const Token &token) : Node(UNTIL_NODE,
 		token),
-	a(std::move(a)),
-	b(std::move(b)),
-	step(std::move(step)),
+	a(a),
+	b(b),
+	step(step),
 	inclusive(inclusive)
 {}
 
@@ -1290,7 +1345,7 @@ void UntilNode::printTree(string indent, bool last) const
 		step->printTree(indent, true);
 }
 
-std::unique_ptr<Node> UntilNode::fold() const
+std::shared_ptr<Node> UntilNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1307,10 +1362,10 @@ std::unique_ptr<Node> UntilNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 MapNode::MapNode(
-	std::vector<std::pair<hash_ull, std::unique_ptr<Node>>> args,
+	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> args,
 	const Token &token) : Node(MAP_NODE,
 		token),
-	args(std::move(args))
+	args(args)
 {}
 
 std::shared_ptr<Instruction> MapNode::genParser() const
@@ -1347,7 +1402,7 @@ void MapNode::printTree(string indent, bool last) const
 		args[i].second->printTree(indent, i == args.size() - 1);
 }
 
-std::unique_ptr<Node> MapNode::fold() const
+std::shared_ptr<Node> MapNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1355,21 +1410,21 @@ std::unique_ptr<Node> MapNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 	}
 
-	std::vector<std::pair<hash_ull, std::unique_ptr<Node>>> nargs;
+	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> nargs;
 	for (auto &c : args)
 		nargs.push_back({ c.first, c.second->fold() });
-	return std::make_unique<MapNode>(std::move(nargs), token);
+	return std::make_unique<MapNode>(nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 SwitchNode::SwitchNode(
-	std::unique_ptr<Node> switchs,
-	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> cases,
+	std::shared_ptr<Node> switchs,
+	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases,
 	const Token &token) : Node(SWITCH_NODE,
 		token),
-	switchs(std::move(switchs)),
-	cases(std::move(cases))
+	switchs(switchs),
+	cases(cases)
 {}
 
 std::shared_ptr<Instruction> SwitchNode::genParser() const
@@ -1390,9 +1445,9 @@ std::shared_ptr<Instruction> SwitchNode::genParser() const
 	return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, nullptr, token);
 }
 
-void SwitchNode::setElse(std::unique_ptr<Node> elses)
+void SwitchNode::setElse(std::shared_ptr<Node> elses)
 {
-	this->elses = std::move(elses);
+	this->elses = (elses);
 }
 
 bool SwitchNode::isConst() const
@@ -1423,7 +1478,7 @@ void SwitchNode::printTree(string indent, bool last) const
 		elses->printTree(indent, true);
 }
 
-std::unique_ptr<Node> SwitchNode::fold() const
+std::shared_ptr<Node> SwitchNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1431,10 +1486,10 @@ std::unique_ptr<Node> SwitchNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
 	}
 
-	std::map<std::unique_ptr<Node>, std::unique_ptr<Node>> ncases;
+	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> ncases;
 	for (auto &c : cases)
 		ncases[c.first->fold()] = c.second->fold();
-	auto ret = std::make_unique<SwitchNode>(switchs->fold(), std::move(ncases), token);
+	auto ret = std::make_unique<SwitchNode>(switchs->fold(), ncases, token);
 	if (elses)
 		ret->setElse(elses->fold());
 	return ret;
@@ -1443,13 +1498,13 @@ std::unique_ptr<Node> SwitchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 TryCatchNode::TryCatchNode(
-	std::unique_ptr<Node> trys,
-	std::unique_ptr<Node> catchs,
+	std::shared_ptr<Node> trys,
+	std::shared_ptr<Node> catchs,
 	hash_ull key,
 	const Token &token) : Node(TRY_CATCH_NODE,
 		token),
-	trys(std::move(trys)),
-	catchs(std::move(catchs)),
+	trys(trys),
+	catchs(catchs),
 	key(key)
 {}
 
@@ -1480,7 +1535,7 @@ void TryCatchNode::printTree(string indent, bool last) const
 	catchs->printTree(indent, true);
 }
 
-std::unique_ptr<Node> TryCatchNode::fold() const
+std::shared_ptr<Node> TryCatchNode::fold() const
 {
 	return std::make_unique<TryCatchNode>(trys->fold(), catchs->fold(), key, token);
 }
@@ -1488,9 +1543,9 @@ std::unique_ptr<Node> TryCatchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ThrowNode::ThrowNode(
-	std::unique_ptr<Node> throws,
+	std::shared_ptr<Node> throws,
 	const Token &token) : Node(THROW_NODE, token),
-	throws(std::move(throws))
+	throws(throws)
 {}
 
 std::shared_ptr<Instruction> ThrowNode::genParser() const
@@ -1519,7 +1574,7 @@ void ThrowNode::printTree(string indent, bool last) const
 	throws->printTree(indent, true);
 }
 
-std::unique_ptr<Node> ThrowNode::fold() const
+std::shared_ptr<Node> ThrowNode::fold() const
 {
 	return std::make_unique<ThrowNode>(throws->fold(), token);
 }

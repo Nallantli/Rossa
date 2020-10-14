@@ -1,7 +1,7 @@
 #ifndef DECLARATIONS_H
 #define DECLARATIONS_H
 
-#define _RUOTA_VERSION_ "v1.6.4-alpha"
+#define _RUOTA_VERSION_ "v1.6.5-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
 #define RUOTA_LIB_HEADER Hash MAIN_HASH = Hash();
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
@@ -254,7 +254,8 @@ enum NodeType
 	SWITCH_NODE,
 	BID_NODE,
 	TRY_CATCH_NODE,
-	THROW_NODE
+	THROW_NODE,
+	PAREN_NODE
 };
 
 #endif

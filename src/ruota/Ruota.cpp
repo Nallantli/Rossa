@@ -52,9 +52,8 @@ Ruota::Ruota(std::vector<string> args)
 	main.createVariable(MAIN_HASH.hashString("_args"), v, NULL);
 }
 
-//std::unique_ptr<DataManager> Ruota::manager = std::make_unique<DataManager>();
-
 const std::map<string, signed int> Ruota::bOperators = {
+	{"[]", 999},
 	{"**", -13},
 	{"*", 12},
 	{"/", 12},
@@ -103,7 +102,7 @@ const std::map<string, signed int> Ruota::uOperators = {
 
 Lexer Ruota::lexer = Lexer(bOperators, uOperators);
 
-std::unique_ptr<Node> Ruota::compileCode(const string &code, boost::filesystem::path currentFile) const
+std::shared_ptr<Node> Ruota::compileCode(const string &code, boost::filesystem::path currentFile) const
 {
 	auto tokens = lexer.lexString(code, currentFile.filename().string());
 	NodeParser testnp(tokens, bOperators, uOperators, currentFile);
@@ -111,7 +110,7 @@ std::unique_ptr<Node> Ruota::compileCode(const string &code, boost::filesystem::
 	return n->fold();
 }
 
-const Symbol Ruota::runCode(std::unique_ptr<Node> entry, bool tree)
+const Symbol Ruota::runCode(std::shared_ptr<Node> entry, bool tree)
 {
 	if (tree)
 		entry->printTree("", true);

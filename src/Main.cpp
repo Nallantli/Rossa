@@ -208,7 +208,7 @@ int main(int argc, char const *argv[])
 				}
 			}
 
-			std::unique_ptr<Node> comp;
+			std::shared_ptr<Node> comp;
 			if (!force) {
 				try {
 					flag = true;

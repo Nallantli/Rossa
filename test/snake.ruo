@@ -90,7 +90,7 @@ static snake_game class {
 		setApple();
 	}
 
-	evaluateKeys() => {
+	evaluateInput() => {
 		e := Event.poll();
 		if e.type == Event.QUIT then {
 			exit();
@@ -149,7 +149,7 @@ static snake_game class {
 
 		start := clock.milliseconds();
 		while true do {
-			evaluateKeys();
+			evaluateInput();
 			lapse := clock.milliseconds() - start;
 			if lapse > speed then {
 				start = clock.milliseconds();

@@ -1,0 +1,214 @@
+load "sdl.ruo";
+
+world := [
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+	1, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1;
+	1, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 1;
+	1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1;
+	1, 0, 2, 2, 0, 5, 0, 0, 4, 0, 2, 2, 0, 1;
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+	1, 0, 2, 2, 0, 6, 0, 0, 3, 0, 2, 2, 0, 1;
+	1, 0, 0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1;
+	1, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 0, 0, 1;
+	1, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1;
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+];
+
+colors := {
+	1 : {
+		red : 0xff,
+		green : 0,
+		blue : 0,
+		alpha : 0xff
+	},
+	2 : {
+		red : 0,
+		green : 0xff,
+		blue : 0,
+		alpha : 0xff
+	},
+	3 : {
+		red : 0,
+		green : 0,
+		blue : 0xff,
+		alpha : 0xff
+	},
+	4 : {
+		red : 0xff,
+		green : 0xff,
+		blue : 0,
+		alpha : 0xff
+	},
+	5 : {
+		red : 0xff,
+		green : 0,
+		blue : 0xff,
+		alpha : 0xff
+	},
+	6 : {
+		red : 0,
+		green : 0xff,
+		blue : 0xff,
+		alpha : 0xff
+	}
+};
+
+keys := {};
+
+posX := 1.5;
+posY := 1.5;
+dirX := -1;
+dirY := 0;
+
+width := 800;
+height := 600;
+
+size_x := world.size();
+size_y := world[0].size();
+
+planeX := 0;
+planeY := width / height / 2;
+
+w := new Window("Raycaster", width, height);
+r := w.getRenderer();
+
+cache := alloc(width);
+for x in 0 .. width do {
+	cache[x] = r.add(new Shape.Rect(x, 0, 1, height, Color.WHITE));
+}
+
+refresh() => {
+	for x in 0 .. width do {
+		var sideDistX, sideDistY, stepX, stepY, side, wDist;
+
+		camera_x := 2 * x / width - 1;
+		rayDirX := dirX + planeX * camera_x;
+		rayDirY := dirY + planeY * camera_x;
+		mapX := math.floor(posX);
+		mapY := math.floor(posY);
+		deltaX := math.abs(1 / rayDirX);
+		deltaY := math.abs(1 / rayDirY);
+		hit := false;
+		btype := 1;
+
+		if rayDirX < 0 then {
+			stepX = -1;
+			sideDistX = (posX - mapX) * deltaX;
+		} else {
+			stepX = 1;
+			sideDistX = (mapX + 1 - posX) * deltaX;
+		}
+
+		if rayDirY < 0 then {
+			stepY = -1;
+			sideDistY = (posY - mapY) * deltaY;
+		} else {
+			stepY = 1;
+			sideDistY = (mapY + 1 - posY) * deltaY;
+		}
+
+		while !hit do {
+			if sideDistX < sideDistY then {
+				sideDistX += deltaX;
+				mapX += stepX;
+				side = 0;
+			} else {
+				sideDistY += deltaY;
+				mapY += stepY;
+				side = 1;
+			}
+			if world[mapX][mapY] > 0 then {
+				hit = true;
+			}
+		}
+
+		if side == 0 then {
+			wDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
+		} else {
+			wDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
+		}
+
+		lineHeight := height / wDist;
+
+		drawStart := math.floor(math.max(0, (-lineHeight / 2) + height / 2));
+		color := colors[world[mapX][mapY]];
+
+		if side == 1 then {
+			color.red /= 2;
+			color.green /= 2;
+			color.blue /= 2;
+		}
+
+		cache[x].setColor(color);
+		cache[x].setHeight(lineHeight);
+		cache[x].setPos(x, drawStart);
+	}
+	r.update();
+}
+
+evaluateMovement(ref lapse : Number) => {
+	rotSpeed := 0;
+	if keys['a'] == true then {
+		rotSpeed += -0.0025 * lapse;
+	}
+	if keys['d'] == true then {
+		rotSpeed += 0.0025 * lapse;
+	}
+
+	moveSpeed := 0.005 * lapse;
+
+	if keys['w'] == true then {
+		potX := posX + dirX * moveSpeed;
+		potY := posY + dirY * moveSpeed;
+		if world[potX][posY] == 0 then {
+			posX = potX;
+		}
+		if world[posX][potY] == 0 then {
+			posY = potY;
+		}
+	}
+	if keys['s'] == true then {
+		potX := posX - dirX * moveSpeed;
+		potY := posY - dirY * moveSpeed;
+		if world[potX][posY] == 0 then {
+			posX = potX;
+		}
+		if world[posX][potY] == 0 then {
+			posY = potY;
+		}
+    }
+
+    if rotSpeed != 0 then {
+		oldDirX := dirX;
+		dirX = dirX * math.cos(-rotSpeed) - dirY * math.sin(-rotSpeed);
+		dirY = oldDirX * math.sin(-rotSpeed) + dirY * math.cos(-rotSpeed);
+		oldPlaneX := planeX;
+		planeX = planeX * math.cos(-rotSpeed) - planeY * math.sin(-rotSpeed);
+		planeY = oldPlaneX * math.sin(-rotSpeed) + planeY * math.cos(-rotSpeed);
+	}
+}
+
+evaluateInput() => {
+	e := Event.poll();
+	if e.type == Event.QUIT then {
+		exit();
+	} elif e.type == Event.KEY_DOWN then {
+		keys[e.keysym.sym] = true;
+	} elif e.type == Event.KEY_UP then {
+		keys[e.keysym.sym] = false;
+	}
+}
+
+start := clock.milliseconds();
+while true do {
+	evaluateInput();
+	lapse := clock.milliseconds() - start;
+	if lapse > 1000/60 then {
+		start = clock.milliseconds();
+		evaluateMovement(lapse);
+		refresh();
+	}
+}
