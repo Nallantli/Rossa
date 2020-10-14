@@ -1,22 +1,26 @@
 extern _window_init in "libsdl";
 extern _window_getRenderer in "libsdl";
-extern _renderer_add in "libsdl";
-extern _renderer_remove in "libsdl";
+extern _renderer_draw in "libsdl";
+extern _renderer_clear in "libsdl";
 extern _renderer_update in "libsdl";
+extern _renderer_flush in "libsdl";
 extern _window_register in "libsdl";
 extern _rect_init in "libsdl";
 extern _line_init in "libsdl";
 extern _point_init in "libsdl";
-extern _image_init in "libsdl";
-extern _area_init in "libsdl";
-extern _area_add in "libsdl";
-extern _area_remove in "libsdl";
+extern _image_init_nokey in "libsdl";
+extern _image_init_key in "libsdl";
+extern _texture_init in "libsdl";
+extern _texture_setImage in "libsdl";
 extern _shape_setColor in "libsdl";
-extern _shape_setPosition in "libsdl";
 extern _sizable_setSize in "libsdl";
 extern _sizable_setWidth in "libsdl";
 extern _sizable_setHeight in "libsdl";
 extern _rotatable_setAngle in "libsdl";
+extern _rotatable_setCenter in "libsdl";
+extern _rotatable_deCenter in "libsdl";
+extern _rotatable_setClip in "libsdl";
+extern _rotatable_deClip in "libsdl";
 extern _event_poll in "libsdl";
 
 static Event class {
@@ -148,7 +152,23 @@ static Color class {
 	}
 }
 
-static Shape class {
+static SDL class {
+	struct Image class {
+		var ptr;
+
+		init(ref path : String) => {
+			ptr = (extern_call libsdl._image_init_nokey(path));
+		}
+
+		init(ref path : String, ref r : Number, ref g : Number, ref b : Number) => {
+			ptr = (extern_call libsdl._image_init_key(path, r, g, b));
+		}
+
+		init(ref path : String, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._image_init_key(path, color.red, color.green, color.blue));
+		}
+	}
+
 	virtual Prototype class {
 		var ptr;
 
@@ -162,10 +182,6 @@ static Shape class {
 
 		setColor(ref r : Number, ref g : Number, ref b : Number) => {
 			extern_call libsdl._shape_setColor(ptr, r, g, b, 0xff);
-		}
-
-		setPos(ref x : Number, ref y : Number) => {
-			extern_call libsdl._shape_setPosition(ptr, x, y);
 		}
 	}
 
@@ -187,73 +203,69 @@ static Shape class {
 		setAngle(ref angle : Number) => {
 			extern_call libsdl._rotatable_setAngle(ptr, angle);
 		}
+
+		pivot(ref x : Number, ref y : Number) => {
+			extern_call libsdl._rotatable_setCenter(ptr, x, y);
+		}
+
+		unpivot() => {
+			extern_call libsdl._rotatable_deCenter(ptr);
+		}
+
+		clip(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+			extern_call libsdl._rotatable_setClip(ptr, x, y, width, height);
+		}
+
+		unclip() => {
+			extern_call libsdl._rotatable_deClip(ptr);
+		}
 	}
 
 	struct Rect class : Sizable {
-		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._rect_init(x, y, width, height, r, g, b, a));
+		init(ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._rect_init(width, height, r, g, b, a));
 		}
 
-		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._rect_init(x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		init(ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._rect_init(width, height, color.red, color.green, color.blue, color.alpha));
 		}
 	}
 
-	struct Line class : Prototype {
-		init(ref x1 : Number, ref y1 : Number, ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._line_init(x1, y1, x2, y2, r, g, b, a));
+	struct Line class : Sizable {
+		init(ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._line_init(x2, y2, r, g, b, a));
 		}
 
-		init(ref x1 : Number, ref y1 : Number, ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._line_init(x1, y1, x2, y2, color.red, color.green, color.blue, color.alpha));
+		init(ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._line_init(x2, y2, color.red, color.green, color.blue, color.alpha));
 		}
 	}
 
 	struct Point class : Prototype {
-		init(ref x : Number, ref y : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._point_init(x, y, r, g, b, a));
+		init(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._point_init(r, g, b, a));
 		}
 
-		init(ref x : Number, ref y : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._point_init(x, y, color.red, color.green, color.blue, color.alpha));
-		}
-	}
-
-	struct Image class : Rotatable {
-		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
-			ptr = (extern_call libsdl._image_init(path, x, y, width, height, 0xff, 0xff, 0xff));
-		}
-
-		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._image_init(path, x, y, width, height, r, g, b, a));
-		}
-
-		init(ref path : String, ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._image_init(path, x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		init(ref color : Dictionary) => {
+			ptr = (extern_call libsdl._point_init(color.red, color.green, color.blue, color.alpha));
 		}
 	}
 
-	struct Area class : Rotatable {
-		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
-			ptr = (extern_call libsdl._area_init(x, y, width, height, 0xff, 0xff, 0xff));
+	struct Texture class : Rotatable {
+		init(ref img : @SDL.Image, ref width : Number, ref height : Number) => {
+			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, 0xff, 0xff, 0xff));
 		}
 
-		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._image_init(x, y, width, height, r, g, b, a));
+		init(ref img : @SDL.Image, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, r, g, b, a));
 		}
 
-		init(ref x : Number, ref y : Number, ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._image_init(x, y, width, height, color.red, color.green, color.blue, color.alpha));
+		init(ref img : @SDL.Image, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, color.red, color.green, color.blue, color.alpha));
 		}
 
-		add(ref shape : @Shape.Prototype) => {
-			extern_call libsdl._area_add(ptr, shape.ptr);
-			refer shape;
-		}
-
-		remove(ref shape : @Shape.Prototype) => {
-			extern_call libsdl._area_remove(ptr, shape.ptr);
-			refer shape;
+		setImage(ref img : @SDL.Image) => {
+			extern_call libsdl._texture_setImage(ptr, img.ptr);
 		}
 	}
 }
@@ -266,18 +278,21 @@ struct Window class {
 			this.ptr = ptr;
 		}
 
-		add(ref shape : @Shape.Prototype) => {
-			extern_call libsdl._renderer_add(ptr, shape.ptr);
+		put(ref shape : @SDL.Prototype, ref x : Number, ref y : Number) => {
+			extern_call libsdl._renderer_draw(ptr, shape.ptr, x, y);
 			refer shape;
 		}
 
-		remove(ref shape : @Shape.Prototype) => {
-			extern_call libsdl._renderer_remove(ptr, shape.ptr);
-			refer shape;
+		clear() => {
+			extern_call libsdl._renderer_clear(ptr);
 		}
 
 		update() => {
 			extern_call libsdl._renderer_update(ptr);
+		}
+
+		flush() => {
+			extern_call libsdl._renderer_flush(ptr);
 		}
 	}
 

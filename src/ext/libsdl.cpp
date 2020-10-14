@@ -17,17 +17,58 @@ namespace libsdl
 
 	static std::map<Uint32, Symbol> registered = {};
 
+	struct Image
+	{
+	private:
+		SDL_Surface *loaded = NULL;
+		SDL_Texture *image = NULL;
+
+	public:
+		Image(const string &path, const Token *token, const short &r, const short &g, const short &b)
+		{
+			loaded = IMG_Load(path.c_str());
+			if (loaded == NULL)
+				throw RuotaError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
+		}
+
+		Image(const string &path, const Token *token)
+		{
+			loaded = IMG_Load(path.c_str());
+			if (loaded == NULL)
+				throw RuotaError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+		}
+
+		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token)
+		{
+			if (image == NULL) {
+				image = SDL_CreateTextureFromSurface(renderer, loaded);
+				if (image == NULL)
+					throw RuotaError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token);
+				SDL_FreeSurface(loaded);
+			}
+			return image;
+		}
+
+		~Image()
+		{
+			if (loaded != NULL)
+				SDL_FreeSurface(loaded);
+			if (image != NULL)
+				SDL_DestroyTexture(image);
+		}
+	};
+
 	struct Shape
 	{
-		int base_x, base_y;
 		short r, g, b, a;
 		const hash_ull id;
 		static hash_ull id_count;
 
-		Shape(const int &base_x, const int &base_y, const short &r, const short &b, const short &g, const short &a) : base_x(base_x), base_y(base_y), r(r), g(g), b(b), a(a), id(id_count++)
+		Shape(const short &r, const short &b, const short &g, const short &a) : r(r), g(g), b(b), a(a), id(id_count++)
 		{}
 
-		virtual void draw(SDL_Renderer *renderer, const Token *token) = 0;
+		virtual void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) = 0;
 
 		void setColor(const short &r, const short &g, const short &b, const short &a)
 		{
@@ -35,12 +76,6 @@ namespace libsdl
 			this->g = g;
 			this->b = b;
 			this->a = a;
-		}
-
-		void setPosition(const int &base_x, const int &base_y)
-		{
-			this->base_x = base_x;
-			this->base_y = base_y;
 		}
 
 		bool operator==(const Shape &s) const
@@ -56,7 +91,7 @@ namespace libsdl
 		int width;
 		int height;
 
-		Sizable(const int &base_x, const int &base_y, const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Shape(base_x, base_y, r, g, b, a), width(width), height(height)
+		Sizable(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Shape(r, g, b, a), width(width), height(height)
 		{}
 
 		void setSize(const int &width, const int &height)
@@ -80,8 +115,9 @@ namespace libsdl
 	{
 		double angle = 0;
 		SDL_Point *center = NULL;
+		SDL_Rect *clip = NULL;
 
-		Rotatable(const int &base_x, const int &base_y, const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(base_x, base_y, width, height, r, g, b, a)
+		Rotatable(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
 		{}
 
 		void setAngle(const double &angle)
@@ -89,21 +125,51 @@ namespace libsdl
 			this->angle = angle;
 		}
 
+		void setCenter(const int &x, const int &y)
+		{
+			if (center != NULL)
+				SDL_free(center);
+			center = new SDL_Point({ x, y });
+		}
+
+		void deCenter()
+		{
+			if (center != NULL)
+				SDL_free(center);
+			center = NULL;
+		}
+
+		void setClip(const int &cx, const int &cy, const int &cwidth, const int &cheight)
+		{
+			if (clip != NULL)
+				SDL_free(clip);
+			clip = new SDL_Rect({ cx, cy, cwidth, cheight });
+		}
+
+		void deClip()
+		{
+			if (clip != NULL)
+				SDL_free(clip);
+			clip = NULL;
+		}
+
 		~Rotatable()
 		{
 			if (center != NULL)
 				SDL_free(center);
+			if (clip != NULL)
+				SDL_free(clip);
 		}
 	};
 
 	struct Rectangle : public Sizable
 	{
-		Rectangle(int base_x, int base_y, int width, int height, short r, short g, short b, short a) : Sizable(base_x, base_y, width, height, r, g, b, a)
+		Rectangle(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token) override
+		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
-			SDL_Rect temp = { base_x, base_y, width, height };
+			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
@@ -111,122 +177,52 @@ namespace libsdl
 		}
 	};
 
-	struct Line : public Shape
+	struct Line : public Sizable
 	{
-		int x2;
-		int y2;
-
-		Line(int base_x, int base_y, int x2, int y2, short r, short g, short b, short a) : Shape(base_x, base_y, r, g, b, a), x2(x2), y2(y2)
+		Line(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token) override
+		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
-			if (SDL_RenderDrawLine(renderer, base_x, base_y, x2, y2) < 0)
+			if (SDL_RenderDrawLine(renderer, x, y, x + width, y + height) < 0)
 				throw RuotaError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
 		}
 	};
 
 	struct Point : public Shape
 	{
-		Point(int base_x, int base_y, short r, short g, short b, short a) : Shape(base_x, base_y, r, g, b, a)
+		Point(const short &r, const short &g, const short &b, const short &a) : Shape(r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token) override
+		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
-			if (SDL_RenderDrawPoint(renderer, base_x, base_y) < 0)
+			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
 				throw RuotaError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
 		}
 	};
 
-	struct Image : public Rotatable
+	struct Texture : public Rotatable
 	{
-		SDL_Texture *image = NULL;
-		SDL_Surface *loaded = NULL;
+		Symbol image;
 
-		Image(const string &path, const Token *token, int base_x, int base_y, int width, int height, short r, short g, short b) : Rotatable(base_x, base_y, width, height, r, g, b, 0)
+		Texture(const Symbol &image, const int &width, const int &height, const short &r, const short &g, const short &b) : Rotatable(width, height, r, g, b, 0), image(image)
+		{}
+
+		void setImage(const Symbol &image)
 		{
-			loaded = IMG_Load(path.c_str());
-			if (loaded == NULL)
-				throw RuotaError((boost::format("Image file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+			this->image = image;
 		}
 
-		void draw(SDL_Renderer *renderer, const Token *token) override
+		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
-			if (image == NULL) {
-				image = SDL_CreateTextureFromSurface(renderer, loaded);
-				if (image == NULL)
-					throw RuotaError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token);
-				SDL_FreeSurface(loaded);
-				loaded = NULL;
-			}
-			SDL_SetTextureColorMod(image, r, g, b);
-			SDL_Rect temp = { base_x, base_y, width, height };
-			SDL_RenderCopyEx(renderer, image, NULL, &temp, angle, center, SDL_FLIP_NONE);
-		}
-
-		~Image()
-		{
-			if (image != NULL)
-				SDL_DestroyTexture(image);
-			if (loaded != NULL)
-				SDL_FreeSurface(loaded);
-		}
-	};
-
-	struct Area : public Rotatable
-	{
-		SDL_Surface *surface = NULL;
-		SDL_Renderer *area = NULL;
-
-		std::vector<Symbol> shapes;
-
-		Area(const Token *token, const int &base_x, const int &base_y, const int &width, const int &height, const short &r, const short &g, const short &b) : Rotatable(base_x, base_y, width, height, r, g, b, 0)
-		{
-			surface = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
-			if (surface == NULL)
-				throw RuotaError((boost::format("Cannot create Area surface: %1%") % SDL_GetError()).str(), *token);
-			area = SDL_CreateSoftwareRenderer(surface);
-			if (area == NULL)
-				throw RuotaError((boost::format("Cannot create Area renderer: %1%") % SDL_GetError()).str(), *token);
-		}
-
-		void draw(SDL_Renderer *renderer, const Token *token) override
-		{
-			SDL_SetRenderDrawColor(area, 0, 0, 0, 0);
-			SDL_RenderClear(area);
-			for (auto &s : shapes)
-				COERCE_PTR(s.getPointer(token), Shape)->draw(area, token);
-
-			SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-			SDL_SetTextureColorMod(texture, r, g, b);
-			SDL_Rect temp = { base_x, base_y, width, height };
-			SDL_RenderCopyEx(renderer, texture, NULL, &temp, angle, center, SDL_FLIP_NONE);
-			SDL_DestroyTexture(texture);
-		}
-
-		void addShape(const Symbol &shape)
-		{
-			shapes.push_back(shape);
-		}
-
-		void removeShape(const Symbol &shape)
-		{
-			shapes.erase(std::remove_if(shapes.begin(), shapes.end(), [shape](const Symbol &s) {
-				return s.getPointer(NULL) == shape.getPointer(NULL);
-				}),
-				shapes.end());
-		}
-
-		~Area()
-		{
-			if (surface != NULL)
-				SDL_FreeSurface(surface);
-			if (area != NULL)
-				SDL_DestroyRenderer(area);
+			auto img = COERCE_PTR(image.getPointer(token), Image)->getImage(renderer, token);
+			SDL_SetTextureColorMod(img, r, g, b);
+			SDL_Rect temp = { x, y, width, height };
+			SDL_RenderCopyEx(renderer, img, clip, &temp, angle, center, SDL_FLIP_NONE);
 		}
 	};
 
@@ -234,7 +230,7 @@ namespace libsdl
 	{
 		Uint32 windowID;
 		SDL_Renderer *renderer = NULL;
-		std::vector<Symbol> shapes;
+		std::vector<std::pair<Symbol, std::pair<int, int>>> shapes;
 
 		Renderer(SDL_Window *window, const Token *token)
 		{
@@ -243,17 +239,14 @@ namespace libsdl
 				throw RuotaError((boost::format("Failure to initialize renderer: %1%") % SDL_GetError()).str(), *token);
 		}
 
-		void addShape(const Symbol &shape)
+		void addShape(const Symbol &shape, const int &x, const int &y)
 		{
-			shapes.push_back(shape);
+			shapes.push_back({ shape, {x, y} });
 		}
 
-		void removeShape(const Symbol &shape)
+		void clearAll()
 		{
-			shapes.erase(std::remove_if(shapes.begin(), shapes.end(), [shape](const Symbol &s) {
-				return s.getPointer(NULL) == shape.getPointer(NULL);
-				}),
-				shapes.end());
+			shapes.clear();
 		}
 
 		void draw(const Token *token)
@@ -261,7 +254,7 @@ namespace libsdl
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 			SDL_RenderClear(renderer);
 			for (auto &s : shapes)
-				COERCE_PTR(s.getPointer(token), Shape)->draw(renderer, token);
+				COERCE_PTR(s.first.getPointer(token), Shape)->draw(renderer, token, s.second.first, s.second.second);
 			SDL_RenderPresent(renderer);
 		}
 
@@ -517,23 +510,16 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(w->getRenderer(token)));
 	}
 
-	RUOTA_EXT_SYM(_renderer_add, args, token, hash)
+	RUOTA_EXT_SYM(_renderer_draw, args, token, hash)
 	{
 		auto g = COERCE_PTR(
 			args[0].getPointer(token),
 			Renderer);
 
-		g->addShape(args[1]);
-		return Symbol();
-	}
+		int x = args[2].getNumber(token).getLong();
+		int y = args[3].getNumber(token).getLong();
 
-	RUOTA_EXT_SYM(_renderer_remove, args, token, hash)
-	{
-		auto g = COERCE_PTR(
-			args[0].getPointer(token),
-			Renderer);
-
-		g->removeShape(args[1]);
+		g->addShape(args[1], x, y);
 		return Symbol();
 	}
 
@@ -553,20 +539,6 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_shape_setPosition, args, token, hash)
-	{
-		auto shape = COERCE_PTR(
-			args[0].getPointer(token),
-			Shape);
-
-		int x = args[1].getNumber(token).getLong();
-		int y = args[2].getNumber(token).getLong();
-
-		shape->setPosition(x, y);
-
-		return Symbol();
-	}
-
 	RUOTA_EXT_SYM(_rotatable_setAngle, args, token, hash)
 	{
 		auto rot = COERCE_PTR(
@@ -580,19 +552,69 @@ namespace libsdl
 		return Symbol();
 	}
 
+	RUOTA_EXT_SYM(_rotatable_setCenter, args, token, hash)
+	{
+		auto rot = COERCE_PTR(
+			args[0].getPointer(token),
+			Rotatable);
+
+		int x = args[1].getNumber(token).getLong();
+		int y = args[2].getNumber(token).getLong();
+
+		rot->setCenter(x, y);
+
+		return Symbol();
+	}
+
+	RUOTA_EXT_SYM(_rotatable_deCenter, args, token, hash)
+	{
+		auto rot = COERCE_PTR(
+			args[0].getPointer(token),
+			Rotatable);
+
+		rot->deCenter();
+
+		return Symbol();
+	}
+
+	RUOTA_EXT_SYM(_rotatable_setClip, args, token, hash)
+	{
+		auto rot = COERCE_PTR(
+			args[0].getPointer(token),
+			Rotatable);
+
+		int x = args[1].getNumber(token).getLong();
+		int y = args[2].getNumber(token).getLong();
+		int width = args[3].getNumber(token).getLong();
+		int height = args[4].getNumber(token).getLong();
+
+		rot->setClip(x, y, width, height);
+
+		return Symbol();
+	}
+
+	RUOTA_EXT_SYM(_rotatable_deClip, args, token, hash)
+	{
+		auto rot = COERCE_PTR(
+			args[0].getPointer(token),
+			Rotatable);
+
+		rot->deClip();
+
+		return Symbol();
+	}
+
 	RUOTA_EXT_SYM(_rect_init, args, token, hash)
 	{
-		int x = args[0].getNumber(token).getLong();
-		int y = args[1].getNumber(token).getLong();
-		int width = args[2].getNumber(token).getLong();
-		int height = args[3].getNumber(token).getLong();
+		int width = args[0].getNumber(token).getLong();
+		int height = args[1].getNumber(token).getLong();
 
-		short r = args[4].getNumber(token).getLong();
-		short g = args[5].getNumber(token).getLong();
-		short b = args[6].getNumber(token).getLong();
-		short a = args[7].getNumber(token).getLong();
+		short r = args[2].getNumber(token).getLong();
+		short g = args[3].getNumber(token).getLong();
+		short b = args[4].getNumber(token).getLong();
+		short a = args[5].getNumber(token).getLong();
 
-		auto rect = std::make_shared<Rectangle>(x, y, width, height, r, g, b, a);
+		auto rect = std::make_shared<Rectangle>(width, height, r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(rect));
 	}
 
@@ -635,83 +657,70 @@ namespace libsdl
 
 	RUOTA_EXT_SYM(_line_init, args, token, hash)
 	{
-		int x1 = args[0].getNumber(token).getLong();
-		int y1 = args[1].getNumber(token).getLong();
-		int x2 = args[2].getNumber(token).getLong();
-		int y2 = args[3].getNumber(token).getLong();
-
-		short r = args[4].getNumber(token).getLong();
-		short g = args[5].getNumber(token).getLong();
-		short b = args[6].getNumber(token).getLong();
-		short a = args[7].getNumber(token).getLong();
-
-		auto line = std::make_shared<Line>(x1, y1, x2, y2, r, g, b, a);
-		return Symbol(static_cast<std::shared_ptr<void>>(line));
-	}
-
-	RUOTA_EXT_SYM(_point_init, args, token, hash)
-	{
-		int x = args[0].getNumber(token).getLong();
-		int y = args[1].getNumber(token).getLong();
+		int x2 = args[0].getNumber(token).getLong();
+		int y2 = args[1].getNumber(token).getLong();
 
 		short r = args[2].getNumber(token).getLong();
 		short g = args[3].getNumber(token).getLong();
 		short b = args[4].getNumber(token).getLong();
 		short a = args[5].getNumber(token).getLong();
 
-		auto point = std::make_shared<Point>(x, y, r, g, b, a);
+		auto line = std::make_shared<Line>(x2, y2, r, g, b, a);
+		return Symbol(static_cast<std::shared_ptr<void>>(line));
+	}
+
+	RUOTA_EXT_SYM(_point_init, args, token, hash)
+	{
+		short r = args[0].getNumber(token).getLong();
+		short g = args[1].getNumber(token).getLong();
+		short b = args[2].getNumber(token).getLong();
+		short a = args[3].getNumber(token).getLong();
+
+		auto point = std::make_shared<Point>(r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(point));
 	}
 
-	RUOTA_EXT_SYM(_image_init, args, token, hash)
+	RUOTA_EXT_SYM(_image_init_nokey, args, token, hash)
 	{
 		string path = args[0].getString(token);
 
-		int x = args[1].getNumber(token).getLong();
-		int y = args[2].getNumber(token).getLong();
-		int width = args[3].getNumber(token).getLong();
-		int height = args[4].getNumber(token).getLong();
-
-		short r = args[5].getNumber(token).getLong();
-		short g = args[6].getNumber(token).getLong();
-		short b = args[7].getNumber(token).getLong();
-
-		auto image = std::make_shared<Image>(path, token, x, y, width, height, r, g, b);
+		auto image = std::make_shared<Image>(path, token);
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_area_init, args, token, hash)
+	RUOTA_EXT_SYM(_image_init_key, args, token, hash)
 	{
-		int x = args[0].getNumber(token).getLong();
-		int y = args[1].getNumber(token).getLong();
-		int width = args[2].getNumber(token).getLong();
-		int height = args[3].getNumber(token).getLong();
+		string path = args[0].getString(token);
+		short r = args[1].getNumber(token).getLong();
+		short g = args[2].getNumber(token).getLong();
+		short b = args[3].getNumber(token).getLong();
 
-		short r = args[4].getNumber(token).getLong();
-		short g = args[5].getNumber(token).getLong();
-		short b = args[6].getNumber(token).getLong();
-
-		auto area = std::make_shared<Area>(token, x, y, width, height, r, g, b);
-		return Symbol(static_cast<std::shared_ptr<void>>(area));
+		auto image = std::make_shared<Image>(path, token, r, g, b);
+		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_area_add, args, token, hash)
+	RUOTA_EXT_SYM(_texture_init, args, token, hash)
 	{
-		auto a = COERCE_PTR(
-			args[0].getPointer(token),
-			Area);
+		auto image = args[0];
 
-		a->addShape(args[1]);
-		return Symbol();
+		int width = args[1].getNumber(token).getLong();
+		int height = args[2].getNumber(token).getLong();
+
+		short r = args[3].getNumber(token).getLong();
+		short g = args[4].getNumber(token).getLong();
+		short b = args[5].getNumber(token).getLong();
+
+		auto texture = std::make_shared<Texture>(image, width, height, r, g, b);
+		return Symbol(static_cast<std::shared_ptr<void>>(texture));
 	}
 
-	RUOTA_EXT_SYM(_area_remove, args, token, hash)
+	RUOTA_EXT_SYM(_texture_setImage, args, token, hash)
 	{
-		auto a = COERCE_PTR(
+		auto texture = COERCE_PTR(
 			args[0].getPointer(token),
-			Area);
+			Texture);
 
-		a->removeShape(args[1]);
+		texture->setImage(args[1]);
 		return Symbol();
 	}
 
@@ -722,6 +731,27 @@ namespace libsdl
 			Renderer);
 
 		g->draw(token);
+		return Symbol();
+	}
+
+	RUOTA_EXT_SYM(_renderer_clear, args, token, hash)
+	{
+		auto g = COERCE_PTR(
+			args[0].getPointer(token),
+			Renderer);
+
+		g->clearAll();
+		return Symbol();
+	}
+
+	RUOTA_EXT_SYM(_renderer_flush, args, token, hash)
+	{
+		auto g = COERCE_PTR(
+			args[0].getPointer(token),
+			Renderer);
+
+		g->draw(token);
+		g->clearAll();
 		return Symbol();
 	}
 }

@@ -16,9 +16,9 @@ buffer := alloc(width).map((e) => alloc(height));
 
 for x in 0 .. width do {
 	for y in 0 .. height do {
-		buffer[x][y] = new Shape.Rect(x * windowScale, y * windowScale, windowScale, windowScale, Color.BLACK);
+		buffer[x][y] = new SDL.Rect(windowScale, windowScale, Color.BLACK);
 		cache[x][y] = 0;
-		renderer.add(buffer[x][y]);
+		renderer.put(buffer[x][y], x * windowScale, y * windowScale);
 	}
 }
 

@@ -42,12 +42,13 @@ static snake_game class {
 
 		for x in 0 .. width do {
 			for y in 0 .. height do {
+				b := buffer[x][y];
 				if cache[x][y] > 0 then {
-					buffer[x][y].setColor(Color.HSL((cache[x][y] % 90) / 90, 1, 0.5));
+					b.setColor(Color.HSL((cache[x][y] % 90) / 90, 1, 0.5));
 				} elif cache[x][y] < 0 then {
-					buffer[x][y].setColor(Color.WHITE);
+					b.setColor(Color.WHITE);
 				} else {
-					buffer[x][y].setColor(Color.BLACK);
+					b.setColor(Color.BLACK);
 				}
 			}
 		}
@@ -140,8 +141,8 @@ static snake_game class {
 
 		for x in 0 .. width do {
 			for y in 0 .. height do {
-				buffer[x][y] = new Shape.Rect(x * scale, y * scale, scale, scale, Color.BLACK);
-				r.add(buffer[x][y]);
+				buffer[x][y] = new SDL.Rect(scale, scale, Color.BLACK);
+				r.put(buffer[x][y], x * scale, y * scale);
 			}
 		}
 

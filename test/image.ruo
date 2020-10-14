@@ -2,17 +2,23 @@ load "sdl.ruo";
 
 w := new Window("Image Test", 800, 600);
 r := w.getRenderer();
-i1 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 0, 200, 200));
-i2 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 200, 200, 200));
-i3 := r.add(new Shape.Image("docs/logo/Logo.png", 0, 400, 200, 200));
-i4 := r.add(new Shape.Image("docs/logo/Logo-Solid.png", 200, 0, 600, 600));
+
+image1 := new SDL.Image("docs/logo/Logo.png");
+image2 := new SDL.Image("docs/logo/Logo-Solid.png");
+t1 := new SDL.Texture(image1, 200, 200);
+t2 := new SDL.Texture(image1, 200, 200);
+t3 := new SDL.Texture(image1, 200, 200);
+t4 := new SDL.Texture(image2, 600, 600);
+
+r.put(t1, 0, 0);
+r.put(t2, 0, 200);
+r.put(t3, 0, 400);
+r.put(t4, 200, 0);
 
 hue := 0;
 r1 := 0;
 r2 := 0;
 r3 := 0;
-
-r.update();
 
 start := clock.milliseconds();
 while Event.poll().type != Event.QUIT do {
@@ -23,10 +29,10 @@ while Event.poll().type != Event.QUIT do {
 		r1 = (r1 + 1) % 360;
 		r2 = (r2 + 0.5) % 360;
 		r3 = (r3 + 0.25) % 360;
-		i4.setColor(Color.HSL(hue / 360, 1, 0.5));
-		i1.setAngle(r1);
-		i2.setAngle(r2);
-		i3.setAngle(r3);
+		t4.setColor(Color.HSL(hue / 360, 1, 0.5));
+		t1.setAngle(r1);
+		t2.setAngle(r2);
+		t3.setAngle(r3);
 		r.update();
 	}
 }

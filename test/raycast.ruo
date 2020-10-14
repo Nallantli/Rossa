@@ -77,7 +77,7 @@ r := w.getRenderer();
 
 cache := alloc(width);
 for x in 0 .. width do {
-	cache[x] = r.add(new Shape.Rect(x, 0, 1, height, Color.WHITE));
+	cache[x] = new SDL.Rect(1, height, Color.WHITE);
 }
 
 refresh() => {
@@ -114,18 +114,18 @@ refresh() => {
 			if sideDistX < sideDistY then {
 				sideDistX += deltaX;
 				mapX += stepX;
-				side = 0;
+				side = true;
 			} else {
 				sideDistY += deltaY;
 				mapY += stepY;
-				side = 1;
+				side = false;
 			}
 			if world[mapX][mapY] > 0 then {
 				hit = true;
 			}
 		}
 
-		if side == 0 then {
+		if side then {
 			wDist = (mapX - posX + (1 - stepX) / 2) / rayDirX;
 		} else {
 			wDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
@@ -136,7 +136,7 @@ refresh() => {
 		drawStart := math.floor(math.max(0, (-lineHeight / 2) + height / 2));
 		color := colors[world[mapX][mapY]];
 
-		if side == 1 then {
+		if side then {
 			color.red /= 2;
 			color.green /= 2;
 			color.blue /= 2;
@@ -144,9 +144,9 @@ refresh() => {
 
 		cache[x].setColor(color);
 		cache[x].setHeight(lineHeight);
-		cache[x].setPos(x, drawStart);
+		r.put(cache[x], x, drawStart);
 	}
-	r.update();
+	r.flush();
 }
 
 evaluateMovement(ref lapse : Number) => {

@@ -131,12 +131,12 @@ Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
 `a .. b`|Yes|~|Range of values from `a` to `b`|Left|1
 `a = b`|Yes|~|Value Assignment|Right|0
 `a := b`|No|~|Variable Declaration and Assignment|Right|0
-`a[b]`|Yes|~|Indexing|~|~
-`a(b,...)`|Yes|~|Function Calling|~|~
-`!a`|No**|~|Unary Logical Negation|~|~
-`+a`|No**|~|Unary Addition (Superfluous in most cases)|~|~
-`-a`|No**|~|Unary Negation|~|~
+`a[b]`|Yes (via `` `[]` ``)|~|Indexing|~|~
+`a(b,...)`|Yes (via `` `()` ``)|~|Function Calling|~|~
+`!a`|No**|~|Unary Logical Negation: `a == false`|~|~
+`+a`|No**|~|Unary Addition (Superfluous in most cases): `0 + a`|~|~
+`-a`|No**|~|Unary Negation: `0 - a`|~|~
 
 _\* Can be used in compound-assignment operators, i.e. `a += b`. This is functionally equivalent to `a = a + b`._
 
-_\*\* The interpreter expands these operators to their binary equivalents during pre-compilation, consequently if their binary equivalents have been overridden, they too will reflect that. E.g. `!a` expands to `a == false`._
+_\*\* The interpreter expands these operators to their binary equivalents during pre-compilation, consequently if their binary equivalents have been overridden, they too will reflect that._
