@@ -1,5 +1,7 @@
 #include "Ruota.h"
 
+using namespace ruota;
+
 Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body) : key(key), parent(parent), params(params), body(body)
 {}
 
@@ -37,12 +39,12 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 	return ret;
 }
 
-size_t Function::getArgSize() const
+const size_t Function::getArgSize() const
 {
 	return params.size();
 }
 
-hash_ull Function::getKey() const
+const hash_ull Function::getKey() const
 {
 	return key;
 }

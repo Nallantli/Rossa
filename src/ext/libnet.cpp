@@ -26,7 +26,7 @@ namespace libnet
 				args[1].getNumber(token).getLong()),
 			ec))
 			if (ec)
-				throw RuotaError(ec.message(), *token);
+				throw RTError(ec.message(), *token);
 		return Symbol(static_cast<std::shared_ptr<void>>(sock));
 	}
 
@@ -36,7 +36,7 @@ namespace libnet
 			args[0].getPointer(token),
 			boost::asio::ip::tcp::socket);
 
-		string content = args[1].getString(token);
+		std::string content = args[1].getString(token);
 		boost::asio::write(*sock, boost::asio::buffer(content));
 		return Symbol();
 	}
@@ -50,7 +50,7 @@ namespace libnet
 		boost::asio::streambuf sb;
 		boost::system::error_code ec;
 		boost::asio::read(*sock, sb, ec);
-		string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
+		std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
 		return Symbol(str);
 	}
 
@@ -62,7 +62,7 @@ namespace libnet
 
 		boost::asio::streambuf sb;
 		if (boost::asio::read_until(*sock, sb, args[1].getString(token))) {
-			string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
+			std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
 			return Symbol(str);
 		}
 		return Symbol();

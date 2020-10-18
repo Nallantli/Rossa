@@ -32,29 +32,29 @@ int getch_n()
 }
 #endif
 
-void printc(const string &s, TextColor color)
+void printc(const std::string &s, const ruota::TextColor &color)
 {
 	std::cout << "\033[" << color << "m" << s << "\033[0m";
 }
 
-std::pair<std::map<string, string>, std::vector<string>> parseOptions(int argc, char const *argv[])
+std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
-	std::map<string, string> options = {
+	std::map<std::string, std::string> options = {
 		{"tree", "false"},
 		{"version", "false"},
 		{"std", "true"},
 		{"file", ""} };
-	std::vector<string> passed;
+	std::vector<std::string> passed;
 
 	bool flag = false;
 
 	for (int i = 1; i < argc; i++) {
 		if (flag == false && argv[i][0] == '-') {
-			if (string(argv[i]) == "--tree" || string(argv[i]) == "-t")
+			if (std::string(argv[i]) == "--tree" || std::string(argv[i]) == "-t")
 				options["tree"] = "true";
-			else if (string(argv[i]) == "--no-std" || string(argv[i]) == "-ns")
+			else if (std::string(argv[i]) == "--no-std" || std::string(argv[i]) == "-ns")
 				options["std"] = "false";
-			else if (string(argv[i]) == "--version" || string(argv[i]) == "-v")
+			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
 				options["version"] = "true";
 			else {
 				std::cerr << "Unknown command line option: " << argv[i] << "\n";
@@ -70,22 +70,22 @@ std::pair<std::map<string, string>, std::vector<string>> parseOptions(int argc, 
 	return { options, passed };
 }
 
-void printError(const RuotaError &e)
+void printError(const ruota::RTError &e)
 {
-	string ret = "\033[" + std::to_string(RED_TEXT) + "m" + e.what() + "\n";
+	std::string ret = "\033[" + std::to_string(ruota::RED_TEXT) + "m" + e.what() + "\n";
 
-	if (e.getToken().getType() != NULL_TOK) {
-		string lineInfoRaw = "<" + e.getToken().getFilename() + ">:" + std::to_string(e.getToken().getLineNumber() + 1) + " | ";
-		ret += "\033[" + std::to_string(CYAN_TEXT) + "m<\033[4m" + e.getToken().getFilename() + "\033[0m\033[" + std::to_string(CYAN_TEXT) + "m>:" + std::to_string(e.getToken().getLineNumber() + 1) + " | ";
-		ret += "\033[" + std::to_string(MAGENTA_TEXT) + "m" + e.getToken().getLine() + "\n";
+	if (e.getToken().type != ruota::NULL_TOK) {
+		std::string lineInfoRaw = "<" + e.getToken().filename + ">:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
+		ret += "\033[" + std::to_string(ruota::CYAN_TEXT) + "m<\033[4m" + e.getToken().filename + "\033[0m\033[" + std::to_string(ruota::CYAN_TEXT) + "m>:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
+		ret += "\033[" + std::to_string(ruota::MAGENTA_TEXT) + "m" + e.getToken().line + "\n";
 
-		ret += "\033[" + std::to_string(RED_TEXT) + "m";
-		for (size_t i = 0; i < e.getToken().getDist() - e.getToken().getValueString().size() + lineInfoRaw.size(); i++)
+		ret += "\033[" + std::to_string(ruota::RED_TEXT) + "m";
+		for (size_t i = 0; i < e.getToken().distance - e.getToken().valueString.size() + lineInfoRaw.size(); i++)
 			ret += " ";
 		ret += "^";
 
-		if (e.getToken().getValueString().size() > 0)
-			for (size_t i = 0; i < e.getToken().getValueString().size() - 1; i++)
+		if (e.getToken().valueString.size() > 0)
+			for (size_t i = 0; i < e.getToken().valueString.size() - 1; i++)
 				ret += "~";
 
 		ret += "\033[0m";
@@ -93,38 +93,38 @@ void printError(const RuotaError &e)
 
 	std::cout << ret << "\n";
 	size_t j = 0;
-	while (!Ruota::stack_trace.empty()) {
+	while (!ruota::Ruota::stack_trace.empty()) {
 		if (j++ > 10) {
-			printc((boost::format(_STACK_TRACE_MORE_) % Ruota::stack_trace.size()).str(), MAGENTA_TEXT);
+			printc((boost::format(_STACK_TRACE_MORE_) % ruota::Ruota::stack_trace.size()).str(), ruota::MAGENTA_TEXT);
 			std::cout << "\n";
-			Ruota::stack_trace.clear();
+			ruota::Ruota::stack_trace.clear();
 			break;
 		}
-		auto f = Ruota::stack_trace.back();
-		printc(" ^ ", MAGENTA_TEXT);
-		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
-		if (MAIN_HASH.deHash(f.getParent()->getHashedKey()) != "")
-			std::cout << MAIN_HASH.deHash(f.getParent()->getHashedKey()) << ".";
-		std::cout << MAIN_HASH.deHash(f.getKey()) << "(\033[0m";
+		auto f = ruota::Ruota::stack_trace.back();
+		printc(" ^ ", ruota::MAGENTA_TEXT);
+		std::cout << "\033[" << ruota::BRIGHT_BLACK_TEXT << "m";
+		if (RUOTA_DEHASH(f.getParent()->getHashedKey()) != "")
+			std::cout << RUOTA_DEHASH(f.getParent()->getHashedKey()) << ".";
+		std::cout << RUOTA_DEHASH(f.getKey()) << "(\033[0m";
 		size_t i = 0;
 		for (auto &p : f.getParams()) {
 			if (i++ > 0)
 				std::cout << ", ";
 			switch (p.first) {
-				case TOK_REF:
-					std::cout << "\033[" << MAGENTA_TEXT << "mref\033[0m ";
+				case ruota::TOK_REF:
+					std::cout << "\033[" << ruota::MAGENTA_TEXT << "mref\033[0m ";
 					break;
 				default:
 					break;
 			}
-			std::cout << MAIN_HASH.deHash(p.second);
+			std::cout << RUOTA_DEHASH(p.second);
 		}
-		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m)\033[0m\n";
-		Ruota::stack_trace.pop_back();
+		std::cout << "\033[" << ruota::BRIGHT_BLACK_TEXT << "m)\033[0m\n";
+		ruota::Ruota::stack_trace.pop_back();
 	}
 }
 
-void moveback(string &code, int c)
+void moveback(std::string &code, int c)
 {
 	for (int i = 0; i < c; i++) {
 		if (code.size() > 0) {
@@ -138,7 +138,7 @@ void moveback(string &code, int c)
 					std::cout << "\033[2D  \033[2D\033[1A> ";
 				} else {
 					std::cout << "\033[2D  \033[2D\033[1A";
-					printc("└ ", BRIGHT_YELLOW_TEXT);
+					printc("└ ", ruota::BRIGHT_YELLOW_TEXT);
 				}
 				if (i > 0)
 					std::cout << "\033[" << i << "C";
@@ -162,7 +162,7 @@ int main(int argc, char const *argv[])
 		std::cout << _RUOTA_VERSION_LONG_ << "\n";
 		return 0;
 	}
-	Ruota wrapper(parsed.second);
+	ruota::Ruota wrapper(parsed.second);
 	bool tree = options["tree"] == "true";
 
 	if (options["file"] == "") {
@@ -172,8 +172,8 @@ int main(int argc, char const *argv[])
 			try {
 				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const RuotaError &e) {
-				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << string(e.what()) << "\n";
+			} catch (const ruota::RTError &e) {
+				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
 			std::cout << _OPTION_NO_STD_ << "\n";
@@ -181,7 +181,7 @@ int main(int argc, char const *argv[])
 
 		bool flag = true;
 		bool force = false;
-		string code = "";
+		std::string code = "";
 		while (true) {
 			if (flag)
 				std::cout << "> ";
@@ -208,21 +208,21 @@ int main(int argc, char const *argv[])
 				}
 			}
 
-			std::shared_ptr<Node> comp;
+			std::shared_ptr<ruota::Node> comp;
 			if (!force) {
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
-				} catch (const RuotaError &e) {
+				} catch (const ruota::RTError &e) {
 					flag = false;
 					std::cout << "\n";
 
-					if (code.find('\n') != string::npos) {
+					if (code.find('\n') != std::string::npos) {
 						std::cout << "\033[1A";
-						printc("│ ", BRIGHT_YELLOW_TEXT);
+						printc("│ ", ruota::BRIGHT_YELLOW_TEXT);
 						std::cout << "\033[2D\033[1B";
 					}
-					printc("└ ", BRIGHT_YELLOW_TEXT);
+					printc("└ ", ruota::BRIGHT_YELLOW_TEXT);
 
 					code += "\n";
 				}
@@ -231,7 +231,7 @@ int main(int argc, char const *argv[])
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
-				} catch (const RuotaError &e) {
+				} catch (const ruota::RTError &e) {
 					flag = false;
 					code = "";
 					std::cout << "\n";
@@ -245,11 +245,11 @@ int main(int argc, char const *argv[])
 				code = "";
 				try {
 					auto value = wrapper.runCode(std::move(comp), tree);
-					if (value.getValueType() == ARRAY) {
+					if (value.getValueType() == ruota::ARRAY) {
 						if (value.vectorSize() != 1) {
 							int i = 0;
 							for (auto &e : value.getVector(NULL)) {
-								printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
+								printc("\t(" + std::to_string(i) + ")\t", ruota::CYAN_TEXT);
 								std::cout << e.toString(NULL) << "\n";
 								i++;
 							}
@@ -257,7 +257,7 @@ int main(int argc, char const *argv[])
 							std::cout << "\t" << value.getVector(NULL)[0].toString(NULL) << "\n";
 						}
 					}
-				} catch (const RuotaError &e) {
+				} catch (const ruota::RTError &e) {
 					printError(e);
 				}
 			}
@@ -270,8 +270,8 @@ int main(int argc, char const *argv[])
 			return 1;
 		}
 
-		string content = "";
-		string line;
+		std::string content = "";
+		std::string line;
 		while (std::getline(file, line))
 			content += line + "\n";
 
@@ -279,7 +279,7 @@ int main(int argc, char const *argv[])
 			if (options["std"] == "true")
 				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
 			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
-		} catch (const RuotaError &e) {
+		} catch (const ruota::RTError &e) {
 			printError(e);
 			return 1;
 		}

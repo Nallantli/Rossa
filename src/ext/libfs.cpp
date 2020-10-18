@@ -73,7 +73,7 @@ namespace libfs
 			args[0].getPointer(token),
 			std::ifstream);
 
-		string line;
+		std::string line;
 		if (std::getline(*fstr, line))
 			return Symbol(line);
 		return Symbol();
@@ -87,7 +87,7 @@ namespace libfs
 
 		size_t max = args[1].getNumber(token).getLong();
 
-		string line = "";
+		std::string line = "";
 		char c;
 		for (size_t i = 0; i < max; i++) {
 			if (fstr->get(c))

@@ -35,7 +35,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_rand_init, args, token, hash)
 	{
-		auto rng = new std::default_random_engine(args[0].getNumber(token).getLong());
+		auto rng = new std::mt19937(args[0].getNumber(token).getLong());
 		return Symbol(static_cast<std::shared_ptr<void>>(rng));
 	}
 
@@ -43,7 +43,7 @@ namespace libstd
 	{
 		auto rng = COERCE_PTR(
 			args[0].getPointer(token),
-			std::default_random_engine);
+			std::mt19937);
 
 		std::uniform_real_distribution<long_double_t> distribution(args[1].getNumber(token).getDouble(), args[2].getNumber(token).getDouble());
 		return Symbol(CNumber::Double(distribution(*rng)));
@@ -53,7 +53,7 @@ namespace libstd
 	{
 		auto rng = COERCE_PTR(
 			args[0].getPointer(token),
-			std::default_random_engine);
+			std::mt19937);
 
 		std::uniform_int_distribution<long_int_t> distribution(args[1].getNumber(token).getLong(), args[2].getNumber(token).getLong());
 		return Symbol(CNumber::Long(distribution(*rng)));
@@ -133,7 +133,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_input_line, args, token, hash)
 	{
-		string line;
+		std::string line;
 		std::getline(std::cin, line);
 		return Symbol(line);
 	}
@@ -157,10 +157,10 @@ namespace libstd
 	RUOTA_EXT_SYM(_regex_match, args, token, hash)
 	{
 		std::regex r(args[0].getString(token));
-		string s = args[1].getString(token);
+		std::string s = args[1].getString(token);
 		std::vector<Symbol> v;
 		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++) {
-			string m = (*i).str();
+			std::string m = (*i).str();
 			v.push_back(Symbol(m));
 		}
 		return Symbol(v);
@@ -169,8 +169,8 @@ namespace libstd
 	RUOTA_EXT_SYM(_regex_replace, args, token, hash)
 	{
 		std::regex r(args[0].getString(token));
-		string rpl = args[1].getString(token);
-		string s = args[2].getString(token);
+		std::string rpl = args[1].getString(token);
+		std::string s = args[2].getString(token);
 		return Symbol(std::regex_replace(s, r, rpl));
 	}
 }

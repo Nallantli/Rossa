@@ -127,7 +127,7 @@ struct Random class {
 	var ptr;
 
 	init() => {
-		ptr = (extern_call libstd._rand_init(0));
+		ptr = (extern_call libstd._rand_init(clock.milliseconds()));
 	}
 
 	init(ref seed : Number) => {

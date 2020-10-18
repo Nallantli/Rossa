@@ -64,11 +64,11 @@ endif
 
 plugins: bin/lib/libstd$(LIB_EXT) bin/lib/libfs$(LIB_EXT) bin/lib/libnet$(LIB_EXT) bin/lib/libsdl$(LIB_EXT)
 
-bin/ruota.exe: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Token.o $(DIR)/Signature.o
-	$(CC) -o bin/ruota.exe $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Token.o $(DIR)/Signature.o $(CFLAGS)
+bin/ruota.exe: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
+	$(CC) -o bin/ruota.exe $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(CFLAGS)
 
-bin/ruota: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Token.o $(DIR)/Signature.o
-	$(CC) -o bin/ruota $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Token.o $(DIR)/Signature.o $(CFLAGS)
+bin/ruota: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
+	$(CC) -o bin/ruota $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(CFLAGS)
 
 bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
 	$(CC) -o bin/lib/libstd$(LIB_EXT) src/ext/libstd.cpp $(LFLAGS)
@@ -105,9 +105,6 @@ $(DIR)/Scope.o: src/ruota/Scope.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruo
 
 $(DIR)/Function.o: src/ruota/Function.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
 	$(CC) src/ruota/Function.cpp -o $(DIR)/Function.o -c $(CFLAGS)
-
-$(DIR)/Token.o: src/ruota/Token.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Token.cpp -o $(DIR)/Token.o -c $(CFLAGS)
 
 $(DIR)/Signature.o: src/ruota/Signature.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
 	$(CC) src/ruota/Signature.cpp -o $(DIR)/Signature.o -c $(CFLAGS)

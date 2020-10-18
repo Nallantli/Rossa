@@ -1,6 +1,7 @@
 #include "Node.h"
 #include "Parser.h"
-#include <iostream>
+
+using namespace ruota;
 
 Node::Node(
 	const NodeType &type,
@@ -37,19 +38,20 @@ bool ContainerNode::isConst() const
 	return true;
 }
 
-void ContainerNode::printTree(string indent, bool last) const
+std::stringstream ContainerNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CONTAINER"
-		<< " : " << s.getValueType() << ", " << s.toCodeString() << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CONTAINER : " << s.toCodeString() << "\n" << colorASCII(RESET_TEXT);
+	return ss;
 }
 std::shared_ptr<Node> ContainerNode::fold() const
 {
@@ -85,22 +87,22 @@ bool VectorNode::isConst() const
 	return true;
 }
 
-void VectorNode::printTree(string indent, bool last) const
+std::stringstream VectorNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "ARRAY : " << scoped
-		<< "\n"
-		<< colorASCII(RESET_TEXT);
-
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "ARRAY : " << scoped << "\n" << colorASCII(RESET_TEXT);
 	for (size_t i = 0; i < args.size(); i++)
-		args[i]->printTree(indent, i == args.size() - 1);
+		ss << args[i]->printTree(indent, i == args.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> VectorNode::fold() const
@@ -139,18 +141,20 @@ bool BreakNode::isConst() const
 	return true;
 }
 
-void BreakNode::printTree(string indent, bool last) const
+std::stringstream BreakNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "BREAK\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "BREAK\n" << colorASCII(RESET_TEXT);
+	return ss;
 }
 
 std::shared_ptr<Node> BreakNode::fold() const
@@ -182,18 +186,20 @@ bool IDNode::isConst() const
 	return false;
 }
 
-void IDNode::printTree(string indent, bool last) const
+std::stringstream IDNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "ID : " << MAIN_HASH.deHash(key) << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "ID : " << RUOTA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	return ss;
 }
 
 std::shared_ptr<Node> IDNode::fold() const
@@ -204,20 +210,20 @@ std::shared_ptr<Node> IDNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 BIDNode::BIDNode(
-	const string &key,
+	const std::string &key,
 	const Token &token) : Node(BID_NODE,
 		token),
 	key(key)
 {}
 
-const string BIDNode::getKey() const
+const std::string BIDNode::getKey() const
 {
 	return key;
 }
 
 std::shared_ptr<Instruction> BIDNode::genParser() const
 {
-	return std::make_shared<VariableI>(MAIN_HASH.hashString(key), token);
+	return std::make_shared<VariableI>(RUOTA_HASH(key), token);
 }
 
 bool BIDNode::isConst() const
@@ -225,18 +231,20 @@ bool BIDNode::isConst() const
 	return false;
 }
 
-void BIDNode::printTree(string indent, bool last) const
+std::stringstream BIDNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "BID : " << key << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "BID : " << key << "\n" << colorASCII(RESET_TEXT);
+	return ss;
 }
 
 std::shared_ptr<Node> BIDNode::fold() const
@@ -248,7 +256,7 @@ std::shared_ptr<Node> BIDNode::fold() const
 
 DefineNode::DefineNode(
 	hash_ull key,
-	Signature ftype,
+	sig_t ftype,
 	std::vector<std::pair<LexerTokenType, hash_ull>> params,
 	std::shared_ptr<Node> body,
 	const Token &token) : Node(DEFINE_NODE,
@@ -269,20 +277,21 @@ bool DefineNode::isConst() const
 	return false;
 }
 
-void DefineNode::printTree(string indent, bool last) const
+std::stringstream DefineNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "DEFINE : " << (key > 0 ? MAIN_HASH.deHash(key) : "<LAMBDA>") << ", " << ftype.values.size() << "\n"
-		<< colorASCII(RESET_TEXT);
-
-	body->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "DEFINE : " << (key > 0 ? RUOTA_DEHASH(key) : "<LAMBDA>") << ", " << sig::toString(ftype) << "\n" << colorASCII(RESET_TEXT);
+	ss << body->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> DefineNode::fold() const
@@ -318,21 +327,22 @@ bool NewNode::isConst() const
 	return false;
 }
 
-void NewNode::printTree(string indent, bool last) const
+std::stringstream NewNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "NEW\n"
-		<< colorASCII(RESET_TEXT);
-
-	object->printTree(indent, false);
-	params->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "NEW\n" << colorASCII(RESET_TEXT);
+	ss << object->printTree(indent, false).str();
+	ss << params->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> NewNode::fold() const
@@ -374,7 +384,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 			ot = VIRTUAL_O;
 			break;
 		default:
-			throw RuotaError(_INVALID_OBJECT_TYPE_, token);
+			throw RTError(_INVALID_OBJECT_TYPE_, token);
 	}
 
 	if (extends == nullptr)
@@ -388,22 +398,24 @@ bool ClassNode::isConst() const
 	return false;
 }
 
-void ClassNode::printTree(string indent, bool last) const
+std::stringstream ClassNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CLASS : " << MAIN_HASH.deHash(key) << ", " << std::to_string(type) << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CLASS : " << RUOTA_DEHASH(key) << ", " << std::to_string(type) << "\n" << colorASCII(RESET_TEXT);
 	if (extends != nullptr)
-		extends->printTree(indent, false);
+		ss << extends->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
-		body[i]->printTree(indent, i == body.size() - 1);
+		ss << body[i]->printTree(indent, i == body.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ClassNode::fold() const
@@ -437,18 +449,20 @@ bool VarNode::isConst() const
 	return false;
 }
 
-void VarNode::printTree(string indent, bool last) const
+std::stringstream VarNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "VAR : " << keys.size() << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "VAR : " << keys.size() << "\n" << colorASCII(RESET_TEXT);
+	return ss;
 }
 
 std::shared_ptr<Node> VarNode::fold() const
@@ -491,22 +505,23 @@ bool CallNode::isConst() const
 	return false;
 }
 
-void CallNode::printTree(string indent, bool last) const
+std::stringstream CallNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CALL\n"
-		<< colorASCII(RESET_TEXT);
-
-	callee->printTree(indent, args.empty());
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CALL\n" << colorASCII(RESET_TEXT);
+	ss << callee->printTree(indent, args.empty()).str();
 	for (size_t i = 0; i < args.size(); i++)
-		args[i]->printTree(indent, i == args.size() - 1);
+		ss << args[i]->printTree(indent, i == args.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> CallNode::fold() const
@@ -521,7 +536,7 @@ std::shared_ptr<Node> CallNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ExternCallNode::ExternCallNode(
-	const string &id,
+	const std::string &id,
 	std::vector<std::shared_ptr<Node>> args,
 	const Token &token) : Node(EXTERN_CALL_NODE,
 		token),
@@ -542,20 +557,22 @@ bool ExternCallNode::isConst() const
 	return false;
 }
 
-void ExternCallNode::printTree(string indent, bool last) const
+std::stringstream ExternCallNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "EXTERN_CALL : " << id << "\n"
-		<< colorASCII(RESET_TEXT);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "EXTERN_CALL : " << id << "\n" << colorASCII(RESET_TEXT);
 	for (size_t i = 0; i < args.size(); i++)
-		args[i]->printTree(indent, i == args.size() - 1);
+		ss << args[i]->printTree(indent, i == args.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ExternCallNode::fold() const
@@ -595,7 +612,7 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 			break;
 	}
 
-	throw RuotaError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token);
+	throw RTError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token);
 	return nullptr;
 }
 
@@ -604,20 +621,21 @@ bool CallBuiltNode::isConst() const
 	return arg->isConst();
 }
 
-void CallBuiltNode::printTree(string indent, bool last) const
+std::stringstream CallBuiltNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CALL_BUILT : " << std::to_string(t) << "\n"
-		<< colorASCII(RESET_TEXT);
-
-	arg->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CALL_BUILT : " << std::to_string(t) << "\n" << colorASCII(RESET_TEXT);
+	ss << arg->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> CallBuiltNode::fold() const
@@ -650,20 +668,21 @@ bool ReturnNode::isConst() const
 	return false;
 }
 
-void ReturnNode::printTree(string indent, bool last) const
+std::stringstream ReturnNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "RETURN\n"
-		<< colorASCII(RESET_TEXT);
-
-	a->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "RETURN\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ReturnNode::fold() const
@@ -690,19 +709,21 @@ bool ReferNode::isConst() const
 	return false;
 }
 
-void ReferNode::printTree(string indent, bool last) const
+std::stringstream ReferNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "REFER\n"
-		<< colorASCII(RESET_TEXT);
-	a->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "REFER\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ReferNode::fold() const
@@ -713,7 +734,7 @@ std::shared_ptr<Node> ReferNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 BinOpNode::BinOpNode(
-	const string &op,
+	const std::string &op,
 	std::shared_ptr<Node> a,
 	std::shared_ptr<Node> b,
 	const Token &token) : Node(BIN_OP_NODE,
@@ -796,22 +817,22 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
 	if (op == ":=") {
 		if (a->getType() != ID_NODE && a->getType() != BID_NODE)
-			throw RuotaError("Only variables may be declared with `:=`", token);
+			throw RTError("Only variables may be declared with `:=`", token);
 		hash_ull t;
 		if (a->getType() == ID_NODE)
 			t = ((IDNode *) a.get())->getKey();
 		else
-			t = MAIN_HASH.hashString(((BIDNode *) a.get())->getKey());
+			t = RUOTA_HASH(((BIDNode *) a.get())->getKey());
 		return std::make_shared<DeclareI>(t, 0, b->genParser(), b->isConst(), token);
 	}
 
 	if (op == "[]")
 		return std::make_shared<IndexI>(a->genParser(), b->genParser(), token);
 
-	throw RuotaError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);
+	throw RTError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);
 }
 
-const string &BinOpNode::getOp() const
+const std::string &BinOpNode::getOp() const
 {
 	return op;
 }
@@ -843,27 +864,29 @@ bool BinOpNode::isConst() const
 			Scope temp;
 			genParser()->evaluate(&temp);
 			return true;
-		} catch (const RuotaError &e) {
+		} catch (const RTError &e) {
 			return false;
 		}
 	}
 	return false;
 }
 
-void BinOpNode::printTree(string indent, bool last) const
+std::stringstream BinOpNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "BINOP : " << op << "\n"
-		<< colorASCII(RESET_TEXT);
-	a->printTree(indent, false);
-	b->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "BINOP : " << op << "\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, false).str();
+	ss << b->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> BinOpNode::fold() const
@@ -881,7 +904,7 @@ std::shared_ptr<Node> BinOpNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 UnOpNode::UnOpNode(
-	const string &op,
+	const std::string &op,
 	std::shared_ptr<Node> a,
 	const Token &token) : Node(UN_OP_NODE,
 		token),
@@ -898,7 +921,7 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "!")
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
-	throw RuotaError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token);
+	throw RTError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token);
 	return nullptr;
 }
 
@@ -907,19 +930,21 @@ bool UnOpNode::isConst() const
 	return a->isConst();
 }
 
-void UnOpNode::printTree(string indent, bool last) const
+std::stringstream UnOpNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "UNOP : " << op << "\n"
-		<< colorASCII(RESET_TEXT);
-	a->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "UNOP : " << op << "\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> UnOpNode::fold() const
@@ -952,19 +977,21 @@ bool ParenNode::isConst() const
 	return a->isConst();
 }
 
-void ParenNode::printTree(string indent, bool last) const
+std::stringstream ParenNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "PAREN\n"
-		<< colorASCII(RESET_TEXT);
-	a->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "PAREN\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ParenNode::fold() const
@@ -999,19 +1026,21 @@ bool CastToNode::isConst() const
 	return a->isConst();
 }
 
-void CastToNode::printTree(string indent, bool last) const
+std::stringstream CastToNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "CAST : " << std::to_string(convert) << "\n"
-		<< colorASCII(RESET_TEXT);
-	a->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CAST : " << std::to_string(convert) << "\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> CastToNode::fold() const
@@ -1055,21 +1084,22 @@ bool InsNode::isConst() const
 {
 	return callee->isConst() && arg->isConst();
 }
-void InsNode::printTree(string indent, bool last) const
+std::stringstream InsNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "INS\n"
-		<< colorASCII(RESET_TEXT);
-
-	callee->printTree(indent, false);
-	arg->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "INS\n" << colorASCII(RESET_TEXT);
+	ss << callee->printTree(indent, false).str();
+	ss << arg->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> InsNode::fold() const
@@ -1117,23 +1147,24 @@ bool IfElseNode::isConst() const
 	return true;
 }
 
-void IfElseNode::printTree(string indent, bool last) const
+std::stringstream IfElseNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "IF_ELSE\n"
-		<< colorASCII(RESET_TEXT);
-
-	ifs->printTree(indent, false);
-	body->printTree(indent, elses == nullptr);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "IF_ELSE\n" << colorASCII(RESET_TEXT);
+	ss << ifs->printTree(indent, false).str();
+	ss << body->printTree(indent, elses == nullptr).str();
 	if (elses != nullptr)
-		elses->printTree(indent, true);
+		ss << elses->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> IfElseNode::fold() const
@@ -1185,21 +1216,23 @@ bool WhileNode::isConst() const
 	return true;
 }
 
-void WhileNode::printTree(string indent, bool last) const
+std::stringstream WhileNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "WHILE\n"
-		<< colorASCII(RESET_TEXT);
-	whiles->printTree(indent, false);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "WHILE\n" << colorASCII(RESET_TEXT);
+	ss << whiles->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
-		body[i]->printTree(indent, i == body.size() - 1);
+		ss << body[i]->printTree(indent, i == body.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> WhileNode::fold() const
@@ -1253,21 +1286,23 @@ bool ForNode::isConst() const
 	return true;
 }
 
-void ForNode::printTree(string indent, bool last) const
+std::stringstream ForNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "FOR : " << MAIN_HASH.deHash(id) << "\n"
-		<< colorASCII(RESET_TEXT);
-	fors->printTree(indent, false);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "FOR : " << RUOTA_DEHASH(id) << "\n" << colorASCII(RESET_TEXT);
+	ss << fors->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
-		body[i]->printTree(indent, i == body.size() - 1);
+		ss << body[i]->printTree(indent, i == body.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ForNode::fold() const
@@ -1319,30 +1354,31 @@ bool UntilNode::isConst() const
 			Scope temp;
 			genParser()->evaluate(&temp);
 			return true;
-		} catch (const RuotaError &e) {
+		} catch (const RTError &e) {
 			return false;
 		}
 	}
 	return false;
 }
 
-void UntilNode::printTree(string indent, bool last) const
+std::stringstream UntilNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "UNTIL\n"
-		<< colorASCII(RESET_TEXT);
-
-	a->printTree(indent, false);
-	b->printTree(indent, step == nullptr);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "UNTIL\n" << colorASCII(RESET_TEXT);
+	ss << a->printTree(indent, false).str();
+	ss << b->printTree(indent, step == nullptr).str();
 	if (step != nullptr)
-		step->printTree(indent, true);
+		ss << step->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> UntilNode::fold() const
@@ -1385,21 +1421,22 @@ bool MapNode::isConst() const
 	return true;
 }
 
-void MapNode::printTree(string indent, bool last) const
+std::stringstream MapNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "MAP\n"
-		<< colorASCII(RESET_TEXT);
-
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "MAP\n" << colorASCII(RESET_TEXT);
 	for (size_t i = 0; i < args.size(); i++)
-		args[i].second->printTree(indent, i == args.size() - 1);
+		ss << args[i].second->printTree(indent, i == args.size() - 1).str();
+	return ss;
 }
 
 std::shared_ptr<Node> MapNode::fold() const
@@ -1455,27 +1492,28 @@ bool SwitchNode::isConst() const
 	return false;
 }
 
-void SwitchNode::printTree(string indent, bool last) const
+std::stringstream SwitchNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "SWITCH"
-		<< "\n"
-		<< colorASCII(RESET_TEXT);
-	switchs->printTree(indent, cases.empty());
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "SWITCH\n" << colorASCII(RESET_TEXT);
+	ss << switchs->printTree(indent, cases.empty()).str();
 	size_t i = 0;
 	for (auto &e : cases) {
-		e.second->printTree(indent, i == cases.size() - 1 && !elses);
+		ss << e.second->printTree(indent, i == cases.size() - 1 && !elses).str();
 		i++;
 	}
 	if (elses)
-		elses->printTree(indent, true);
+		ss << elses->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> SwitchNode::fold() const
@@ -1518,21 +1556,22 @@ bool TryCatchNode::isConst() const
 	return false;
 }
 
-void TryCatchNode::printTree(string indent, bool last) const
+std::stringstream TryCatchNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "TRY_CATCH : " << MAIN_HASH.deHash(key) << "\n"
-		<< colorASCII(RESET_TEXT);
-
-	trys->printTree(indent, false);
-	catchs->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "TRY_CATCH : " << RUOTA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	ss << trys->printTree(indent, false).str();
+	ss << catchs->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> TryCatchNode::fold() const
@@ -1558,20 +1597,21 @@ bool ThrowNode::isConst() const
 	return false;
 }
 
-void ThrowNode::printTree(string indent, bool last) const
+std::stringstream ThrowNode::printTree(std::string indent, bool last) const
 {
-	std::cout << indent;
+	std::stringstream ss;
+	ss << indent;
 	if (last) {
-		std::cout << "└─";
+		ss << "└─";
 		indent += "  ";
 	} else {
-		std::cout << "├─";
+		ss << "├─";
 		indent += "│ ";
 	}
-	std::cout << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT)) << "THROW\n"
-		<< colorASCII(RESET_TEXT);
-
-	throws->printTree(indent, true);
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "THROW\n" << colorASCII(RESET_TEXT);
+	ss << throws->printTree(indent, true).str();
+	return ss;
 }
 
 std::shared_ptr<Node> ThrowNode::fold() const

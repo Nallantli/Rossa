@@ -2,9 +2,11 @@
 
 #include <sstream>
 
+using namespace ruota;
+
 Lexer::Lexer(
-	std::map<string, signed int> bOperators,
-	std::map<string, signed int> uOperators) : bOperators(bOperators),
+	std::map<std::string, signed int> bOperators,
+	std::map<std::string, signed int> uOperators) : bOperators(bOperators),
 	uOperators(uOperators)
 {}
 
@@ -130,6 +132,14 @@ const int Lexer::getToken()
 			return TOK_CHARS;
 		else if (ID_STRING == "case")
 			return TOK_CASE;
+		else if (ID_STRING == "inf") {
+			NUM_VALUE = CNumber::Double(INFINITY);
+			return TOK_NUM;
+		}
+		else if (ID_STRING == "nan") {
+			NUM_VALUE = CNumber::Double(NAN);
+			return TOK_NUM;
+		}
 		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
 			return TOK_OPR;
 
@@ -137,8 +147,8 @@ const int Lexer::getToken()
 	} else if (isdigit(last) || (last == '.' && isdigit(peekChar(0)))) {
 		if (last == '0' && (peekChar(0) == 'x' || peekChar(0) == 'X')) {
 			last = nextChar();
-			string t = string(1, last);
-			string numStr = "";
+			std::string t = std::string(1, last);
+			std::string numStr = "";
 			while (isalnum(peekChar(0))) {
 				last = nextChar();
 				numStr += last;
@@ -152,7 +162,7 @@ const int Lexer::getToken()
 			return TOK_NUM;
 		}
 
-		string numStr = string(1, last);
+		std::string numStr = std::string(1, last);
 		bool flag = false;
 		while (isdigit(peekChar(0)) || (peekChar(0) == '.' && isdigit(peekChar(1)))) {
 			if (flag && peekChar(0) == '.')
@@ -170,7 +180,7 @@ const int Lexer::getToken()
 			NUM_VALUE = CNumber::Long(strtoll(numStr.c_str(), 0, 0));
 		return TOK_NUM;
 	} else if (last == '#') {
-		string commentStr = "";
+		std::string commentStr = "";
 		do {
 			last = nextChar();
 			commentStr += last;
@@ -180,8 +190,8 @@ const int Lexer::getToken()
 		return '#';
 	} else if (last == EOF || last == 0)
 		return TOK_EOF;
-	else if (bOperators.find(string(1, last)) != bOperators.end()) {
-		string opStr = string(1, last);
+	else if (bOperators.find(std::string(1, last)) != bOperators.end()) {
+		std::string opStr = std::string(1, last);
 		while (bOperators.find(opStr + peekChar(0)) != bOperators.end()) {
 			last = nextChar();
 			opStr += last;
@@ -203,8 +213,8 @@ const int Lexer::getToken()
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
-	} else if (uOperators.find(string(1, last)) != uOperators.end()) {
-		string opStr = string(1, last);
+	} else if (uOperators.find(std::string(1, last)) != uOperators.end()) {
+		std::string opStr = std::string(1, last);
 		while (uOperators.find(opStr + peekChar(0)) != uOperators.end()) {
 			last = nextChar();
 			opStr += last;
@@ -213,7 +223,7 @@ const int Lexer::getToken()
 		ID_STRING = opStr;
 		return TOK_OPR;
 	} else if (last == '`') {
-		string value = "";
+		std::string value = "";
 		while (true) {
 			last = nextChar();
 			if (last == '`') {
@@ -223,7 +233,7 @@ const int Lexer::getToken()
 			value += last;
 		}
 	} else if (last == '"') {
-		string value = "";
+		std::string value = "";
 		while (true) {
 			last = nextChar();
 			if (last == '"') {
@@ -266,14 +276,14 @@ const int Lexer::getToken()
 						break;
 					case 'x':
 					{
-						string code = string({ nextChar(), nextChar() });
+						std::string code = std::string({ nextChar(), nextChar() });
 						char hex = std::stoul(code, nullptr, 16);
 						last = hex;
 						break;
 					}
 					case 'u':
 					{
-						string code = string({ nextChar(), nextChar(), nextChar(), nextChar() });
+						std::string code = std::string({ nextChar(), nextChar(), nextChar(), nextChar() });
 						char hex = std::stoul(code, nullptr, 16);
 						last = hex;
 						break;
@@ -283,12 +293,12 @@ const int Lexer::getToken()
 			value += last;
 		}
 	} else if (last == '\'') {
-		string value = "";
+		std::string value = "";
 		while (true) {
 			last = nextChar();
 			if (last == '\'') {
 				if (value.size() < 1)
-					value = string(1, 0);
+					value = std::string(1, 0);
 				ID_STRING = value;
 				NUM_VALUE = CNumber::Long(static_cast<unsigned char>(value[0]));
 				return TOK_NUM;
@@ -329,14 +339,14 @@ const int Lexer::getToken()
 						break;
 					case 'x':
 					{
-						string code = string({ nextChar(), nextChar() });
+						std::string code = std::string({ nextChar(), nextChar() });
 						char hex = std::stoul(code, nullptr, 16);
 						last = hex;
 						break;
 					}
 					case 'u':
 					{
-						string code = string({ nextChar(), nextChar(), nextChar(), nextChar() });
+						std::string code = std::string({ nextChar(), nextChar(), nextChar(), nextChar() });
 						char hex = std::stoul(code, nullptr, 16);
 						last = hex;
 						break;
@@ -353,11 +363,11 @@ const int Lexer::getToken()
 	return ret;
 }
 
-std::vector<Token> Lexer::lexString(const string &INPUT, const string &filename)
+std::vector<Token> Lexer::lexString(const std::string &INPUT, const std::string &filename)
 {
-	std::vector<string> LINES;
+	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);
-	string item;
+	std::string item;
 
 	while (std::getline(ss, item, '\n')) {
 		LINES.push_back(item);
@@ -375,20 +385,20 @@ std::vector<Token> Lexer::lexString(const string &INPUT, const string &filename)
 			break;
 		if (token == '#')
 			continue;
-		Token t(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token);
+		Token t = { filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, token };
 
-		if (t.getType() == TOK_DEF) {
+		if (t.type == TOK_DEF) {
 			std::vector<Token> temp;
-			while (tokens.back().getType() != '(') {
+			while (tokens.back().type != '(') {
 				temp.push_back(tokens.back());
 				tokens.pop_back();
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().getType() == TOK_IDF || tokens.back().getType() == '~' || tokens.back().getType() == TOK_SIZE || tokens.back().getType() == TOK_CHARN || tokens.back().getType() == TOK_CHARS || tokens.back().getType() == TOK_LENGTH || tokens.back().getType() == TOK_ALLOC)) {
+			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == '~' || tokens.back().type == TOK_SIZE || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC)) {
 				temp.push_back(tokens.back());
 				tokens.pop_back();
-				if (tokens.back().getType() == TOK_DEF_TYPE) {
+				if (tokens.back().type == TOK_DEF_TYPE) {
 					temp.push_back(tokens.back());
 					tokens.pop_back();
 					temp.push_back(tokens.back());
@@ -396,7 +406,7 @@ std::vector<Token> Lexer::lexString(const string &INPUT, const string &filename)
 				}
 				tokens.push_back(t);
 			} else {
-				tokens.push_back(Token(filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, TOK_LAMBDA));
+				tokens.push_back({ filename, LINES[LINE_INDEX], LINE_INDEX, this->TOKEN_DIST, this->ID_STRING, this->NUM_VALUE, TOK_LAMBDA });
 			}
 			while (!temp.empty()) {
 				tokens.push_back(temp.back());
@@ -404,6 +414,13 @@ std::vector<Token> Lexer::lexString(const string &INPUT, const string &filename)
 			}
 		} else {
 			tokens.push_back(t);
+		}
+	}
+
+	for (auto &t : tokens) {
+		while (!t.line.empty() && isspace(t.line[0])) {
+			t.line = t.line.substr(1);
+			t.distance--;
 		}
 	}
 

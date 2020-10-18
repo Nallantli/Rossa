@@ -1,9 +1,8 @@
 #include "Ruota.h"
 
-Signature::Signature(const std::vector<type_sll> &values) : values(values)
-{}
+using namespace ruota;
 
-size_t Signature::validity(const std::vector<Symbol> &check) const
+const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check)
 {
 	if (values.size() == 0)
 		return 1;
@@ -26,9 +25,9 @@ size_t Signature::validity(const std::vector<Symbol> &check) const
 	return v;
 }
 
-const string Signature::toString() const
+const std::string sig::toString(const sig_t &values)
 {
-	string s = "(";
+	std::string s = "(";
 	size_t i = 0;
 	for (auto &v : values) {
 		if (i++ > 0)
@@ -36,41 +35,4 @@ const string Signature::toString() const
 		s += getTypeString(v);
 	}
 	return s + ")";
-}
-
-const string Signature::getTypeString(const type_sll &i) const
-{
-	if (i >= 0)
-		return "@" + MAIN_HASH.deHash(i);
-	else {
-		switch (i) {
-			case NIL:
-				return "Nil";
-			case NUMBER:
-				return "Number";
-			case STRING:
-				return "String";
-			case BOOLEAN_D:
-				return "Boolean";
-			case ARRAY:
-				return "Array";
-			case FUNCTION:
-				return "Function";
-			case DICTIONARY:
-				return "Dictionary";
-			case OBJECT:
-				return "Object";
-			case POINTER:
-				return "Pointer";
-			case TYPE_NAME:
-				return "Type";
-			default:
-				return "<error-type>";
-		}
-	}
-}
-
-bool Signature::operator<(const Signature &sig) const
-{
-	return this->toString() < sig.toString();
 }

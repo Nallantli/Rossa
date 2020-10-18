@@ -1,5 +1,7 @@
 #include "Ruota.h"
 
+using namespace ruota;
+
 Scope::Scope() : parent(NULL), type(SCOPE_O), hashed_key(0), name_trace({})
 {}
 
@@ -24,7 +26,7 @@ Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instru
 
 void Scope::traceName(const hash_ull &key)
 {
-	string path = "";
+	std::string path = "";
 	if (parent != NULL)
 		name_trace = parent->name_trace;
 	if (key != 0) {
@@ -34,17 +36,17 @@ void Scope::traceName(const hash_ull &key)
 		for (auto &p : name_trace) {
 			if (i++ > 0)
 				path += ".";
-			path += MAIN_HASH.deHash(p);
+			path += RUOTA_DEHASH(p);
 		}
 	}
 
-	hashed_key = MAIN_HASH.hashString(path);
+	hashed_key = RUOTA_HASH(path);
 }
 
 const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *token) const
 {
 	if (type != STRUCT_O)
-		throw RuotaError(_FAILURE_INSTANTIATE_OBJECT_, *token);
+		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token);
 
 	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions);
 	o->body->evaluate(o.get());
@@ -58,14 +60,14 @@ const hash_ull Scope::getHashedKey() const
 	return hashed_key;
 }
 
-const Symbol &Scope::getVariable(const hash_ull &key, const Token *token)
+const Symbol &Scope::getVariable(const hash_ull &key, const Token *token) const
 {
 	if (values.find(key) != values.end())
-		return values[key];
+		return values.at(key);
 	if (parent != NULL)
 		return parent->getVariable(key, token);
 
-	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % MAIN_HASH.deHash(key)).str(), *token);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % RUOTA_DEHASH(key)).str(), *token);
 }
 
 const Symbol &Scope::createVariable(const hash_ull &key, const Token *token)
@@ -108,7 +110,6 @@ const std::shared_ptr<Instruction> Scope::getBody() const
 {
 	return body;
 }
-
 const Symbol Scope::getThis(const Token *token)
 {
 	if (type != SCOPE_O)
@@ -116,10 +117,10 @@ const Symbol Scope::getThis(const Token *token)
 	if (parent != NULL)
 		return parent->getThis(token);
 
-	throw RuotaError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token);
 }
 
-bool Scope::hasValue(const hash_ull &key) const
+const bool Scope::hasValue(const hash_ull &key) const
 {
 	return values.find(key) != values.end();
 }

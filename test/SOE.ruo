@@ -28,7 +28,7 @@ SOE(ref MAX : Number) => {
 	start = clock.milliseconds();
 	b := alloc(c);
 	j := 0;
-	for i in 2 .. MAX do {
+	for i in 2 .. MAX : 2 do {
 		if a[i] then {
 			b[j] = i;
 			j += 1;

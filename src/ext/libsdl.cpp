@@ -24,19 +24,19 @@ namespace libsdl
 		SDL_Texture *image = NULL;
 
 	public:
-		Image(const string &path, const Token *token, const short &r, const short &g, const short &b)
+		Image(const std::string &path, const Token *token, const short &r, const short &g, const short &b)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RuotaError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
-		Image(const string &path, const Token *token)
+		Image(const std::string &path, const Token *token)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RuotaError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
 		}
 
 		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token)
@@ -44,8 +44,9 @@ namespace libsdl
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw RuotaError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token);
+					throw RTError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token);
 				SDL_FreeSurface(loaded);
+				loaded = NULL;
 			}
 			return image;
 		}
@@ -171,9 +172,9 @@ namespace libsdl
 		{
 			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
-				throw RuotaError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
 		}
 	};
 
@@ -185,9 +186,9 @@ namespace libsdl
 		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
 			if (SDL_RenderDrawLine(renderer, x, y, x + width, y + height) < 0)
-				throw RuotaError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
 		}
 	};
 
@@ -199,9 +200,9 @@ namespace libsdl
 		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RuotaError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
 			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
-				throw RuotaError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
 		}
 	};
 
@@ -236,7 +237,7 @@ namespace libsdl
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
-				throw RuotaError((boost::format("Failure to initialize renderer: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize renderer: %1%") % SDL_GetError()).str(), *token);
 		}
 
 		void addShape(const Symbol &shape, const int &x, const int &y)
@@ -269,11 +270,11 @@ namespace libsdl
 		Uint32 windowID;
 		SDL_Window *window = NULL;
 
-		Window(const string &title, const int &width, const int &height, const Token *token)
+		Window(const std::string &title, const int &width, const int &height, const Token *token)
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
-				throw RuotaError((boost::format("Failure to initialize window: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize window: %1%") % SDL_GetError()).str(), *token);
 
 			this->windowID = SDL_GetWindowID(window);
 		}
@@ -296,11 +297,11 @@ namespace libsdl
 		if (!SDL_INITIALIZED) {
 			SDL_INITIALIZED = true;
 			if (SDL_Init(SDL_INIT_VIDEO) < 0)
-				throw RuotaError((boost::format("Failure to initialize SDL: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize SDL: %1%") % SDL_GetError()).str(), *token);
 
 			int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 			if (!(IMG_Init(imgFlags) & imgFlags))
-				throw RuotaError((boost::format("Failure to initialize SDL_image: %1%") % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize SDL_image: %1%") % IMG_GetError()).str(), *token);
 		}
 
 		auto w = std::make_shared<Window>(args[0].getString(token), args[1].getNumber(token).getLong(), args[2].getNumber(token).getLong(), token);
@@ -342,7 +343,7 @@ namespace libsdl
 					data[hash.hashString("timestamp")] = Symbol(CNumber::Long(e.edit.timestamp));
 					data[hash.hashString("windowID")] = Symbol(CNumber::Long(e.edit.windowID));
 					data[hash.hashString("window")] = registered[e.edit.windowID];
-					data[hash.hashString("text")] = Symbol(string(e.edit.text));
+					data[hash.hashString("text")] = Symbol(std::string(e.edit.text));
 					data[hash.hashString("start")] = Symbol(CNumber::Long(e.edit.start));
 					data[hash.hashString("length")] = Symbol(CNumber::Long(e.edit.length));
 					return Symbol(data);
@@ -350,7 +351,7 @@ namespace libsdl
 					data[hash.hashString("timestamp")] = Symbol(CNumber::Long(e.text.timestamp));
 					data[hash.hashString("windowID")] = Symbol(CNumber::Long(e.text.windowID));
 					data[hash.hashString("window")] = registered[e.text.windowID];
-					data[hash.hashString("text")] = Symbol(string(e.text.text));
+					data[hash.hashString("text")] = Symbol(std::string(e.text.text));
 					return Symbol(data);
 				case SDL_MOUSEMOTION:
 					data[hash.hashString("timestamp")] = Symbol(CNumber::Long(e.motion.timestamp));
@@ -482,7 +483,7 @@ namespace libsdl
 					data[hash.hashString("windowID")] = Symbol(CNumber::Long(e.drop.windowID));
 					data[hash.hashString("window")] = registered[e.drop.windowID];
 					if (e.drop.file != NULL) {
-						data[hash.hashString("file")] = Symbol(string(e.drop.file));
+						data[hash.hashString("file")] = Symbol(std::string(e.drop.file));
 						SDL_free(e.drop.file);
 					}
 					return Symbol(data);
@@ -682,7 +683,7 @@ namespace libsdl
 
 	RUOTA_EXT_SYM(_image_init_nokey, args, token, hash)
 	{
-		string path = args[0].getString(token);
+		std::string path = args[0].getString(token);
 
 		auto image = std::make_shared<Image>(path, token);
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
@@ -690,7 +691,7 @@ namespace libsdl
 
 	RUOTA_EXT_SYM(_image_init_key, args, token, hash)
 	{
-		string path = args[0].getString(token);
+		std::string path = args[0].getString(token);
 		short r = args[1].getNumber(token).getLong();
 		short g = args[2].getNumber(token).getLong();
 		short b = args[3].getNumber(token).getLong();

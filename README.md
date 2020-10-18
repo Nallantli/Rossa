@@ -27,7 +27,30 @@ _Current features, divergences from previous repo, and features to be implemente
 
 ## Building
 
+### Libraries
+
 There will be no downloadable binaries during the alpha stage - however everything can be built from the source rather easily.
+
+Building requires the following libraries:
+
+* Boost (https://www.boost.org/)
+
+For the SDL integration:
+
+* SDL (https://www.libsdl.org/)
+* SDL_image (https://www.libsdl.org/projects/SDL_image/)
+
+On Linux/OSX these libraries can be installed using a package manager. E.g. Debian-based systems:
+
+```sh
+sudo apt-get install libboost-all-dev
+sudo apt-get install libsdl2-dev
+sudo apt-get install libsdl2-image-dev
+```
+
+On Windows, you will have to download the development libraries from the websites above and then edit the paths in the makefile.
+
+### Cloning
 
 ```sh
 git clone https://github.com/Nallantli/Ruota

@@ -1,6 +1,8 @@
 #include "Parser.h"
 #include "Library.h"
 
+using namespace ruota;
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Instruction                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -23,7 +25,7 @@ Instruction::~Instruction()
 UnaryI::UnaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const Token &token) : Instruction(type, token), a(a)
 {}
 
-std::shared_ptr<Instruction> UnaryI::getA() const
+const std::shared_ptr<Instruction> UnaryI::getA() const
 {
 	return a;
 }
@@ -47,7 +49,7 @@ const hash_ull CastingI::getKey() const
 BinaryI::BinaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : UnaryI(type, a, token), b(b)
 {}
 
-std::shared_ptr<Instruction> BinaryI::getB() const
+const std::shared_ptr<Instruction> BinaryI::getB() const
 {
 	return b;
 }
@@ -68,7 +70,7 @@ const Symbol ContainerI::evaluate(Scope *scope) const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const Signature &ftype, std::vector<std::pair<LexerTokenType, hash_ull>> params, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body)
+DefineI::DefineI(const hash_ull &key, const sig_t &ftype, std::vector<std::pair<LexerTokenType, hash_ull>> params, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body)
 {}
 
 const Symbol DefineI::evaluate(Scope *scope) const
@@ -218,8 +220,8 @@ const Symbol IndexI::evaluate(Scope *scope) const
 	switch (evalA.getValueType()) {
 		case DICTIONARY:
 			if (evalB.getValueType() == NUMBER)
-				return evalA.indexDict(MAIN_HASH.hashString(evalB.toString(&token)));
-			return evalA.indexDict(MAIN_HASH.hashString(evalB.getString(&token)));
+				return evalA.indexDict(RUOTA_HASH(evalB.toString(&token)));
+			return evalA.indexDict(RUOTA_HASH(evalB.getString(&token)));
 		case ARRAY:
 			if (evalB.getValueType() != NUMBER)
 				break;
@@ -250,16 +252,16 @@ const Symbol InnerI::evaluate(Scope *scope) const
 		case DICTIONARY:
 			if (b->getType() == VARIABLE)
 				return evalA.indexDict(reinterpret_cast<VariableI *>(b.get())->getKey());
-			throw RuotaError(_CANNOT_ENTER_DICTIONARY_, token);
+			throw RTError(_CANNOT_ENTER_DICTIONARY_, token);
 		case OBJECT:
 		{
 			auto o = evalA.getObject(&token);
 			if (o->getType() != STATIC_O && o->getType() != INSTANCE_O)
-				throw RuotaError(_CANNOT_INDEX_OBJECT_, token);
+				throw RTError(_CANNOT_INDEX_OBJECT_, token);
 			return b->evaluate(o);
 		}
 		default:
-			throw RuotaError(_CANNOT_INDEX_VALUE_, token);
+			throw RTError(_CANNOT_INDEX_VALUE_, token);
 	}
 }
 
@@ -894,7 +896,7 @@ const Symbol SetI::evaluate(Scope *scope) const
 	if (evalA.getValueType() == OBJECT && !evalA.getObject(&token)->hasValue(Ruota::HASH_SET)) {
 		try {
 			return scope->getVariable(Ruota::HASH_SET, &token).call({ evalA, evalB }, &token);
-		} catch (const RuotaError &e) {
+		} catch (const RTError &e) {
 			evalA.set(&evalB, &token, isConst);
 		}
 	} else {
@@ -921,17 +923,17 @@ const Symbol ReturnI::evaluate(Scope *scope) const
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(const string &id, const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(EXTERN, a, token), id(id)
+ExternI::ExternI(const std::string &id, const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(EXTERN, a, token), id(id)
 {
-	if (rlib::loaded.find(id) != rlib::loaded.end())
-		this->f = rlib::loaded[id];
+	if (ruota::lib::loaded.find(id) != ruota::lib::loaded.end())
+		this->f = ruota::lib::loaded[id];
 	else
-		throw RuotaError((boost::format(_EXTERN_NOT_DEFINED_) % id).str(), token);
+		throw RTError((boost::format(_EXTERN_NOT_DEFINED_) % id).str(), token);
 }
 
 const Symbol ExternI::evaluate(Scope *scope) const
 {
-	return f(a->evaluate(scope).getVector(&token), &token, MAIN_HASH);
+	return f(a->evaluate(scope).getVector(&token), &token, _MAIN_HASH_);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -947,7 +949,7 @@ const Symbol LengthI::evaluate(Scope *scope) const
 	switch (evalA.getValueType()) {
 		case STRING:
 		{
-			string str = evalA.getString(&token);
+			std::string str = evalA.getString(&token);
 			int c, i, ix, q;
 			for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++) {
 				c = static_cast<unsigned char>(str[i]);
@@ -969,7 +971,7 @@ const Symbol LengthI::evaluate(Scope *scope) const
 		case ARRAY:
 			return Symbol(CNumber::Long(evalA.vectorSize()));
 		default:
-			throw RuotaError(_FAILURE_LENGTH_, token);
+			throw RTError(_FAILURE_LENGTH_, token);
 	}
 }
 
@@ -991,7 +993,7 @@ const Symbol SizeI::evaluate(Scope *scope) const
 		case ARRAY:
 			return Symbol(CNumber::Long(evalA.vectorSize()));
 		default:
-			throw RuotaError(_FAILURE_SIZE_, token);
+			throw RTError(_FAILURE_SIZE_, token);
 	}
 }
 
@@ -1015,7 +1017,7 @@ const Symbol ClassI::evaluate(Scope *scope) const
 		else {
 			ex = e.getObject(&token);
 			if (ex->getType() == STATIC_O)
-				throw RuotaError(_FAILURE_EXTEND_, token);
+				throw RTError(_FAILURE_EXTEND_, token);
 			auto eb = ex->getBody();
 			std::vector<std::shared_ptr<Instruction>> temp;
 			temp.push_back(body);
@@ -1073,7 +1075,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 					try {
 						return Symbol(CNumber::Double(std::stold(evalA.getString(&token))));
 					} catch (const std::invalid_argument &e) {
-						throw RuotaError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token)).str(), token);
+						throw RTError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token)).str(), token);
 					}
 				case OBJECT:
 				{
@@ -1114,7 +1116,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 					auto v = evalA.getVector(&token);
 					std::map<hash_ull, Symbol> nd;
 					for (size_t i = 0; i < v.size(); i++)
-						nd[MAIN_HASH.hashString(std::to_string(i))] = v[i];
+						nd[RUOTA_HASH(std::to_string(i))] = v[i];
 					return Symbol(nd);
 				}
 				case OBJECT:
@@ -1136,7 +1138,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 					auto dict = evalA.getDictionary(&token);
 					std::vector<Symbol> nv;
 					for (auto &e : dict)
-						nv.push_back(Symbol({ {Ruota::HASH_KEY, Symbol(MAIN_HASH.deHash(e.first))}, {Ruota::HASH_VALUE, e.second} }));
+						nv.push_back(Symbol({ {Ruota::HASH_KEY, Symbol(RUOTA_DEHASH(e.first))}, {Ruota::HASH_VALUE, e.second} }));
 					return Symbol(nv);
 				}
 				case OBJECT:
@@ -1148,7 +1150,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 				}
 				case STRING:
 				{
-					string str = evalA.getString(&token);
+					std::string str = evalA.getString(&token);
 					std::vector<Symbol> nv;
 					int last = 0;
 					int c, i, ix, q, s;
@@ -1169,7 +1171,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 						} else {
 							nv.clear();
 							for (size_t i = 0; i < str.size(); i++)
-								nv.push_back(Symbol(string(1, str[i])));
+								nv.push_back(Symbol(std::string(1, str[i])));
 							return Symbol(nv);
 						}
 						nv.push_back(Symbol(str.substr(last, s)));
@@ -1193,7 +1195,7 @@ const Symbol CastToI::evaluate(Scope *scope) const
 		default:
 			break;
 	}
-	throw RuotaError(_FAILURE_CONVERT_, token);
+	throw RTError(_FAILURE_CONVERT_, token);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1207,7 +1209,7 @@ const Symbol AllocI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope).getNumber(&token).getLong();
 	if (evalA < 0)
-		throw RuotaError(_FAILURE_ALLOC_, token);
+		throw RTError(_FAILURE_ALLOC_, token);
 	return Symbol::allocate(evalA);
 }
 
@@ -1347,9 +1349,9 @@ const Symbol TryCatchI::evaluate(Scope *scope) const
 	try {
 		Scope newScope(scope, 0);
 		return a->evaluate(&newScope);
-	} catch (const RuotaError &e) {
+	} catch (const RTError &e) {
 		Scope newScope(scope, 0);
-		newScope.createVariable(key, Symbol(string(e.what())), &token);
+		newScope.createVariable(key, Symbol(std::string(e.what())), &token);
 		return b->evaluate(&newScope);
 	}
 }
@@ -1364,7 +1366,7 @@ ThrowI::ThrowI(const std::shared_ptr<Instruction> &a, const Token &token) : Unar
 const Symbol ThrowI::evaluate(Scope *scope) const
 {
 	auto evalA = a->evaluate(scope);
-	throw RuotaError(evalA.getString(&token), token);
+	throw RTError(evalA.getString(&token), token);
 	return Symbol();
 }
 
@@ -1424,17 +1426,17 @@ const Symbol CharSI::evaluate(Scope *scope) const
 	auto evalA = a->evaluate(scope);
 	switch (evalA.getValueType()) {
 		case NUMBER:
-			return Symbol(string(1, static_cast<char>(evalA.getNumber(&token).getLong())));
+			return Symbol(std::string(1, static_cast<char>(evalA.getNumber(&token).getLong())));
 		case ARRAY:
 		{
-			string ret = "";
+			std::string ret = "";
 			auto v = evalA.getVector(&token);
 			for (auto &e : v)
 				ret.push_back(static_cast<char>(e.getNumber(&token).getLong()));
 			return Symbol(ret);
 		}
 		default:
-			throw RuotaError(_FAILURE_TO_STR_, token);
+			throw RTError(_FAILURE_TO_STR_, token);
 	}
 }
 

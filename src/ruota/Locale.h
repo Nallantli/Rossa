@@ -1,5 +1,4 @@
-#ifndef LOCALE_H
-#define LOCALE_H
+#pragma once
 
 #ifndef _LOCALIZED_
 #define _LOCALE_ENG_
@@ -227,6 +226,4 @@
 #define _EXPECTED_EXPR_ "表現は思い設けられた"
 #define _EXPECTED_FILE_ "「load」の後でファイルの道は思い設けられた"
 #define _STACK_TRACE_MORE_ " ... （これから%1%以上） ..."
-#endif
-
 #endif
