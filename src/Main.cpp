@@ -32,11 +32,6 @@ int getch_n()
 }
 #endif
 
-void printc(const std::string &s, const ruota::TextColor &color)
-{
-	std::cout << "\033[" << color << "m" << s << "\033[0m";
-}
-
 std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
 	std::map<std::string, std::string> options = {
@@ -70,60 +65,6 @@ std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOpt
 	return { options, passed };
 }
 
-void printError(const ruota::RTError &e)
-{
-	std::string ret = "\033[" + std::to_string(ruota::RED_TEXT) + "m" + e.what() + "\n";
-
-	if (e.getToken().type != ruota::NULL_TOK) {
-		std::string lineInfoRaw = "<" + e.getToken().filename + ">:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
-		ret += "\033[" + std::to_string(ruota::CYAN_TEXT) + "m<\033[4m" + e.getToken().filename + "\033[0m\033[" + std::to_string(ruota::CYAN_TEXT) + "m>:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
-		ret += "\033[" + std::to_string(ruota::MAGENTA_TEXT) + "m" + e.getToken().line + "\n";
-
-		ret += "\033[" + std::to_string(ruota::RED_TEXT) + "m";
-		for (size_t i = 0; i < e.getToken().distance - e.getToken().valueString.size() + lineInfoRaw.size(); i++)
-			ret += " ";
-		ret += "^";
-
-		if (e.getToken().valueString.size() > 0)
-			for (size_t i = 0; i < e.getToken().valueString.size() - 1; i++)
-				ret += "~";
-
-		ret += "\033[0m";
-	}
-
-	std::cout << ret << "\n";
-	size_t j = 0;
-	while (!ruota::Ruota::stack_trace.empty()) {
-		if (j++ > 10) {
-			printc((boost::format(_STACK_TRACE_MORE_) % ruota::Ruota::stack_trace.size()).str(), ruota::MAGENTA_TEXT);
-			std::cout << "\n";
-			ruota::Ruota::stack_trace.clear();
-			break;
-		}
-		auto f = ruota::Ruota::stack_trace.back();
-		printc(" ^ ", ruota::MAGENTA_TEXT);
-		std::cout << "\033[" << ruota::BRIGHT_BLACK_TEXT << "m";
-		if (RUOTA_DEHASH(f.getParent()->getHashedKey()) != "")
-			std::cout << RUOTA_DEHASH(f.getParent()->getHashedKey()) << ".";
-		std::cout << RUOTA_DEHASH(f.getKey()) << "(\033[0m";
-		size_t i = 0;
-		for (auto &p : f.getParams()) {
-			if (i++ > 0)
-				std::cout << ", ";
-			switch (p.first) {
-				case ruota::TOK_REF:
-					std::cout << "\033[" << ruota::MAGENTA_TEXT << "mref\033[0m ";
-					break;
-				default:
-					break;
-			}
-			std::cout << RUOTA_DEHASH(p.second);
-		}
-		std::cout << "\033[" << ruota::BRIGHT_BLACK_TEXT << "m)\033[0m\n";
-		ruota::Ruota::stack_trace.pop_back();
-	}
-}
-
 void moveback(std::string &code, int c)
 {
 	for (int i = 0; i < c; i++) {
@@ -138,7 +79,7 @@ void moveback(std::string &code, int c)
 					std::cout << "\033[2D  \033[2D\033[1A> ";
 				} else {
 					std::cout << "\033[2D  \033[2D\033[1A";
-					printc("└ ", ruota::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", ruota::BRIGHT_YELLOW_TEXT);
 				}
 				if (i > 0)
 					std::cout << "\033[" << i << "C";
@@ -155,6 +96,7 @@ int main(int argc, char const *argv[])
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
 #endif
+	PRINTC("", 0);
 	auto parsed = parseOptions(argc, argv);
 	auto options = parsed.first;
 
@@ -219,10 +161,10 @@ int main(int argc, char const *argv[])
 
 					if (code.find('\n') != std::string::npos) {
 						std::cout << "\033[1A";
-						printc("│ ", ruota::BRIGHT_YELLOW_TEXT);
+						PRINTC("│ ", ruota::BRIGHT_YELLOW_TEXT);
 						std::cout << "\033[2D\033[1B";
 					}
-					printc("└ ", ruota::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", ruota::BRIGHT_YELLOW_TEXT);
 
 					code += "\n";
 				}
@@ -235,7 +177,7 @@ int main(int argc, char const *argv[])
 					flag = false;
 					code = "";
 					std::cout << "\n";
-					printError(e);
+					ruota::Ruota::printError(e);
 					std::cout << "> ";
 				}
 			}
@@ -245,20 +187,21 @@ int main(int argc, char const *argv[])
 				code = "";
 				try {
 					auto value = wrapper.runCode(std::move(comp), tree);
+					std::vector<ruota::Function> stack_trace;
 					if (value.getValueType() == ruota::ARRAY) {
 						if (value.vectorSize() != 1) {
 							int i = 0;
-							for (auto &e : value.getVector(NULL)) {
-								printc("\t(" + std::to_string(i) + ")\t", ruota::CYAN_TEXT);
-								std::cout << e.toString(NULL) << "\n";
+							for (auto &e : value.getVector(NULL, stack_trace)) {
+								PRINTC("\t(" + std::to_string(i) + ")\t", ruota::CYAN_TEXT);
+								std::cout << e.toString(NULL, stack_trace) << "\n";
 								i++;
 							}
 						} else {
-							std::cout << "\t" << value.getVector(NULL)[0].toString(NULL) << "\n";
+							std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
 						}
 					}
 				} catch (const ruota::RTError &e) {
-					printError(e);
+					ruota::Ruota::printError(e);
 				}
 			}
 		}
@@ -280,7 +223,7 @@ int main(int argc, char const *argv[])
 				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
 			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
 		} catch (const ruota::RTError &e) {
-			printError(e);
+			ruota::Ruota::printError(e);
 			return 1;
 		}
 	}

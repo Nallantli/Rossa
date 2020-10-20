@@ -7,6 +7,7 @@
 #include <memory>
 #include <sstream>
 #include <map>
+#include <unordered_map>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -49,13 +50,13 @@ namespace ruota
 
 	namespace sig
 	{
-		const size_t validity(const sig_t &, const std::vector<Symbol> &);
+		const size_t validity(const sig_t &, const std::vector<Symbol> &, std::vector<Function> &stack_trace);
 		const std::string toString(const sig_t &);
 	}
 
 	struct Token
 	{
-		std::string filename;
+		boost::filesystem::path filename;
 		std::string line;
 		size_t lineNumber;
 		size_t distance;
@@ -68,14 +69,20 @@ namespace ruota
 	{
 	private:
 		const Token token;
+		const std::vector<Function> stack_trace;
 
 	public:
-		RTError(const std::string &error, const Token &token) : std::runtime_error(error), token(token)
+		RTError(const std::string &error, const Token &token, const std::vector<Function> &stack_trace) : std::runtime_error(error), token(token), stack_trace(stack_trace)
 		{}
 
 		const Token &getToken() const
 		{
 			return token;
+		}
+
+		const std::vector<Function> &getTrace() const
+		{
+			return stack_trace;
 		}
 	};
 
@@ -87,7 +94,7 @@ namespace ruota
 
 	public:
 		Instruction(const InstructionType &, const Token &);
-		virtual const Symbol evaluate(Scope *) const = 0;
+		virtual const Symbol evaluate(Scope *, std::vector<Function> &) const = 0;
 		InstructionType getType() const;
 		virtual ~Instruction();
 	};
@@ -102,7 +109,7 @@ namespace ruota
 
 	public:
 		Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &);
-		const Symbol evaluate(const std::vector<Symbol> &, const Token *) const;
+		const Symbol evaluate(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
 		const size_t getArgSize() const;
 		const hash_ull getKey() const;
 		Scope *getParent() const;
@@ -127,13 +134,13 @@ namespace ruota
 		Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const Scope *, const std::vector<type_sll> &);
 		Scope(Scope *, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::vector<type_sll> &);
 		Scope *getParent() const;
-		const Symbol instantiate(const std::vector<Symbol> &, const Token *) const;
+		const Symbol instantiate(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
 		void clear();
-		const Symbol getThis(const Token *);
+		const Symbol getThis(const Token *, std::vector<Function> &);
 		const bool extendsObject(const type_sll &) const;
 		const ObjectType getType() const;
 		const std::shared_ptr<Instruction> getBody() const;
-		const Symbol &getVariable(const hash_ull &, const Token *) const;
+		const Symbol &getVariable(const hash_ull &, const Token *, std::vector<Function> &stack_trace) const;
 		const Symbol &createVariable(const hash_ull &, const Token *);
 		const Symbol &createVariable(const hash_ull &, const Symbol &, const Token *);
 		const hash_ull getHashedKey() const;
@@ -172,25 +179,22 @@ namespace ruota
 		const int getToken();
 		const char peekChar(const size_t &) const;
 		const char nextChar();
-		std::map<std::string, signed int> bOperators;
-		std::map<std::string, signed int> uOperators;
 
 	public:
-		Lexer(std::map<std::string, signed int>, std::map<std::string, signed int>);
-		std::vector<Token> lexString(const std::string &, const std::string &);
+		Lexer();
+		std::vector<Token> lexString(const std::string &, const boost::filesystem::path &);
 	};
 
 	class Ruota
 	{
 	private:
-		static const std::map<std::string, signed int> bOperators;
-		static const std::map<std::string, signed int> uOperators;
 		Scope main;
 
 	public:
-		static Lexer lexer;
+		static const std::map<std::string, signed int> bOperators;
+		static const std::map<std::string, signed int> uOperators;
 
-		static std::vector<Function> stack_trace;
+		static Lexer lexer;
 
 		static const hash_ull HASH_THIS;
 		static const hash_ull HASH_IDEM;
@@ -230,6 +234,7 @@ namespace ruota
 		Ruota(std::vector<std::string>);
 		std::shared_ptr<Node> compileCode(const std::string &, boost::filesystem::path) const;
 		const Symbol runCode(std::shared_ptr<Node>, bool);
+		static void printError(const RTError &);
 	};
 
 	class Value
@@ -382,24 +387,24 @@ namespace ruota
 			this->type = type;
 		}
 
-		inline const CNumber &getNumber(const Token *token) const
+		inline const CNumber &getNumber(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != NUMBER)
-				throw RTError(_NOT_NUMBER_, *token);
+				throw RTError(_NOT_NUMBER_, *token, stack_trace);
 			return d->valueNumber;
 		}
 
-		inline void *getPointer(const Token *token) const
+		inline void *getPointer(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != POINTER)
-				throw RTError(_NOT_POINTER_, *token);
+				throw RTError(_NOT_POINTER_, *token, stack_trace);
 			return d->valuePointer.get();
 		}
 
-		inline const std::map<hash_ull, Symbol> &getDictionary(const Token *token) const
+		inline const std::map<hash_ull, Symbol> &getDictionary(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != DICTIONARY)
-				throw RTError(_NOT_DICTIONARY_, *token);
+				throw RTError(_NOT_DICTIONARY_, *token, stack_trace);
 			auto iter = d->valueDictionary.begin();
 			for (; iter != d->valueDictionary.end();) {
 				if (iter->second.d->type == NIL)
@@ -410,38 +415,38 @@ namespace ruota
 			return d->valueDictionary;
 		}
 
-		inline const Symbol &indexVector(const size_t &i, const Token *token) const
+		inline const Symbol &indexVector(const size_t &i, const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (i >= d->valueVector.size())
-				throw RTError((boost::format(_INDEX_OUT_OF_BOUNDS_) % d->valueVector.size() % i).str(), *token);
+				throw RTError((boost::format(_INDEX_OUT_OF_BOUNDS_) % d->valueVector.size() % i).str(), *token, stack_trace);
 			return d->valueVector[i];
 		}
 
-		inline const std::vector<Symbol> &getVector(const Token *token) const
+		inline const std::vector<Symbol> &getVector(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != ARRAY)
-				throw RTError(_NOT_VECTOR_, *token);
+				throw RTError(_NOT_VECTOR_, *token, stack_trace);
 			return d->valueVector;
 		}
 
-		inline const std::string &getString(const Token *token) const
+		inline const std::string &getString(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != STRING)
-				throw RTError(_NOT_STRING_, *token);
+				throw RTError(_NOT_STRING_, *token, stack_trace);
 			return d->valueString;
 		}
 
-		inline const bool getBool(const Token *token) const
+		inline const bool getBool(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != BOOLEAN_D)
-				throw RTError(_NOT_BOOLEAN_, *token);
+				throw RTError(_NOT_BOOLEAN_, *token, stack_trace);
 			return d->valueBool;
 		}
 
-		inline Scope *getObject(const Token *token) const
+		inline Scope *getObject(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != OBJECT)
-				throw RTError(_NOT_OBJECT_, *token);
+				throw RTError(_NOT_OBJECT_, *token, stack_trace);
 			return d->valueObject.get();
 		}
 
@@ -457,42 +462,44 @@ namespace ruota
 			return d->type;
 		}
 
-		inline const type_sll getTypeName(const Token *token) const
+		inline const type_sll getTypeName(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != TYPE_NAME)
-				throw RTError(_NOT_TYPE_, *token);
+				throw RTError(_NOT_TYPE_, *token, stack_trace);
 			return d->valueType;
 		}
 
-		inline const std::shared_ptr<const Function> &getFunction(const std::vector<Symbol> &params, const Token *token) const
+		inline const std::shared_ptr<const Function> &getFunction(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != FUNCTION)
-				throw RTError(_NOT_FUNCTION_, *token);
+				throw RTError(_NOT_FUNCTION_, *token, stack_trace);
 
 			if (d->valueFunction.find(params.size()) == d->valueFunction.end())
-				throw RTError(_FUNCTION_ARG_SIZE_FAILURE_, *token);
+				throw RTError(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
 
 			std::vector<type_sll> ftypes;
 			for (auto &e : params)
 				ftypes.push_back(e.getAugValueType());
 
 			std::map<sig_t, std::shared_ptr<const Function>> foftype = d->valueFunction[params.size()];
-			const sig_t *key = NULL;
+			bool flag = false;
+			sig_t key;
 			size_t cur_v = 0;
 			for (auto &f2 : foftype) {
-				size_t v = sig::validity(f2.first, params);
+				size_t v = sig::validity(f2.first, params, stack_trace);
 				if (v > cur_v) {
 					cur_v = v;
-					key = &f2.first;
+					key = f2.first;
+					flag = true;
 					if (v == ftypes.size() * 2)
 						break;
 				}
 			}
 
-			if (key == NULL)
-				throw RTError(_FUNCTION_VALUE_NOT_EXIST_, *token);
+			if (!flag)
+				throw RTError(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
 
-			return foftype[*key];
+			return foftype[key];
 		}
 
 		inline const Symbol &indexDict(const hash_ull &i) const
@@ -510,12 +517,12 @@ namespace ruota
 			return d->valueVector.size();
 		}
 
-		inline const size_t dictionarySize(const Token *token) const
+		inline const size_t dictionarySize(const Token *token, std::vector<Function> &stack_trace) const
 		{
-			return getDictionary(token).size();
+			return getDictionary(token, stack_trace).size();
 		}
 
-		inline const std::string toString(const Token *token) const
+		inline const std::string toString(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			switch (d->type) {
 				case NIL:
@@ -541,7 +548,7 @@ namespace ruota
 				{
 					auto o = d->valueObject;
 					if (o->hasValue(Ruota::HASH_TO_STRING))
-						return o->getVariable(Ruota::HASH_TO_STRING, token).call({}, token).getString(token);
+						return o->getVariable(Ruota::HASH_TO_STRING, token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
 					return "<Object>";
 				}
 				case POINTER:
@@ -555,7 +562,7 @@ namespace ruota
 					for (auto &d2 : d->valueVector) {
 						if (i > 0)
 							ret += ", ";
-						ret += d2.toString(token);
+						ret += d2.toString(token, stack_trace);
 						i++;
 					}
 					return ret + "]";
@@ -564,10 +571,10 @@ namespace ruota
 				{
 					std::string ret = "{";
 					unsigned int i = 0;
-					for (auto &e : getDictionary(token)) {
+					for (auto &e : getDictionary(token, stack_trace)) {
 						if (i > 0)
 							ret += ", ";
-						ret += "\"" + RUOTA_DEHASH(e.first) + "\" : " + e.second.toString(token);
+						ret += "\"" + RUOTA_DEHASH(e.first) + "\" : " + e.second.toString(token, stack_trace);
 						i++;
 					}
 					return ret + "}";
@@ -608,12 +615,13 @@ namespace ruota
 		{
 			if (type == ID_BREAK)
 				return "<BREAK>";
-			return getTypeString(getAugValueType()) + "::" + toString(NULL);
+			std::vector<Function> stack_trace;
+			return getTypeString(getAugValueType()) + "::" + toString(NULL, stack_trace);
 		}
 
-		inline const Symbol call(const std::vector<Symbol> &params, const Token *token) const
+		inline const Symbol call(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
 		{
-			return getFunction(params, token)->evaluate(params, token);
+			return getFunction(params, token, stack_trace)->evaluate(params, token, stack_trace);
 		}
 
 		inline void addFunctions(const Symbol *b, const Token *token) const
@@ -624,12 +632,12 @@ namespace ruota
 					d->valueFunction[f.first][t.first] = t.second;
 		}
 
-		inline void set(const Symbol *b, const Token *token, const bool &isConst) const
+		inline void set(const Symbol *b, const Token *token, const bool &isConst, std::vector<Function> &stack_trace) const
 		{
 			if (b->d == d)
 				return;
 			if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Ruota::HASH_SET)) {
-				d->valueObject->getVariable(Ruota::HASH_SET, token).call({ *b }, token);
+				d->valueObject->getVariable(Ruota::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
 				return;
 			}
 			d->clearData();
@@ -662,7 +670,7 @@ namespace ruota
 					}
 					d->valueVector.resize(v.size());
 					for (size_t i = 0; i < v.size(); i++)
-						d->valueVector[i].set(&v[i], token, isConst);
+						d->valueVector[i].set(&v[i], token, isConst, stack_trace);
 					break;
 				}
 				case DICTIONARY:
@@ -676,7 +684,7 @@ namespace ruota
 						if (e.second.d->type == NIL)
 							continue;
 						auto newd = Symbol();
-						newd.set(&e.second, token, isConst);
+						newd.set(&e.second, token, isConst, stack_trace);
 						d->valueDictionary[e.first] = newd;
 					}
 					break;
@@ -689,7 +697,7 @@ namespace ruota
 			}
 		}
 
-		inline const bool equals(const Symbol *b, const Token *token) const
+		inline const bool equals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != b->d->type && d->type != OBJECT)
 				return false;
@@ -706,7 +714,7 @@ namespace ruota
 				{
 					auto o = d->valueObject;
 					if (o->hasValue(Ruota::HASH_EQUALS))
-						return o->getVariable(Ruota::HASH_EQUALS, token).call({ *b }, token).d->valueBool;
+						return o->getVariable(Ruota::HASH_EQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
 					return o == b->d->valueObject;
 				}
 				case ARRAY:
@@ -715,13 +723,13 @@ namespace ruota
 					if (d->valueVector.size() != bv.size())
 						return false;
 					for (unsigned long i = 0; i < d->valueVector.size(); i++)
-						if (!d->valueVector[i].equals(&bv[i], token))
+						if (!d->valueVector[i].equals(&bv[i], token, stack_trace))
 							return false;
 					return true;
 				}
 				case DICTIONARY:
 					for (auto &e : d->valueDictionary) {
-						if (!e.second.equals(&b->d->valueDictionary[e.first], token))
+						if (!e.second.equals(&b->d->valueDictionary[e.first], token, stack_trace))
 							return false;
 					}
 					return true;
@@ -732,43 +740,45 @@ namespace ruota
 			}
 		}
 
-		inline const bool nequals(const Symbol *b, const Token *token) const
+		inline const bool nequals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
 		{
 			switch (d->type) {
 				case OBJECT:
 				{
 					auto o = d->valueObject;
 					if (o->hasValue(Ruota::HASH_NEQUALS))
-						return o->getVariable(Ruota::HASH_NEQUALS, token).call({ *b }, token).d->valueBool;
+						return o->getVariable(Ruota::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
 				}
 				default:
-					return !this->equals(b, token);
+					return !this->equals(b, token, stack_trace);
 			}
 		}
 
-		inline const bool pureEquals(const Symbol *b, const Token *token) const
+		inline const bool pureEquals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
 		{
 			switch (d->type) {
 				case OBJECT:
 					return d->valueObject == b->d->valueObject;
 				default:
-					return this->equals(b, token);
+					return this->equals(b, token, stack_trace);
 			}
 		}
 
-		inline const bool pureNEquals(const Symbol *b, const Token *token) const
+		inline const bool pureNEquals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
 		{
-			return !this->pureEquals(b, token);
+			return !this->pureEquals(b, token, stack_trace);
 		}
 
 		inline const bool operator==(const Symbol &b) const
 		{
-			return this->equals(&b, NULL);
+			std::vector<Function> stack_trace;
+			return this->equals(&b, NULL, stack_trace);
 		}
 
 		inline const bool operator!=(const Symbol &b) const
 		{
-			return this->nequals(&b, NULL);
+			std::vector<Function> stack_trace;
+			return this->nequals(&b, NULL, stack_trace);
 		}
 
 		inline const bool operator<(const Symbol &b) const

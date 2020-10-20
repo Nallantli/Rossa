@@ -9,8 +9,6 @@ namespace ruota
 	{
 	private:
 		const std::vector<Token> tokens;
-		const std::map<std::string, signed int> bOperators;
-		const std::map<std::string, signed int> uOperators;
 		const boost::filesystem::path currentFile;
 
 		unsigned int index = 0;
@@ -56,7 +54,7 @@ namespace ruota
 		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> logErrorSN(const std::string &, const Token);
 
 	public:
-		NodeParser(const std::vector<Token> &, const std::map<std::string, signed int> &, const std::map<std::string, signed int> &, const boost::filesystem::path &);
+		NodeParser(const std::vector<Token> &, const boost::filesystem::path &);
 		std::shared_ptr<Node> parse();
 		static std::shared_ptr<Instruction> genParser(std::shared_ptr<Node>);
 	};

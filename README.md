@@ -19,7 +19,7 @@ _Current features, divergences from previous repo, and features to be implemente
 - [x] Compilation Error Tracing
 - [x] Memory Management
 - [x] Unicode Support by Default
-- [ ] Multithreading
+- [x] Multithreading
 - [ ] Private Class Members
 - [ ] Reflection
 
@@ -93,7 +93,7 @@ putln(fact(5)); # 120
 FizzBuzz:
 
 ```ruota
-for i in [1 until 100] do {
+for i in 1 .+ 100 do {
 	if i % 3 == 0 && i % 5 == 0 then {
 		putln("FizzBuzz");
 	} elif i % 3 == 0 then {
@@ -121,6 +121,22 @@ if !p.exists() then {
 io := new FileIO(p / "example.txt");
 io.write("Hello World");
 io.close();
+```
+
+Threading:
+
+```ruota
+f(x, id) => {
+	for i in 0 .. x do {
+		putln("Thread " + (id -> String) + ": " + (i -> String));
+	}
+}
+
+t1 := new Thread(() => f(10, 1));
+t2 := new Thread(() => f(10, 2));
+
+t1.join();
+t2.join();
 ```
 
 -----

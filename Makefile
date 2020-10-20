@@ -1,6 +1,8 @@
 locale=ENG
 
-CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_ -Wall
+CV=--std=c++17
+
+CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_ -Wall $(CV) -O3
 
 ifeq ($(OS),Windows_NT)
 
@@ -15,8 +17,8 @@ SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 SDL_IMAGE_PATH_WIN=C:/SDL2_image/x86_64-w64-mingw32
 SDL_FLAGS=-I"$(SDL_PATH_WIN)/include" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
 
-CFLAGS=-O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
-LFLAGS=-shared -O3 -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN) --std=gnu++17
+CFLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
+LFLAGS=-shared -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
 
 LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
 
@@ -40,8 +42,8 @@ else
 LIB_EXT=.so
 
 SDL_FLAGS=-lSDL2 -lSDL2_image
-CFLAGS=-O3 -lboost_filesystem -lboost_system --std=gnu++17 -ldl
-LFLAGS=-fPIC -shared -O3 -lboost_filesystem --std=gnu++17 -ldl
+CFLAGS=-lboost_filesystem -lboost_system -ldl
+LFLAGS=-fPIC -shared -lboost_filesystem -ldl
 
 LIBNET_FLAGS=-lboost_system
 
@@ -70,8 +72,8 @@ bin/ruota.exe: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(
 bin/ruota: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
 	$(CC) -o bin/ruota $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(CFLAGS)
 
-bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) -o bin/lib/libstd$(LIB_EXT) src/ext/libstd.cpp $(LFLAGS)
+bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp src/ruota/Ruota.cpp src/ruota/Node.cpp src/ruota/NodeParser.cpp src/ruota/Lexer.cpp src/ruota/Parser.cpp src/ruota/Scope.cpp src/ruota/Function.cpp src/ruota/Signature.cpp
+	$(CC) -o bin/lib/libstd$(LIB_EXT) src/ext/libstd.cpp src/ruota/Ruota.cpp src/ruota/Node.cpp src/ruota/NodeParser.cpp src/ruota/Lexer.cpp src/ruota/Parser.cpp src/ruota/Scope.cpp src/ruota/Function.cpp src/ruota/Signature.cpp $(LFLAGS)
 
 bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
 	$(CC) -o bin/lib/libfs$(LIB_EXT) src/ext/libfs.cpp $(LFLAGS)

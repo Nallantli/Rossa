@@ -19,7 +19,8 @@ namespace ruota
 			auto libDirCheck = boost::dll::program_location().parent_path() / "lib" / filename;
 			if (boost::filesystem::exists(libDirCheck))
 				return libDirCheck;
-			throw RTError((boost::format(_FILE_NOT_FOUND_) % filename).str(), *token);
+			std::vector<Function> stack_trace;
+			throw RTError((boost::format(_FILE_NOT_FOUND_) % filename).str(), *token, stack_trace);
 		}
 	} // namespace rdir
 
@@ -44,7 +45,8 @@ namespace ruota
 			try {
 				loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(dir::findFile(currentDir, libname, token), fname);
 			} catch (const boost::wrapexcept<boost::system::system_error> &e) {
-				throw RTError((boost::format("Error loading `%1%`: %2%") % search % e.what()).str(), *token);
+				std::vector<Function> stack_trace;
+				throw RTError((boost::format("Error loading `%1%`: %2%") % search % e.what()).str(), *token, stack_trace);
 			}
 		}
 	}

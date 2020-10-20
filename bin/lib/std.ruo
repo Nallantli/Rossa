@@ -20,6 +20,10 @@ extern _rand_nextInt in "libstd";
 extern _system_call in "libstd";
 extern _regex_match in "libstd";
 extern _regex_replace in "libstd";
+extern _clock_format in "libstd";
+extern _thread_init in "libstd";
+extern _thread_join in "libstd";
+extern _thread_detach in "libstd";
 
 # BASIC
 
@@ -32,6 +36,8 @@ size := ((ref x) => size(x));
 charn := ((ref x) => charn(x));
 
 chars := ((ref x) => chars(x));
+
+parse := ((ref x) => parse(x));
 
 # CONSOLE
 
@@ -95,6 +101,14 @@ static cons class {
 		for c in v do {
 			setDecor(c);
 		}
+	}
+
+	setForeColor(ref r : Number, ref g : Number, ref b : Number) => {
+		setDecor("38;5;" + ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
+	}
+
+	setBackColor(ref r : Number, ref g : Number, ref b : Number) => {
+		setDecor("48;5;" + ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
 	}
 
 	moveCursor(ref x : Number, ref y : Number) => {
@@ -165,6 +179,8 @@ static clock class {
 	milliseconds() => extern_call libstd._timeMS();
 
 	sleep(ref ms : Number) => extern_call libstd._sleep(ms);
+
+	format(ref s : String, ref time : Number) => extern_call libstd._clock_format(time, s);
 }
 
 # ARRAY
@@ -297,6 +313,10 @@ String::`..`(ref a, ref b : String) => {
 	return [charn(a)[0] .. charn(b)[0]];
 }
 
+String::parseDict(ref a) => {
+	return parse(a + ";")[0];
+}
+
 # MATH
 
 static math class {
@@ -341,4 +361,28 @@ static regex class {
 	match(ref s : String, ref r : String) => extern_call libstd._regex_match(r, s);
 
 	replace(ref s : String, ref r : String, ref x : String) => extern_call libstd._regex_replace(r, x, s);
+}
+
+struct Thread class {
+	var ptr;
+
+	init(ref f : Function) => {
+		ptr = (extern_call libstd._thread_init(f, []));
+	}
+
+	init(ref f : Function, ref args : Array) => {
+		ptr = (extern_call libstd._thread_init(f, args));
+	}
+
+	join() => {
+		extern_call libstd._thread_join(ptr);
+	}
+
+	detach() => {
+		extern_call libstd._thread_detach(ptr);
+	}
+
+	~() => {
+		detach();
+	}
 }

@@ -9,8 +9,6 @@ using namespace ruota;
 std::vector<boost::filesystem::path> dir::loaded = {};
 std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> lib::loaded = {};
 
-std::vector<Function> Ruota::stack_trace = {};
-
 Hash _MAIN_HASH_ = Hash();
 
 const hash_ull Ruota::HASH_INIT = RUOTA_HASH("init");
@@ -105,12 +103,12 @@ const std::map<std::string, signed int> Ruota::uOperators = {
 	{"+", -1},
 	{"!", -1} };
 
-Lexer Ruota::lexer = Lexer(bOperators, uOperators);
+Lexer Ruota::lexer = Lexer();
 
 std::shared_ptr<Node> Ruota::compileCode(const std::string &code, boost::filesystem::path currentFile) const
 {
 	auto tokens = lexer.lexString(code, currentFile.filename().string());
-	NodeParser testnp(tokens, bOperators, uOperators, currentFile);
+	NodeParser testnp(tokens, currentFile);
 	auto n = testnp.parse();
 	return n->fold();
 }
@@ -122,5 +120,63 @@ const Symbol Ruota::runCode(std::shared_ptr<Node> entry, bool tree)
 
 	auto g = NodeParser::genParser(std::move(entry));
 
-	return g->evaluate(&main);
+	std::vector<Function> stack_trace;
+	return g->evaluate(&main, stack_trace);
+}
+
+
+
+void Ruota::printError(const RTError &e)
+{
+	std::string ret = "\033[" + std::to_string(RED_TEXT) + "m" + e.what() + "\n";
+
+	if (e.getToken().type != NULL_TOK) {
+		std::string lineInfoRaw = "<" + e.getToken().filename.string() + ">:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
+		ret += "\033[" + std::to_string(CYAN_TEXT) + "m<\033[4m" + e.getToken().filename.string() + "\033[0m\033[" + std::to_string(CYAN_TEXT) + "m>:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
+		ret += "\033[" + std::to_string(MAGENTA_TEXT) + "m" + e.getToken().line + "\n";
+
+		ret += "\033[" + std::to_string(RED_TEXT) + "m";
+		for (size_t i = 0; i < e.getToken().distance - e.getToken().valueString.size() + lineInfoRaw.size(); i++)
+			ret += " ";
+		ret += "^";
+
+		if (e.getToken().valueString.size() > 0)
+			for (size_t i = 0; i < e.getToken().valueString.size() - 1; i++)
+				ret += "~";
+
+		ret += "\033[0m";
+	}
+
+	std::cout << ret << "\n";
+	size_t j = 0;
+	auto trace = e.getTrace();
+	while (!trace.empty()) {
+		if (j++ > 10) {
+			PRINTC((boost::format(_STACK_TRACE_MORE_) % trace.size()).str(), MAGENTA_TEXT);
+			std::cout << "\n";
+			trace.clear();
+			break;
+		}
+		auto f = trace.back();
+		PRINTC(" ^ ", MAGENTA_TEXT);
+		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
+		if (RUOTA_DEHASH(f.getParent()->getHashedKey()) != "")
+			std::cout << RUOTA_DEHASH(f.getParent()->getHashedKey()) << ".";
+		std::cout << RUOTA_DEHASH(f.getKey()) << "(\033[0m";
+		size_t i = 0;
+		for (auto &p : f.getParams()) {
+			if (i++ > 0)
+				std::cout << ", ";
+			switch (p.first) {
+				case TOK_REF:
+					std::cout << "\033[" << MAGENTA_TEXT << "mref\033[0m ";
+					break;
+				default:
+					break;
+			}
+			std::cout << RUOTA_DEHASH(p.second);
+		}
+		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m)\033[0m\n";
+		trace.pop_back();
+	}
 }

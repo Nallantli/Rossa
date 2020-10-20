@@ -1,9 +1,10 @@
 #pragma once
 
-#define _RUOTA_VERSION_ "v1.6.6-alpha"
-#define RUOTA_EXT_SYM(name, args, token, hash) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash)
+#define _RUOTA_VERSION_ "v1.6.7-alpha"
+#define RUOTA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define RUOTA_LIB_HEADER using namespace ruota; Hash _MAIN_HASH_ = Hash();
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
+#define PRINTC(s, color) std::cout << "\033[" << color << "m" << s << "\033[0m"
 
 #define RUOTA_DEHASH(x) _MAIN_HASH_.deHash(x)
 #define RUOTA_HASH(x) _MAIN_HASH_.hashString(x)
@@ -137,7 +138,8 @@ namespace ruota
 		TOK_CHARS = -53,
 		TOK_LAMBDA = -54,
 		TOK_UNTILT = -55,
-		TOK_UNTILF = -56
+		TOK_UNTILF = -56,
+		TOK_PARSE = -57
 	};
 
 	enum SymbolType

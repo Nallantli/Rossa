@@ -110,7 +110,8 @@ std::shared_ptr<Node> VectorNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	std::vector<std::shared_ptr<Node>> nargs;
@@ -299,7 +300,8 @@ std::shared_ptr<Node> DefineNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<DefineNode>(key, ftype, params, body->fold(), token);
@@ -371,6 +373,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 	for (auto &e : this->body)
 		is.push_back(e->genParser());
 	auto bodyI = std::make_shared<ScopeI>(is, token);
+	std::vector<Function> stack_trace;
 
 	ObjectType ot;
 	switch (type) {
@@ -384,7 +387,7 @@ std::shared_ptr<Instruction> ClassNode::genParser() const
 			ot = VIRTUAL_O;
 			break;
 		default:
-			throw RTError(_INVALID_OBJECT_TYPE_, token);
+			throw RTError(_INVALID_OBJECT_TYPE_, token, stack_trace);
 	}
 
 	if (extends == nullptr)
@@ -604,6 +607,8 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 			return std::make_shared<LengthI>(arg->genParser(), token);
 		case TOK_ALLOC:
 			return std::make_shared<AllocI>(arg->genParser(), token);
+		case TOK_PARSE:
+			return std::make_shared<ParseI>(arg->genParser(), token);
 		case TOK_CHARN:
 			return std::make_shared<CharNI>(arg->genParser(), token);
 		case TOK_CHARS:
@@ -612,7 +617,8 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 			break;
 	}
 
-	throw RTError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token);
+	std::vector<Function> stack_trace;
+	throw RTError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token, stack_trace);
 	return nullptr;
 }
 
@@ -643,7 +649,8 @@ std::shared_ptr<Node> CallBuiltNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<CallBuiltNode>(t, arg->fold(), token);
@@ -746,6 +753,8 @@ BinOpNode::BinOpNode(
 
 std::shared_ptr<Instruction> BinOpNode::genParser() const
 {
+	std::vector<Function> stack_trace;
+
 	if (op == "+")
 		return std::make_shared<AddI>(a->genParser(), b->genParser(), token);
 	if (op == "-")
@@ -817,7 +826,7 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
 	if (op == ":=") {
 		if (a->getType() != ID_NODE && a->getType() != BID_NODE)
-			throw RTError("Only variables may be declared with `:=`", token);
+			throw RTError("Only variables may be declared with `:=`", token, stack_trace);
 		hash_ull t;
 		if (a->getType() == ID_NODE)
 			t = ((IDNode *) a.get())->getKey();
@@ -829,7 +838,7 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "[]")
 		return std::make_shared<IndexI>(a->genParser(), b->genParser(), token);
 
-	throw RTError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token);
+	throw RTError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token, stack_trace);
 }
 
 const std::string &BinOpNode::getOp() const
@@ -862,7 +871,8 @@ bool BinOpNode::isConst() const
 	if (a->isConst() && b->isConst()) {
 		try {
 			Scope temp;
-			genParser()->evaluate(&temp);
+			std::vector<Function> stack_trace;
+			genParser()->evaluate(&temp, stack_trace);
 			return true;
 		} catch (const RTError &e) {
 			return false;
@@ -893,9 +903,10 @@ std::shared_ptr<Node> BinOpNode::fold() const
 {
 	if (isConst()) {
 		Scope scope;
-		auto evalA = a->genParser()->evaluate(&scope);
-		auto evalB = b->genParser()->evaluate(&scope);
-		return std::make_unique<ContainerNode>(genParser()->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		auto evalA = a->genParser()->evaluate(&scope, stack_trace);
+		auto evalB = b->genParser()->evaluate(&scope, stack_trace);
+		return std::make_unique<ContainerNode>(genParser()->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<BinOpNode>(op, a->fold(), b->fold(), token);
@@ -921,7 +932,8 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "!")
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 
-	throw RTError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token);
+	std::vector<Function> stack_trace;
+	throw RTError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token, stack_trace);
 	return nullptr;
 }
 
@@ -952,7 +964,8 @@ std::shared_ptr<Node> UnOpNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<UnOpNode>(op, a->fold(), token);
@@ -999,7 +1012,8 @@ std::shared_ptr<Node> ParenNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<ParenNode>(a->fold(), token);
@@ -1048,7 +1062,8 @@ std::shared_ptr<Node> CastToNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<CastToNode>(convert, a->fold(), token);
@@ -1107,7 +1122,8 @@ std::shared_ptr<Node> InsNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	return std::make_unique<InsNode>(callee->fold(), arg->fold(), token);
@@ -1172,7 +1188,8 @@ std::shared_ptr<Node> IfElseNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	auto ret = std::make_unique<IfElseNode>(ifs->fold(), body->fold(), token);
@@ -1240,7 +1257,8 @@ std::shared_ptr<Node> WhileNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	std::vector<std::shared_ptr<Node>> nbody;
@@ -1310,7 +1328,8 @@ std::shared_ptr<Node> ForNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	std::vector<std::shared_ptr<Node>> nbody;
@@ -1352,7 +1371,8 @@ bool UntilNode::isConst() const
 	if (flag) {
 		try {
 			Scope temp;
-			genParser()->evaluate(&temp);
+			std::vector<Function> stack_trace;
+			genParser()->evaluate(&temp, stack_trace);
 			return true;
 		} catch (const RTError &e) {
 			return false;
@@ -1386,7 +1406,8 @@ std::shared_ptr<Node> UntilNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	if (step == nullptr)
@@ -1444,7 +1465,8 @@ std::shared_ptr<Node> MapNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> nargs;
@@ -1468,10 +1490,11 @@ std::shared_ptr<Instruction> SwitchNode::genParser() const
 {
 	std::map<Symbol, std::shared_ptr<Instruction>> cases_solved;
 	std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> cases_unsolved;
+	std::vector<Function> stack_trace;
 	for (auto &e : this->cases) {
 		if (e.first->isConst()) {
 			Scope temp;
-			auto key = e.first->genParser()->evaluate(&temp);
+			auto key = e.first->genParser()->evaluate(&temp, stack_trace);
 			cases_solved[key] = e.second->genParser();
 		} else {
 			cases_unsolved[e.first->genParser()] = e.second->genParser();
@@ -1521,7 +1544,8 @@ std::shared_ptr<Node> SwitchNode::fold() const
 	if (isConst()) {
 		auto i = genParser();
 		Scope scope;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope), token);
+		std::vector<Function> stack_trace;
+		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
 	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> ncases;

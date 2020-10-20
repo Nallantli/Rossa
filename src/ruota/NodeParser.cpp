@@ -6,11 +6,7 @@ using namespace ruota;
 
 NodeParser::NodeParser(
 	const std::vector<Token> &tokens,
-	const std::map<std::string, signed int> &bOperators,
-	const std::map<std::string, signed int> &uOperators,
 	const boost::filesystem::path &currentFile) : tokens(tokens),
-	bOperators(bOperators),
-	uOperators(uOperators),
 	currentFile(currentFile)
 {}
 
@@ -147,6 +143,8 @@ std::shared_ptr<Node> NodeParser::parseCallNode(std::shared_ptr<Node> a)
 				ret = std::make_shared<CallBuiltNode>(TOK_SIZE, a_a, marker);
 			if (key == "alloc")
 				ret = std::make_shared<CallBuiltNode>(TOK_ALLOC, a_a, marker);
+			if (key == "parse")
+				ret = std::make_shared<CallBuiltNode>(TOK_PARSE, a_a, marker);
 			if (key == "charn")
 				ret = std::make_shared<CallBuiltNode>(TOK_CHARN, a_a, marker);
 			if (key == "chars")
@@ -315,7 +313,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 	nextToken();
 
 	ValueType ftype = NIL;
-	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS) {
+	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE) {
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
 				ftype = BOOLEAN_D;
@@ -353,7 +351,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 		nextToken();
 	}
 
-	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS))
+	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = RUOTA_HASH(currentToken.valueString);
 	nextToken();
@@ -544,9 +542,9 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 	std::shared_ptr<Node> current = a;
 	int pastPrec = 999;
 
-	while (currentToken.type != NULL_TOK && bOperators.find(currentToken.valueString) != bOperators.end()) {
+	while (currentToken.type != NULL_TOK && Ruota::bOperators.find(currentToken.valueString) != Ruota::bOperators.end()) {
 		std::string opStr = currentToken.valueString;
-		int prec = bOperators.at(opStr);
+		int prec = Ruota::bOperators.at(opStr);
 
 		auto marker = currentToken;
 
@@ -568,7 +566,7 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 					auto oldOp = bon->getOp();
 					auto bon_b = bon->getB();
 
-					if (!(std::abs(bOperators.at(oldOp) < std::abs(prec) || (std::abs(bOperators.at(oldOp)) == std::abs(prec) && bOperators.at(oldOp) < 0)))) {
+					if (!(std::abs(Ruota::bOperators.at(oldOp) < std::abs(prec) || (std::abs(Ruota::bOperators.at(oldOp)) == std::abs(prec) && Ruota::bOperators.at(oldOp) < 0)))) {
 						reinterpret_cast<BinOpNode *>(parent.get())->setB(std::make_shared<BinOpNode>(
 							opStr,
 							n,
@@ -589,7 +587,7 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 					parent = n;
 					n = bon_b;
 				}
-				pastPrec = bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
+				pastPrec = Ruota::bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
 			}
 		} else {
 			return logErrorN(_EXPECTED_RH_, currentToken);
@@ -679,7 +677,7 @@ std::shared_ptr<Node> NodeParser::parseUnOpNode()
 	std::string opStr = currentToken.valueString;
 	auto marker = currentToken;
 	nextToken();
-	if (uOperators.find(opStr) != uOperators.end()) {
+	if (Ruota::uOperators.find(opStr) != Ruota::uOperators.end()) {
 		if (auto a = parseEquNode())
 			return std::make_shared<UnOpNode>(opStr, a, marker);
 		return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
@@ -884,6 +882,7 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 		case TOK_ALLOC:
 		case TOK_CHARN:
 		case TOK_CHARS:
+		case TOK_PARSE:
 			return parseCallBuiltNode();
 		case TOK_NEW:
 			return parseNewNode();
@@ -1239,7 +1238,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 	}
 
 	auto tokens = Ruota::lexer.lexString(content, path.filename().string());
-	NodeParser np(tokens, this->bOperators, this->uOperators, path);
+	NodeParser np(tokens, path);
 	auto n = np.parse();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != ';')
@@ -1361,10 +1360,11 @@ std::shared_ptr<Instruction> NodeParser::genParser(std::shared_ptr<Node> n)
 
 std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token t)
 {
+	std::vector<Function> stack_trace;
 	if (t.type == NULL_TOK)
-		throw RTError(s, tokens.at(index - 1));
+		throw RTError(s, tokens.at(index - 1), stack_trace);
 	else
-		throw RTError(s, t);
+		throw RTError(s, t, stack_trace);
 	return nullptr;
 }
 

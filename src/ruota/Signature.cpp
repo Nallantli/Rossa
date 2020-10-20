@@ -2,7 +2,7 @@
 
 using namespace ruota;
 
-const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check)
+const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check, std::vector<Function> &stack_trace)
 {
 	if (values.size() == 0)
 		return 1;
@@ -15,7 +15,7 @@ const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check
 		else if (values[i] == vt)
 			v += 3;
 		else if (check[i].getValueType() == OBJECT) {
-			if (check[i].getObject(NULL)->extendsObject(values[i]))
+			if (check[i].getObject(NULL, stack_trace)->extendsObject(values[i]))
 				v += 2;
 			else
 				return 0;

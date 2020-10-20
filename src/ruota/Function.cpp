@@ -5,9 +5,9 @@ using namespace ruota;
 Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body) : key(key), parent(parent), params(params), body(body)
 {}
 
-const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token) const
+const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token, std::vector<Function> &stack_trace) const
 {
-	Ruota::stack_trace.push_back(*this);
+	stack_trace.push_back(*this);
 
 	Scope newScope(parent, 0);
 
@@ -19,15 +19,13 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 			default:
 			{
 				auto temp = newScope.createVariable(params[i].second, token);
-				temp.set(&paramValues[i], token, false);
+				temp.set(&paramValues[i], token, false, stack_trace);
 				break;
 			}
 		}
 	}
 
-	auto temp = body->evaluate(&newScope);
-
-	Ruota::stack_trace.pop_back();
+	auto temp = body->evaluate(&newScope, stack_trace);
 
 	if (temp.getSymbolType() == ID_REFER) {
 		temp.setSymbolType(ID_CASUAL);
@@ -35,7 +33,10 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 	}
 
 	auto ret = Symbol();
-	ret.set(&temp, token, false);
+	ret.set(&temp, token, false, stack_trace);
+
+	stack_trace.pop_back();
+
 	return ret;
 }
 

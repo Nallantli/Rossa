@@ -24,27 +24,27 @@ namespace libsdl
 		SDL_Texture *image = NULL;
 
 	public:
-		Image(const std::string &path, const Token *token, const short &r, const short &g, const short &b)
+		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace, const short &r, const short &g, const short &b)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token, stack_trace);
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
-		Image(const std::string &path, const Token *token)
+		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Texture file `%1%` loading error: %2%") % path % IMG_GetError()).str(), *token, stack_trace);
 		}
 
-		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token)
+		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace)
 		{
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw RTError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token);
+					throw RTError((boost::format("Cannot create renderable image: ") % SDL_GetError()).str(), *token, stack_trace);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
 			}
@@ -69,7 +69,7 @@ namespace libsdl
 		Shape(const short &r, const short &b, const short &g, const short &a) : r(r), g(g), b(b), a(a), id(id_count++)
 		{}
 
-		virtual void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) = 0;
+		virtual void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) = 0;
 
 		void setColor(const short &r, const short &g, const short &b, const short &a)
 		{
@@ -168,13 +168,13 @@ namespace libsdl
 		Rectangle(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
 		{
 			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token, stack_trace);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
-				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token, stack_trace);
 		}
 	};
 
@@ -183,12 +183,12 @@ namespace libsdl
 		Line(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token, stack_trace);
 			if (SDL_RenderDrawLine(renderer, x, y, x + width, y + height) < 0)
-				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token, stack_trace);
 		}
 	};
 
@@ -197,12 +197,12 @@ namespace libsdl
 		Point(const short &r, const short &g, const short &b, const short &a) : Shape(r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error setting shape color: %1%") % SDL_GetError()).str(), *token, stack_trace);
 			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
-				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Error drawing shape: %1%") % SDL_GetError()).str(), *token, stack_trace);
 		}
 	};
 
@@ -218,9 +218,9 @@ namespace libsdl
 			this->image = image;
 		}
 
-		void draw(SDL_Renderer *renderer, const Token *token, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
 		{
-			auto img = COERCE_PTR(image.getPointer(token), Image)->getImage(renderer, token);
+			auto img = COERCE_PTR(image.getPointer(token, stack_trace), Image)->getImage(renderer, token, stack_trace);
 			SDL_SetTextureColorMod(img, r, g, b);
 			SDL_Rect temp = { x, y, width, height };
 			SDL_RenderCopyEx(renderer, img, clip, &temp, angle, center, SDL_FLIP_NONE);
@@ -233,11 +233,11 @@ namespace libsdl
 		SDL_Renderer *renderer = NULL;
 		std::vector<std::pair<Symbol, std::pair<int, int>>> shapes;
 
-		Renderer(SDL_Window *window, const Token *token)
+		Renderer(SDL_Window *window, const Token *token, std::vector<Function> &stack_trace)
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
-				throw RTError((boost::format("Failure to initialize renderer: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize renderer: %1%") % SDL_GetError()).str(), *token, stack_trace);
 		}
 
 		void addShape(const Symbol &shape, const int &x, const int &y)
@@ -250,12 +250,12 @@ namespace libsdl
 			shapes.clear();
 		}
 
-		void draw(const Token *token)
+		void draw(const Token *token, std::vector<Function> &stack_trace)
 		{
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 			SDL_RenderClear(renderer);
 			for (auto &s : shapes)
-				COERCE_PTR(s.first.getPointer(token), Shape)->draw(renderer, token, s.second.first, s.second.second);
+				COERCE_PTR(s.first.getPointer(token, stack_trace), Shape)->draw(renderer, token, stack_trace, s.second.first, s.second.second);
 			SDL_RenderPresent(renderer);
 		}
 
@@ -270,18 +270,18 @@ namespace libsdl
 		Uint32 windowID;
 		SDL_Window *window = NULL;
 
-		Window(const std::string &title, const int &width, const int &height, const Token *token)
+		Window(const std::string &title, const int &width, const int &height, const Token *token, std::vector<Function> &stack_trace)
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
-				throw RTError((boost::format("Failure to initialize window: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize window: %1%") % SDL_GetError()).str(), *token, stack_trace);
 
 			this->windowID = SDL_GetWindowID(window);
 		}
 
-		std::shared_ptr<Renderer> getRenderer(const Token *token)
+		std::shared_ptr<Renderer> getRenderer(const Token *token, std::vector<Function> &stack_trace)
 		{
-			auto g = std::make_shared<Renderer>(window, token);
+			auto g = std::make_shared<Renderer>(window, token, stack_trace);
 			return g;
 		}
 
@@ -292,24 +292,24 @@ namespace libsdl
 		}
 	};
 
-	RUOTA_EXT_SYM(_window_init, args, token, hash)
+	RUOTA_EXT_SYM(_window_init, args, token, hash, stack_trace)
 	{
 		if (!SDL_INITIALIZED) {
 			SDL_INITIALIZED = true;
 			if (SDL_Init(SDL_INIT_VIDEO) < 0)
-				throw RTError((boost::format("Failure to initialize SDL: %1%") % SDL_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize SDL: %1%") % SDL_GetError()).str(), *token, stack_trace);
 
 			int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 			if (!(IMG_Init(imgFlags) & imgFlags))
-				throw RTError((boost::format("Failure to initialize SDL_image: %1%") % IMG_GetError()).str(), *token);
+				throw RTError((boost::format("Failure to initialize SDL_image: %1%") % IMG_GetError()).str(), *token, stack_trace);
 		}
 
-		auto w = std::make_shared<Window>(args[0].getString(token), args[1].getNumber(token).getLong(), args[2].getNumber(token).getLong(), token);
+		auto w = std::make_shared<Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
 		std::vector<Symbol> v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(CNumber::Long(w->windowID)) };
 		return Symbol(v);
 	}
 
-	RUOTA_EXT_SYM(_event_poll, args, token, hash)
+	RUOTA_EXT_SYM(_event_poll, args, token, hash, stack_trace)
 	{
 		SDL_Event e;
 		std::map<hash_ull, Symbol> data;
@@ -496,81 +496,81 @@ namespace libsdl
 		return Symbol(data);
 	}
 
-	RUOTA_EXT_SYM(_window_register, args, token, hash)
+	RUOTA_EXT_SYM(_window_register, args, token, hash, stack_trace)
 	{
-		registered[args[0].getNumber(token).getLong()] = args[1];
+		registered[args[0].getNumber(token, stack_trace).getLong()] = args[1];
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_window_getRenderer, args, token, hash)
+	RUOTA_EXT_SYM(_window_getRenderer, args, token, hash, stack_trace)
 	{
 		auto w = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Window);
 
-		return Symbol(static_cast<std::shared_ptr<void>>(w->getRenderer(token)));
+		return Symbol(static_cast<std::shared_ptr<void>>(w->getRenderer(token, stack_trace)));
 	}
 
-	RUOTA_EXT_SYM(_renderer_draw, args, token, hash)
+	RUOTA_EXT_SYM(_renderer_draw, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Renderer);
 
-		int x = args[2].getNumber(token).getLong();
-		int y = args[3].getNumber(token).getLong();
+		int x = args[2].getNumber(token, stack_trace).getLong();
+		int y = args[3].getNumber(token, stack_trace).getLong();
 
 		g->addShape(args[1], x, y);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_shape_setColor, args, token, hash)
+	RUOTA_EXT_SYM(_shape_setColor, args, token, hash, stack_trace)
 	{
 		auto shape = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Shape);
 
-		short r = args[1].getNumber(token).getLong();
-		short g = args[2].getNumber(token).getLong();
-		short b = args[3].getNumber(token).getLong();
-		short a = args[4].getNumber(token).getLong();
+		short r = args[1].getNumber(token, stack_trace).getLong();
+		short g = args[2].getNumber(token, stack_trace).getLong();
+		short b = args[3].getNumber(token, stack_trace).getLong();
+		short a = args[4].getNumber(token, stack_trace).getLong();
 
 		shape->setColor(r, g, b, a);
 
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setAngle, args, token, hash)
+	RUOTA_EXT_SYM(_rotatable_setAngle, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Rotatable);
 
-		int angle = args[1].getNumber(token).getDouble();
+		int angle = args[1].getNumber(token, stack_trace).getDouble();
 
 		rot->setAngle(angle);
 
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setCenter, args, token, hash)
+	RUOTA_EXT_SYM(_rotatable_setCenter, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Rotatable);
 
-		int x = args[1].getNumber(token).getLong();
-		int y = args[2].getNumber(token).getLong();
+		int x = args[1].getNumber(token, stack_trace).getLong();
+		int y = args[2].getNumber(token, stack_trace).getLong();
 
 		rot->setCenter(x, y);
 
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_deCenter, args, token, hash)
+	RUOTA_EXT_SYM(_rotatable_deCenter, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Rotatable);
 
 		rot->deCenter();
@@ -578,26 +578,26 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setClip, args, token, hash)
+	RUOTA_EXT_SYM(_rotatable_setClip, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Rotatable);
 
-		int x = args[1].getNumber(token).getLong();
-		int y = args[2].getNumber(token).getLong();
-		int width = args[3].getNumber(token).getLong();
-		int height = args[4].getNumber(token).getLong();
+		int x = args[1].getNumber(token, stack_trace).getLong();
+		int y = args[2].getNumber(token, stack_trace).getLong();
+		int width = args[3].getNumber(token, stack_trace).getLong();
+		int height = args[4].getNumber(token, stack_trace).getLong();
 
 		rot->setClip(x, y, width, height);
 
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_deClip, args, token, hash)
+	RUOTA_EXT_SYM(_rotatable_deClip, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Rotatable);
 
 		rot->deClip();
@@ -605,153 +605,153 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rect_init, args, token, hash)
+	RUOTA_EXT_SYM(_rect_init, args, token, hash, stack_trace)
 	{
-		int width = args[0].getNumber(token).getLong();
-		int height = args[1].getNumber(token).getLong();
+		int width = args[0].getNumber(token, stack_trace).getLong();
+		int height = args[1].getNumber(token, stack_trace).getLong();
 
-		short r = args[2].getNumber(token).getLong();
-		short g = args[3].getNumber(token).getLong();
-		short b = args[4].getNumber(token).getLong();
-		short a = args[5].getNumber(token).getLong();
+		short r = args[2].getNumber(token, stack_trace).getLong();
+		short g = args[3].getNumber(token, stack_trace).getLong();
+		short b = args[4].getNumber(token, stack_trace).getLong();
+		short a = args[5].getNumber(token, stack_trace).getLong();
 
 		auto rect = std::make_shared<Rectangle>(width, height, r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(rect));
 	}
 
-	RUOTA_EXT_SYM(_sizable_setSize, args, token, hash)
+	RUOTA_EXT_SYM(_sizable_setSize, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Sizable);
 
-		int width = args[1].getNumber(token).getLong();
-		int height = args[2].getNumber(token).getLong();
+		int width = args[1].getNumber(token, stack_trace).getLong();
+		int height = args[2].getNumber(token, stack_trace).getLong();
 
 		sizable->setSize(width, height);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_sizable_setWidth, args, token, hash)
+	RUOTA_EXT_SYM(_sizable_setWidth, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Sizable);
 
-		int width = args[1].getNumber(token).getLong();
+		int width = args[1].getNumber(token, stack_trace).getLong();
 
 		sizable->setWidth(width);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_sizable_setHeight, args, token, hash)
+	RUOTA_EXT_SYM(_sizable_setHeight, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Sizable);
 
-		int height = args[1].getNumber(token).getLong();
+		int height = args[1].getNumber(token, stack_trace).getLong();
 
 		sizable->setHeight(height);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_line_init, args, token, hash)
+	RUOTA_EXT_SYM(_line_init, args, token, hash, stack_trace)
 	{
-		int x2 = args[0].getNumber(token).getLong();
-		int y2 = args[1].getNumber(token).getLong();
+		int x2 = args[0].getNumber(token, stack_trace).getLong();
+		int y2 = args[1].getNumber(token, stack_trace).getLong();
 
-		short r = args[2].getNumber(token).getLong();
-		short g = args[3].getNumber(token).getLong();
-		short b = args[4].getNumber(token).getLong();
-		short a = args[5].getNumber(token).getLong();
+		short r = args[2].getNumber(token, stack_trace).getLong();
+		short g = args[3].getNumber(token, stack_trace).getLong();
+		short b = args[4].getNumber(token, stack_trace).getLong();
+		short a = args[5].getNumber(token, stack_trace).getLong();
 
 		auto line = std::make_shared<Line>(x2, y2, r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(line));
 	}
 
-	RUOTA_EXT_SYM(_point_init, args, token, hash)
+	RUOTA_EXT_SYM(_point_init, args, token, hash, stack_trace)
 	{
-		short r = args[0].getNumber(token).getLong();
-		short g = args[1].getNumber(token).getLong();
-		short b = args[2].getNumber(token).getLong();
-		short a = args[3].getNumber(token).getLong();
+		short r = args[0].getNumber(token, stack_trace).getLong();
+		short g = args[1].getNumber(token, stack_trace).getLong();
+		short b = args[2].getNumber(token, stack_trace).getLong();
+		short a = args[3].getNumber(token, stack_trace).getLong();
 
 		auto point = std::make_shared<Point>(r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(point));
 	}
 
-	RUOTA_EXT_SYM(_image_init_nokey, args, token, hash)
+	RUOTA_EXT_SYM(_image_init_nokey, args, token, hash, stack_trace)
 	{
-		std::string path = args[0].getString(token);
+		std::string path = args[0].getString(token, stack_trace);
 
-		auto image = std::make_shared<Image>(path, token);
+		auto image = std::make_shared<Image>(path, token, stack_trace);
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_image_init_key, args, token, hash)
+	RUOTA_EXT_SYM(_image_init_key, args, token, hash, stack_trace)
 	{
-		std::string path = args[0].getString(token);
-		short r = args[1].getNumber(token).getLong();
-		short g = args[2].getNumber(token).getLong();
-		short b = args[3].getNumber(token).getLong();
+		std::string path = args[0].getString(token, stack_trace);
+		short r = args[1].getNumber(token, stack_trace).getLong();
+		short g = args[2].getNumber(token, stack_trace).getLong();
+		short b = args[3].getNumber(token, stack_trace).getLong();
 
-		auto image = std::make_shared<Image>(path, token, r, g, b);
+		auto image = std::make_shared<Image>(path, token, stack_trace, r, g, b);
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_texture_init, args, token, hash)
+	RUOTA_EXT_SYM(_texture_init, args, token, hash, stack_trace)
 	{
 		auto image = args[0];
 
-		int width = args[1].getNumber(token).getLong();
-		int height = args[2].getNumber(token).getLong();
+		int width = args[1].getNumber(token, stack_trace).getLong();
+		int height = args[2].getNumber(token, stack_trace).getLong();
 
-		short r = args[3].getNumber(token).getLong();
-		short g = args[4].getNumber(token).getLong();
-		short b = args[5].getNumber(token).getLong();
+		short r = args[3].getNumber(token, stack_trace).getLong();
+		short g = args[4].getNumber(token, stack_trace).getLong();
+		short b = args[5].getNumber(token, stack_trace).getLong();
 
 		auto texture = std::make_shared<Texture>(image, width, height, r, g, b);
 		return Symbol(static_cast<std::shared_ptr<void>>(texture));
 	}
 
-	RUOTA_EXT_SYM(_texture_setImage, args, token, hash)
+	RUOTA_EXT_SYM(_texture_setImage, args, token, hash, stack_trace)
 	{
 		auto texture = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Texture);
 
 		texture->setImage(args[1]);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_update, args, token, hash)
+	RUOTA_EXT_SYM(_renderer_update, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Renderer);
 
-		g->draw(token);
+		g->draw(token, stack_trace);
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_clear, args, token, hash)
+	RUOTA_EXT_SYM(_renderer_clear, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Renderer);
 
 		g->clearAll();
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_flush, args, token, hash)
+	RUOTA_EXT_SYM(_renderer_flush, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
-			args[0].getPointer(token),
+			args[0].getPointer(token, stack_trace),
 			Renderer);
 
-		g->draw(token);
+		g->draw(token, stack_trace);
 		g->clearAll();
 		return Symbol();
 	}

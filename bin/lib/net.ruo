@@ -6,8 +6,16 @@ extern _socket_read_until in "libnet";
 extern _socket_close in "libnet";
 extern _server_init in "libnet";
 extern _server_accept in "libnet";
+extern _tcp_stream_init in "libnet";
+extern _tcp_stream_request in "libnet";
+extern _tcp_stream_close in "libnet";
+extern _encodeURI in "libnet";
+extern _decodeURI in "libnet";
 
 static net class {
+	encodeURI(ref s : String) => extern_call libnet._encodeURI(s);
+	decodeURI(ref s : String) => extern_call libnet._decodeURI(s);
+
 	struct Service class {
 		var ptr;
 
@@ -80,6 +88,37 @@ static net class {
 
 		accept() => {
 			return new Socket(extern_call libnet._server_accept(ptr, service.ptr), service);
+		}
+	}
+
+	struct Stream class {
+		var ptr;
+
+		init(ref address : String, ref port : Number) => {
+			ptr = (extern_call libnet._tcp_stream_init(address, port, __DEFAULT_NET_SERVICE__.ptr));
+		}
+
+		init(ref address : String, ref port : Number, ref service : @net.Service) => {
+			ptr = (extern_call libnet._tcp_stream_init(address, port, service.ptr));
+		}
+
+		request(ref target : String, ref data : Dictionary, ref version : Number) => {
+			return (extern_call libnet._tcp_stream_request(target, version, data, ptr));
+		}
+
+		request(ref target : String, ref data : Dictionary) => {
+			return request(target, data, 11);
+		}
+
+		close() => {
+			if ptr != nil then {
+				extern_call libnet._tcp_stream_close(ptr);
+				ptr = nil;
+			}
+		}
+
+		~() => {
+			close();
 		}
 	}
 }

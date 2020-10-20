@@ -43,7 +43,7 @@ namespace ruota
 
 	public:
 		ContainerI(const Symbol &d, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class DefineI : public Instruction
@@ -56,7 +56,7 @@ namespace ruota
 
 	public:
 		DefineI(const hash_ull &, const sig_t &, std::vector<std::pair<LexerTokenType, hash_ull>>, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class SequenceI : public Instruction
@@ -66,7 +66,7 @@ namespace ruota
 
 	public:
 		SequenceI(std::vector<std::shared_ptr<Instruction>>, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class IfElseI : public Instruction
@@ -78,7 +78,7 @@ namespace ruota
 
 	public:
 		IfElseI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class WhileI : public Instruction
@@ -89,7 +89,7 @@ namespace ruota
 
 	public:
 		WhileI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ForI : public Instruction
@@ -101,14 +101,14 @@ namespace ruota
 
 	public:
 		ForI(const hash_ull &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class VariableI : public CastingI
 	{
 	public:
 		VariableI(const hash_ull &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class DeclareI : public CastingI
@@ -120,161 +120,161 @@ namespace ruota
 
 	public:
 		DeclareI(const hash_ull &, const type_sll &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class IndexI : public BinaryI
 	{
 	public:
 		IndexI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class InnerI : public BinaryI
 	{
 	public:
 		InnerI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class CallI : public BinaryI
 	{
 	public:
 		CallI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class AddI : public BinaryI
 	{
 	public:
 		AddI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class SubI : public BinaryI
 	{
 	public:
 		SubI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class MulI : public BinaryI
 	{
 	public:
 		MulI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class DivI : public BinaryI
 	{
 	public:
 		DivI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ModI : public BinaryI
 	{
 	public:
 		ModI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class PowI : public BinaryI
 	{
 	public:
 		PowI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class LessI : public BinaryI
 	{
 	public:
 		LessI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class MoreI : public BinaryI
 	{
 	public:
 		MoreI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ELessI : public BinaryI
 	{
 	public:
 		ELessI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class EMoreI : public BinaryI
 	{
 	public:
 		EMoreI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class EqualsI : public BinaryI
 	{
 	public:
 		EqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class NEqualsI : public BinaryI
 	{
 	public:
 		NEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class AndI : public BinaryI
 	{
 	public:
 		AndI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class OrI : public BinaryI
 	{
 	public:
 		OrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class BOrI : public BinaryI
 	{
 	public:
 		BOrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class BAndI : public BinaryI
 	{
 	public:
 		BAndI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class BXOrI : public BinaryI
 	{
 	public:
 		BXOrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class BShiftLeftI : public BinaryI
 	{
 	public:
 		BShiftLeftI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class BShiftRightI : public BinaryI
 	{
 	public:
 		BShiftRightI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class SetI : public BinaryI
@@ -284,14 +284,14 @@ namespace ruota
 
 	public:
 		SetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ReturnI : public UnaryI
 	{
 	public:
 		ReturnI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ExternI : public UnaryI
@@ -302,21 +302,21 @@ namespace ruota
 
 	public:
 		ExternI(const std::string &, const std::shared_ptr<Instruction> &a, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class LengthI : public UnaryI
 	{
 	public:
 		LengthI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class SizeI : public UnaryI
 	{
 	public:
 		SizeI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ClassI : public Instruction
@@ -329,14 +329,14 @@ namespace ruota
 
 	public:
 		ClassI(const hash_ull &, const ObjectType &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class NewI : public BinaryI
 	{
 	public:
 		NewI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class CastToI : public UnaryI
@@ -346,14 +346,14 @@ namespace ruota
 
 	public:
 		CastToI(const std::shared_ptr<Instruction> &, const ValueType &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class AllocI : public UnaryI
 	{
 	public:
 		AllocI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class UntilI : public BinaryI
@@ -364,7 +364,7 @@ namespace ruota
 
 	public:
 		UntilI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ScopeI : public Instruction
@@ -374,7 +374,7 @@ namespace ruota
 
 	public:
 		ScopeI(const std::vector<std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class MapI : public Instruction
@@ -384,14 +384,14 @@ namespace ruota
 
 	public:
 		MapI(const std::map<hash_ull, std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ReferI : public UnaryI
 	{
 	public:
 		ReferI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class SwitchI : public Instruction
@@ -404,7 +404,7 @@ namespace ruota
 
 	public:
 		SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, std::shared_ptr<Instruction>> &, const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class TryCatchI : public BinaryI
@@ -414,42 +414,42 @@ namespace ruota
 
 	public:
 		TryCatchI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const hash_ull &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class ThrowI : public UnaryI
 	{
 	public:
 		ThrowI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class PureEqualsI : public BinaryI
 	{
 	public:
 		PureEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class PureNEqualsI : public BinaryI
 	{
 	public:
 		PureNEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class CharNI : public UnaryI
 	{
 	public:
 		CharNI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class CharSI : public UnaryI
 	{
 	public:
 		CharSI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
 	class DeclareVarsI : public Instruction
@@ -459,6 +459,13 @@ namespace ruota
 
 	public:
 		DeclareVarsI(const std::vector<hash_ull> &, const Token &);
-		const Symbol evaluate(Scope *) const override;
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
+	};
+
+	class ParseI : public UnaryI
+	{
+	public:
+		ParseI(const std::shared_ptr<Instruction> &, const Token &);
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 }

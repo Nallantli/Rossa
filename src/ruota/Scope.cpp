@@ -43,15 +43,15 @@ void Scope::traceName(const hash_ull &key)
 	hashed_key = RUOTA_HASH(path);
 }
 
-const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *token) const
+const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (type != STRUCT_O)
-		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token);
+		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
 	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions);
-	o->body->evaluate(o.get());
+	o->body->evaluate(o.get(), stack_trace);
 	auto d = Symbol(o);
-	o->getVariable(Ruota::HASH_INIT, token).call(params, token);
+	o->getVariable(Ruota::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
 	return d;
 }
 
@@ -60,14 +60,14 @@ const hash_ull Scope::getHashedKey() const
 	return hashed_key;
 }
 
-const Symbol &Scope::getVariable(const hash_ull &key, const Token *token) const
+const Symbol &Scope::getVariable(const hash_ull &key, const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (values.find(key) != values.end())
 		return values.at(key);
 	if (parent != NULL)
-		return parent->getVariable(key, token);
+		return parent->getVariable(key, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % RUOTA_DEHASH(key)).str(), *token);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % RUOTA_DEHASH(key)).str(), *token, stack_trace);
 }
 
 const Symbol &Scope::createVariable(const hash_ull &key, const Token *token)
@@ -110,14 +110,14 @@ const std::shared_ptr<Instruction> Scope::getBody() const
 {
 	return body;
 }
-const Symbol Scope::getThis(const Token *token)
+const Symbol Scope::getThis(const Token *token, std::vector<Function> &stack_trace)
 {
 	if (type != SCOPE_O)
 		return Symbol(shared_from_this());
 	if (parent != NULL)
-		return parent->getThis(token);
+		return parent->getThis(token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token, stack_trace);
 }
 
 const bool Scope::hasValue(const hash_ull &key) const
@@ -128,6 +128,7 @@ const bool Scope::hasValue(const hash_ull &key) const
 Scope::~Scope()
 {
 	if (hasValue(Ruota::HASH_DELETER)) {
-		values[Ruota::HASH_DELETER].call({}, NULL);
+		std::vector<Function> stack_trace;
+		values[Ruota::HASH_DELETER].call({}, NULL, stack_trace);
 	}
 }
