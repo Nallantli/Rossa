@@ -82,7 +82,7 @@ static snake_game class {
 	}
 
 	reset() => {
-		pause = false;
+		paused = false;
 		LOST = false;
 		direction = 0;
 		newDir = 0;
