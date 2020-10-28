@@ -1,6 +1,6 @@
 <div align="center">
 <h1>Ruota</h1>
-<img src="docs/logo/Logo.svg" width="200">
+<img src="misc/logo/Logo.svg" width="200">
 </div>
 
 -----

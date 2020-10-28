@@ -13,6 +13,7 @@ RUOTA_LIB_HEADER
 
 namespace libsdl
 {
+	typedef unsigned char color_t;
 	static bool SDL_INITIALIZED = false;
 
 	static std::map<Uint32, Symbol> registered = {};
@@ -24,7 +25,7 @@ namespace libsdl
 		SDL_Texture *image = NULL;
 
 	public:
-		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace, const short &r, const short &g, const short &b)
+		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
@@ -62,16 +63,16 @@ namespace libsdl
 
 	struct Shape
 	{
-		short r, g, b, a;
+		color_t r, g, b, a;
 		const hash_ull id;
 		static hash_ull id_count;
 
-		Shape(const short &r, const short &b, const short &g, const short &a) : r(r), g(g), b(b), a(a), id(id_count++)
+		Shape(const color_t &r, const color_t &b, const color_t &g, const color_t &a) : r(r), g(g), b(b), a(a), id(id_count++)
 		{}
 
 		virtual void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) = 0;
 
-		void setColor(const short &r, const short &g, const short &b, const short &a)
+		void setColor(const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 		{
 			this->r = r;
 			this->g = g;
@@ -92,7 +93,7 @@ namespace libsdl
 		int width;
 		int height;
 
-		Sizable(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Shape(r, g, b, a), width(width), height(height)
+		Sizable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a), width(width), height(height)
 		{}
 
 		void setSize(const int &width, const int &height)
@@ -118,7 +119,7 @@ namespace libsdl
 		SDL_Point *center = NULL;
 		SDL_Rect *clip = NULL;
 
-		Rotatable(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
+		Rotatable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
 		{}
 
 		void setAngle(const double &angle)
@@ -165,7 +166,7 @@ namespace libsdl
 
 	struct Rectangle : public Sizable
 	{
-		Rectangle(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
+		Rectangle(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -180,7 +181,7 @@ namespace libsdl
 
 	struct Line : public Sizable
 	{
-		Line(const int &width, const int &height, const short &r, const short &g, const short &b, const short &a) : Sizable(width, height, r, g, b, a)
+		Line(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -194,7 +195,7 @@ namespace libsdl
 
 	struct Point : public Shape
 	{
-		Point(const short &r, const short &g, const short &b, const short &a) : Shape(r, g, b, a)
+		Point(const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -210,7 +211,7 @@ namespace libsdl
 	{
 		Symbol image;
 
-		Texture(const Symbol &image, const int &width, const int &height, const short &r, const short &g, const short &b) : Rotatable(width, height, r, g, b, 0), image(image)
+		Texture(const Symbol &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b) : Rotatable(width, height, r, g, b, 0), image(image)
 		{}
 
 		void setImage(const Symbol &image)
@@ -530,10 +531,10 @@ namespace libsdl
 			args[0].getPointer(token, stack_trace),
 			Shape);
 
-		short r = args[1].getNumber(token, stack_trace).getLong();
-		short g = args[2].getNumber(token, stack_trace).getLong();
-		short b = args[3].getNumber(token, stack_trace).getLong();
-		short a = args[4].getNumber(token, stack_trace).getLong();
+		color_t r = args[1].getNumber(token, stack_trace).getLong();
+		color_t g = args[2].getNumber(token, stack_trace).getLong();
+		color_t b = args[3].getNumber(token, stack_trace).getLong();
+		color_t a = args[4].getNumber(token, stack_trace).getLong();
 
 		shape->setColor(r, g, b, a);
 
@@ -610,10 +611,10 @@ namespace libsdl
 		int width = args[0].getNumber(token, stack_trace).getLong();
 		int height = args[1].getNumber(token, stack_trace).getLong();
 
-		short r = args[2].getNumber(token, stack_trace).getLong();
-		short g = args[3].getNumber(token, stack_trace).getLong();
-		short b = args[4].getNumber(token, stack_trace).getLong();
-		short a = args[5].getNumber(token, stack_trace).getLong();
+		color_t r = args[2].getNumber(token, stack_trace).getLong();
+		color_t g = args[3].getNumber(token, stack_trace).getLong();
+		color_t b = args[4].getNumber(token, stack_trace).getLong();
+		color_t a = args[5].getNumber(token, stack_trace).getLong();
 
 		auto rect = std::make_shared<Rectangle>(width, height, r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(rect));
@@ -661,10 +662,10 @@ namespace libsdl
 		int x2 = args[0].getNumber(token, stack_trace).getLong();
 		int y2 = args[1].getNumber(token, stack_trace).getLong();
 
-		short r = args[2].getNumber(token, stack_trace).getLong();
-		short g = args[3].getNumber(token, stack_trace).getLong();
-		short b = args[4].getNumber(token, stack_trace).getLong();
-		short a = args[5].getNumber(token, stack_trace).getLong();
+		color_t r = args[2].getNumber(token, stack_trace).getLong();
+		color_t g = args[3].getNumber(token, stack_trace).getLong();
+		color_t b = args[4].getNumber(token, stack_trace).getLong();
+		color_t a = args[5].getNumber(token, stack_trace).getLong();
 
 		auto line = std::make_shared<Line>(x2, y2, r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(line));
@@ -672,10 +673,10 @@ namespace libsdl
 
 	RUOTA_EXT_SYM(_point_init, args, token, hash, stack_trace)
 	{
-		short r = args[0].getNumber(token, stack_trace).getLong();
-		short g = args[1].getNumber(token, stack_trace).getLong();
-		short b = args[2].getNumber(token, stack_trace).getLong();
-		short a = args[3].getNumber(token, stack_trace).getLong();
+		color_t r = args[0].getNumber(token, stack_trace).getLong();
+		color_t g = args[1].getNumber(token, stack_trace).getLong();
+		color_t b = args[2].getNumber(token, stack_trace).getLong();
+		color_t a = args[3].getNumber(token, stack_trace).getLong();
 
 		auto point = std::make_shared<Point>(r, g, b, a);
 		return Symbol(static_cast<std::shared_ptr<void>>(point));
@@ -692,9 +693,9 @@ namespace libsdl
 	RUOTA_EXT_SYM(_image_init_key, args, token, hash, stack_trace)
 	{
 		std::string path = args[0].getString(token, stack_trace);
-		short r = args[1].getNumber(token, stack_trace).getLong();
-		short g = args[2].getNumber(token, stack_trace).getLong();
-		short b = args[3].getNumber(token, stack_trace).getLong();
+		color_t r = args[1].getNumber(token, stack_trace).getLong();
+		color_t g = args[2].getNumber(token, stack_trace).getLong();
+		color_t b = args[3].getNumber(token, stack_trace).getLong();
 
 		auto image = std::make_shared<Image>(path, token, stack_trace, r, g, b);
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
@@ -707,9 +708,9 @@ namespace libsdl
 		int width = args[1].getNumber(token, stack_trace).getLong();
 		int height = args[2].getNumber(token, stack_trace).getLong();
 
-		short r = args[3].getNumber(token, stack_trace).getLong();
-		short g = args[4].getNumber(token, stack_trace).getLong();
-		short b = args[5].getNumber(token, stack_trace).getLong();
+		color_t r = args[3].getNumber(token, stack_trace).getLong();
+		color_t g = args[4].getNumber(token, stack_trace).getLong();
+		color_t b = args[5].getNumber(token, stack_trace).getLong();
 
 		auto texture = std::make_shared<Texture>(image, width, height, r, g, b);
 		return Symbol(static_cast<std::shared_ptr<void>>(texture));

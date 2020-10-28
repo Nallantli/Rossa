@@ -1,0 +1,17 @@
+random := new Random();
+
+correct := random.nexti(0, 100);
+
+var guess;
+
+while guess != correct do {
+	puts("Enter guess: ");
+	guess = input.line() -> Number;
+	if guess < correct then {
+		putln("Too low!");
+	} elif guess > correct then {
+		putln("Too high!");
+	}
+}
+
+putln("You win! The number was " + (correct -> String));
