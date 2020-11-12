@@ -3,8 +3,8 @@ load "sdl.ruo";
 w := new Window("Image Test", 800, 600);
 r := w.getRenderer();
 
-image1 := new SDL.Image("docs/logo/Logo.png");
-image2 := new SDL.Image("docs/logo/Logo-Solid.png");
+image1 := new SDL.Image("misc/logo/Logo.png");
+image2 := new SDL.Image("misc/logo/Logo-Solid.png");
 t1 := new SDL.Texture(image1, 200, 200);
 t2 := new SDL.Texture(image1, 200, 200);
 t3 := new SDL.Texture(image1, 200, 200);

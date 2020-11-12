@@ -1,9 +1,11 @@
 <div align="center">
 <h1>Ruota</h1>
-<img src="docs/logo/Logo.svg" width="200">
+<img src="docs/Logo.svg" width="200">
 </div>
 
 -----
+
+[Docs](https://nallantli.github.io/Ruota/#/)
 
 _Current features, divergences from previous repo, and features to be implemented:_
 

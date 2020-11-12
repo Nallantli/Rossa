@@ -14,6 +14,7 @@ static snake_game class {
 		buffer,
 		w,
 		r,
+		paused,
 		LOST;
 
 	speed := 80;
@@ -76,7 +77,12 @@ static snake_game class {
 		cache[x][y] = -1;
 	}
 
+	togglePause() => {
+		paused = !paused;
+	}
+
 	reset() => {
+		paused = false;
 		LOST = false;
 		direction = 0;
 		newDir = 0;
@@ -121,7 +127,8 @@ static snake_game class {
 				case '2' do speed = 120;
 				case '3' do speed = 80;
 				case '4' do speed = 0;
-				case ' ' do reset();
+				case ' ' do togglePause();
+				case 'r' do reset();
 			}
 		}
 	}
@@ -152,7 +159,7 @@ static snake_game class {
 		while true do {
 			evaluateInput();
 			lapse := clock.milliseconds() - start;
-			if lapse > speed then {
+			if lapse > speed && !paused then {
 				start = clock.milliseconds();
 				refresh();
 			}

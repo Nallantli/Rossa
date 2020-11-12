@@ -4,7 +4,7 @@ w := new Window("Sprite Clipping", 512, 512);
 r := w.getRenderer();
 rand := new Random();
 
-spritesheet := new SDL.Image("docs/curses12x12.png", Color.MAGENTA);
+spritesheet := new SDL.Image("misc/curses12x12.png", Color.MAGENTA);
 
 tiles := alloc(256);
 
