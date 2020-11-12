@@ -1,7 +1,12 @@
 #include "../ruota/Ruota.h"
 
+#ifdef __unix__
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#else
+#include <SDL.h>
+#include <SDL_image.h>
+#endif
 #include <algorithm>
 
 RUOTA_LIB_HEADER
