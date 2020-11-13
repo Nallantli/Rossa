@@ -1,6 +1,6 @@
 #pragma once
 
-#define _RUOTA_VERSION_ "v1.6.7-alpha"
+#define _RUOTA_VERSION_ "v1.6.8-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define RUOTA_LIB_HEADER using namespace ruota; Hash _MAIN_HASH_ = Hash();
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)

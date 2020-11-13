@@ -1077,14 +1077,17 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				case STRING:
 					try {
 						auto s = evalA.getString(&token, stack_trace);
-						if (s.length() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
-							unsigned int x;
-							std::stringstream ss;
-							ss << std::hex << s;
-							ss >> x;
-							return Symbol(CNumber::Long(x));
+						if (s.length() > 2 && s[0] == '0' && isalpha(s[1])) {
+							switch (s[1])
+							{
+							case 'b':
+							case 'B':
+								return Symbol(CNumber::Long(std::stoll(s.substr(2), nullptr, 2)));
+							default:
+								return Symbol(CNumber::Long(std::stoll(s, nullptr, 0)));
+							}
 						}
-						return Symbol(CNumber::Double(std::stold(evalA.getString(&token, stack_trace))));
+						return Symbol(CNumber::Double(std::stold(s)));
 					} catch (const std::invalid_argument &e) {
 						throw RTError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token, stack_trace)).str(), token, stack_trace);
 					}

@@ -263,6 +263,44 @@ Array::empty(ref a) => {
 	return size(a) == 0;
 }
 
+Array::sort(ref a, ref comp : Function) => {
+	if a.size() < 2 then {
+		return a;
+	}
+
+	left := [];
+	right := [];
+	pivot := a[0];
+	for i in 1 .. a.size() do {
+		if comp(a[i], pivot) then {
+			left.push(a[i]);
+		} else {
+			right.push(a[i]);
+		}
+	}
+
+	return sort(left) + [ pivot ] + sort(right);
+}
+
+Array::sort(ref a) => {
+	if a.size() < 2 then {
+		return a;
+	}
+
+	left := [];
+	right := [];
+	pivot := a[0];
+	for i in 1 .. a.size() do {
+		if a[i] < pivot then {
+			left.push(a[i]);
+		} else {
+			right.push(a[i]);
+		}
+	}
+
+	return sort(left) + [ pivot ] + sort(right);
+}
+
 # STRING
 
 String::push(ref s, ref value : Number) => {

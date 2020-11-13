@@ -140,20 +140,24 @@ const int Lexer::getToken()
 
 		return TOK_IDF;
 	} else if (isdigit(last) || (last == '.' && isdigit(peekChar(0)))) {
-		if (last == '0' && (peekChar(0) == 'x' || peekChar(0) == 'X')) {
-			last = nextChar();
-			std::string t = std::string(1, last);
+		if (last == '0' && isalpha(peekChar(0))) {
+			char base = nextChar();
 			std::string numStr = "";
 			while (isalnum(peekChar(0))) {
 				last = nextChar();
 				numStr += last;
 			}
-			ID_STRING = "0" + t + numStr;
-			unsigned int x;
-			std::stringstream ss;
-			ss << std::hex << numStr;
-			ss >> x;
-			NUM_VALUE = CNumber::Long(x);
+			switch (base)
+			{
+			case 'b':
+			case 'B':
+				NUM_VALUE = CNumber::Long(std::stoll(numStr, nullptr, 2));
+				break;
+			default:
+				NUM_VALUE = CNumber::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
+				break;
+			}
+			ID_STRING = "0" + std::string(1, base) + numStr;
 			return TOK_NUM;
 		}
 
@@ -170,9 +174,9 @@ const int Lexer::getToken()
 
 		ID_STRING = numStr;
 		if (flag)
-			NUM_VALUE = CNumber::Double(strtold(numStr.c_str(), 0));
+			NUM_VALUE = CNumber::Double(std::stold(numStr));
 		else
-			NUM_VALUE = CNumber::Long(strtoll(numStr.c_str(), 0, 0));
+			NUM_VALUE = CNumber::Long(std::stoll(numStr, nullptr, 10));
 		return TOK_NUM;
 	} else if (last == '#') {
 		std::string commentStr = "";

@@ -1,0 +1,114 @@
+static huffman class {
+	struct Node class {
+		var left, right, value, count, key;
+
+		init(ref value : String, ref count : Number) => {
+			this.value = value;
+			this.count = count;
+			key = "";
+		}
+
+		init(ref left : @huffman.Node, ref right : @huffman.Node) => {
+			this.left = left;
+			this.right = right;
+			this.count = left.count + right.count;
+			this.value = left.value + right.value;
+			left.pushLeft();
+			right.pushRight();
+		}
+
+		pushLeft() => {
+			if key == nil then {
+				left.pushLeft();
+				right.pushLeft();
+			} else {
+				key = "0" + key;
+			}
+		}
+
+		pushRight() => {
+			if key == nil then {
+				left.pushRight();
+				right.pushRight();
+			} else {
+				key = "1" + key;
+			}
+		}
+
+		getKey() => {
+			if key == nil then {
+				a := left.getKey();
+				b := right.getKey();
+				for e in b -> Array do {
+					a[e.key] = e.value;
+				}
+				return a;
+			}
+			d := {};
+			d[value] = key;
+			return d;
+		}
+
+		`<`(ref n : @huffman.Node) => {
+			if count == n.count then {
+				return value < n.value;
+			}
+			return count < n.count;
+		}
+
+		`->String`() => {
+			if key == nil then {
+				return "(" + (left -> String) + ", " + (right -> String) + ")";
+			}
+			return value + "#" + (count -> String);
+		}
+	}
+
+	encode(ref data : String) => {
+		freq := {};
+		for c in data -> Array do {
+			if freq[c] == nil then {
+				freq[c] = 0;
+			}
+			freq[c] += 1;
+		}
+
+		nodes := [];
+		for e in freq -> Array do {
+			nodes.push(new Node(e.key, e.value));
+		}
+
+		while nodes.size() > 1 do {
+			nodes = nodes.sort();
+			nodes.push(new Node(nodes[0], nodes[1]));
+			nodes.shift(2);
+		}
+
+		d := nodes[0].getKey();
+		enc := "";
+
+		for c in data -> Array do {
+			enc += d[c];
+		}
+
+		decoder := {};
+		for e in d -> Array do {
+			decoder[e.value] = e.key;
+		}
+
+		return { decoder : decoder, data : enc };
+	}
+
+	decode(ref data : String, ref decoder : Dictionary) => {
+		dec := "";
+		curr := "";
+		for c in data -> Array do {
+			if decoder[curr] != nil then {
+				dec += decoder[curr];
+				curr = "";
+			}
+			curr += c;
+		}
+		return dec;
+	}
+}
