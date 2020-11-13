@@ -1,7 +1,5 @@
 #include "Ruota.h"
 
-#include <sstream>
-
 using namespace ruota;
 
 Lexer::Lexer()

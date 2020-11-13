@@ -12,10 +12,7 @@ std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const To
 Hash _MAIN_HASH_ = Hash();
 
 const hash_ull Ruota::HASH_INIT = RUOTA_HASH("init");
-const hash_ull Ruota::HASH_IDEM = RUOTA_HASH("idem");
 const hash_ull Ruota::HASH_THIS = RUOTA_HASH("this");
-const hash_ull Ruota::HASH_KEY = RUOTA_HASH("key");
-const hash_ull Ruota::HASH_VALUE = RUOTA_HASH("value");
 const hash_ull Ruota::HASH_DELETER = RUOTA_HASH("~");
 
 const hash_ull Ruota::HASH_ADD = RUOTA_HASH("+");

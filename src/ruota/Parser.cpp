@@ -221,8 +221,8 @@ const Symbol IndexI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	switch (evalA.getValueType()) {
 		case DICTIONARY:
 			if (evalB.getValueType() == NUMBER)
-				return evalA.indexDict(RUOTA_HASH(evalB.toString(&token, stack_trace)));
-			return evalA.indexDict(RUOTA_HASH(evalB.getString(&token, stack_trace)));
+				return evalA.indexDict(evalB.toString(&token, stack_trace));
+			return evalA.indexDict(evalB.getString(&token, stack_trace));
 		case ARRAY:
 			if (evalB.getValueType() != NUMBER)
 				break;
@@ -252,7 +252,7 @@ const Symbol InnerI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	switch (evalA.getValueType()) {
 		case DICTIONARY:
 			if (b->getType() == VARIABLE)
-				return evalA.indexDict(reinterpret_cast<VariableI *>(b.get())->getKey());
+				return evalA.indexDict(RUOTA_DEHASH(reinterpret_cast<VariableI *>(b.get())->getKey()));
 			throw RTError(_CANNOT_ENTER_DICTIONARY_, token, stack_trace);
 		case OBJECT:
 		{
@@ -1125,9 +1125,9 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				case ARRAY:
 				{
 					auto v = evalA.getVector(&token, stack_trace);
-					std::map<hash_ull, Symbol> nd;
+					sym_map_t nd;
 					for (size_t i = 0; i < v.size(); i++)
-						nd[RUOTA_HASH(std::to_string(i))] = v[i];
+						nd[std::to_string(i)] = v[i];
 					return Symbol(nd);
 				}
 				case OBJECT:
@@ -1149,7 +1149,7 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 					auto dict = evalA.getDictionary(&token, stack_trace);
 					std::vector<Symbol> nv;
 					for (auto &e : dict)
-						nv.push_back(Symbol({ {Ruota::HASH_KEY, Symbol(RUOTA_DEHASH(e.first))}, {Ruota::HASH_VALUE, e.second} }));
+						nv.push_back(Symbol({ {"key", Symbol(e.first)}, {"value", e.second} }));
 					return Symbol(nv);
 				}
 				case OBJECT:
@@ -1294,12 +1294,12 @@ const Symbol ScopeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 /*class MapI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MapI::MapI(const std::map<hash_ull, std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(MAP_I, token), children(children)
+MapI::MapI(const std::map<std::string, std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(MAP_I, token), children(children)
 {}
 
 const Symbol MapI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
-	std::map<hash_ull, Symbol> evals;
+	sym_map_t evals;
 	for (auto &e : children) {
 		auto eval = e.second->evaluate(scope, stack_trace);
 		if (eval.getValueType() == NIL)

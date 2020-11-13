@@ -729,7 +729,7 @@ std::shared_ptr<Node> NodeParser::parseVectorNode()
 std::shared_ptr<Node> NodeParser::parseMapNode()
 {
 	nextToken();
-	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> args;
+	std::vector<std::pair<std::string, std::shared_ptr<Node>>> args;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (i > 0) {
@@ -746,7 +746,7 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % ":").str(), currentToken);
 		nextToken();
 		if (auto b = parseEquNode()) {
-			std::pair<hash_ull, std::shared_ptr<Node>> p = { RUOTA_HASH(key), b };
+			std::pair<std::string, std::shared_ptr<Node>> p = { key, b };
 			args.push_back(p);
 		} else
 			return nullptr;

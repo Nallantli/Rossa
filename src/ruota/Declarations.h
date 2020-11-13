@@ -7,10 +7,12 @@
 #define PRINTC(s, color) std::cout << "\033[" << color << "m" << s << "\033[0m"
 
 #define RUOTA_DEHASH(x) _MAIN_HASH_.deHash(x)
-#define RUOTA_HASH(x) _MAIN_HASH_.hashString(x)
+#define RUOTA_HASH(x) _MAIN_HASH_.hashValue(x)
 
 #include <vector>
 #include <string>
+#include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <boost/config.hpp>
 
@@ -51,7 +53,7 @@ namespace ruota
 			variable_hash.push_back("<LAMBDA>");
 		}
 
-		inline hash_ull hashString(const std::string &key)
+		inline hash_ull hashValue(const std::string &key)
 		{
 			if (std::find(variable_hash.begin(), variable_hash.end(), key) != variable_hash.end())
 				return std::distance(variable_hash.begin(), std::find(variable_hash.begin(), variable_hash.end(), key));
@@ -73,6 +75,8 @@ namespace ruota
 	class Ruota;
 	class Value;
 	class Symbol;
+
+	typedef std::map<std::string, Symbol> sym_map_t;
 
 	enum LexerTokenType
 	{

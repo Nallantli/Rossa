@@ -1,0 +1,31 @@
+static isPrime class : Function {
+	data := {};
+
+	`()`(ref n : Number) => {
+		if n < 2 then {
+			return false;
+		} elif data[n] != nil then {
+			return data[n];
+		}
+
+		for i in 2 .+ n / 2 do {
+			if n % i == 0 then {
+				return data[n] = false;
+			}
+		}
+
+		return data[n] = true;
+	}
+}
+
+pfact(ref n : Number) => {
+	if n < 2 then {
+		return [];
+	}
+	for i in [2, (3 .. n : 2)].filter(isPrime) do {
+		if n % i == 0 then {
+			return [ i ] + pfact(n / i);
+		}
+	}
+	return [ n ];
+}

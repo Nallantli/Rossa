@@ -345,10 +345,10 @@ namespace ruota
 	class MapNode : public Node
 	{
 	private:
-		std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> args;
+		std::vector<std::pair<std::string, std::shared_ptr<Node>>> args;
 
 	public:
-		MapNode(std::vector<std::pair<hash_ull, std::shared_ptr<Node>>>, const Token &);
+		MapNode(std::vector<std::pair<std::string, std::shared_ptr<Node>>>, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;

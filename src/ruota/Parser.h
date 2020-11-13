@@ -380,10 +380,10 @@ namespace ruota
 	class MapI : public Instruction
 	{
 	protected:
-		const std::map<hash_ull, std::shared_ptr<Instruction>> children;
+		const std::map<std::string, std::shared_ptr<Instruction>> children;
 
 	public:
-		MapI(const std::map<hash_ull, std::shared_ptr<Instruction>> &, const Token &);
+		MapI(const std::map<std::string, std::shared_ptr<Instruction>> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 

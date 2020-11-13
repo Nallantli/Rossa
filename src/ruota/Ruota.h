@@ -6,8 +6,6 @@
 
 #include <memory>
 #include <sstream>
-#include <map>
-#include <unordered_map>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
@@ -197,10 +195,7 @@ namespace ruota
 		static Lexer lexer;
 
 		static const hash_ull HASH_THIS;
-		static const hash_ull HASH_IDEM;
 		static const hash_ull HASH_INIT;
-		static const hash_ull HASH_KEY;
-		static const hash_ull HASH_VALUE;
 		static const hash_ull HASH_DELETER;
 
 		static const hash_ull HASH_ADD;
@@ -255,7 +250,7 @@ namespace ruota
 		std::shared_ptr<void> valuePointer;
 		std::vector<Symbol> valueVector;
 		std::unordered_map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> valueFunction;
-		std::map<hash_ull, Symbol> valueDictionary;
+		sym_map_t valueDictionary;
 		std::shared_ptr<Scope> valueObject;
 		refc_ull references = 1;
 
@@ -275,7 +270,7 @@ namespace ruota
 		{}
 		Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector)
 		{}
-		Value(const std::map<hash_ull, Symbol> &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary)
+		Value(const sym_map_t &valueDictionary) : type(DICTIONARY), valueDictionary(valueDictionary)
 		{}
 		Value(const std::string &valueString) : type(STRING), valueString(valueString)
 		{}
@@ -341,7 +336,7 @@ namespace ruota
 		Symbol(const std::string &valueString) : type(ID_CASUAL), d(new Value(valueString))
 		{}
 
-		Symbol(const std::map<hash_ull, Symbol> &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary))
+		Symbol(const sym_map_t &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary))
 		{}
 
 		Symbol(const Symbol &s)
@@ -401,7 +396,7 @@ namespace ruota
 			return d->valuePointer.get();
 		}
 
-		inline const std::map<hash_ull, Symbol> &getDictionary(const Token *token, std::vector<Function> &stack_trace) const
+		inline const sym_map_t &getDictionary(const Token *token, std::vector<Function> &stack_trace) const
 		{
 			if (d->type != DICTIONARY)
 				throw RTError(_NOT_DICTIONARY_, *token, stack_trace);
@@ -502,12 +497,12 @@ namespace ruota
 			return foftype[key];
 		}
 
-		inline const Symbol &indexDict(const hash_ull &i) const
+		inline const Symbol &indexDict(const std::string &key) const
 		{
-			return d->valueDictionary[i];
+			return d->valueDictionary[key];
 		}
 
-		inline const bool hasDictionaryKey(const hash_ull &key) const
+		inline const bool hasDictionaryKey(const std::string &key) const
 		{
 			return d->valueDictionary.find(key) != d->valueDictionary.end();
 		}
@@ -574,7 +569,7 @@ namespace ruota
 					for (auto &e : getDictionary(token, stack_trace)) {
 						if (i > 0)
 							ret += ", ";
-						ret += "\"" + RUOTA_DEHASH(e.first) + "\" : " + e.second.toString(token, stack_trace);
+						ret += "\"" + e.first + "\" : " + e.second.toString(token, stack_trace);
 						i++;
 					}
 					return ret + "}";

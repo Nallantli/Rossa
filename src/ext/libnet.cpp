@@ -141,7 +141,7 @@ namespace libnet
 		boost::beast::http::request<boost::beast::http::string_body> req(boost::beast::http::verb::get, target, version);
 
 		for (auto &p : params) {
-			req.set(hash.deHash(p.first), p.second.getString(token, stack_trace));
+			req.set(p.first, p.second.getString(token, stack_trace));
 		}
 
 		boost::beast::http::write(*tcpstream, req);
@@ -149,13 +149,13 @@ namespace libnet
 		boost::beast::http::response<boost::beast::http::string_body> res;
 		boost::beast::http::read(*tcpstream, buff, res);
 
-		std::map<hash_ull, Symbol> ret;
+		sym_map_t ret;
 
 		for (auto &r : res) {
-			ret[hash.hashString(r.name_string().to_string())] = Symbol(r.value().to_string());
+			ret[r.name_string().to_string()] = Symbol(r.value().to_string());
 		}
 
-		ret[hash.hashString("CONTENT")] = res.body();
+		ret["CONTENT"] = Symbol(res.body());
 
 		return Symbol(ret);
 	}

@@ -1419,7 +1419,7 @@ std::shared_ptr<Node> UntilNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 MapNode::MapNode(
-	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> args,
+	std::vector<std::pair<std::string, std::shared_ptr<Node>>> args,
 	const Token &token) : Node(MAP_NODE,
 		token),
 	args(args)
@@ -1427,7 +1427,7 @@ MapNode::MapNode(
 
 std::shared_ptr<Instruction> MapNode::genParser() const
 {
-	std::map<hash_ull, std::shared_ptr<Instruction>> is;
+	std::map<std::string, std::shared_ptr<Instruction>> is;
 	for (auto &e : this->args) {
 		is[e.first] = e.second->genParser();
 	}
@@ -1469,7 +1469,7 @@ std::shared_ptr<Node> MapNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
-	std::vector<std::pair<hash_ull, std::shared_ptr<Node>>> nargs;
+	std::vector<std::pair<std::string, std::shared_ptr<Node>>> nargs;
 	for (auto &c : args)
 		nargs.push_back({ c.first, c.second->fold() });
 	return std::make_unique<MapNode>(nargs, token);
