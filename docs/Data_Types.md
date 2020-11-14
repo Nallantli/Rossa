@@ -83,7 +83,7 @@ Operator|Function|Return
 `a <= b`|Less or Equal Comparison|`Boolean`
 `a >= b`|More or Equal Comparison|`Boolean`
 `a & b`|Bitwise And (Integers)|`Number`
-`a | b`|Bitwise Or (Integers)|`Number`
+`a \| b`|Bitwise Or (Integers)|`Number`
 `a ^ b`|Bitwise XOr (Integers)|`Number`
 `a << b`|Left Bitshift (Integers)|`Number`
 `a >> b`|Right Bitshift (Integers)|`Number`
