@@ -1,10 +1,9 @@
 #pragma once
 
-#define _RUOTA_VERSION_ "v1.6.8-alpha"
+#define _RUOTA_VERSION_ "v1.6.9-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define RUOTA_LIB_HEADER using namespace ruota; Hash _MAIN_HASH_ = Hash();
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
-#define PRINTC(s, color) std::cout << "\033[" << color << "m" << s << "\033[0m"
 
 #define RUOTA_DEHASH(x) _MAIN_HASH_.deHash(x)
 #define RUOTA_HASH(x) _MAIN_HASH_.hashValue(x)
@@ -15,6 +14,11 @@
 #include <unordered_map>
 #include <algorithm>
 #include <boost/config.hpp>
+#include <iostream>
+
+inline void PRINTC(const std::string &s, const int &color) {
+	std::cout << "\033[" << color << "m" << s << "\033[0m";
+}
 
 namespace ruota
 {

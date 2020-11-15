@@ -5,7 +5,7 @@
 #include <iostream>
 #include "encode.h"
 
-RUOTA_LIB_HEADER
+using namespace ruota;
 
 namespace libnet
 {

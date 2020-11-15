@@ -2,8 +2,6 @@
 #include "Library.h"
 #include "NodeParser.h"
 
-#include <iostream>
-
 using namespace ruota;
 
 std::vector<boost::filesystem::path> dir::loaded = {};

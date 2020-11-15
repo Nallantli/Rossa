@@ -3,7 +3,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-RUOTA_LIB_HEADER
+using namespace ruota;
 
 namespace libfs
 {

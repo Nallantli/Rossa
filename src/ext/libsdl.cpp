@@ -9,7 +9,7 @@
 #endif
 #include <algorithm>
 
-RUOTA_LIB_HEADER
+using namespace ruota;
 
 namespace libsdl
 {

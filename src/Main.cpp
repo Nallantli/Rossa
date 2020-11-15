@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 
-#include "ruota/Node.h"
 #include "ruota/Ruota.h"
 
 #ifdef _WIN32

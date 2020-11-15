@@ -19,6 +19,7 @@ SDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2
 
 CFLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
 LFLAGS=-shared -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
+OFLAGS=$(CFLAGS)
 
 LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
 
@@ -44,6 +45,7 @@ LIB_EXT=.so
 SDL_FLAGS=-lSDL2 -lSDL2_image
 CFLAGS=-lboost_filesystem -lboost_system -ldl
 LFLAGS=-fPIC -shared -lboost_filesystem -ldl
+OFLAGS=-fPIC $(CFLAGS)
 
 LIBNET_FLAGS=-lboost_system
 
@@ -66,47 +68,47 @@ endif
 
 plugins: bin/lib/libstd$(LIB_EXT) bin/lib/libfs$(LIB_EXT) bin/lib/libnet$(LIB_EXT) bin/lib/libsdl$(LIB_EXT)
 
-bin/ruota.exe: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
-	$(CC) -o bin/ruota.exe $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(CFLAGS)
+bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/ext/libstd.cpp $(DIR)/libruota.a $(LFLAGS)
 
-bin/ruota: $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
-	$(CC) -o bin/ruota $(DIR)/Main.o $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(CFLAGS)
+bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/ext/libfs.cpp $(DIR)/libruota.a $(LFLAGS)
 
-bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp src/ruota/Ruota.cpp src/ruota/Node.cpp src/ruota/NodeParser.cpp src/ruota/Lexer.cpp src/ruota/Parser.cpp src/ruota/Scope.cpp src/ruota/Function.cpp src/ruota/Signature.cpp
-	$(CC) -o bin/lib/libstd$(LIB_EXT) src/ext/libstd.cpp src/ruota/Ruota.cpp src/ruota/Node.cpp src/ruota/NodeParser.cpp src/ruota/Lexer.cpp src/ruota/Parser.cpp src/ruota/Scope.cpp src/ruota/Function.cpp src/ruota/Signature.cpp $(LFLAGS)
+bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/ext/libnet.cpp $(DIR)/libruota.a $(LFLAGS) $(LIBNET_FLAGS)
 
-bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) -o bin/lib/libfs$(LIB_EXT) src/ext/libfs.cpp $(LFLAGS)
+bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/ext/libsdl.cpp $(DIR)/libruota.a $(LFLAGS) $(SDL_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) -o bin/lib/libnet$(LIB_EXT) src/ext/libnet.cpp $(LFLAGS) $(LIBNET_FLAGS)
+bin/ruota.exe: src/Main.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
 
-bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) -o bin/lib/libsdl$(LIB_EXT) src/ext/libsdl.cpp $(LFLAGS) $(SDL_FLAGS)
+bin/ruota: src/Main.cpp $(DIR)/libruota.a
+	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
 
-$(DIR)/Main.o: src/Main.cpp src/ruota/Node.h src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/Main.cpp -o $(DIR)/Main.o -c $(CFLAGS)
+$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
+	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
 
-$(DIR)/Ruota.o: src/ruota/Ruota.cpp src/ruota/Node.h src/ruota/NodeParser.h src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Ruota.cpp -o $(DIR)/Ruota.o -c $(CFLAGS)
+$(DIR)/Ruota.o: src/ruota/Ruota.cpp
+	$(CC) -o $@ src/ruota/Ruota.cpp -c $(OFLAGS)
 
-$(DIR)/Node.o: src/ruota/Node.cpp src/ruota/Node.h src/ruota/Parser.h src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Node.cpp -o $(DIR)/Node.o -c $(CFLAGS)
+$(DIR)/Node.o: src/ruota/Node.cpp
+	$(CC) -o $@ src/ruota/Node.cpp -c $(OFLAGS)
 
-$(DIR)/NodeParser.o: src/ruota/NodeParser.cpp src/ruota/NodeParser.h src/ruota/Library.h src/ruota/Node.h src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/NodeParser.cpp -o $(DIR)/NodeParser.o -c $(CFLAGS)
+$(DIR)/NodeParser.o: src/ruota/NodeParser.cpp
+	$(CC) -o $@ src/ruota/NodeParser.cpp -c $(OFLAGS)
 
-$(DIR)/Lexer.o: src/ruota/Lexer.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Lexer.cpp -o $(DIR)/Lexer.o -c $(CFLAGS)
+$(DIR)/Lexer.o: src/ruota/Lexer.cpp
+	$(CC) -o $@ src/ruota/Lexer.cpp -c $(OFLAGS)
 
-$(DIR)/Parser.o: src/ruota/Parser.cpp src/ruota/Parser.h src/ruota/Library.h src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Parser.cpp -o $(DIR)/Parser.o -c $(CFLAGS)
+$(DIR)/Parser.o: src/ruota/Parser.cpp
+	$(CC) -o $@ src/ruota/Parser.cpp -c $(OFLAGS)
 
-$(DIR)/Scope.o: src/ruota/Scope.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Scope.cpp -o $(DIR)/Scope.o -c $(CFLAGS)
+$(DIR)/Scope.o: src/ruota/Scope.cpp
+	$(CC) -o $@ src/ruota/Scope.cpp -c $(OFLAGS)
 
-$(DIR)/Function.o: src/ruota/Function.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Function.cpp -o $(DIR)/Function.o -c $(CFLAGS)
+$(DIR)/Function.o: src/ruota/Function.cpp
+	$(CC) -o $@ src/ruota/Function.cpp -c $(OFLAGS)
 
-$(DIR)/Signature.o: src/ruota/Signature.cpp src/ruota/Ruota.h src/ruota/Locale.h src/ruota/Declarations.h src/ruota/CNumber.h
-	$(CC) src/ruota/Signature.cpp -o $(DIR)/Signature.o -c $(CFLAGS)
+$(DIR)/Signature.o: src/ruota/Signature.cpp
+	$(CC) -o $@ src/ruota/Signature.cpp -c $(OFLAGS)
