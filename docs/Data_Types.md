@@ -123,6 +123,7 @@ Strings are declared with double quotes:
 Operator|Function|Return
 -|-|-
 `a + b`|String Concatanation|`String`
+`a & [b...]`|Templative String Concatanation\*|`String`
 `a < b`|Lexical Less Comparison|`Boolean`
 `a > b`|Lexical More Comparison|`Boolean`
 `a <= b`|Lexical Less or Equal Comparison|`Boolean`
@@ -131,6 +132,15 @@ Operator|Function|Return
 `length(a)`/`a.length()`|Unicode Char-length of String|`Number`
 
 Note the difference between `size` and `length`: The `String` value `"ルオタ"` has a `size` of `9` (CJK characters take up 3 bytes each), but a `length` of `3`.
+
+\* This operation takes a `String` value and an `Array` of values and inserts the latter into positions defined with `%n%` where `n` is the index in the `Array`. For instance:
+
+```ruo
+"#1#, World!" & ["Hello"]; # "Hello, World!"
+"#2# is the last name of #1#" & ["John", "Smith"]; # "Smith is the last name of John"
+```
+
+This operation is one of the few that does not require explicit conversion, all elements of any type will have their `->String` method called for concatanation.
 
 ## Array
 

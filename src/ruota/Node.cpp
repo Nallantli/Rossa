@@ -829,9 +829,9 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 			throw RTError("Only variables may be declared with `:=`", token, stack_trace);
 		hash_ull t;
 		if (a->getType() == ID_NODE)
-			t = ((IDNode *) a.get())->getKey();
+			t = ((IDNode *)a.get())->getKey();
 		else
-			t = RUOTA_HASH(((BIDNode *) a.get())->getKey());
+			t = RUOTA_HASH(((BIDNode *)a.get())->getKey());
 		return std::make_shared<DeclareI>(t, 0, b->genParser(), b->isConst(), token);
 	}
 

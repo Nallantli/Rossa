@@ -1,13 +1,12 @@
 #include "Ruota.h"
 #include "Library.h"
-#include "NodeParser.h"
 
 using namespace ruota;
 
 std::vector<boost::filesystem::path> dir::loaded = {};
 std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> lib::loaded = {};
 
-Hash _MAIN_HASH_ = Hash();
+Hash Ruota::MAIN_HASH = Hash();
 
 const hash_ull Ruota::HASH_INIT = RUOTA_HASH("init");
 const hash_ull Ruota::HASH_THIS = RUOTA_HASH("this");
@@ -118,8 +117,6 @@ const Symbol Ruota::runCode(std::shared_ptr<Node> entry, bool tree)
 	std::vector<Function> stack_trace;
 	return g->evaluate(&main, stack_trace);
 }
-
-
 
 void Ruota::printError(const RTError &e)
 {

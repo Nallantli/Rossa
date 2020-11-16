@@ -26,21 +26,19 @@ Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instru
 
 void Scope::traceName(const hash_ull &key)
 {
-	std::string path = "";
 	if (parent != NULL)
 		name_trace = parent->name_trace;
 	if (key != 0) {
+		std::string path = "";
 		name_trace.push_back(key);
-
 		size_t i = 0;
 		for (auto &p : name_trace) {
 			if (i++ > 0)
 				path += ".";
 			path += RUOTA_DEHASH(p);
 		}
+		hashed_key = RUOTA_HASH(path);
 	}
-
-	hashed_key = RUOTA_HASH(path);
 }
 
 const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const

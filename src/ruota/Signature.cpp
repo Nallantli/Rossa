@@ -36,3 +36,35 @@ const std::string sig::toString(const sig_t &values)
 	}
 	return s + ")";
 }
+
+const std::string sig::getTypeString(const type_sll &i)
+{
+	if (i >= 0)
+		return "@" + RUOTA_DEHASH(i);
+	else {
+		switch (i) {
+			case NIL:
+				return "Nil";
+			case NUMBER:
+				return "Number";
+			case STRING:
+				return "String";
+			case BOOLEAN_D:
+				return "Boolean";
+			case ARRAY:
+				return "Array";
+			case FUNCTION:
+				return "Function";
+			case DICTIONARY:
+				return "Dictionary";
+			case OBJECT:
+				return "Object";
+			case POINTER:
+				return "Pointer";
+			case TYPE_NAME:
+				return "Type";
+			default:
+				return "<error-type>";
+		}
+	}
+}

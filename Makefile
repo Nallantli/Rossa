@@ -86,8 +86,8 @@ bin/ruota.exe: src/Main.cpp $(DIR)/libruota.a
 bin/ruota: src/Main.cpp $(DIR)/libruota.a
 	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
 
-$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
-	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o
+$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
 
 $(DIR)/Ruota.o: src/ruota/Ruota.cpp
 	$(CC) -o $@ src/ruota/Ruota.cpp -c $(OFLAGS)
@@ -112,3 +112,12 @@ $(DIR)/Function.o: src/ruota/Function.cpp
 
 $(DIR)/Signature.o: src/ruota/Signature.cpp
 	$(CC) -o $@ src/ruota/Signature.cpp -c $(OFLAGS)
+
+$(DIR)/Value.o: src/ruota/Value.cpp
+	$(CC) -o $@ src/ruota/Value.cpp -c $(OFLAGS)
+
+$(DIR)/Symbol.o: src/ruota/Symbol.cpp
+	$(CC) -o $@ src/ruota/Symbol.cpp -c $(OFLAGS)
+
+$(DIR)/RTError.o: src/ruota/RTError.cpp
+	$(CC) -o $@ src/ruota/RTError.cpp -c $(OFLAGS)

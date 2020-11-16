@@ -1,6 +1,5 @@
 #include "Parser.h"
 #include "Library.h"
-#include "NodeParser.h"
 
 using namespace ruota;
 
@@ -812,6 +811,23 @@ const Symbol BAndI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 			if (evalB.getValueType() != NUMBER)
 				break;
 			return Symbol(evalA.getNumber(&token, stack_trace) & evalB.getNumber(&token, stack_trace));
+		case STRING:
+		{
+			if (evalB.getValueType() != ARRAY)
+				break;
+			boost::format ret(evalA.getString(&token, stack_trace));
+			for (auto &e : evalB.getVector(&token, stack_trace)) {
+				std::string s;
+				if (e.getValueType() != STRING)
+					s = e.toString(&token, stack_trace);
+				else
+					s = e.getString(&token, stack_trace);
+				ret = ret % s;
+			}
+			if (ret.remaining_args() > 0)
+				throw RTError(_FAILURE_STRING_FORMAT_, token, stack_trace);
+			return Symbol(ret.str());
+		}
 		case OBJECT:
 		{
 			auto o = evalA.getObject(&token, stack_trace);
@@ -936,7 +952,7 @@ ExternI::ExternI(const std::string &id, const std::shared_ptr<Instruction> &a, c
 
 const Symbol ExternI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
-	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, _MAIN_HASH_);
+	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Ruota::MAIN_HASH);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1078,13 +1094,12 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 					try {
 						auto s = evalA.getString(&token, stack_trace);
 						if (s.length() > 2 && s[0] == '0' && isalpha(s[1])) {
-							switch (s[1])
-							{
-							case 'b':
-							case 'B':
-								return Symbol(CNumber::Long(std::stoll(s.substr(2), nullptr, 2)));
-							default:
-								return Symbol(CNumber::Long(std::stoll(s, nullptr, 0)));
+							switch (s[1]) {
+								case 'b':
+								case 'B':
+									return Symbol(CNumber::Long(std::stoll(s.substr(2), nullptr, 2)));
+								default:
+									return Symbol(CNumber::Long(std::stoll(s, nullptr, 0)));
 							}
 						}
 						return Symbol(CNumber::Double(std::stold(s)));

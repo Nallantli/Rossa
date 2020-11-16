@@ -132,10 +132,10 @@ const int Lexer::getToken()
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = CNumber::Double(INFINITY);
 			return TOK_NUM;
-		} 		else if (ID_STRING == "nan") {
+		} else if (ID_STRING == "nan") {
 			NUM_VALUE = CNumber::Double(NAN);
 			return TOK_NUM;
-		} 		else if (Ruota::bOperators.find(ID_STRING) != Ruota::bOperators.end() || Ruota::uOperators.find(ID_STRING) != Ruota::uOperators.end())
+		} else if (Ruota::bOperators.find(ID_STRING) != Ruota::bOperators.end() || Ruota::uOperators.find(ID_STRING) != Ruota::uOperators.end())
 			return TOK_OPR;
 
 		return TOK_IDF;
@@ -147,15 +147,14 @@ const int Lexer::getToken()
 				last = nextChar();
 				numStr += last;
 			}
-			switch (base)
-			{
-			case 'b':
-			case 'B':
-				NUM_VALUE = CNumber::Long(std::stoll(numStr, nullptr, 2));
-				break;
-			default:
-				NUM_VALUE = CNumber::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
-				break;
+			switch (base) {
+				case 'b':
+				case 'B':
+					NUM_VALUE = CNumber::Long(std::stoll(numStr, nullptr, 2));
+					break;
+				default:
+					NUM_VALUE = CNumber::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
+					break;
 			}
 			ID_STRING = "0" + std::string(1, base) + numStr;
 			return TOK_NUM;

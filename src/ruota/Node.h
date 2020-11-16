@@ -4,11 +4,6 @@
 
 namespace ruota
 {
-	inline std::string colorASCII(const TextColor &color)
-	{
-		return "\033[" + std::to_string(color) + "m";
-	}
-
 	class ContainerNode : public Node
 	{
 	private:
