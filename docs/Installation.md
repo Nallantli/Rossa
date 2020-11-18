@@ -9,9 +9,12 @@ git clone https://github.com/Nallantli/Ruota
 cd Ruota
 ```
 
-You will also need the following libraries in order to build:
+You will also need the following librar(y/ies) in order to build:
 
 * Boost (https://www.boost.org/)
+
+For `libsdl`, these additionally will be necessary:
+
 * SDL (https://www.libsdl.org/)
 * SDL_image (https://www.libsdl.org/projects/SDL_image/)
 
@@ -51,3 +54,13 @@ All systems need only type the `make` command.
 ```bash
 make
 ```
+
+The libraries (other than the standard `libstd`/`sdl.ruo`) need to be compiled before use:
+
+```bash
+make libnet
+make libfs
+make libsdl
+```
+
+Alternatively, `make libs` compiles all of the above.

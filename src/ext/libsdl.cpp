@@ -306,7 +306,7 @@ namespace libsdl
 		}
 
 		auto w = std::make_shared<Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
-		std::vector<Symbol> v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(CNumber::Long(w->windowID)) };
+		std::vector<Symbol> v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(RNumber::Long(w->windowID)) };
 		return Symbol(v);
 	}
 
@@ -315,173 +315,173 @@ namespace libsdl
 		SDL_Event e;
 		sym_map_t data;
 		if (SDL_PollEvent(&e)) {
-			data["type"] = Symbol(CNumber::Long(e.type));
+			data["type"] = Symbol(RNumber::Long(e.type));
 			switch (e.type) {
 				case SDL_WINDOWEVENT:
-					data["timestamp"] = Symbol(CNumber::Long(e.window.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.window.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.window.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.window.windowID));
 					data["window"] = registered[e.window.windowID];
-					data["event"] = Symbol(CNumber::Long(e.window.event));
-					data["data1"] = Symbol(CNumber::Long(e.window.data1));
-					data["data2"] = Symbol(CNumber::Long(e.window.data2));
+					data["event"] = Symbol(RNumber::Long(e.window.event));
+					data["data1"] = Symbol(RNumber::Long(e.window.data1));
+					data["data2"] = Symbol(RNumber::Long(e.window.data2));
 					return Symbol(data);
 				case SDL_KEYDOWN:
 				case SDL_KEYUP:
 				{
-					data["timestamp"] = Symbol(CNumber::Long(e.key.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.key.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.key.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.key.windowID));
 					data["window"] = registered[e.key.windowID];
-					data["state"] = Symbol(CNumber::Long(e.key.state));
-					data["repeat"] = Symbol(CNumber::Long(e.key.repeat));
+					data["state"] = Symbol(RNumber::Long(e.key.state));
+					data["repeat"] = Symbol(RNumber::Long(e.key.repeat));
 					sym_map_t keysym;
-					keysym["scancode"] = Symbol(CNumber::Long(e.key.keysym.scancode));
-					keysym["sym"] = Symbol(CNumber::Long(e.key.keysym.sym));
-					keysym["mod"] = Symbol(CNumber::Long(e.key.keysym.mod));
+					keysym["scancode"] = Symbol(RNumber::Long(e.key.keysym.scancode));
+					keysym["sym"] = Symbol(RNumber::Long(e.key.keysym.sym));
+					keysym["mod"] = Symbol(RNumber::Long(e.key.keysym.mod));
 					data["keysym"] = Symbol(keysym);
 					return Symbol(data);
 				}
 				case SDL_TEXTEDITING:
-					data["timestamp"] = Symbol(CNumber::Long(e.edit.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.edit.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.edit.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.edit.windowID));
 					data["window"] = registered[e.edit.windowID];
 					data["text"] = Symbol(std::string(e.edit.text));
-					data["start"] = Symbol(CNumber::Long(e.edit.start));
-					data["length"] = Symbol(CNumber::Long(e.edit.length));
+					data["start"] = Symbol(RNumber::Long(e.edit.start));
+					data["length"] = Symbol(RNumber::Long(e.edit.length));
 					return Symbol(data);
 				case SDL_TEXTINPUT:
-					data["timestamp"] = Symbol(CNumber::Long(e.text.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.text.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.text.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.text.windowID));
 					data["window"] = registered[e.text.windowID];
 					data["text"] = Symbol(std::string(e.text.text));
 					return Symbol(data);
 				case SDL_MOUSEMOTION:
-					data["timestamp"] = Symbol(CNumber::Long(e.motion.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.motion.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.motion.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.motion.windowID));
 					data["window"] = registered[e.motion.windowID];
-					data["which"] = Symbol(CNumber::Long(e.motion.which));
-					data["state"] = Symbol(CNumber::Long(e.motion.state));
-					data["x"] = Symbol(CNumber::Long(e.motion.x));
-					data["y"] = Symbol(CNumber::Long(e.motion.y));
-					data["xrel"] = Symbol(CNumber::Long(e.motion.xrel));
-					data["yrel"] = Symbol(CNumber::Long(e.motion.yrel));
+					data["which"] = Symbol(RNumber::Long(e.motion.which));
+					data["state"] = Symbol(RNumber::Long(e.motion.state));
+					data["x"] = Symbol(RNumber::Long(e.motion.x));
+					data["y"] = Symbol(RNumber::Long(e.motion.y));
+					data["xrel"] = Symbol(RNumber::Long(e.motion.xrel));
+					data["yrel"] = Symbol(RNumber::Long(e.motion.yrel));
 					return Symbol(data);
 				case SDL_MOUSEBUTTONDOWN:
 				case SDL_MOUSEBUTTONUP:
-					data["timestamp"] = Symbol(CNumber::Long(e.button.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.button.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.button.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.button.windowID));
 					data["window"] = registered[e.button.windowID];
-					data["which"] = Symbol(CNumber::Long(e.button.which));
-					data["state"] = Symbol(CNumber::Long(e.button.state));
-					data["x"] = Symbol(CNumber::Long(e.button.x));
-					data["y"] = Symbol(CNumber::Long(e.button.y));
-					data["button"] = Symbol(CNumber::Long(e.button.button));
-					data["clicks"] = Symbol(CNumber::Long(e.button.clicks));
+					data["which"] = Symbol(RNumber::Long(e.button.which));
+					data["state"] = Symbol(RNumber::Long(e.button.state));
+					data["x"] = Symbol(RNumber::Long(e.button.x));
+					data["y"] = Symbol(RNumber::Long(e.button.y));
+					data["button"] = Symbol(RNumber::Long(e.button.button));
+					data["clicks"] = Symbol(RNumber::Long(e.button.clicks));
 					return Symbol(data);
 				case SDL_MOUSEWHEEL:
-					data["timestamp"] = Symbol(CNumber::Long(e.wheel.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.wheel.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.wheel.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.wheel.windowID));
 					data["window"] = registered[e.wheel.windowID];
-					data["which"] = Symbol(CNumber::Long(e.wheel.which));
-					data["direction"] = Symbol(CNumber::Long(e.wheel.direction));
-					data["x"] = Symbol(CNumber::Long(e.wheel.x));
-					data["y"] = Symbol(CNumber::Long(e.wheel.y));
+					data["which"] = Symbol(RNumber::Long(e.wheel.which));
+					data["direction"] = Symbol(RNumber::Long(e.wheel.direction));
+					data["x"] = Symbol(RNumber::Long(e.wheel.x));
+					data["y"] = Symbol(RNumber::Long(e.wheel.y));
 					return Symbol(data);
 				case SDL_JOYAXISMOTION:
-					data["timestamp"] = Symbol(CNumber::Long(e.jaxis.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.jaxis.which));
-					data["axis"] = Symbol(CNumber::Long(e.jaxis.axis));
-					data["value"] = Symbol(CNumber::Long(e.jaxis.value));
+					data["timestamp"] = Symbol(RNumber::Long(e.jaxis.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.jaxis.which));
+					data["axis"] = Symbol(RNumber::Long(e.jaxis.axis));
+					data["value"] = Symbol(RNumber::Long(e.jaxis.value));
 					return Symbol(data);
 				case SDL_JOYBALLMOTION:
-					data["timestamp"] = Symbol(CNumber::Long(e.jball.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.jball.which));
-					data["ball"] = Symbol(CNumber::Long(e.jball.ball));
-					data["xrel"] = Symbol(CNumber::Long(e.jball.xrel));
-					data["yrel"] = Symbol(CNumber::Long(e.jball.yrel));
+					data["timestamp"] = Symbol(RNumber::Long(e.jball.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.jball.which));
+					data["ball"] = Symbol(RNumber::Long(e.jball.ball));
+					data["xrel"] = Symbol(RNumber::Long(e.jball.xrel));
+					data["yrel"] = Symbol(RNumber::Long(e.jball.yrel));
 					return Symbol(data);
 				case SDL_JOYHATMOTION:
-					data["timestamp"] = Symbol(CNumber::Long(e.jhat.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.jhat.which));
-					data["hat"] = Symbol(CNumber::Long(e.jhat.hat));
-					data["value"] = Symbol(CNumber::Long(e.jhat.value));
+					data["timestamp"] = Symbol(RNumber::Long(e.jhat.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.jhat.which));
+					data["hat"] = Symbol(RNumber::Long(e.jhat.hat));
+					data["value"] = Symbol(RNumber::Long(e.jhat.value));
 					return Symbol(data);
 				case SDL_JOYBUTTONDOWN:
 				case SDL_JOYBUTTONUP:
-					data["timestamp"] = Symbol(CNumber::Long(e.jbutton.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.jbutton.which));
-					data["button"] = Symbol(CNumber::Long(e.jbutton.button));
-					data["state"] = Symbol(CNumber::Long(e.jbutton.state));
+					data["timestamp"] = Symbol(RNumber::Long(e.jbutton.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.jbutton.which));
+					data["button"] = Symbol(RNumber::Long(e.jbutton.button));
+					data["state"] = Symbol(RNumber::Long(e.jbutton.state));
 					return Symbol(data);
 				case SDL_JOYDEVICEADDED:
 				case SDL_JOYDEVICEREMOVED:
-					data["timestamp"] = Symbol(CNumber::Long(e.jdevice.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.jdevice.which));
+					data["timestamp"] = Symbol(RNumber::Long(e.jdevice.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.jdevice.which));
 					return Symbol(data);
 				case SDL_CONTROLLERAXISMOTION:
-					data["timestamp"] = Symbol(CNumber::Long(e.caxis.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.caxis.which));
-					data["axis"] = Symbol(CNumber::Long(e.caxis.axis));
-					data["value"] = Symbol(CNumber::Long(e.caxis.value));
+					data["timestamp"] = Symbol(RNumber::Long(e.caxis.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.caxis.which));
+					data["axis"] = Symbol(RNumber::Long(e.caxis.axis));
+					data["value"] = Symbol(RNumber::Long(e.caxis.value));
 					return Symbol(data);
 				case SDL_CONTROLLERBUTTONDOWN:
 				case SDL_CONTROLLERBUTTONUP:
-					data["timestamp"] = Symbol(CNumber::Long(e.cbutton.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.cbutton.which));
-					data["button"] = Symbol(CNumber::Long(e.cbutton.button));
-					data["state"] = Symbol(CNumber::Long(e.cbutton.state));
+					data["timestamp"] = Symbol(RNumber::Long(e.cbutton.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.cbutton.which));
+					data["button"] = Symbol(RNumber::Long(e.cbutton.button));
+					data["state"] = Symbol(RNumber::Long(e.cbutton.state));
 					return Symbol(data);
 				case SDL_CONTROLLERDEVICEADDED:
 				case SDL_CONTROLLERDEVICEREMOVED:
 				case SDL_CONTROLLERDEVICEREMAPPED:
-					data["timestamp"] = Symbol(CNumber::Long(e.cdevice.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.cdevice.which));
+					data["timestamp"] = Symbol(RNumber::Long(e.cdevice.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.cdevice.which));
 					return Symbol(data);
 				case SDL_AUDIODEVICEADDED:
 				case SDL_AUDIODEVICEREMOVED:
-					data["timestamp"] = Symbol(CNumber::Long(e.adevice.timestamp));
-					data["which"] = Symbol(CNumber::Long(e.adevice.which));
-					data["iscapture"] = Symbol(CNumber::Long(e.adevice.iscapture));
+					data["timestamp"] = Symbol(RNumber::Long(e.adevice.timestamp));
+					data["which"] = Symbol(RNumber::Long(e.adevice.which));
+					data["iscapture"] = Symbol(RNumber::Long(e.adevice.iscapture));
 					return Symbol(data);
 				case SDL_QUIT:
-					data["timestamp"] = Symbol(CNumber::Long(e.quit.timestamp));
+					data["timestamp"] = Symbol(RNumber::Long(e.quit.timestamp));
 					return Symbol(data);
 				case SDL_FINGERMOTION:
 				case SDL_FINGERDOWN:
 				case SDL_FINGERUP:
-					data["timestamp"] = Symbol(CNumber::Long(e.tfinger.timestamp));
-					data["touchId"] = Symbol(CNumber::Long(e.tfinger.touchId));
-					data["fingerId"] = Symbol(CNumber::Long(e.tfinger.fingerId));
-					data["x"] = Symbol(CNumber::Double(e.tfinger.x));
-					data["y"] = Symbol(CNumber::Double(e.tfinger.y));
-					data["dx"] = Symbol(CNumber::Double(e.tfinger.dx));
-					data["dy"] = Symbol(CNumber::Double(e.tfinger.dy));
-					data["pressure"] = Symbol(CNumber::Double(e.tfinger.pressure));
+					data["timestamp"] = Symbol(RNumber::Long(e.tfinger.timestamp));
+					data["touchId"] = Symbol(RNumber::Long(e.tfinger.touchId));
+					data["fingerId"] = Symbol(RNumber::Long(e.tfinger.fingerId));
+					data["x"] = Symbol(RNumber::Double(e.tfinger.x));
+					data["y"] = Symbol(RNumber::Double(e.tfinger.y));
+					data["dx"] = Symbol(RNumber::Double(e.tfinger.dx));
+					data["dy"] = Symbol(RNumber::Double(e.tfinger.dy));
+					data["pressure"] = Symbol(RNumber::Double(e.tfinger.pressure));
 					return Symbol(data);
 				case SDL_MULTIGESTURE:
-					data["timestamp"] = Symbol(CNumber::Long(e.mgesture.timestamp));
-					data["touchId"] = Symbol(CNumber::Long(e.mgesture.touchId));
-					data["dTheta"] = Symbol(CNumber::Double(e.mgesture.dTheta));
-					data["dDist"] = Symbol(CNumber::Double(e.mgesture.dDist));
-					data["x"] = Symbol(CNumber::Double(e.mgesture.x));
-					data["y"] = Symbol(CNumber::Double(e.mgesture.y));
-					data["numFingers"] = Symbol(CNumber::Long(e.mgesture.numFingers));
+					data["timestamp"] = Symbol(RNumber::Long(e.mgesture.timestamp));
+					data["touchId"] = Symbol(RNumber::Long(e.mgesture.touchId));
+					data["dTheta"] = Symbol(RNumber::Double(e.mgesture.dTheta));
+					data["dDist"] = Symbol(RNumber::Double(e.mgesture.dDist));
+					data["x"] = Symbol(RNumber::Double(e.mgesture.x));
+					data["y"] = Symbol(RNumber::Double(e.mgesture.y));
+					data["numFingers"] = Symbol(RNumber::Long(e.mgesture.numFingers));
 					return Symbol(data);
 				case SDL_DOLLARGESTURE:
 				case SDL_DOLLARRECORD:
-					data["timestamp"] = Symbol(CNumber::Long(e.dgesture.timestamp));
-					data["touchId"] = Symbol(CNumber::Long(e.dgesture.touchId));
-					data["gestureId"] = Symbol(CNumber::Long(e.dgesture.gestureId));
-					data["numFingers"] = Symbol(CNumber::Long(e.dgesture.numFingers));
-					data["error"] = Symbol(CNumber::Double(e.dgesture.error));
-					data["x"] = Symbol(CNumber::Double(e.dgesture.x));
-					data["y"] = Symbol(CNumber::Double(e.dgesture.y));
+					data["timestamp"] = Symbol(RNumber::Long(e.dgesture.timestamp));
+					data["touchId"] = Symbol(RNumber::Long(e.dgesture.touchId));
+					data["gestureId"] = Symbol(RNumber::Long(e.dgesture.gestureId));
+					data["numFingers"] = Symbol(RNumber::Long(e.dgesture.numFingers));
+					data["error"] = Symbol(RNumber::Double(e.dgesture.error));
+					data["x"] = Symbol(RNumber::Double(e.dgesture.x));
+					data["y"] = Symbol(RNumber::Double(e.dgesture.y));
 					return Symbol(data);
 				case SDL_DROPFILE:
 				case SDL_DROPBEGIN:
 				case SDL_DROPTEXT:
 				case SDL_DROPCOMPLETE:
-					data["timestamp"] = Symbol(CNumber::Long(e.drop.timestamp));
-					data["windowID"] = Symbol(CNumber::Long(e.drop.windowID));
+					data["timestamp"] = Symbol(RNumber::Long(e.drop.timestamp));
+					data["windowID"] = Symbol(RNumber::Long(e.drop.windowID));
 					data["window"] = registered[e.drop.windowID];
 					if (e.drop.file != NULL) {
 						data["file"] = Symbol(std::string(e.drop.file));
@@ -493,7 +493,7 @@ namespace libsdl
 			}
 		}
 
-		data["type"] = Symbol(CNumber());
+		data["type"] = Symbol(RNumber());
 		return Symbol(data);
 	}
 

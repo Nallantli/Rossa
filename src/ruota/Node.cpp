@@ -165,6 +165,44 @@ std::shared_ptr<Node> BreakNode::fold() const
 
 //------------------------------------------------------------------------------------------------------
 
+ContinueNode::ContinueNode(
+	const Token &token) : Node(CONTINUE_NODE,
+		token)
+{}
+
+std::shared_ptr<Instruction> ContinueNode::genParser() const
+{
+	return std::make_shared<ContainerI>(Symbol(ID_CONTINUE), token);
+}
+
+bool ContinueNode::isConst() const
+{
+	return true;
+}
+
+std::stringstream ContinueNode::printTree(std::string indent, bool last) const
+{
+	std::stringstream ss;
+	ss << indent;
+	if (last) {
+		ss << "└─";
+		indent += "  ";
+	} else {
+		ss << "├─";
+		indent += "│ ";
+	}
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CONTINUE\n" << colorASCII(RESET_TEXT);
+	return ss;
+}
+
+std::shared_ptr<Node> ContinueNode::fold() const
+{
+	return std::make_unique<ContainerNode>(Symbol(ID_CONTINUE), token);
+}
+
+//------------------------------------------------------------------------------------------------------
+
 IDNode::IDNode(
 	hash_ull key,
 	const Token &token) : Node(ID_NODE,
@@ -928,7 +966,7 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 	if (op == "+")
 		return a->genParser();
 	if (op == "-")
-		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(CNumber::Long(0)), token)->genParser(), a->genParser(), token);
+		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(RNumber::Long(0)), token)->genParser(), a->genParser(), token);
 	if (op == "!")
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 

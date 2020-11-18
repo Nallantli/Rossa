@@ -31,9 +31,9 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/ruota.exe plugins
+$(dir_present): bin/ruota.exe bin/lib/libstd$(LIB_EXT)
 
-$(dir_absent): $(DIR) bin/ruota.exe plugins
+$(dir_absent): $(DIR) bin/ruota.exe bin/lib/libstd$(LIB_EXT)
 
 $(DIR):
 	mkdir $@
@@ -57,16 +57,22 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/ruota plugins
+$(dir_present): bin/ruota bin/lib/libstd$(LIB_EXT)
 
-$(dir_absent): $(DIR) bin/ruota plugins
+$(dir_absent): $(DIR) bin/ruota bin/lib/libstd$(LIB_EXT)
 
 $(DIR):
 	mkdir -p $@
 
 endif
 
-plugins: bin/lib/libstd$(LIB_EXT) bin/lib/libfs$(LIB_EXT) bin/lib/libnet$(LIB_EXT) bin/lib/libsdl$(LIB_EXT)
+libs: libfs libnet libsdl
+
+libfs: bin/lib/libfs$(LIB_EXT)
+
+libnet: bin/lib/libnet$(LIB_EXT)
+
+libsdl: bin/lib/libsdl$(LIB_EXT)
 
 bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp $(DIR)/libruota.a
 	$(CC) -o $@ src/ext/libstd.cpp $(DIR)/libruota.a $(LFLAGS)
@@ -86,8 +92,8 @@ bin/ruota.exe: src/Main.cpp $(DIR)/libruota.a
 bin/ruota: src/Main.cpp $(DIR)/libruota.a
 	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
 
-$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
-	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Lexer.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
 
 $(DIR)/Ruota.o: src/ruota/Ruota.cpp
 	$(CC) -o $@ src/ruota/Ruota.cpp -c $(OFLAGS)
@@ -97,9 +103,6 @@ $(DIR)/Node.o: src/ruota/Node.cpp
 
 $(DIR)/NodeParser.o: src/ruota/NodeParser.cpp
 	$(CC) -o $@ src/ruota/NodeParser.cpp -c $(OFLAGS)
-
-$(DIR)/Lexer.o: src/ruota/Lexer.cpp
-	$(CC) -o $@ src/ruota/Lexer.cpp -c $(OFLAGS)
 
 $(DIR)/Parser.o: src/ruota/Parser.cpp
 	$(CC) -o $@ src/ruota/Parser.cpp -c $(OFLAGS)

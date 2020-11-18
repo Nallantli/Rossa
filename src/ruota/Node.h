@@ -42,6 +42,16 @@ namespace ruota
 		std::shared_ptr<Node> fold() const override;
 	};
 
+	class ContinueNode : public Node
+	{
+	public:
+		ContinueNode(const Token &);
+		std::shared_ptr<Instruction> genParser() const override;
+		bool isConst() const override;
+		std::stringstream printTree(std::string, bool) const override;
+		std::shared_ptr<Node> fold() const override;
+	};
+
 	class IDNode : public Node
 	{
 	private:

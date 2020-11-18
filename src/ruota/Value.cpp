@@ -20,7 +20,7 @@ Value::Value(const std::shared_ptr<Scope> &valueObject) : type(OBJECT), valueObj
 Value::Value(const sig_t &ftype, const std::shared_ptr<const Function> &function) : type(FUNCTION), valueFunction({ {function->getArgSize(), {{ftype, function}}} })
 {}
 
-Value::Value(const CNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber)
+Value::Value(const RNumber &valueNumber) : type(NUMBER), valueNumber(valueNumber)
 {}
 
 Value::Value(const std::vector<Symbol> &valueVector) : type(ARRAY), valueVector(valueVector)

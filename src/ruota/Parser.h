@@ -2,8 +2,6 @@
 
 #include "Ruota.h"
 
-#include <boost/function.hpp>
-
 namespace ruota
 {
 	class UnaryI : public Instruction

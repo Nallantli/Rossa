@@ -1,5 +1,4 @@
 #include "Parser.h"
-#include "Library.h"
 
 using namespace ruota;
 
@@ -142,8 +141,11 @@ const Symbol WhileI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 				return temp;
 			case ID_BREAK:
 				return Symbol();
+			case ID_CONTINUE:
+				continue;
 			default:
 				newScope.clear();
+				break;
 		}
 	}
 	return Symbol();
@@ -169,8 +171,11 @@ const Symbol ForI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 				return temp;
 			case ID_BREAK:
 				return Symbol();
+			case ID_CONTINUE:
+				continue;
 			default:
 				newScope.clear();
+				break;
 		}
 	}
 	return Symbol();
@@ -981,14 +986,14 @@ const Symbol LengthI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				else if ((c & 0xF8) == 0xF0)
 					i += 3;
 				else
-					return Symbol(CNumber::Long(evalA.getString(&token, stack_trace).size()));
+					return Symbol(RNumber::Long(evalA.getString(&token, stack_trace).size()));
 			}
-			return Symbol(CNumber::Long(q));
+			return Symbol(RNumber::Long(q));
 		}
 		case DICTIONARY:
-			return Symbol(CNumber::Long(evalA.dictionarySize(&token, stack_trace)));
+			return Symbol(RNumber::Long(evalA.dictionarySize(&token, stack_trace)));
 		case ARRAY:
-			return Symbol(CNumber::Long(evalA.vectorSize()));
+			return Symbol(RNumber::Long(evalA.vectorSize()));
 		default:
 			throw RTError(_FAILURE_LENGTH_, token, stack_trace);
 	}
@@ -1006,11 +1011,11 @@ const Symbol SizeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
 		case STRING:
-			return Symbol(CNumber::Long(evalA.getString(&token, stack_trace).size()));
+			return Symbol(RNumber::Long(evalA.getString(&token, stack_trace).size()));
 		case DICTIONARY:
-			return Symbol(CNumber::Long(evalA.dictionarySize(&token, stack_trace)));
+			return Symbol(RNumber::Long(evalA.dictionarySize(&token, stack_trace)));
 		case ARRAY:
-			return Symbol(CNumber::Long(evalA.vectorSize()));
+			return Symbol(RNumber::Long(evalA.vectorSize()));
 		default:
 			throw RTError(_FAILURE_SIZE_, token, stack_trace);
 	}
@@ -1089,7 +1094,7 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				case NUMBER:
 					return evalA;
 				case NIL:
-					return Symbol(CNumber::Long(0));
+					return Symbol(RNumber::Long(0));
 				case STRING:
 					try {
 						auto s = evalA.getString(&token, stack_trace);
@@ -1097,12 +1102,12 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 							switch (s[1]) {
 								case 'b':
 								case 'B':
-									return Symbol(CNumber::Long(std::stoll(s.substr(2), nullptr, 2)));
+									return Symbol(RNumber::Long(std::stoll(s.substr(2), nullptr, 2)));
 								default:
-									return Symbol(CNumber::Long(std::stoll(s, nullptr, 0)));
+									return Symbol(RNumber::Long(std::stoll(s, nullptr, 0)));
 							}
 						}
-						return Symbol(CNumber::Double(std::stold(s)));
+						return Symbol(RNumber::Double(std::stold(s)));
 					} catch (const std::invalid_argument &e) {
 						throw RTError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token, stack_trace)).str(), token, stack_trace);
 					}
@@ -1261,7 +1266,7 @@ const Symbol UntilI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 				break;
 			auto numA = evalA.getNumber(&token, stack_trace);
 			auto numB = evalB.getNumber(&token, stack_trace);
-			auto numStep = (step == nullptr ? CNumber::Long(1) : step->evaluate(scope, stack_trace).getNumber(&token, stack_trace));
+			auto numStep = (step == nullptr ? RNumber::Long(1) : step->evaluate(scope, stack_trace).getNumber(&token, stack_trace));
 			std::vector<Symbol> nv;
 			if (inclusive) {
 				for (; numA <= numB; numA += numStep)
@@ -1439,7 +1444,7 @@ const Symbol CharNI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 	std::vector<Symbol> nv;
 	for (const unsigned char &c : evalA)
-		nv.push_back(Symbol(CNumber::Long(c)));
+		nv.push_back(Symbol(RNumber::Long(c)));
 	return Symbol(nv);
 }
 
@@ -1495,7 +1500,7 @@ const Symbol ParseI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 {
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
-	auto tokens = Ruota::lexer.lexString(evalA, boost::filesystem::current_path() / "nil");
+	auto tokens = Ruota::lexString(evalA, boost::filesystem::current_path() / "nil");
 	NodeParser np(tokens, boost::filesystem::current_path() / "nil");
 	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
 }

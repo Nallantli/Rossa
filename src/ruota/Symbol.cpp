@@ -14,7 +14,7 @@ Symbol::Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(n
 Symbol::Symbol(const type_sll &valueType) : type(ID_CASUAL), d(new Value(valueType))
 {}
 
-Symbol::Symbol(const CNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber))
+Symbol::Symbol(const RNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber))
 {}
 
 Symbol::Symbol(const bool &valueBool) : type(ID_CASUAL), d(new Value(valueBool))
@@ -78,7 +78,7 @@ void Symbol::setSymbolType(const SymbolType &type)
 	this->type = type;
 }
 
-const CNumber &Symbol::getNumber(const Token *token, std::vector<Function> &stack_trace) const
+const RNumber &Symbol::getNumber(const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (d->type != NUMBER)
 		throw RTError(_NOT_NUMBER_, *token, stack_trace);

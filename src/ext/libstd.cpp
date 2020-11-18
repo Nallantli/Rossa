@@ -43,7 +43,7 @@ namespace libstd
 	RUOTA_EXT_SYM(_timeMS, args, token, hash, stack_trace)
 	{
 		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-		return Symbol(CNumber::Long(ms.count()));
+		return Symbol(RNumber::Long(ms.count()));
 	}
 
 	RUOTA_EXT_SYM(_rand_init, args, token, hash, stack_trace)
@@ -59,7 +59,7 @@ namespace libstd
 			std::mt19937);
 
 		std::uniform_real_distribution<long_double_t> distribution(args[1].getNumber(token, stack_trace).getDouble(), args[2].getNumber(token, stack_trace).getDouble());
-		return Symbol(CNumber::Double(distribution(*rng)));
+		return Symbol(RNumber::Double(distribution(*rng)));
 	}
 
 	RUOTA_EXT_SYM(_rand_nextInt, args, token, hash, stack_trace)
@@ -69,7 +69,7 @@ namespace libstd
 			std::mt19937);
 
 		std::uniform_int_distribution<long_int_t> distribution(args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong());
-		return Symbol(CNumber::Long(distribution(*rng)));
+		return Symbol(RNumber::Long(distribution(*rng)));
 	}
 
 	RUOTA_EXT_SYM(_exit, args, token, hash, stack_trace)
@@ -79,7 +79,7 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_system_call, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Long(system(args[0].getString(token, stack_trace).c_str())));
+		return Symbol(RNumber::Long(system(args[0].getString(token, stack_trace).c_str())));
 	}
 
 	RUOTA_EXT_SYM(_sleep, args, token, hash, stack_trace)
@@ -90,58 +90,58 @@ namespace libstd
 
 	RUOTA_EXT_SYM(_log, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::log(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::log(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_sin, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::sin(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::sin(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_cos, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::cos(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::cos(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_tan, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::tan(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::tan(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_sinh, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::sinh(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::sinh(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_cosh, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::cosh(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::cosh(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_tanh, args, token, hash, stack_trace)
 	{
-		return Symbol(CNumber::Double(std::tanh(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Double(std::tanh(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_floor, args, token, hash, stack_trace)
 	{
-		if (args[0].getNumber(token, stack_trace).type == CNumber::LONG_NUM)
+		if (args[0].getNumber(token, stack_trace).type == RNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber::Long(std::floor(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Long(std::floor(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_ceil, args, token, hash, stack_trace)
 	{
-		if (args[0].getNumber(token, stack_trace).type == CNumber::LONG_NUM)
+		if (args[0].getNumber(token, stack_trace).type == RNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber::Long(std::ceil(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Long(std::ceil(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_round, args, token, hash, stack_trace)
 	{
-		if (args[0].getNumber(token, stack_trace).type == CNumber::LONG_NUM)
+		if (args[0].getNumber(token, stack_trace).type == RNumber::LONG_NUM)
 			return args[0];
-		return Symbol(CNumber::Long(std::round(args[0].getNumber(token, stack_trace).getDouble())));
+		return Symbol(RNumber::Long(std::round(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	RUOTA_EXT_SYM(_input_line, args, token, hash, stack_trace)
@@ -164,7 +164,7 @@ namespace libstd
 #else
 		char c = getch();
 #endif
-		return Symbol(CNumber::Long(c));
+		return Symbol(RNumber::Long(c));
 	}
 
 	RUOTA_EXT_SYM(_regex_match, args, token, hash, stack_trace)

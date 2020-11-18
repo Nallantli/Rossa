@@ -1,6 +1,6 @@
 #pragma once
 
-#define _RUOTA_VERSION_ "v1.6.10-alpha"
+#define _RUOTA_VERSION_ "v1.6.11-alpha"
 #define RUOTA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
@@ -11,13 +11,15 @@
 #define PRINTC(s, c) std::cout << colorASCII(c) << s << colorASCII(0)
 
 #include "Locale.h"
-#include "CNumber.h"
+#include "RNumber.h"
 
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#include <boost/dll.hpp>
+#include <boost/function.hpp>
 #include <iostream>
 
 namespace ruota
@@ -26,7 +28,6 @@ namespace ruota
 	class Function;
 	class Scope;
 	class Node;
-	class Lexer;
 	class NodeParser;
 	class Ruota;
 	class Value;
@@ -125,13 +126,15 @@ namespace ruota
 		TOK_LAMBDA = -54,
 		TOK_UNTILT = -55,
 		TOK_UNTILF = -56,
-		TOK_PARSE = -57
+		TOK_PARSE = -57,
+		TOK_CONTINUE = -58
 	};
 
 	enum SymbolType
 	{
 		ID_RETURN,
 		ID_BREAK,
+		ID_CONTINUE,
 		ID_CASUAL,
 		ID_REFER
 	};
@@ -237,6 +240,7 @@ namespace ruota
 		MAP_NODE,
 		CONTAINER_NODE,
 		BREAK_NODE,
+		CONTINUE_NODE,
 		REFER_NODE,
 		SWITCH_NODE,
 		BID_NODE,
@@ -282,7 +286,7 @@ namespace ruota
 		size_t lineNumber;
 		size_t distance;
 		std::string valueString;
-		CNumber valueNumber;
+		RNumber valueNumber;
 		int type = NULL_TOK;
 	};
 
@@ -378,25 +382,6 @@ namespace ruota
 		virtual std::shared_ptr<Node> fold() const = 0;
 	};
 
-	class Lexer
-	{
-	private:
-		std::string ID_STRING;
-		size_t LINE_INDEX;
-		CNumber NUM_VALUE;
-		std::string INPUT;
-		size_t INPUT_INDEX;
-		size_t TOKEN_DIST;
-
-		const int getToken();
-		const char peekChar(const size_t &) const;
-		const char nextChar();
-
-	public:
-		Lexer();
-		std::vector<Token> lexString(const std::string &, const boost::filesystem::path &);
-	};
-
 	class NodeParser
 	{
 	private:
@@ -456,11 +441,13 @@ namespace ruota
 	private:
 		Scope main;
 
+		static const int getToken(const std::string &, size_t &, size_t &, size_t &, std::string &, RNumber &);
+		static const char peekChar(const size_t &, const std::string &, const size_t &);
+		static const char nextChar(const std::string &, size_t &, size_t &, size_t &);
+
 	public:
 		static const std::map<std::string, signed int> bOperators;
 		static const std::map<std::string, signed int> uOperators;
-
-		static Lexer lexer;
 
 		static Hash MAIN_HASH;
 
@@ -500,6 +487,7 @@ namespace ruota
 		std::shared_ptr<Node> compileCode(const std::string &, boost::filesystem::path) const;
 		const Symbol runCode(std::shared_ptr<Node>, bool);
 		static void printError(const RTError &);
+		static const std::vector<Token> lexString(const std::string &, const boost::filesystem::path &);
 	};
 
 	class Value
@@ -513,7 +501,7 @@ namespace ruota
 		{
 			type_sll valueType;
 			bool valueBool;
-			CNumber valueNumber;
+			RNumber valueNumber;
 		};
 
 		std::string valueString;
@@ -530,7 +518,7 @@ namespace ruota
 		Value(const std::shared_ptr<void> &);
 		Value(const std::shared_ptr<Scope> &);
 		Value(const sig_t &, const std::shared_ptr<const Function> &);
-		Value(const CNumber &);
+		Value(const RNumber &);
 		Value(const std::vector<Symbol> &);
 		Value(const sym_map_t &);
 		Value(const std::string &);
@@ -548,7 +536,7 @@ namespace ruota
 		Symbol(const SymbolType &);
 		Symbol(const std::shared_ptr<void> &);
 		Symbol(const type_sll &);
-		Symbol(const CNumber &);
+		Symbol(const RNumber &);
 		Symbol(const bool &);
 		Symbol(const std::vector<Symbol> &);
 		Symbol(const std::shared_ptr<Scope> &);
@@ -562,7 +550,7 @@ namespace ruota
 		static const Symbol allocate(const size_t &);
 		const SymbolType getSymbolType() const;
 		void setSymbolType(const SymbolType &);
-		const CNumber &getNumber(const Token *, std::vector<Function> &) const;
+		const RNumber &getNumber(const Token *, std::vector<Function> &) const;
 		void *getPointer(const Token *, std::vector<Function> &) const;
 		const sym_map_t &getDictionary(const Token *, std::vector<Function> &) const;
 		const Symbol &indexVector(const size_t &, const Token *, std::vector<Function> &) const;
@@ -591,4 +579,48 @@ namespace ruota
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
 	};
+
+	namespace dir
+	{
+		extern std::vector<boost::filesystem::path> loaded;
+
+		inline boost::filesystem::path findFile(const boost::filesystem::path &currentDir, const std::string &filename, const Token *token)
+		{
+			auto currentDirCheck = currentDir / filename;
+			if (boost::filesystem::exists(currentDirCheck))
+				return currentDirCheck;
+			auto libDirCheck = boost::dll::program_location().parent_path() / "lib" / filename;
+			if (boost::filesystem::exists(libDirCheck))
+				return libDirCheck;
+			std::vector<Function> stack_trace;
+			throw RTError((boost::format(_FILE_NOT_FOUND_) % filename).str(), *token, stack_trace);
+		}
+	} // namespace rdir
+
+	namespace lib
+	{
+		extern std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> loaded;
+
+		inline void loadFunction(const boost::filesystem::path &currentDir, const std::string &rawlibname, const std::string &fname, const Token *token)
+		{
+			std::string libname = rawlibname;
+
+#ifdef __unix__
+			libname += ".so";
+#else
+			libname += ".dll";
+#endif
+
+			std::string search = rawlibname + "$" + fname;
+			if (loaded.find(search) != loaded.end())
+				return;
+
+			try {
+				loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(dir::findFile(currentDir, libname, token), fname);
+			} catch (const boost::wrapexcept<boost::system::system_error> &e) {
+				std::vector<Function> stack_trace;
+				throw RTError((boost::format("Error loading `%1%`: %2%") % search % e.what()).str(), *token, stack_trace);
+			}
+		}
+	}
 }

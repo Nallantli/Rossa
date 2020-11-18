@@ -1,4 +1,3 @@
-#include "Library.h"
 #include "Node.h"
 #include <fstream>
 
@@ -1237,7 +1236,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 		myfile.close();
 	}
 
-	auto tokens = Ruota::lexer.lexString(content, path.filename().string());
+	auto tokens = Ruota::lexString(content, path.filename().string());
 	NodeParser np(tokens, path);
 	auto n = np.parse();
 
@@ -1318,6 +1317,12 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
 			nextToken();
 			return std::make_shared<BreakNode>(currentToken);
+		case TOK_CONTINUE:
+			nextToken();
+			if (currentToken.type == NULL_TOK || currentToken.type != ';')
+				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+			nextToken();
+			return std::make_shared<ContinueNode>(currentToken);
 		case TOK_RETURN:
 			nextToken();
 			if (auto ret = parseEquNode()) {
