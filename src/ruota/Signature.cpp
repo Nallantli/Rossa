@@ -44,25 +44,25 @@ const std::string sig::getTypeString(const type_sll &i)
 	else {
 		switch (i) {
 			case NIL:
-				return "Nil";
+				return KEYWORD_NIL_NAME;
 			case NUMBER:
-				return "Number";
+				return KEYWORD_NUMBER;
 			case STRING:
-				return "String";
+				return KEYWORD_STRING;
 			case BOOLEAN_D:
-				return "Boolean";
+				return KEYWORD_BOOLEAN;
 			case ARRAY:
-				return "Array";
+				return KEYWORD_ARRAY;
 			case FUNCTION:
-				return "Function";
+				return KEYWORD_FUNCTION;
 			case DICTIONARY:
-				return "Dictionary";
+				return KEYWORD_DICTIONARY;
 			case OBJECT:
-				return "Object";
+				return KEYWORD_OBJECT;
 			case POINTER:
-				return "Pointer";
+				return KEYWORD_POINTER;
 			case TYPE_NAME:
-				return "Type";
+				return KEYWORD_TYPE;
 			default:
 				return "<error-type>";
 		}

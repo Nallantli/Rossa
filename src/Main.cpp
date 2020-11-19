@@ -111,7 +111,7 @@ int main(int argc, char const *argv[])
 
 		if (options["std"] == "true") {
 			try {
-				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std.ruo\";", boost::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
 			} catch (const ruota::RTError &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
@@ -153,7 +153,7 @@ int main(int argc, char const *argv[])
 			if (!force) {
 				try {
 					flag = true;
-					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
+					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
 				} catch (const ruota::RTError &e) {
 					flag = false;
 					std::cout << "\n";
@@ -171,7 +171,7 @@ int main(int argc, char const *argv[])
 				force = false;
 				try {
 					flag = true;
-					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "nil");
+					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
 				} catch (const ruota::RTError &e) {
 					flag = false;
 					code = "";
@@ -219,7 +219,7 @@ int main(int argc, char const *argv[])
 
 		try {
 			if (options["std"] == "true")
-				wrapper.runCode(wrapper.compileCode("load \"std.ruo\";", boost::filesystem::current_path() / "nil"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std.ruo\";", boost::filesystem::current_path() / "*"), false);
 			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
 		} catch (const ruota::RTError &e) {
 			ruota::Ruota::printError(e);

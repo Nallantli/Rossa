@@ -7,8 +7,9 @@ std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const To
 
 Hash Ruota::MAIN_HASH = Hash();
 
-const hash_ull Ruota::HASH_INIT = RUOTA_HASH("init");
-const hash_ull Ruota::HASH_THIS = RUOTA_HASH("this");
+const hash_ull Ruota::HASH_INIT = RUOTA_HASH(KEYWORD_INIT);
+const hash_ull Ruota::HASH_BLANK = RUOTA_HASH("");
+const hash_ull Ruota::HASH_THIS = RUOTA_HASH(KEYWORD_THIS);
 const hash_ull Ruota::HASH_DELETER = RUOTA_HASH("~");
 
 const hash_ull Ruota::HASH_ADD = RUOTA_HASH("+");
@@ -33,11 +34,11 @@ const hash_ull Ruota::HASH_SET = RUOTA_HASH("=");
 const hash_ull Ruota::HASH_CALL = RUOTA_HASH("()");
 const hash_ull Ruota::HASH_RANGE = RUOTA_HASH("..");
 
-const hash_ull Ruota::HASH_TO_STRING = RUOTA_HASH("->String");
-const hash_ull Ruota::HASH_TO_NUMBER = RUOTA_HASH("->Number");
-const hash_ull Ruota::HASH_TO_BOOLEAN = RUOTA_HASH("->Boolean");
-const hash_ull Ruota::HASH_TO_VECTOR = RUOTA_HASH("->Array");
-const hash_ull Ruota::HASH_TO_DICTIONARY = RUOTA_HASH("->Dictionary");
+const hash_ull Ruota::HASH_TO_STRING = RUOTA_HASH("->" KEYWORD_STRING);
+const hash_ull Ruota::HASH_TO_NUMBER = RUOTA_HASH("->" KEYWORD_NUMBER);
+const hash_ull Ruota::HASH_TO_BOOLEAN = RUOTA_HASH("->" KEYWORD_BOOLEAN);
+const hash_ull Ruota::HASH_TO_VECTOR = RUOTA_HASH("->" KEYWORD_ARRAY);
+const hash_ull Ruota::HASH_TO_DICTIONARY = RUOTA_HASH("->" KEYWORD_DICTIONARY);
 
 Ruota::Ruota(std::vector<std::string> args)
 {
@@ -215,99 +216,97 @@ const int Ruota::getToken(
 			ID_STRING += last;
 		}
 
-		if (ID_STRING == "then")
+		if (ID_STRING == KEYWORD_THEN)
 			return TOK_THEN;
-		else if (ID_STRING == "else")
+		else if (ID_STRING == KEYWORD_ELSE)
 			return TOK_ELSE;
-		else if (ID_STRING == "do")
+		else if (ID_STRING == KEYWORD_DO)
 			return TOK_DO;
-		else if (ID_STRING == "in")
+		else if (ID_STRING == KEYWORD_IN)
 			return TOK_IN;
-		else if (ID_STRING == "var")
+		else if (ID_STRING == KEYWORD_VAR)
 			return TOK_VAR;
-		else if (ID_STRING == "if")
+		else if (ID_STRING == KEYWORD_IF)
 			return TOK_IF;
-		else if (ID_STRING == "while")
+		else if (ID_STRING == KEYWORD_WHILE)
 			return TOK_WHILE;
-		else if (ID_STRING == "var")
-			return TOK_VAR;
-		else if (ID_STRING == "elif")
+		else if (ID_STRING == KEYWORD_ELIF)
 			return TOK_ELSEIF;
-		else if (ID_STRING == "for")
+		else if (ID_STRING == KEYWORD_FOR)
 			return TOK_FOR;
-		else if (ID_STRING == "true")
+		else if (ID_STRING == KEYWORD_TRUE)
 			return TOK_TRUE;
-		else if (ID_STRING == "false")
+		else if (ID_STRING == KEYWORD_FALSE)
 			return TOK_FALSE;
-		else if (ID_STRING == "return")
+		else if (ID_STRING == KEYWORD_RETURN)
 			return TOK_RETURN;
-		else if (ID_STRING == "nil")
+		else if (ID_STRING == KEYWORD_NIL)
 			return TOK_NIL;
-		else if (ID_STRING == "Number")
+		else if (ID_STRING == KEYWORD_NUMBER)
 			return TOK_NUMBER;
-		else if (ID_STRING == "String")
+		else if (ID_STRING == KEYWORD_STRING)
 			return TOK_STRING;
-		else if (ID_STRING == "Array")
+		else if (ID_STRING == KEYWORD_ARRAY)
 			return TOK_ARRAY;
-		else if (ID_STRING == "Boolean")
+		else if (ID_STRING == KEYWORD_BOOLEAN)
 			return TOK_BOOLEAN;
-		else if (ID_STRING == "Dictionary")
+		else if (ID_STRING == KEYWORD_DICTIONARY)
 			return TOK_DICTIONARY;
-		else if (ID_STRING == "Object")
+		else if (ID_STRING == KEYWORD_OBJECT)
 			return TOK_OBJECT;
-		else if (ID_STRING == "Function")
+		else if (ID_STRING == KEYWORD_FUNCTION)
 			return TOK_FUNCTION;
-		else if (ID_STRING == "Type")
+		else if (ID_STRING == KEYWORD_TYPE)
 			return TOK_TYPE_NAME;
-		else if (ID_STRING == "extern")
+		else if (ID_STRING == KEYWORD_EXTERN)
 			return TOK_EXTERN;
-		else if (ID_STRING == "extern_call")
+		else if (ID_STRING == KEYWORD_EXTERN_CALL)
 			return TOK_EXTERN_CALL;
-		else if (ID_STRING == "size")
+		else if (ID_STRING == KEYWORD_SIZE)
 			return TOK_SIZE;
-		else if (ID_STRING == "length")
+		else if (ID_STRING == KEYWORD_LENGTH)
 			return TOK_LENGTH;
-		else if (ID_STRING == "struct")
+		else if (ID_STRING == KEYWORD_STRUCT)
 			return TOK_STRUCT;
-		else if (ID_STRING == "static")
+		else if (ID_STRING == KEYWORD_STATIC)
 			return TOK_STATIC;
-		else if (ID_STRING == "class")
+		else if (ID_STRING == KEYWORD_CLASS)
 			return TOK_CLASS;
-		else if (ID_STRING == "new")
+		else if (ID_STRING == KEYWORD_NEW)
 			return TOK_NEW;
-		else if (ID_STRING == "load")
+		else if (ID_STRING == KEYWORD_LOAD)
 			return TOK_LOAD;
-		else if (ID_STRING == "alloc")
+		else if (ID_STRING == KEYWORD_ALLOC)
 			return TOK_ALLOC;
-		else if (ID_STRING == "ref")
+		else if (ID_STRING == KEYWORD_REF)
 			return TOK_REF;
-		else if (ID_STRING == "break")
+		else if (ID_STRING == KEYWORD_BREAK)
 			return TOK_BREAK;
-		else if (ID_STRING == "refer")
+		else if (ID_STRING == KEYWORD_REFER)
 			return TOK_REFER;
-		else if (ID_STRING == "Nil")
+		else if (ID_STRING == KEYWORD_NIL_NAME)
 			return TOK_NIL_NAME;
-		else if (ID_STRING == "Pointer")
+		else if (ID_STRING == KEYWORD_POINTER)
 			return TOK_POINTER;
-		else if (ID_STRING == "virtual")
+		else if (ID_STRING == KEYWORD_VIRTUAL)
 			return TOK_VIRTUAL;
-		else if (ID_STRING == "switch")
+		else if (ID_STRING == KEYWORD_SWITCH)
 			return TOK_SWITCH;
-		else if (ID_STRING == "try")
+		else if (ID_STRING == KEYWORD_TRY)
 			return TOK_TRY;
-		else if (ID_STRING == "catch")
+		else if (ID_STRING == KEYWORD_CATCH)
 			return TOK_CATCH;
-		else if (ID_STRING == "throw")
+		else if (ID_STRING == KEYWORD_THROW)
 			return TOK_THROW;
-		else if (ID_STRING == "charn")
+		else if (ID_STRING == KEYWORD_CHAR_N)
 			return TOK_CHARN;
-		else if (ID_STRING == "chars")
+		else if (ID_STRING == KEYWORD_CHAR_S)
 			return TOK_CHARS;
-		else if (ID_STRING == "case")
+		else if (ID_STRING == KEYWORD_CASE)
 			return TOK_CASE;
-		else if (ID_STRING == "parse")
+		else if (ID_STRING == KEYWORD_PARSE)
 			return TOK_PARSE;
-		else if (ID_STRING == "continue")
+		else if (ID_STRING == KEYWORD_CONTINUE)
 			return TOK_CONTINUE;
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = RNumber::Double(INFINITY);

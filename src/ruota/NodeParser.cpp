@@ -26,7 +26,7 @@ std::shared_ptr<Node> NodeParser::parseNumNode()
 
 std::shared_ptr<Node> NodeParser::parseBoolNode()
 {
-	auto n = std::make_shared<ContainerNode>(Symbol(currentToken.valueString == "true"), currentToken);
+	auto n = std::make_shared<ContainerNode>(Symbol(currentToken.valueString == KEYWORD_TRUE), currentToken);
 	nextToken();
 	return n;
 }
@@ -136,17 +136,17 @@ std::shared_ptr<Node> NodeParser::parseCallNode(std::shared_ptr<Node> a)
 			/*if (!args.empty())
 				return logErrorN("Built in functions take a single argument", currentToken);*/
 
-			if (key == "length")
+			if (key == KEYWORD_LENGTH)
 				ret = std::make_shared<CallBuiltNode>(TOK_LENGTH, a_a, marker);
-			if (key == "size")
+			if (key == KEYWORD_SIZE)
 				ret = std::make_shared<CallBuiltNode>(TOK_SIZE, a_a, marker);
-			if (key == "alloc")
+			if (key == KEYWORD_ALLOC)
 				ret = std::make_shared<CallBuiltNode>(TOK_ALLOC, a_a, marker);
-			if (key == "parse")
+			if (key == KEYWORD_PARSE)
 				ret = std::make_shared<CallBuiltNode>(TOK_PARSE, a_a, marker);
-			if (key == "charn")
+			if (key == KEYWORD_CHAR_N)
 				ret = std::make_shared<CallBuiltNode>(TOK_CHARN, a_a, marker);
-			if (key == "chars")
+			if (key == KEYWORD_CHAR_S)
 				ret = std::make_shared<CallBuiltNode>(TOK_CHARS, a_a, marker);
 
 			ret = parseTrailingNode(ret, true);
@@ -762,9 +762,9 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases;
 	auto switchs = parseEquNode();
 	if (!switchs)
-		return logErrorN((boost::format(_EXPECTED_AFTER_) % "switch").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_AFTER_) % KEYWORD_SWITCH).str(), currentToken);
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "in").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != '{')
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
@@ -772,7 +772,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (currentToken.type == NULL_TOK || currentToken.type != TOK_CASE)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "case").str(), currentToken);
+			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CASE).str(), currentToken);
 		nextToken();
 
 		auto c = parseUnitNode();
@@ -780,7 +780,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
 		if (currentToken.type == NULL_TOK || currentToken.type != TOK_DO)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "do").str(), currentToken);
+			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
 		nextToken();
 
 		if (currentToken.type == NULL_TOK || currentToken.type != '{') {
@@ -960,7 +960,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_THEN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "then").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_THEN).str(), currentToken);
 
 	auto marker = currentToken;
 
@@ -1049,7 +1049,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_CATCH)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "catch").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CATCH).str(), currentToken);
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IDF)
@@ -1058,7 +1058,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_THEN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "then").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_THEN).str(), currentToken);
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != '{')
@@ -1089,7 +1089,7 @@ std::shared_ptr<Node> NodeParser::parseWhileNode()
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type != TOK_DO)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "do").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
 
 	auto marker = currentToken;
 
@@ -1121,11 +1121,11 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 	auto id = RUOTA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "in").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
 	nextToken();
 	auto fors = parseEquNode();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_DO)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "do").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
 
 	auto marker = currentToken;
 
@@ -1158,7 +1158,7 @@ std::shared_ptr<Node> NodeParser::parseExternNode()
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "in").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
 	nextToken();
 
 	std::string libname = currentToken.valueString;
@@ -1180,7 +1180,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 	auto key = RUOTA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_CLASS)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "class").str(), currentToken);
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CLASS).str(), currentToken);
 	nextToken();
 	std::shared_ptr<Node> extends = nullptr;
 	if (currentToken.type == NULL_TOK || currentToken.type == ':') {

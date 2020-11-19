@@ -217,7 +217,7 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 {
 	switch (d->type) {
 		case NIL:
-			return "nil";
+			return KEYWORD_NIL;
 		case NUMBER:
 			return d->valueNumber.toString();
 		case STRING:
@@ -245,7 +245,7 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 		case POINTER:
 			return "<Pointer>";
 		case BOOLEAN_D:
-			return d->valueBool ? "true" : "false";
+			return d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE;
 		case ARRAY:
 		{
 			std::string ret = "[";

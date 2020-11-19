@@ -38,6 +38,8 @@ void Scope::traceName(const hash_ull &key)
 			path += RUOTA_DEHASH(p);
 		}
 		hashed_key = RUOTA_HASH(path);
+	} else {
+		hashed_key = Ruota::HASH_BLANK;
 	}
 }
 
@@ -115,7 +117,7 @@ const Symbol Scope::getThis(const Token *token, std::vector<Function> &stack_tra
 	if (parent != NULL)
 		return parent->getThis(token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % "this").str(), *token, stack_trace);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % KEYWORD_THIS).str(), *token, stack_trace);
 }
 
 const bool Scope::hasValue(const hash_ull &key) const

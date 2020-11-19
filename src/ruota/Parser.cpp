@@ -1130,7 +1130,7 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				case NUMBER:
 					return Symbol(evalA.getNumber(&token, stack_trace).getLong() != 0);
 				case STRING:
-					return Symbol(evalA.getString(&token, stack_trace) == "true");
+					return Symbol(evalA.getString(&token, stack_trace) == KEYWORD_TRUE);
 				case OBJECT:
 				{
 					auto o = evalA.getObject(&token, stack_trace);
@@ -1500,7 +1500,7 @@ const Symbol ParseI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 {
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
-	auto tokens = Ruota::lexString(evalA, boost::filesystem::current_path() / "nil");
-	NodeParser np(tokens, boost::filesystem::current_path() / "nil");
+	auto tokens = Ruota::lexString(evalA, boost::filesystem::current_path() / KEYWORD_NIL);
+	NodeParser np(tokens, boost::filesystem::current_path() / KEYWORD_NIL);
 	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
 }

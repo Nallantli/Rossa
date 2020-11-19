@@ -12,6 +12,7 @@
 
 #include "Locale.h"
 #include "RNumber.h"
+#include "Keywords.h"
 
 #include <memory>
 #include <sstream>
@@ -452,6 +453,7 @@ namespace ruota
 		static Hash MAIN_HASH;
 
 		static const hash_ull HASH_THIS;
+		static const hash_ull HASH_BLANK;
 		static const hash_ull HASH_INIT;
 		static const hash_ull HASH_DELETER;
 
