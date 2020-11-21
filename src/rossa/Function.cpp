@@ -1,6 +1,6 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body) : key(key), parent(parent), params(params), body(body)
 {}

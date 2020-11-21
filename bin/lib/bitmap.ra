@@ -1,4 +1,4 @@
-load "fs.ruo";
+load "fs";
 
 static bitmap class {
 	allocate(ref height : Number, ref width : Number) => {

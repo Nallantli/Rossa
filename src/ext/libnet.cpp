@@ -1,21 +1,21 @@
-#include "../ruota/Ruota.h"
+#include "../rossa/Rossa.h"
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <iostream>
 #include "encode.h"
 
-using namespace ruota;
+using namespace rossa;
 
 namespace libnet
 {
-	RUOTA_EXT_SYM(_service_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_service_init, args, token, hash, stack_trace)
 	{
 		auto service = std::make_shared<boost::asio::io_service>();
 		return Symbol(static_cast<std::shared_ptr<void>>(service));
 	}
 
-	RUOTA_EXT_SYM(_socket_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_socket_init, args, token, hash, stack_trace)
 	{
 		auto io_service_object = COERCE_PTR(
 			args[2].getPointer(token, stack_trace),
@@ -33,7 +33,7 @@ namespace libnet
 		return Symbol(static_cast<std::shared_ptr<void>>(sock));
 	}
 
-	RUOTA_EXT_SYM(_socket_send, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_socket_send, args, token, hash, stack_trace)
 	{
 		auto sock = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -44,7 +44,7 @@ namespace libnet
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_socket_read, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_socket_read, args, token, hash, stack_trace)
 	{
 		auto sock = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -57,7 +57,7 @@ namespace libnet
 		return Symbol(str);
 	}
 
-	RUOTA_EXT_SYM(_socket_read_until, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_socket_read_until, args, token, hash, stack_trace)
 	{
 		auto sock = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -71,7 +71,7 @@ namespace libnet
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_socket_close, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_socket_close, args, token, hash, stack_trace)
 	{
 		auto sock = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -84,7 +84,7 @@ namespace libnet
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_server_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_server_init, args, token, hash, stack_trace)
 	{
 		auto io_service_object = COERCE_PTR(
 			args[1].getPointer(token, stack_trace),
@@ -94,7 +94,7 @@ namespace libnet
 		return Symbol(static_cast<std::shared_ptr<void>>(acc));
 	}
 
-	RUOTA_EXT_SYM(_server_accept, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_server_accept, args, token, hash, stack_trace)
 	{
 		auto acc = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -109,7 +109,7 @@ namespace libnet
 		return Symbol(static_cast<std::shared_ptr<void>>(sock));
 	}
 
-	RUOTA_EXT_SYM(_tcp_stream_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_tcp_stream_init, args, token, hash, stack_trace)
 	{
 		const std::string address = args[0].getString(token, stack_trace);
 		const std::string port = std::to_string(args[1].getNumber(token, stack_trace).getLong());
@@ -128,7 +128,7 @@ namespace libnet
 		return Symbol(static_cast<std::shared_ptr<void>>(tcpstream));
 	}
 
-	RUOTA_EXT_SYM(_tcp_stream_request, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_tcp_stream_request, args, token, hash, stack_trace)
 	{
 		const std::string target = args[0].getString(token, stack_trace);
 		const int version = args[1].getNumber(token, stack_trace).getLong();
@@ -160,7 +160,7 @@ namespace libnet
 		return Symbol(ret);
 	}
 
-	RUOTA_EXT_SYM(_tcp_stream_close, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_tcp_stream_close, args, token, hash, stack_trace)
 	{
 		auto tcpstream = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -171,13 +171,13 @@ namespace libnet
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_encodeURI, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_encodeURI, args, token, hash, stack_trace)
 	{
 		const std::string s = args[0].getString(token, stack_trace);
 		return Symbol(encodeURIComponent(s));
 	}
 
-	RUOTA_EXT_SYM(_decodeURI, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_decodeURI, args, token, hash, stack_trace)
 	{
 		const std::string s = args[0].getString(token, stack_trace);
 		return Symbol(decodeURIComponent(s));

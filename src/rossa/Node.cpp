@@ -1,7 +1,7 @@
 #include "Node.h"
 #include "Parser.h"
 
-using namespace ruota;
+using namespace rossa;
 
 Node::Node(
 	const NodeType &type,
@@ -74,7 +74,8 @@ std::shared_ptr<Instruction> VectorNode::genParser() const
 {
 	std::vector<std::shared_ptr<Instruction>> ins;
 	for (auto &n : args)
-		ins.push_back(n->genParser());
+		if (n != nullptr)
+			ins.push_back(n->genParser());
 	if (scoped)
 		return std::make_shared<ScopeI>(ins, token);
 	return std::make_shared<SequenceI>(ins, token);
@@ -83,7 +84,7 @@ std::shared_ptr<Instruction> VectorNode::genParser() const
 bool VectorNode::isConst() const
 {
 	for (auto &c : args)
-		if (!c->isConst())
+		if (c != nullptr && !c->isConst())
 			return false;
 	return true;
 }
@@ -102,7 +103,8 @@ std::stringstream VectorNode::printTree(std::string indent, bool last) const
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
 	ss << "ARRAY : " << scoped << "\n" << colorASCII(RESET_TEXT);
 	for (size_t i = 0; i < args.size(); i++)
-		ss << args[i]->printTree(indent, i == args.size() - 1).str();
+		if (args[i] != nullptr)
+			ss << args[i]->printTree(indent, i == args.size() - 1).str();
 	return ss;
 }
 
@@ -117,7 +119,8 @@ std::shared_ptr<Node> VectorNode::fold() const
 
 	std::vector<std::shared_ptr<Node>> nargs;
 	for (auto &c : args)
-		nargs.push_back(c->fold());
+		if (c != nullptr)
+			nargs.push_back(c->fold());
 	return std::make_unique<VectorNode>(nargs, scoped, token);
 }
 
@@ -238,7 +241,7 @@ std::stringstream IDNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "ID : " << RUOTA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	ss << "ID : " << ROSSA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
 	return ss;
 }
 
@@ -263,7 +266,7 @@ const std::string BIDNode::getKey() const
 
 std::shared_ptr<Instruction> BIDNode::genParser() const
 {
-	return std::make_shared<VariableI>(RUOTA_HASH(key), token);
+	return std::make_shared<VariableI>(ROSSA_HASH(key), token);
 }
 
 bool BIDNode::isConst() const
@@ -329,7 +332,7 @@ std::stringstream DefineNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "DEFINE : " << (key > 0 ? RUOTA_DEHASH(key) : "<LAMBDA>") << ", " << sig::toString(ftype) << "\n" << colorASCII(RESET_TEXT);
+	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << sig::toString(ftype) << "\n" << colorASCII(RESET_TEXT);
 	ss << body->printTree(indent, true).str();
 	return ss;
 }
@@ -452,7 +455,7 @@ std::stringstream ClassNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CLASS : " << RUOTA_DEHASH(key) << ", " << std::to_string(type) << "\n" << colorASCII(RESET_TEXT);
+	ss << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n" << colorASCII(RESET_TEXT);
 	if (extends != nullptr)
 		ss << extends->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
@@ -870,7 +873,7 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 		if (a->getType() == ID_NODE)
 			t = ((IDNode *)a.get())->getKey();
 		else
-			t = RUOTA_HASH(((BIDNode *)a.get())->getKey());
+			t = ROSSA_HASH(((BIDNode *)a.get())->getKey());
 		return std::make_shared<DeclareI>(t, 0, b->genParser(), b->isConst(), token);
 	}
 
@@ -1355,7 +1358,7 @@ std::stringstream ForNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "FOR : " << RUOTA_DEHASH(id) << "\n" << colorASCII(RESET_TEXT);
+	ss << "FOR : " << ROSSA_DEHASH(id) << "\n" << colorASCII(RESET_TEXT);
 	ss << fors->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
 		ss << body[i]->printTree(indent, i == body.size() - 1).str();
@@ -1573,10 +1576,14 @@ std::stringstream SwitchNode::printTree(std::string indent, bool last) const
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
 	ss << "SWITCH\n" << colorASCII(RESET_TEXT);
-	ss << switchs->printTree(indent, gotos.empty()).str();
+	ss << switchs->printTree(indent, gotos.empty() && cases.empty()).str();
 	size_t i = 0;
+	for (auto &e : cases) {
+		ss << e.first->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses).str();
+		i++;
+	}
 	for (auto &e : gotos) {
-		ss << e->printTree(indent, i == gotos.size() - 1 && !elses).str();
+		ss << e->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses).str();
 		i++;
 	}
 	if (elses)
@@ -1640,7 +1647,7 @@ std::stringstream TryCatchNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "TRY_CATCH : " << RUOTA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	ss << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
 	ss << trys->printTree(indent, false).str();
 	ss << catchs->printTree(indent, true).str();
 	return ss;

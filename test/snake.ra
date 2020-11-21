@@ -1,4 +1,4 @@
-load "sdl.ruo";
+load "sdl";
 
 static snake_game class {
 	var	height,

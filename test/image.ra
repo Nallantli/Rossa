@@ -1,4 +1,4 @@
-load "sdl.ruo";
+load "sdl";
 
 w := new Window("Image Test", 800, 600);
 r := w.getRenderer();

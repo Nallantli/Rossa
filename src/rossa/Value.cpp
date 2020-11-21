@@ -1,6 +1,6 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 Value::Value() : type(NIL)
 {}

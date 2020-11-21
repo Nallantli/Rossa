@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "ruota/Ruota.h"
+#include "rossa/Rossa.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -78,7 +78,7 @@ void moveback(std::string &code, int c)
 					std::cout << "\033[2D  \033[2D\033[1A> ";
 				} else {
 					std::cout << "\033[2D  \033[2D\033[1A";
-					PRINTC("└ ", ruota::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", rossa::BRIGHT_YELLOW_TEXT);
 				}
 				if (i > 0)
 					std::cout << "\033[" << i << "C";
@@ -100,20 +100,20 @@ int main(int argc, char const *argv[])
 	auto options = parsed.first;
 
 	if (options["version"] == "true") {
-		std::cout << _RUOTA_VERSION_LONG_ << "\n";
+		std::cout << _ROSSA_VERSION_LONG_ << "\n";
 		return 0;
 	}
-	ruota::Ruota wrapper(parsed.second);
+	rossa::Rossa wrapper(parsed.second);
 	bool tree = options["tree"] == "true";
 
 	if (options["file"] == "") {
-		std::cout << _RUOTA_INTERPRETER_START_ << "\n";
+		std::cout << _ROSSA_INTERPRETER_START_ << "\n";
 
 		if (options["std"] == "true") {
 			try {
-				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std.ruo\";", boost::filesystem::current_path() / "*"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", boost::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const ruota::RTError &e) {
+			} catch (const rossa::RTError &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
@@ -149,21 +149,21 @@ int main(int argc, char const *argv[])
 				}
 			}
 
-			std::shared_ptr<ruota::Node> comp;
+			std::shared_ptr<rossa::Node> comp;
 			if (!force) {
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
-				} catch (const ruota::RTError &e) {
+				} catch (const rossa::RTError &e) {
 					flag = false;
 					std::cout << "\n";
 
 					if (code.find('\n') != std::string::npos) {
 						std::cout << "\033[1A";
-						PRINTC("│ ", ruota::BRIGHT_YELLOW_TEXT);
+						PRINTC("│ ", rossa::BRIGHT_YELLOW_TEXT);
 						std::cout << "\033[2D\033[1B";
 					}
-					PRINTC("└ ", ruota::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", rossa::BRIGHT_YELLOW_TEXT);
 
 					code += "\n";
 				}
@@ -172,11 +172,11 @@ int main(int argc, char const *argv[])
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
-				} catch (const ruota::RTError &e) {
+				} catch (const rossa::RTError &e) {
 					flag = false;
 					code = "";
 					std::cout << "\n";
-					ruota::Ruota::printError(e);
+					rossa::Rossa::printError(e);
 					std::cout << "> ";
 				}
 			}
@@ -186,12 +186,12 @@ int main(int argc, char const *argv[])
 				code = "";
 				try {
 					auto value = wrapper.runCode(std::move(comp), tree);
-					std::vector<ruota::Function> stack_trace;
-					if (value.getValueType() == ruota::ARRAY) {
+					std::vector<rossa::Function> stack_trace;
+					if (value.getValueType() == rossa::ARRAY) {
 						if (value.vectorSize() != 1) {
 							int i = 0;
 							for (auto &e : value.getVector(NULL, stack_trace)) {
-								PRINTC("\t(" + std::to_string(i) + ")\t", ruota::CYAN_TEXT);
+								PRINTC("\t(" + std::to_string(i) + ")\t", rossa::CYAN_TEXT);
 								std::cout << e.toString(NULL, stack_trace) << "\n";
 								i++;
 							}
@@ -199,8 +199,8 @@ int main(int argc, char const *argv[])
 							std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
 						}
 					}
-				} catch (const ruota::RTError &e) {
-					ruota::Ruota::printError(e);
+				} catch (const rossa::RTError &e) {
+					rossa::Rossa::printError(e);
 				}
 			}
 		}
@@ -219,10 +219,10 @@ int main(int argc, char const *argv[])
 
 		try {
 			if (options["std"] == "true")
-				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std.ruo\";", boost::filesystem::current_path() / "*"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", boost::filesystem::current_path() / "*"), false);
 			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
-		} catch (const ruota::RTError &e) {
-			ruota::Ruota::printError(e);
+		} catch (const rossa::RTError &e) {
+			rossa::Rossa::printError(e);
 			return 1;
 		}
 	}

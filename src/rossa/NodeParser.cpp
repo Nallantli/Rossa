@@ -1,7 +1,7 @@
 #include "Node.h"
 #include <fstream>
 
-using namespace ruota;
+using namespace rossa;
 
 NodeParser::NodeParser(
 	const std::vector<Token> &tokens,
@@ -33,7 +33,7 @@ std::shared_ptr<Node> NodeParser::parseBoolNode()
 
 std::shared_ptr<Node> NodeParser::parseIDNode()
 {
-	auto n = std::make_shared<IDNode>(RUOTA_HASH(currentToken.valueString), currentToken);
+	auto n = std::make_shared<IDNode>(ROSSA_HASH(currentToken.valueString), currentToken);
 	nextToken();
 	return n;
 }
@@ -51,12 +51,8 @@ std::shared_ptr<Node> NodeParser::parseBIDNode()
 std::shared_ptr<Node> NodeParser::parseEntryNode()
 {
 	std::vector<std::shared_ptr<Node>> v;
-	while (currentToken.type != NULL_TOK) {
-		if (auto n = parseExprNode())
-			v.push_back(n);
-		else
-			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
-	}
+	while (currentToken.type != NULL_TOK)
+		v.push_back(parseExprNode());
 	return std::make_shared<VectorNode>(v, false, currentToken);
 }
 
@@ -93,7 +89,7 @@ std::shared_ptr<Node> NodeParser::parseCallBuiltNode()
 	auto marker = currentToken;
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != '(')
-		return std::make_shared<IDNode>(RUOTA_HASH(temp), marker);
+		return std::make_shared<IDNode>(ROSSA_HASH(temp), marker);
 	nextToken();
 	auto arg = parseEquNode();
 	if (currentToken.type == NULL_TOK || currentToken.type != ')')
@@ -285,7 +281,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 						typestr += ".";
 						nextToken();
 					}
-					ftype = RUOTA_HASH(typestr);
+					ftype = ROSSA_HASH(typestr);
 					break;
 				}
 				default:
@@ -293,7 +289,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 			}
 		}
 
-		args.push_back({ static_cast<LexerTokenType>(type), RUOTA_HASH(arg) });
+		args.push_back({ static_cast<LexerTokenType>(type), ROSSA_HASH(arg) });
 		types.push_back(ftype);
 
 		if (currentToken.type == NULL_TOK)
@@ -352,7 +348,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 
 	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
-	auto key = RUOTA_HASH(currentToken.valueString);
+	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 
 	auto sig = parseSigNode(ftype);
@@ -513,7 +509,7 @@ std::shared_ptr<Node> NodeParser::parseTypeNode()
 		typestr += ".";
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(RUOTA_HASH(typestr))), currentToken);
+	return std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(ROSSA_HASH(typestr))), currentToken);
 }
 
 std::shared_ptr<Node> NodeParser::parseUntilNode(std::shared_ptr<Node> a, bool inclusive)
@@ -541,9 +537,9 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 	std::shared_ptr<Node> current = a;
 	int pastPrec = 999;
 
-	while (currentToken.type != NULL_TOK && Ruota::bOperators.find(currentToken.valueString) != Ruota::bOperators.end()) {
+	while (currentToken.type != NULL_TOK && Rossa::bOperators.find(currentToken.valueString) != Rossa::bOperators.end()) {
 		std::string opStr = currentToken.valueString;
-		int prec = Ruota::bOperators.at(opStr);
+		int prec = Rossa::bOperators.at(opStr);
 
 		auto marker = currentToken;
 
@@ -565,7 +561,7 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 					auto oldOp = bon->getOp();
 					auto bon_b = bon->getB();
 
-					if (!(std::abs(Ruota::bOperators.at(oldOp) < std::abs(prec) || (std::abs(Ruota::bOperators.at(oldOp)) == std::abs(prec) && Ruota::bOperators.at(oldOp) < 0)))) {
+					if (!(std::abs(Rossa::bOperators.at(oldOp) < std::abs(prec) || (std::abs(Rossa::bOperators.at(oldOp)) == std::abs(prec) && Rossa::bOperators.at(oldOp) < 0)))) {
 						reinterpret_cast<BinOpNode *>(parent.get())->setB(std::make_shared<BinOpNode>(
 							opStr,
 							n,
@@ -586,7 +582,7 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
 					parent = n;
 					n = bon_b;
 				}
-				pastPrec = Ruota::bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
+				pastPrec = Rossa::bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
 			}
 		} else {
 			return logErrorN(_EXPECTED_RH_, currentToken);
@@ -676,7 +672,7 @@ std::shared_ptr<Node> NodeParser::parseUnOpNode()
 	std::string opStr = currentToken.valueString;
 	auto marker = currentToken;
 	nextToken();
-	if (Ruota::uOperators.find(opStr) != Ruota::uOperators.end()) {
+	if (Rossa::uOperators.find(opStr) != Rossa::uOperators.end()) {
 		if (auto a = parseEquNode())
 			return std::make_shared<UnOpNode>(opStr, a, marker);
 		return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
@@ -824,7 +820,10 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 				return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 			nextToken();
 
-			gotos.push_back(std::make_shared<VectorNode>(body, true, currentToken));
+			if (body.size() == 1)
+				gotos.push_back(body[0]);
+			else
+				gotos.push_back(std::make_shared<VectorNode>(body, true, currentToken));
 		}
 
 		for (auto &c : keys)
@@ -1072,7 +1071,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IDF)
 		return logErrorN(_EXPECTED_IDF_, currentToken);
-	hash_ull key = RUOTA_HASH(currentToken.valueString);
+	hash_ull key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_THEN)
@@ -1136,7 +1135,7 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 {
 
 	nextToken();
-	auto id = RUOTA_HASH(currentToken.valueString);
+	auto id = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IN)
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
@@ -1187,7 +1186,7 @@ std::shared_ptr<Node> NodeParser::parseExternNode()
 	nextToken();
 
 	lib::loadFunction(currentFile.parent_path(), libname, fname, &currentToken);
-	return std::make_shared<ContainerNode>(Symbol(), currentToken);
+	return nullptr;
 }
 
 std::shared_ptr<Node> NodeParser::parseClassNode()
@@ -1195,7 +1194,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 
 	auto type = currentToken.type;
 	nextToken();
-	auto key = RUOTA_HASH(currentToken.valueString);
+	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_CLASS)
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CLASS).str(), currentToken);
@@ -1227,11 +1226,10 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 
 std::shared_ptr<Node> NodeParser::parseLoadNode()
 {
-
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != TOK_STR_LIT)
 		return logErrorN(_EXPECTED_FILE_, currentToken);
-	std::string filename = currentToken.valueString;
+	std::string filename = currentToken.valueString + ".ra";
 	nextToken();
 
 	auto path = dir::findFile(currentFile.parent_path(), filename, &currentToken);
@@ -1240,7 +1238,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 		if (currentToken.type == NULL_TOK || currentToken.type != ';')
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
 		nextToken();
-		return std::make_shared<ContainerNode>(Symbol(), currentToken);
+		return nullptr;
 	}
 
 	dir::loaded.push_back(path);
@@ -1254,7 +1252,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 		myfile.close();
 	}
 
-	auto tokens = Ruota::lexString(content, path.filename().string());
+	auto tokens = Rossa::lexString(content, path.filename().string());
 	NodeParser np(tokens, path);
 	auto n = np.parse();
 
@@ -1308,7 +1306,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 				}
 				if (currentToken.type != TOK_IDF)
 					return logErrorN(_EXPECTED_IDF_, currentToken);
-				v.push_back(RUOTA_HASH(currentToken.valueString));
+				v.push_back(ROSSA_HASH(currentToken.valueString));
 				nextToken();
 				if (currentToken.type == ';') {
 					nextToken();

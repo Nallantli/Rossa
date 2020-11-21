@@ -1,4 +1,4 @@
-load "sdl.ruo";
+load "sdl";
 
 w := new Window("Sprite Clipping", 512, 512);
 r := w.getRenderer();

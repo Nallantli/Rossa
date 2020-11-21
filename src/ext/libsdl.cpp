@@ -1,4 +1,4 @@
-#include "../ruota/Ruota.h"
+#include "../rossa/Rossa.h"
 
 #ifdef __unix__
 #include <SDL2/SDL.h>
@@ -9,7 +9,7 @@
 #endif
 #include <algorithm>
 
-using namespace ruota;
+using namespace rossa;
 
 namespace libsdl
 {
@@ -293,7 +293,7 @@ namespace libsdl
 		}
 	};
 
-	RUOTA_EXT_SYM(_window_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_window_init, args, token, hash, stack_trace)
 	{
 		if (!SDL_INITIALIZED) {
 			SDL_INITIALIZED = true;
@@ -310,7 +310,7 @@ namespace libsdl
 		return Symbol(v);
 	}
 
-	RUOTA_EXT_SYM(_event_poll, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_event_poll, args, token, hash, stack_trace)
 	{
 		SDL_Event e;
 		sym_map_t data;
@@ -497,13 +497,13 @@ namespace libsdl
 		return Symbol(data);
 	}
 
-	RUOTA_EXT_SYM(_window_register, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_window_register, args, token, hash, stack_trace)
 	{
 		registered[args[0].getNumber(token, stack_trace).getLong()] = args[1];
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_window_getRenderer, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_window_getRenderer, args, token, hash, stack_trace)
 	{
 		auto w = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -512,7 +512,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(w->getRenderer(token, stack_trace)));
 	}
 
-	RUOTA_EXT_SYM(_renderer_draw, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_renderer_draw, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -525,7 +525,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_shape_setColor, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_shape_setColor, args, token, hash, stack_trace)
 	{
 		auto shape = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -541,7 +541,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setAngle, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rotatable_setAngle, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -554,7 +554,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setCenter, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rotatable_setCenter, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -568,7 +568,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_deCenter, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rotatable_deCenter, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -579,7 +579,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_setClip, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rotatable_setClip, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -595,7 +595,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rotatable_deClip, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rotatable_deClip, args, token, hash, stack_trace)
 	{
 		auto rot = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -606,7 +606,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_rect_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_rect_init, args, token, hash, stack_trace)
 	{
 		int width = args[0].getNumber(token, stack_trace).getLong();
 		int height = args[1].getNumber(token, stack_trace).getLong();
@@ -620,7 +620,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(rect));
 	}
 
-	RUOTA_EXT_SYM(_sizable_setSize, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_sizable_setSize, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -633,7 +633,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_sizable_setWidth, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_sizable_setWidth, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -645,7 +645,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_sizable_setHeight, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_sizable_setHeight, args, token, hash, stack_trace)
 	{
 		auto sizable = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -657,7 +657,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_line_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_line_init, args, token, hash, stack_trace)
 	{
 		int x2 = args[0].getNumber(token, stack_trace).getLong();
 		int y2 = args[1].getNumber(token, stack_trace).getLong();
@@ -671,7 +671,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(line));
 	}
 
-	RUOTA_EXT_SYM(_point_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_point_init, args, token, hash, stack_trace)
 	{
 		color_t r = args[0].getNumber(token, stack_trace).getLong();
 		color_t g = args[1].getNumber(token, stack_trace).getLong();
@@ -682,7 +682,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(point));
 	}
 
-	RUOTA_EXT_SYM(_image_init_nokey, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_image_init_nokey, args, token, hash, stack_trace)
 	{
 		std::string path = args[0].getString(token, stack_trace);
 
@@ -690,7 +690,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_image_init_key, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_image_init_key, args, token, hash, stack_trace)
 	{
 		std::string path = args[0].getString(token, stack_trace);
 		color_t r = args[1].getNumber(token, stack_trace).getLong();
@@ -701,7 +701,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(image));
 	}
 
-	RUOTA_EXT_SYM(_texture_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_texture_init, args, token, hash, stack_trace)
 	{
 		auto image = args[0];
 
@@ -716,7 +716,7 @@ namespace libsdl
 		return Symbol(static_cast<std::shared_ptr<void>>(texture));
 	}
 
-	RUOTA_EXT_SYM(_texture_setImage, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_texture_setImage, args, token, hash, stack_trace)
 	{
 		auto texture = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -726,7 +726,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_update, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_renderer_update, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -736,7 +736,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_clear, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_renderer_clear, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -746,7 +746,7 @@ namespace libsdl
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_renderer_flush, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_renderer_flush, args, token, hash, stack_trace)
 	{
 		auto g = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),

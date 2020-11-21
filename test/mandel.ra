@@ -1,4 +1,4 @@
-load "bitmap.ruo";
+load "bitmap";
 
 static mandel class {
 	ASCII := [

@@ -1,13 +1,13 @@
-#include "../ruota/Ruota.h"
+#include "../rossa/Rossa.h"
 
 #include <fstream>
 #include <boost/filesystem.hpp>
 
-using namespace ruota;
+using namespace rossa;
 
 namespace libfs
 {
-	RUOTA_EXT_SYM(_writer_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_writer_init, args, token, hash, stack_trace)
 	{
 		auto filename = args[0].getString(token, stack_trace);
 		auto fstr = std::make_shared<std::ofstream>();
@@ -18,7 +18,7 @@ namespace libfs
 		return Symbol(static_cast<std::shared_ptr<void>>(fstr));
 	}
 
-	RUOTA_EXT_SYM(_writer_close, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_writer_close, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -28,7 +28,7 @@ namespace libfs
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_writer_isOpen, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_writer_isOpen, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -37,7 +37,7 @@ namespace libfs
 		return Symbol(fstr->is_open());
 	}
 
-	RUOTA_EXT_SYM(_reader_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_reader_init, args, token, hash, stack_trace)
 	{
 		auto filename = args[0].getString(token, stack_trace);
 		auto fstr = std::make_shared<std::ifstream>();
@@ -48,7 +48,7 @@ namespace libfs
 		return Symbol(static_cast<std::shared_ptr<void>>(fstr));
 	}
 
-	RUOTA_EXT_SYM(_reader_close, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_reader_close, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -58,7 +58,7 @@ namespace libfs
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_reader_isOpen, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_reader_isOpen, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -67,7 +67,7 @@ namespace libfs
 		return Symbol(fstr->is_open());
 	}
 
-	RUOTA_EXT_SYM(_reader_readLine, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_reader_readLine, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -79,7 +79,7 @@ namespace libfs
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_reader_read, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_reader_read, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -98,7 +98,7 @@ namespace libfs
 		return Symbol(line);
 	}
 
-	RUOTA_EXT_SYM(_writer_write, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_writer_write, args, token, hash, stack_trace)
 	{
 		auto fstr = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -108,7 +108,7 @@ namespace libfs
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_path_init, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_init, args, token, hash, stack_trace)
 	{
 		auto pathstr = args[0].getString(token, stack_trace);
 		auto path = std::make_shared<boost::filesystem::path>(pathstr);
@@ -116,7 +116,7 @@ namespace libfs
 		return Symbol(static_cast<std::shared_ptr<void>>(path));
 	}
 
-	RUOTA_EXT_SYM(_path_filename, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_filename, args, token, hash, stack_trace)
 	{
 		auto path = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -125,7 +125,7 @@ namespace libfs
 		return Symbol(path->filename().string());
 	}
 
-	RUOTA_EXT_SYM(_path_string, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_string, args, token, hash, stack_trace)
 	{
 		auto path = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -134,7 +134,7 @@ namespace libfs
 		return Symbol(boost::filesystem::weakly_canonical(*path).string());
 	}
 
-	RUOTA_EXT_SYM(_path_mkdirs, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_mkdirs, args, token, hash, stack_trace)
 	{
 		auto path = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -144,7 +144,7 @@ namespace libfs
 		return Symbol();
 	}
 
-	RUOTA_EXT_SYM(_path_exists, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_exists, args, token, hash, stack_trace)
 	{
 		auto path = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -153,7 +153,7 @@ namespace libfs
 		return Symbol(boost::filesystem::exists(path->string()));
 	}
 
-	RUOTA_EXT_SYM(_path_append_path, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_append_path, args, token, hash, stack_trace)
 	{
 		auto path1 = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),
@@ -166,7 +166,7 @@ namespace libfs
 		return Symbol((*path1 / *path2).string());
 	}
 
-	RUOTA_EXT_SYM(_path_append_string, args, token, hash, stack_trace)
+	ROSSA_EXT_SYM(_path_append_string, args, token, hash, stack_trace)
 	{
 		auto path1 = COERCE_PTR(
 			args[0].getPointer(token, stack_trace),

@@ -1,6 +1,6 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 Symbol::Symbol() : type(ID_CASUAL), d(new Value())
 {}
@@ -238,8 +238,8 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 		case OBJECT:
 		{
 			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_TO_STRING))
-				return o->getVariable(Ruota::HASH_TO_STRING, token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
+			if (o->hasValue(Rossa::HASH_TO_STRING))
+				return o->getVariable(Rossa::HASH_TO_STRING, token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
 			return "<Object>";
 		}
 		case POINTER:
@@ -294,7 +294,7 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 				case POINTER:
 					return "Type::Pointer";
 				default:
-					return "Type::@" + RUOTA_DEHASH(d->valueType);
+					return "Type::@" + ROSSA_DEHASH(d->valueType);
 			}
 		}
 		default:
@@ -327,8 +327,8 @@ void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, std::
 {
 	if (b->d == d)
 		return;
-	if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Ruota::HASH_SET)) {
-		d->valueObject->getVariable(Ruota::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
+	if (d->type == OBJECT && d->valueObject != NULL && d->valueObject->hasValue(Rossa::HASH_SET)) {
+		d->valueObject->getVariable(Rossa::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
 		return;
 	}
 	d->clearData();
@@ -404,8 +404,8 @@ const bool Symbol::equals(const Symbol *b, const Token *token, std::vector<Funct
 		case OBJECT:
 		{
 			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_EQUALS))
-				return o->getVariable(Ruota::HASH_EQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
+			if (o->hasValue(Rossa::HASH_EQUALS))
+				return o->getVariable(Rossa::HASH_EQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
 			return o == b->d->valueObject;
 		}
 		case ARRAY:
@@ -437,8 +437,8 @@ const bool Symbol::nequals(const Symbol *b, const Token *token, std::vector<Func
 		case OBJECT:
 		{
 			auto o = d->valueObject;
-			if (o->hasValue(Ruota::HASH_NEQUALS))
-				return o->getVariable(Ruota::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
+			if (o->hasValue(Rossa::HASH_NEQUALS))
+				return o->getVariable(Rossa::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
 		}
 		default:
 			return !this->equals(b, token, stack_trace);

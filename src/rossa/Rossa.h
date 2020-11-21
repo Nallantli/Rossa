@@ -1,11 +1,11 @@
 #pragma once
 
-#define _RUOTA_VERSION_ "v1.7.0-alpha"
-#define RUOTA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
+#define _ROSSA_VERSION_ "v1.7.1-alpha"
+#define ROSSA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
-#define RUOTA_DEHASH(x) Ruota::MAIN_HASH.deHash(x)
-#define RUOTA_HASH(x) Ruota::MAIN_HASH.hashValue(x)
+#define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
+#define ROSSA_HASH(x) Rossa::MAIN_HASH.hashValue(x)
 
 #define colorASCII(c) "\033[" + std::to_string(c) + "m"
 #define PRINTC(s, c) std::cout << colorASCII(c) << s << colorASCII(0)
@@ -23,14 +23,14 @@
 #include <boost/function.hpp>
 #include <iostream>
 
-namespace ruota
+namespace rossa
 {
 	class Instruction;
 	class Function;
 	class Scope;
 	class Node;
 	class NodeParser;
-	class Ruota;
+	class Rossa;
 	class Value;
 	class Symbol;
 
@@ -438,7 +438,7 @@ namespace ruota
 		static std::shared_ptr<Instruction> genParser(std::shared_ptr<Node>);
 	};
 
-	class Ruota
+	class Rossa
 	{
 	private:
 		Scope main;
@@ -486,7 +486,7 @@ namespace ruota
 		static const hash_ull HASH_TO_VECTOR;
 		static const hash_ull HASH_TO_DICTIONARY;
 
-		Ruota(std::vector<std::string>);
+		Rossa(std::vector<std::string>);
 		std::shared_ptr<Node> compileCode(const std::string &, boost::filesystem::path) const;
 		const Symbol runCode(std::shared_ptr<Node>, bool);
 		static void printError(const RTError &);

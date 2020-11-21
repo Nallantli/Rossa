@@ -1,55 +1,55 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 std::vector<boost::filesystem::path> dir::loaded = {};
 std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> lib::loaded = {};
 
-Hash Ruota::MAIN_HASH = Hash();
+Hash Rossa::MAIN_HASH = Hash();
 
-const hash_ull Ruota::HASH_INIT = RUOTA_HASH(KEYWORD_INIT);
-const hash_ull Ruota::HASH_BLANK = RUOTA_HASH("");
-const hash_ull Ruota::HASH_THIS = RUOTA_HASH(KEYWORD_THIS);
-const hash_ull Ruota::HASH_DELETER = RUOTA_HASH("~");
+const hash_ull Rossa::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);
+const hash_ull Rossa::HASH_BLANK = ROSSA_HASH("");
+const hash_ull Rossa::HASH_THIS = ROSSA_HASH(KEYWORD_THIS);
+const hash_ull Rossa::HASH_DELETER = ROSSA_HASH("~");
 
-const hash_ull Ruota::HASH_ADD = RUOTA_HASH("+");
-const hash_ull Ruota::HASH_SUB = RUOTA_HASH("-");
-const hash_ull Ruota::HASH_MUL = RUOTA_HASH("*");
-const hash_ull Ruota::HASH_DIV = RUOTA_HASH("/");
-const hash_ull Ruota::HASH_MOD = RUOTA_HASH("%");
-const hash_ull Ruota::HASH_POW = RUOTA_HASH("**");
-const hash_ull Ruota::HASH_B_AND = RUOTA_HASH("&");
-const hash_ull Ruota::HASH_B_OR = RUOTA_HASH("|");
-const hash_ull Ruota::HASH_B_XOR = RUOTA_HASH("^");
-const hash_ull Ruota::HASH_B_SH_L = RUOTA_HASH("<<");
-const hash_ull Ruota::HASH_B_SH_R = RUOTA_HASH(">>");
-const hash_ull Ruota::HASH_LESS = RUOTA_HASH("<");
-const hash_ull Ruota::HASH_MORE = RUOTA_HASH(">");
-const hash_ull Ruota::HASH_ELESS = RUOTA_HASH("<=");
-const hash_ull Ruota::HASH_EMORE = RUOTA_HASH(">=");
-const hash_ull Ruota::HASH_INDEX = RUOTA_HASH("[]");
-const hash_ull Ruota::HASH_EQUALS = RUOTA_HASH("==");
-const hash_ull Ruota::HASH_NEQUALS = RUOTA_HASH("!=");
-const hash_ull Ruota::HASH_SET = RUOTA_HASH("=");
-const hash_ull Ruota::HASH_CALL = RUOTA_HASH("()");
-const hash_ull Ruota::HASH_RANGE = RUOTA_HASH("..");
+const hash_ull Rossa::HASH_ADD = ROSSA_HASH("+");
+const hash_ull Rossa::HASH_SUB = ROSSA_HASH("-");
+const hash_ull Rossa::HASH_MUL = ROSSA_HASH("*");
+const hash_ull Rossa::HASH_DIV = ROSSA_HASH("/");
+const hash_ull Rossa::HASH_MOD = ROSSA_HASH("%");
+const hash_ull Rossa::HASH_POW = ROSSA_HASH("**");
+const hash_ull Rossa::HASH_B_AND = ROSSA_HASH("&");
+const hash_ull Rossa::HASH_B_OR = ROSSA_HASH("|");
+const hash_ull Rossa::HASH_B_XOR = ROSSA_HASH("^");
+const hash_ull Rossa::HASH_B_SH_L = ROSSA_HASH("<<");
+const hash_ull Rossa::HASH_B_SH_R = ROSSA_HASH(">>");
+const hash_ull Rossa::HASH_LESS = ROSSA_HASH("<");
+const hash_ull Rossa::HASH_MORE = ROSSA_HASH(">");
+const hash_ull Rossa::HASH_ELESS = ROSSA_HASH("<=");
+const hash_ull Rossa::HASH_EMORE = ROSSA_HASH(">=");
+const hash_ull Rossa::HASH_INDEX = ROSSA_HASH("[]");
+const hash_ull Rossa::HASH_EQUALS = ROSSA_HASH("==");
+const hash_ull Rossa::HASH_NEQUALS = ROSSA_HASH("!=");
+const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
+const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
+const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
-const hash_ull Ruota::HASH_TO_STRING = RUOTA_HASH("->" KEYWORD_STRING);
-const hash_ull Ruota::HASH_TO_NUMBER = RUOTA_HASH("->" KEYWORD_NUMBER);
-const hash_ull Ruota::HASH_TO_BOOLEAN = RUOTA_HASH("->" KEYWORD_BOOLEAN);
-const hash_ull Ruota::HASH_TO_VECTOR = RUOTA_HASH("->" KEYWORD_ARRAY);
-const hash_ull Ruota::HASH_TO_DICTIONARY = RUOTA_HASH("->" KEYWORD_DICTIONARY);
+const hash_ull Rossa::HASH_TO_STRING = ROSSA_HASH("->" KEYWORD_STRING);
+const hash_ull Rossa::HASH_TO_NUMBER = ROSSA_HASH("->" KEYWORD_NUMBER);
+const hash_ull Rossa::HASH_TO_BOOLEAN = ROSSA_HASH("->" KEYWORD_BOOLEAN);
+const hash_ull Rossa::HASH_TO_VECTOR = ROSSA_HASH("->" KEYWORD_ARRAY);
+const hash_ull Rossa::HASH_TO_DICTIONARY = ROSSA_HASH("->" KEYWORD_DICTIONARY);
 
-Ruota::Ruota(std::vector<std::string> args)
+Rossa::Rossa(std::vector<std::string> args)
 {
 	std::vector<Symbol> argv;
 	for (auto &s : args)
 		argv.push_back(Symbol(s));
 	auto v = Symbol(argv);
-	main.createVariable(RUOTA_HASH("_args"), v, NULL);
+	main.createVariable(ROSSA_HASH("_args"), v, NULL);
 }
 
-const std::map<std::string, signed int> Ruota::bOperators = {
+const std::map<std::string, signed int> Rossa::bOperators = {
 	{"[]", 999},
 	{"**", -13},
 	{"*", 12},
@@ -92,12 +92,12 @@ const std::map<std::string, signed int> Ruota::bOperators = {
 	{"::", 0},
 	{"=>", 0} };
 
-const std::map<std::string, signed int> Ruota::uOperators = {
+const std::map<std::string, signed int> Rossa::uOperators = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1} };
 
-std::shared_ptr<Node> Ruota::compileCode(const std::string &code, boost::filesystem::path currentFile) const
+std::shared_ptr<Node> Rossa::compileCode(const std::string &code, boost::filesystem::path currentFile) const
 {
 	auto tokens = lexString(code, currentFile.filename().string());
 	NodeParser testnp(tokens, currentFile);
@@ -105,7 +105,7 @@ std::shared_ptr<Node> Ruota::compileCode(const std::string &code, boost::filesys
 	return n->fold();
 }
 
-const Symbol Ruota::runCode(std::shared_ptr<Node> entry, bool tree)
+const Symbol Rossa::runCode(std::shared_ptr<Node> entry, bool tree)
 {
 	if (tree)
 		std::cout << entry->printTree("", true).str();
@@ -116,7 +116,7 @@ const Symbol Ruota::runCode(std::shared_ptr<Node> entry, bool tree)
 	return g->evaluate(&main, stack_trace);
 }
 
-void Ruota::printError(const RTError &e)
+void Rossa::printError(const RTError &e)
 {
 	std::string ret = "\033[" + std::to_string(RED_TEXT) + "m" + e.what() + "\n";
 
@@ -150,9 +150,9 @@ void Ruota::printError(const RTError &e)
 		auto f = trace.back();
 		PRINTC(" ^ ", MAGENTA_TEXT);
 		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
-		if (RUOTA_DEHASH(f.getParent()->getHashedKey()) != "")
-			std::cout << RUOTA_DEHASH(f.getParent()->getHashedKey()) << ".";
-		std::cout << RUOTA_DEHASH(f.getKey()) << "(\033[0m";
+		if (ROSSA_DEHASH(f.getParent()->getHashedKey()) != "")
+			std::cout << ROSSA_DEHASH(f.getParent()->getHashedKey()) << ".";
+		std::cout << ROSSA_DEHASH(f.getKey()) << "(\033[0m";
 		size_t i = 0;
 		for (auto &p : f.getParams()) {
 			if (i++ > 0)
@@ -164,14 +164,14 @@ void Ruota::printError(const RTError &e)
 				default:
 					break;
 			}
-			std::cout << RUOTA_DEHASH(p.second);
+			std::cout << ROSSA_DEHASH(p.second);
 		}
 		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m)\033[0m\n";
 		trace.pop_back();
 	}
 }
 
-const char Ruota::nextChar(
+const char Rossa::nextChar(
 	const std::string &INPUT,
 	size_t &INPUT_INDEX,
 	size_t &LINE_INDEX,
@@ -187,7 +187,7 @@ const char Ruota::nextChar(
 	return c;
 }
 
-const char Ruota::peekChar(
+const char Rossa::peekChar(
 	const size_t &i,
 	const std::string &INPUT,
 	const size_t &INPUT_INDEX)
@@ -197,7 +197,7 @@ const char Ruota::peekChar(
 	return 0;
 }
 
-const int Ruota::getToken(
+const int Rossa::getToken(
 	const std::string &INPUT,
 	size_t &INPUT_INDEX,
 	size_t &LINE_INDEX,
@@ -316,7 +316,7 @@ const int Ruota::getToken(
 		} else if (ID_STRING == "nan") {
 			NUM_VALUE = RNumber::Double(NAN);
 			return TOK_NUM;
-		} else if (Ruota::bOperators.find(ID_STRING) != Ruota::bOperators.end() || Ruota::uOperators.find(ID_STRING) != Ruota::uOperators.end())
+		} else if (Rossa::bOperators.find(ID_STRING) != Rossa::bOperators.end() || Rossa::uOperators.find(ID_STRING) != Rossa::uOperators.end())
 			return TOK_OPR;
 
 		return TOK_IDF;
@@ -369,9 +369,9 @@ const int Ruota::getToken(
 		return '#';
 	} else if (last == EOF || last == 0)
 		return TOK_EOF;
-	else if (Ruota::bOperators.find(std::string(1, last)) != Ruota::bOperators.end()) {
+	else if (Rossa::bOperators.find(std::string(1, last)) != Rossa::bOperators.end()) {
 		std::string opStr = std::string(1, last);
-		while (Ruota::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Ruota::bOperators.end()) {
+		while (Rossa::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Rossa::bOperators.end()) {
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
@@ -392,9 +392,9 @@ const int Ruota::getToken(
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
-	} else if (Ruota::uOperators.find(std::string(1, last)) != Ruota::uOperators.end()) {
+	} else if (Rossa::uOperators.find(std::string(1, last)) != Rossa::uOperators.end()) {
 		std::string opStr = std::string(1, last);
-		while (Ruota::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Ruota::uOperators.end()) {
+		while (Rossa::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Rossa::uOperators.end()) {
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
@@ -541,7 +541,7 @@ const int Ruota::getToken(
 	return ret;
 }
 
-const std::vector<Token> Ruota::lexString(const std::string &INPUT, const boost::filesystem::path &filename)
+const std::vector<Token> Rossa::lexString(const std::string &INPUT, const boost::filesystem::path &filename)
 {
 	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);

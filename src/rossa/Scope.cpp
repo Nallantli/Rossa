@@ -1,6 +1,6 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 Scope::Scope() : parent(NULL), type(SCOPE_O), hashed_key(0), name_trace({})
 {}
@@ -35,11 +35,11 @@ void Scope::traceName(const hash_ull &key)
 		for (auto &p : name_trace) {
 			if (i++ > 0)
 				path += ".";
-			path += RUOTA_DEHASH(p);
+			path += ROSSA_DEHASH(p);
 		}
-		hashed_key = RUOTA_HASH(path);
+		hashed_key = ROSSA_HASH(path);
 	} else {
-		hashed_key = Ruota::HASH_BLANK;
+		hashed_key = Rossa::HASH_BLANK;
 	}
 }
 
@@ -51,7 +51,7 @@ const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *
 	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions);
 	o->body->evaluate(o.get(), stack_trace);
 	auto d = Symbol(o);
-	o->getVariable(Ruota::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
+	o->getVariable(Rossa::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
 	return d;
 }
 
@@ -67,7 +67,7 @@ const Symbol &Scope::getVariable(const hash_ull &key, const Token *token, std::v
 	if (parent != NULL)
 		return parent->getVariable(key, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % RUOTA_DEHASH(key)).str(), *token, stack_trace);
+	throw RTError((boost::format(_UNDECLARED_VARIABLE_ERROR_) % ROSSA_DEHASH(key)).str(), *token, stack_trace);
 }
 
 const Symbol &Scope::createVariable(const hash_ull &key, const Token *token)
@@ -127,8 +127,8 @@ const bool Scope::hasValue(const hash_ull &key) const
 
 Scope::~Scope()
 {
-	if (hasValue(Ruota::HASH_DELETER)) {
+	if (hasValue(Rossa::HASH_DELETER)) {
 		std::vector<Function> stack_trace;
-		values[Ruota::HASH_DELETER].call({}, NULL, stack_trace);
+		values[Rossa::HASH_DELETER].call({}, NULL, stack_trace);
 	}
 }

@@ -1,7 +1,7 @@
 build
-bin/ruota
-bin/ruota.exe
+bin/rossa
+bin/rossa.exe
 bin/lib/*.so
 bin/lib/*.dll
 .vscode
-test.ruo
+test.ra

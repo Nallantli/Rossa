@@ -5,8 +5,8 @@
 #endif
 
 #ifdef _LOCALE_ENG_
-#define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\nCopyright 2020 - BSD 3-Clause License\nAuthors:\n * Benjamin Park / parkbenjamin2@gmail.com"
-#define _RUOTA_INTERPRETER_START_ "Ruota " _RUOTA_VERSION_ " Interpreter"
+#define _ROSSA_VERSION_LONG_ "Rossa " _ROSSA_VERSION_ "\nCopyright 2020 - BSD 3-Clause License\nAuthors:\n * Benjamin Park / parkbenjamin2@gmail.com"
+#define _ROSSA_INTERPRETER_START_ "Rossa " _ROSSA_VERSION_ " Interpreter"
 #define _STANDARD_LIBRARY_LOADED_ "Standard Library Loaded"
 #define _STANDARD_LIBRARY_LOAD_FAIL_ "Failed to load Standard Library: "
 #define _FAILURE_FILEPATH_ "Cannot find path to file: "
@@ -62,8 +62,8 @@
 #endif
 
 #ifdef _LOCALE_ITA_
-#define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\nDiritto d'autore 2020 - BSD 3-Clause Licenza\nAutori:\n * Benjamin Park / parkbenjamin2@gmail.com"
-#define _RUOTA_INTERPRETER_START_ "Ruota " _RUOTA_VERSION_ " Interprete"
+#define _ROSSA_VERSION_LONG_ "Rossa " _ROSSA_VERSION_ "\nDiritto d'autore 2020 - BSD 3-Clause Licenza\nAutori:\n * Benjamin Park / parkbenjamin2@gmail.com"
+#define _ROSSA_INTERPRETER_START_ "Rossa " _ROSSA_VERSION_ " Interprete"
 #define _STANDARD_LIBRARY_LOADED_ "Libreria Standard è Caricata"
 #define _STANDARD_LIBRARY_LOAD_FAIL_ "Caricamento di Libreria Standard è Bocciato: "
 #define _FAILURE_FILEPATH_ "Non si può trovare il percorso del file: "
@@ -119,8 +119,8 @@
 #endif
 
 #ifdef _LOCALE_LAT_
-#define _RUOTA_VERSION_LONG_ "Ruota " _RUOTA_VERSION_ "\nDīrēctus Auctōris ex MMXX - Licentiā BSD III-Ideae\nAuctōrēs:\n * Beniamin Parchus / parkbenjamin2@gmail.com"
-#define _RUOTA_INTERPRETER_START_ "Ruota " _RUOTA_VERSION_ " Interpretātrum"
+#define _ROSSA_VERSION_LONG_ "Rossa " _ROSSA_VERSION_ "\nDīrēctus Auctōris ex MMXX - Licentiā BSD III-Ideae\nAuctōrēs:\n * Beniamin Parchus / parkbenjamin2@gmail.com"
+#define _ROSSA_INTERPRETER_START_ "Rossa " _ROSSA_VERSION_ " Interpretātrum"
 #define _STANDARD_LIBRARY_LOADED_ "Bibliothēca Generālis Legitur"
 #define _STANDARD_LIBRARY_LOAD_FAIL_ "Bibliothēca Generālis nōn legī poterat: "
 #define _FAILURE_FILEPATH_ "Ad scāpum via nōn legī poterat: "
@@ -176,8 +176,8 @@
 #endif
 
 #ifdef _LOCALE_JPN_
-#define _RUOTA_VERSION_LONG_ "ルオタ・" _RUOTA_VERSION_ "\n2020版権・BSD 3-Clause License\n作者:\n * パーク・ベンジャミン / parkbenjamin2@gmail.com"
-#define _RUOTA_INTERPRETER_START_ "ルオタ・" _RUOTA_VERSION_ "のインタプリタ"
+#define _ROSSA_VERSION_LONG_ "ロッサ・" _ROSSA_VERSION_ "\n2020版権・BSD 3-Clause License\n作者:\n * パーク・ベンジャミン / parkbenjamin2@gmail.com"
+#define _ROSSA_INTERPRETER_START_ "ロッサ・" _ROSSA_VERSION_ "のインタプリタ"
 #define _STANDARD_LIBRARY_LOADED_ "一般的なライブラリーはロードされた"
 #define _STANDARD_LIBRARY_LOAD_FAIL_ "一般的なライブラリーのロードは駄目："
 #define _FAILURE_FILEPATH_ "ファイルの道は不明："

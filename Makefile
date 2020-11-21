@@ -31,9 +31,9 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/ruota.exe bin/lib/libstd$(LIB_EXT)
+$(dir_present): bin/rossa.exe bin/lib/libstd$(LIB_EXT)
 
-$(dir_absent): $(DIR) bin/ruota.exe bin/lib/libstd$(LIB_EXT)
+$(dir_absent): $(DIR) bin/rossa.exe bin/lib/libstd$(LIB_EXT)
 
 $(DIR):
 	mkdir $@
@@ -57,9 +57,9 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/ruota bin/lib/libstd$(LIB_EXT)
+$(dir_present): bin/rossa bin/lib/libstd$(LIB_EXT)
 
-$(dir_absent): $(DIR) bin/ruota bin/lib/libstd$(LIB_EXT)
+$(dir_absent): $(DIR) bin/rossa bin/lib/libstd$(LIB_EXT)
 
 $(DIR):
 	mkdir -p $@
@@ -74,53 +74,53 @@ libnet: bin/lib/libnet$(LIB_EXT)
 
 libsdl: bin/lib/libsdl$(LIB_EXT)
 
-bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/ext/libstd.cpp $(DIR)/libruota.a $(LFLAGS)
+bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/ext/libstd.cpp $(DIR)/librossa.a $(LFLAGS)
 
-bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/ext/libfs.cpp $(DIR)/libruota.a $(LFLAGS)
+bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/ext/libfs.cpp $(DIR)/librossa.a $(LFLAGS)
 
-bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/ext/libnet.cpp $(DIR)/libruota.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/ext/libnet.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
 
-bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/ext/libsdl.cpp $(DIR)/libruota.a $(LFLAGS) $(SDL_FLAGS)
+bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/ext/libsdl.cpp $(DIR)/librossa.a $(LFLAGS) $(SDL_FLAGS)
 
-bin/ruota.exe: src/Main.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
+bin/rossa.exe: src/Main.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-bin/ruota: src/Main.cpp $(DIR)/libruota.a
-	$(CC) -o $@ src/Main.cpp $(DIR)/libruota.a $(CFLAGS)
+bin/rossa: src/Main.cpp $(DIR)/librossa.a
+	$(CC) -o $@ src/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/libruota.a: $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
-	ar rcs $@ $(DIR)/Ruota.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
 
-$(DIR)/Ruota.o: src/ruota/Ruota.cpp
-	$(CC) -o $@ src/ruota/Ruota.cpp -c $(OFLAGS)
+$(DIR)/Rossa.o: src/rossa/Rossa.cpp
+	$(CC) -o $@ src/rossa/Rossa.cpp -c $(OFLAGS)
 
-$(DIR)/Node.o: src/ruota/Node.cpp
-	$(CC) -o $@ src/ruota/Node.cpp -c $(OFLAGS)
+$(DIR)/Node.o: src/rossa/Node.cpp
+	$(CC) -o $@ src/rossa/Node.cpp -c $(OFLAGS)
 
-$(DIR)/NodeParser.o: src/ruota/NodeParser.cpp
-	$(CC) -o $@ src/ruota/NodeParser.cpp -c $(OFLAGS)
+$(DIR)/NodeParser.o: src/rossa/NodeParser.cpp
+	$(CC) -o $@ src/rossa/NodeParser.cpp -c $(OFLAGS)
 
-$(DIR)/Parser.o: src/ruota/Parser.cpp
-	$(CC) -o $@ src/ruota/Parser.cpp -c $(OFLAGS)
+$(DIR)/Parser.o: src/rossa/Parser.cpp
+	$(CC) -o $@ src/rossa/Parser.cpp -c $(OFLAGS)
 
-$(DIR)/Scope.o: src/ruota/Scope.cpp
-	$(CC) -o $@ src/ruota/Scope.cpp -c $(OFLAGS)
+$(DIR)/Scope.o: src/rossa/Scope.cpp
+	$(CC) -o $@ src/rossa/Scope.cpp -c $(OFLAGS)
 
-$(DIR)/Function.o: src/ruota/Function.cpp
-	$(CC) -o $@ src/ruota/Function.cpp -c $(OFLAGS)
+$(DIR)/Function.o: src/rossa/Function.cpp
+	$(CC) -o $@ src/rossa/Function.cpp -c $(OFLAGS)
 
-$(DIR)/Signature.o: src/ruota/Signature.cpp
-	$(CC) -o $@ src/ruota/Signature.cpp -c $(OFLAGS)
+$(DIR)/Signature.o: src/rossa/Signature.cpp
+	$(CC) -o $@ src/rossa/Signature.cpp -c $(OFLAGS)
 
-$(DIR)/Value.o: src/ruota/Value.cpp
-	$(CC) -o $@ src/ruota/Value.cpp -c $(OFLAGS)
+$(DIR)/Value.o: src/rossa/Value.cpp
+	$(CC) -o $@ src/rossa/Value.cpp -c $(OFLAGS)
 
-$(DIR)/Symbol.o: src/ruota/Symbol.cpp
-	$(CC) -o $@ src/ruota/Symbol.cpp -c $(OFLAGS)
+$(DIR)/Symbol.o: src/rossa/Symbol.cpp
+	$(CC) -o $@ src/rossa/Symbol.cpp -c $(OFLAGS)
 
-$(DIR)/RTError.o: src/ruota/RTError.cpp
-	$(CC) -o $@ src/ruota/RTError.cpp -c $(OFLAGS)
+$(DIR)/RTError.o: src/rossa/RTError.cpp
+	$(CC) -o $@ src/rossa/RTError.cpp -c $(OFLAGS)

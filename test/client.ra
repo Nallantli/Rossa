@@ -1,4 +1,4 @@
-load "net.ruo";
+load "net";
 
 client := new net.Socket("127.0.0.1", 9999);
 

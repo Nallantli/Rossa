@@ -22,14 +22,14 @@ a;
 
 This will not call the function, in fact, it will not do anything notable whatsoever because it does not assign or modify any values.
 
-Secondly, string literal values in Ruota are bordered by double quotes `"<string>"`. While strings are base-values - in a manner akin to JavaScript, Python, and other scripting languages - they cannot similarly be given in optional single quotes `*'<string?>'`. There is no character data-type; when using single quotes, the interpreter reads the numerical equivalent of the character, e.g., `'a'` is equivalent in value and interpretation with the number `97`.
+Secondly, string literal values in Rossa are bordered by double quotes `"<string>"`. While strings are base-values - in a manner akin to JavaScript, Python, and other scripting languages - they cannot similarly be given in optional single quotes `*'<string?>'`. There is no character data-type; when using single quotes, the interpreter reads the numerical equivalent of the character, e.g., `'a'` is equivalent in value and interpretation with the number `97`.
 
 Lastly, lines of instruction are terminated in the C-style with the semi-colon `;`. The compiler will throw an error if no semi-colon is found.
 
 To run the code, save a file the single line to `hello.ruo`, and run the interpreter over the file:
 
 ```bash
-ruota hello.ruo
+rossa hello.ruo
 ```
 
 The output should appear thus:
@@ -66,7 +66,7 @@ var guess;
 
 Using `var` only _declares_ a variable, it does not set it to any value in particular. If you call the variable, it will return `nil`. The `:=` operator should be used when a variable need be declared with a value, while `var` can declare multiple variable names in a single command, e.g. `var a, b, c;`.
 
-Now we must iterate until our `guess` is equivalent to our `correct` number, and to do this we use a `while` loop. The syntax for the loop in Ruota is slightly more explicit than C-style languages:
+Now we must iterate until our `guess` is equivalent to our `correct` number, and to do this we use a `while` loop. The syntax for the loop in Rossa is slightly more explicit than C-style languages:
 
 ```ruo
 while guess != correct do {

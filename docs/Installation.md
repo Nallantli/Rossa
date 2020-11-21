@@ -5,8 +5,8 @@
 Clone from the GitHub repo:
 
 ```bash
-git clone https://github.com/Nallantli/Ruota
-cd Ruota
+git clone https://github.com/Nallantli/Rossa
+cd Rossa
 ```
 
 You will also need the following librar(y/ies) in order to build:

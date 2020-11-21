@@ -1,6 +1,6 @@
-#include "Ruota.h"
+#include "Rossa.h"
 
-using namespace ruota;
+using namespace rossa;
 
 const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check, std::vector<Function> &stack_trace)
 {
@@ -10,12 +10,12 @@ const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check
 	size_t v = 0;
 	for (size_t i = 0; i < values.size(); i++) {
 		type_sll vt = check[i].getAugValueType();
-		if (values[i] == NIL && values[i] != vt)
-			v += 1;
-		else if (values[i] == vt)
+		if (values[i] == vt)
 			v += 3;
+		else if (values[i] == NIL)
+			v += 1;
 		else if (check[i].getValueType() == OBJECT) {
-			if (check[i].getObject(NULL, stack_trace)->extendsObject(values[i]))
+			if (values[i] == OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(values[i]))
 				v += 2;
 			else
 				return 0;
@@ -40,7 +40,7 @@ const std::string sig::toString(const sig_t &values)
 const std::string sig::getTypeString(const type_sll &i)
 {
 	if (i >= 0)
-		return "@" + RUOTA_DEHASH(i);
+		return "@" + ROSSA_DEHASH(i);
 	else {
 		switch (i) {
 			case NIL:

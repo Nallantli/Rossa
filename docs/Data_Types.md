@@ -276,7 +276,7 @@ Only the `()` is defined for `Function` values, operating as the call.
 
 ## Pointer
 
-The `Pointer` type has no literals or operators - it cannot be declared in Ruota itself. It is used for storing values during interfacing with C++ libraries. Usage is not important unless one wishes to make an external library.
+The `Pointer` type has no literals or operators - it cannot be declared in Rossa itself. It is used for storing values during interfacing with C++ libraries. Usage is not important unless one wishes to make an external library.
 
 ## nil
 

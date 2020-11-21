@@ -1,4 +1,4 @@
-load "sdl.ruo";
+load "sdl";
 
 x := -0.5;
 y := 0;

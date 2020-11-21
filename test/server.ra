@@ -1,4 +1,4 @@
-load "net.ruo";
+load "net";
 
 server := new net.Server(9999);
 putln("Server Created");

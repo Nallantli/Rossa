@@ -148,7 +148,7 @@ while (i < 10) {
 
 For this reason it is not really within the goal of this language to have a structure immediately corresponding to a declare-compare-augmenter.
 
-What is becoming more widely available to programmers is the for-each structure (in C++/Java this uses `for (<ELEMENT> : <ITERABLE>)`, JS `Array.protoype.forEach()`, etc.). This procedure makes more sense for a high level of abstraction compared to the DCA format, and in this vein Ruota reflects for-each only:
+What is becoming more widely available to programmers is the for-each structure (in C++/Java this uses `for (<ELEMENT> : <ITERABLE>)`, JS `Array.protoype.forEach()`, etc.). This procedure makes more sense for a high level of abstraction compared to the DCA format, and in this vein Rossa reflects for-each only:
 
 ```ruo
 for i in 0 .. 10 do {
@@ -234,7 +234,7 @@ switch <EXPRESSION> of {
 }
 ```
 
-The key difference in Ruota switch statements compared to languages like C/++ and Java is that there is no need for `break` to stop flow into the proceeding case. All cases are self-contained paths.
+The key difference in Rossa switch statements compared to languages like C/++ and Java is that there is no need for `break` to stop flow into the proceeding case. All cases are self-contained paths.
 
 The switch-statement can also have cases for values that are not constant or base types, these values will be evaluated at the time the switch statement is called. In this manner the switch statement will operate in a manner kin to an if-else sequence. Priority will be given to _constant_ values that are evaluated during compilation and placed in the switch map.
 
