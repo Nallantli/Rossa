@@ -68,7 +68,7 @@ while true do {
 			exit();
 		}
 	}
-	switch e.keysym.sym in {
+	switch e.keysym.sym of {
 		case 'w' do y += 2 / height * scale;
 		case 's' do y -= 2 / height * scale;
 		case 'a' do x -= 6 / width * scale;

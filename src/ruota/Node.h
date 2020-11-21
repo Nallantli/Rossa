@@ -364,11 +364,12 @@ namespace ruota
 	{
 	private:
 		std::shared_ptr<Node> switchs;
-		std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases;
+		std::map<std::shared_ptr<Node>, size_t> cases;
+		std::vector<std::shared_ptr<Node>> gotos;
 		std::shared_ptr<Node> elses;
 
 	public:
-		SwitchNode(std::shared_ptr<Node>, std::map<std::shared_ptr<Node>, std::shared_ptr<Node>>, const Token &);
+		SwitchNode(std::shared_ptr<Node>, std::map<std::shared_ptr<Node>, size_t>, std::vector<std::shared_ptr<Node>>, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		void setElse(std::shared_ptr<Node>);
 		bool isConst() const override;

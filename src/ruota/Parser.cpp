@@ -1350,24 +1350,31 @@ const Symbol ReferI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 /*class SwitchI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SwitchI::SwitchI(const std::shared_ptr<Instruction> &switchs, const std::map<Symbol, std::shared_ptr<Instruction>> &cases_solved, const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> &cases_unsolved, const std::shared_ptr<Instruction> &elses, const Token &token) : Instruction(SWITCH_I, token), switchs(switchs), cases_solved(cases_solved), cases_unsolved(cases_unsolved), elses(elses)
+SwitchI::SwitchI(const std::shared_ptr<Instruction> &switchs, const std::map<Symbol, size_t> &cases_solved, const std::map<std::shared_ptr<Instruction>, size_t> &cases_unsolved, const std::vector<std::shared_ptr<Instruction>> &cases, const std::shared_ptr<Instruction> &elses, const Token &token) : Instruction(SWITCH_I, token), switchs(switchs), cases_solved(cases_solved), cases_unsolved(cases_unsolved), cases(cases), elses(elses)
 {}
 
 const Symbol SwitchI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
 	Scope newScope(scope, 0);
 	auto eval = switchs->evaluate(&newScope, stack_trace);
+	size_t index = 0;
 	if (cases_solved.find(eval) != cases_solved.end()) {
-		return cases_solved.at(eval)->evaluate(&newScope, stack_trace);
+		index = cases_solved.at(eval);
 	} else if (!cases_unsolved.empty()) {
 		for (auto &e : cases_unsolved) {
 			auto evalE = e.first->evaluate(&newScope, stack_trace);
-			if (evalE.equals(&eval, &token, stack_trace))
-				return e.second->evaluate(&newScope, stack_trace);
+			if (evalE.equals(&eval, &token, stack_trace)) {
+				index = e.second;
+			}
 		}
+	}
+
+	if (index > 0) {
+		return cases[index - 1]->evaluate(&newScope, stack_trace);
 	} else if (elses) {
 		return elses->evaluate(&newScope, stack_trace);
 	}
+
 	return Symbol();
 }
 

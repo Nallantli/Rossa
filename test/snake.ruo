@@ -23,7 +23,7 @@ static snake_game class {
 		if !LOST then {
 			direction = newDir;
 
-			switch direction in {
+			switch direction of {
 				case 0 do posX = (posX + 1 + width) % width;
 				case 1 do posX = (posX - 1 + width) % width;
 				case 2 do posY = (posY + 1 + height) % height;
@@ -102,23 +102,23 @@ static snake_game class {
 		if e.type == Event.QUIT then {
 			exit();
 		} elif e.type == Event.KEY_DOWN then {
-			switch e.keysym.sym in {
-				case 'w' do {
+			switch e.keysym.sym of {
+				case 'w', 'k' do {
 					if direction != 2 then {
 						newDir = 3;
 					}
 				}
-				case 's' do {
+				case 's', 'j' do {
 					if direction != 3 then {
 						newDir = 2;
 					}
 				}
-				case 'a' do {
+				case 'a', 'h' do {
 					if direction != 0 then {
 						newDir = 1;
 					}
 				}
-				case 'd' do {
+				case 'd', 'l' do {
 					if direction != 1 then {
 						newDir = 0;
 					}
@@ -127,7 +127,7 @@ static snake_game class {
 				case '2' do speed = 120;
 				case '3' do speed = 80;
 				case '4' do speed = 0;
-				case ' ' do togglePause();
+				case ' ', 'p' do togglePause();
 				case 'r' do reset();
 			}
 		}

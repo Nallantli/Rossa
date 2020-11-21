@@ -759,12 +759,14 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 std::shared_ptr<Node> NodeParser::parseSwitchNode()
 {
 	nextToken();
-	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases;
+	std::map<std::shared_ptr<Node>, size_t> cases;
+	std::vector<std::shared_ptr<Node>> gotos;
+
 	auto switchs = parseEquNode();
 	if (!switchs)
 		return logErrorN((boost::format(_EXPECTED_AFTER_) % KEYWORD_SWITCH).str(), currentToken);
-	if (currentToken.type == NULL_TOK || currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
+	if (currentToken.type == NULL_TOK || currentToken.type != TOK_OF)
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_OF).str(), currentToken);
 	nextToken();
 	if (currentToken.type == NULL_TOK || currentToken.type != '{')
 		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
@@ -775,9 +777,22 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CASE).str(), currentToken);
 		nextToken();
 
-		auto c = parseUnitNode();
-		if (!c)
-			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		std::vector<std::shared_ptr<Node>> keys;
+
+		size_t i = 0;
+		while (currentToken.type != NULL_TOK) {
+			if (i++ > 0) {
+				if (currentToken.type != ',')
+					return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				nextToken();
+			}
+			auto c = parseUnitNode();
+			if (!c)
+				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+			keys.push_back(c);
+			if (currentToken.type == TOK_DO)
+				break;
+		}
 
 		if (currentToken.type == NULL_TOK || currentToken.type != TOK_DO)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
@@ -793,7 +808,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
 			nextToken();
 
-			cases[c] = eq;
+			gotos.push_back(eq);
 		} else {
 			nextToken();
 			std::vector<std::shared_ptr<Node>> body;
@@ -809,14 +824,17 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 				return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 			nextToken();
 
-			cases[c] = std::make_shared<VectorNode>(body, true, currentToken);
+			gotos.push_back(std::make_shared<VectorNode>(body, true, currentToken));
 		}
+
+		for (auto &c : keys)
+			cases[c] = gotos.size();
 
 		if (currentToken.type == NULL_TOK)
 			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
 	}
 	nextToken();
-	auto ret = std::make_shared<SwitchNode>(switchs, cases, currentToken);
+	auto ret = std::make_shared<SwitchNode>(switchs, cases, gotos, currentToken);
 
 	if (currentToken.type != NULL_TOK && currentToken.type == TOK_ELSE) {
 		nextToken();

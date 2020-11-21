@@ -128,7 +128,8 @@ namespace ruota
 		TOK_UNTILT = -55,
 		TOK_UNTILF = -56,
 		TOK_PARSE = -57,
-		TOK_CONTINUE = -58
+		TOK_CONTINUE = -58,
+		TOK_OF = -59
 	};
 
 	enum SymbolType

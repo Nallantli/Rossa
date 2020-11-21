@@ -396,12 +396,13 @@ namespace ruota
 	{
 	protected:
 		const std::shared_ptr<Instruction> switchs;
-		const std::map<Symbol, std::shared_ptr<Instruction>> cases_solved;
-		const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> cases_unsolved;
+		const std::map<Symbol, size_t> cases_solved;
+		const std::map<std::shared_ptr<Instruction>, size_t> cases_unsolved;
+		const std::vector<std::shared_ptr<Instruction>> cases;
 		const std::shared_ptr<Instruction> elses;
 
 	public:
-		SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, std::shared_ptr<Instruction>> &, const std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> &, const std::shared_ptr<Instruction> &, const Token &);
+		SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, size_t> &, const std::map<std::shared_ptr<Instruction>, size_t> &, const std::vector<std::shared_ptr<Instruction>> &, const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 

@@ -53,6 +53,7 @@ std::stringstream ContainerNode::printTree(std::string indent, bool last) const
 	ss << "CONTAINER : " << s.toCodeString() << "\n" << colorASCII(RESET_TEXT);
 	return ss;
 }
+
 std::shared_ptr<Node> ContainerNode::fold() const
 {
 	return std::make_unique<ContainerNode>(s, token);
@@ -1517,30 +1518,36 @@ std::shared_ptr<Node> MapNode::fold() const
 
 SwitchNode::SwitchNode(
 	std::shared_ptr<Node> switchs,
-	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> cases,
+	std::map<std::shared_ptr<Node>, size_t> cases,
+	std::vector<std::shared_ptr<Node>> gotos,
 	const Token &token) : Node(SWITCH_NODE,
 		token),
 	switchs(switchs),
-	cases(cases)
+	cases(cases),
+	gotos(gotos)
 {}
 
 std::shared_ptr<Instruction> SwitchNode::genParser() const
 {
-	std::map<Symbol, std::shared_ptr<Instruction>> cases_solved;
-	std::map<std::shared_ptr<Instruction>, std::shared_ptr<Instruction>> cases_unsolved;
+	std::map<Symbol, size_t> cases_solved;
+	std::map<std::shared_ptr<Instruction>, size_t> cases_unsolved;
+	std::vector<std::shared_ptr<Instruction>> goto_cases;
 	std::vector<Function> stack_trace;
 	for (auto &e : this->cases) {
 		if (e.first->isConst()) {
 			Scope temp;
 			auto key = e.first->genParser()->evaluate(&temp, stack_trace);
-			cases_solved[key] = e.second->genParser();
+			cases_solved[key] = e.second;
 		} else {
-			cases_unsolved[e.first->genParser()] = e.second->genParser();
+			cases_unsolved[e.first->genParser()] = e.second;
 		}
 	}
+	for (auto &e : this->gotos) {
+		goto_cases.push_back(e->genParser());
+	}
 	if (elses)
-		return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, elses->genParser(), token);
-	return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, nullptr, token);
+		return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, goto_cases, elses->genParser(), token);
+	return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, goto_cases, nullptr, token);
 }
 
 void SwitchNode::setElse(std::shared_ptr<Node> elses)
@@ -1566,10 +1573,10 @@ std::stringstream SwitchNode::printTree(std::string indent, bool last) const
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
 	ss << "SWITCH\n" << colorASCII(RESET_TEXT);
-	ss << switchs->printTree(indent, cases.empty()).str();
+	ss << switchs->printTree(indent, gotos.empty()).str();
 	size_t i = 0;
-	for (auto &e : cases) {
-		ss << e.second->printTree(indent, i == cases.size() - 1 && !elses).str();
+	for (auto &e : gotos) {
+		ss << e->printTree(indent, i == gotos.size() - 1 && !elses).str();
 		i++;
 	}
 	if (elses)
@@ -1586,10 +1593,13 @@ std::shared_ptr<Node> SwitchNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
-	std::map<std::shared_ptr<Node>, std::shared_ptr<Node>> ncases;
+	std::map<std::shared_ptr<Node>, size_t> ncases;
+	std::vector<std::shared_ptr<Node>> ngotos;
 	for (auto &c : cases)
-		ncases[c.first->fold()] = c.second->fold();
-	auto ret = std::make_unique<SwitchNode>(switchs->fold(), ncases, token);
+		ncases[c.first->fold()] = c.second;
+	for (auto &e : gotos)
+		ngotos.push_back(e->fold());
+	auto ret = std::make_unique<SwitchNode>(switchs->fold(), ncases, ngotos, token);
 	if (elses)
 		ret->setElse(elses->fold());
 	return ret;

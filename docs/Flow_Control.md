@@ -210,7 +210,7 @@ A switch-statement allows the code to branch based on a hashed table of possible
 The syntax is as follows:
 
 ```ruo
-switch <EXPRESSION> in {
+switch <EXPRESSION> of {
 	case <VALUE> do {
 		...
 	}
@@ -227,7 +227,7 @@ case <VALUE> do <EXPRESSION>;
 The `default` case for a switch statement is defined with an `else` clause coming after the switch block, like so:
 
 ```ruo
-switch <EXPRESSION> in {
+switch <EXPRESSION> of {
 	...
 } else {
 	...
@@ -241,7 +241,7 @@ The switch-statement can also have cases for values that are not constant or bas
 For instance:
 
 ```ruo
-switch a in {
+switch a of {
 	case 1 do {
 		...
 	}

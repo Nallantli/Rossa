@@ -224,6 +224,8 @@ const int Ruota::getToken(
 			return TOK_DO;
 		else if (ID_STRING == KEYWORD_IN)
 			return TOK_IN;
+		else if (ID_STRING == KEYWORD_OF)
+			return TOK_OF;
 		else if (ID_STRING == KEYWORD_VAR)
 			return TOK_VAR;
 		else if (ID_STRING == KEYWORD_IF)

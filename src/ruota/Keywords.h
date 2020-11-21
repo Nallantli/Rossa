@@ -21,6 +21,7 @@
 #define KEYWORD_FUNCTION "Function"
 #define KEYWORD_IF "if"
 #define KEYWORD_IN "in"
+#define KEYWORD_OF "of"
 #define KEYWORD_INIT "init"
 #define KEYWORD_LENGTH "length"
 #define KEYWORD_LOAD "load"
