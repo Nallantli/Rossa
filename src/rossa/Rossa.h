@@ -25,8 +25,6 @@
 #include <boost/format.hpp>
 #include <boost/dll.hpp>
 #include <boost/function.hpp>
-#include <boost/system/error_code.hpp>
-#include <boost/throw_exception.hpp>
 
 namespace rossa
 {
@@ -625,9 +623,9 @@ namespace rossa
 
 			try {
 				loaded[search] = boost::dll::import<const Symbol(std::vector<Symbol>, const Token *, Hash &)>(dir::findFile(currentDir, libname, token), fname);
-			} catch (const boost::wrapexcept<boost::system::system_error> &e) {
+			} catch (...) {
 				std::vector<Function> stack_trace;
-				throw RTError((boost::format("Error loading `%1%`: %2%") % search % e.what()).str(), *token, stack_trace);
+				throw RTError((boost::format("Error loading `%1%`") % search).str(), *token, stack_trace);
 			}
 		}
 	}
