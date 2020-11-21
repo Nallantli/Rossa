@@ -4,6 +4,11 @@
 </div>
 
 -----
+<div align="center">
+
+![C/C++ CI](https://github.com/Nallantli/Rossa/workflows/C/C++%20CI/badge.svg)
+
+</div>
 
 [Docs](https://nallantli.github.io/Rossa/#/)
 
