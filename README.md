@@ -96,7 +96,7 @@ Basic File/Folder Output:
 (Note that the `/` operator is overloaded in class `Path`)
 
 ```rossa
-load "fs.ruo";
+load "fs";
 
 p := new Path();
 p = p / "Example";
