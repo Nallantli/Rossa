@@ -14,14 +14,17 @@
 #include "RNumber.h"
 #include "Keywords.h"
 
+#include <map>
+#include <unordered_map>
+#include <vector>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <iostream>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/dll.hpp>
 #include <boost/function.hpp>
-#include <iostream>
 
 namespace rossa
 {
