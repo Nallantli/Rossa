@@ -25,6 +25,7 @@
 #include <boost/format.hpp>
 #include <boost/dll.hpp>
 #include <boost/function.hpp>
+#include <boost/system/error_code.hpp>
 
 namespace rossa
 {
