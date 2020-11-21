@@ -13,6 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: update
+      run: sudo apt-get update
+    - name: boost
+      run: sudo apt-get install libboost-all-dev
+    - name: sdl2
+      run: sudo apt-get install libsdl2-dev && sudo apt-get install libsdl2-image-dev
     - name: make
       run: make
     - name: make libs
