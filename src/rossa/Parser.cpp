@@ -353,6 +353,15 @@ const Symbol AddI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 			valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
 			return Symbol(valA);
 		}
+		case DICTIONARY:
+		{
+			if (evalB.getValueType() != DICTIONARY)
+				break;
+			auto valA = evalA.getDictionary(&token, stack_trace);
+			auto valB = evalB.getDictionary(&token, stack_trace);
+			valA.merge(valB);
+			return Symbol(valA);
+		}
 		case STRING:
 			if (evalB.getValueType() != STRING)
 				break;
