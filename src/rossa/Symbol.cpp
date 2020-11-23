@@ -238,8 +238,8 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 		case OBJECT:
 		{
 			auto o = d->valueObject;
-			if (o->hasValue(Rossa::HASH_TO_STRING))
-				return o->getVariable(Rossa::HASH_TO_STRING, token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
+			if (o->hasValue(ROSSA_HASH("->String")))
+				return o->getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
 			return "<Object>";
 		}
 		case POINTER:

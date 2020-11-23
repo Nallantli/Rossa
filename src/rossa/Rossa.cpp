@@ -34,12 +34,6 @@ const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
 const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
 const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
-const hash_ull Rossa::HASH_TO_STRING = ROSSA_HASH("->" KEYWORD_STRING);
-const hash_ull Rossa::HASH_TO_NUMBER = ROSSA_HASH("->" KEYWORD_NUMBER);
-const hash_ull Rossa::HASH_TO_BOOLEAN = ROSSA_HASH("->" KEYWORD_BOOLEAN);
-const hash_ull Rossa::HASH_TO_VECTOR = ROSSA_HASH("->" KEYWORD_ARRAY);
-const hash_ull Rossa::HASH_TO_DICTIONARY = ROSSA_HASH("->" KEYWORD_DICTIONARY);
-
 Rossa::Rossa(std::vector<std::string> args)
 {
 	std::vector<Symbol> argv;
@@ -51,6 +45,7 @@ Rossa::Rossa(std::vector<std::string> args)
 
 const std::map<std::string, signed int> Rossa::bOperators = {
 	{"[]", 999},
+	{"->", 14},
 	{"**", -13},
 	{"*", 12},
 	{"/", 12},
@@ -77,7 +72,6 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"&&", 3},
 	{"||", 2},
 	{"=", -1},
-	{"->", 0},
 	{":=", -1},
 	{"**=", -1},
 	{"*=", -1},
@@ -95,7 +89,8 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 const std::map<std::string, signed int> Rossa::uOperators = {
 	{"-", -1},
 	{"+", -1},
-	{"!", -1} };
+	{"!", -1},
+	{"$", -1} };
 
 std::shared_ptr<Node> Rossa::compileCode(const std::string &code, boost::filesystem::path currentFile) const
 {
@@ -377,8 +372,6 @@ const int Rossa::getToken(
 		}
 
 		ID_STRING = opStr;
-		if (ID_STRING == "->")
-			return TOK_CAST;
 		if (ID_STRING == "=>")
 			return TOK_DEF;
 		if (ID_STRING == "::")

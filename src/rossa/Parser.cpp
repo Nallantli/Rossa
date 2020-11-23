@@ -1084,27 +1084,30 @@ const Symbol NewI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 /*class CastToI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastToI::CastToI(const std::shared_ptr<Instruction> &a, const ValueType &convert, const Token &token) : UnaryI(CAST_TO_I, a, token), convert(convert)
+CastToI::CastToI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(CAST_TO_I, a, b, token)
 {}
 
 const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
-	switch (convert) {
-		case STRING:
-			switch (evalA.getValueType()) {
-				case STRING:
-					return evalA;
-				default:
-					return Symbol(evalA.toString(&token, stack_trace));
-			}
+	auto convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
+
+	switch (evalA.getValueType()) {
 		case NUMBER:
-			switch (evalA.getValueType()) {
+			switch (convert) {
 				case NUMBER:
 					return evalA;
-				case NIL:
-					return Symbol(RNumber::Long(0));
 				case STRING:
+					return Symbol(evalA.toString(&token, stack_trace));
+				case BOOLEAN_D:
+					return Symbol(evalA.getNumber(&token, stack_trace).getLong() != 0);
+				default:
+					break;
+			}
+			break;
+		case STRING:
+			switch (convert) {
+				case NUMBER:
 					try {
 						auto s = evalA.getString(&token, stack_trace);
 						if (s.length() > 2 && s[0] == '0' && isalpha(s[1])) {
@@ -1120,80 +1123,11 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 					} catch (const std::invalid_argument &e) {
 						throw RTError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token, stack_trace)).str(), token, stack_trace);
 					}
-				case OBJECT:
-				{
-					auto o = evalA.getObject(&token, stack_trace);
-					if (o->hasValue(Rossa::HASH_TO_NUMBER))
-						return o->getVariable(Rossa::HASH_TO_NUMBER, &token, stack_trace).call({}, &token, stack_trace);
-					break;
-				}
-				default:
-					break;
-			}
-		case BOOLEAN_D:
-			switch (evalA.getValueType()) {
+				case STRING:
+					return evalA;
 				case BOOLEAN_D:
-					return evalA;
-				case NIL:
-					return Symbol(false);
-				case NUMBER:
-					return Symbol(evalA.getNumber(&token, stack_trace).getLong() != 0);
-				case STRING:
 					return Symbol(evalA.getString(&token, stack_trace) == KEYWORD_TRUE);
-				case OBJECT:
-				{
-					auto o = evalA.getObject(&token, stack_trace);
-					if (o->hasValue(Rossa::HASH_TO_BOOLEAN))
-						return o->getVariable(Rossa::HASH_TO_BOOLEAN, &token, stack_trace).call({}, &token, stack_trace);
-					break;
-				}
-				default:
-					break;
-			}
-		case DICTIONARY:
-			switch (evalA.getValueType()) {
-				case DICTIONARY:
-					return evalA;
 				case ARRAY:
-				{
-					auto v = evalA.getVector(&token, stack_trace);
-					sym_map_t nd;
-					for (size_t i = 0; i < v.size(); i++)
-						nd[std::to_string(i)] = v[i];
-					return Symbol(nd);
-				}
-				case OBJECT:
-				{
-					auto o = evalA.getObject(&token, stack_trace);
-					if (o->hasValue(Rossa::HASH_TO_DICTIONARY))
-						return o->getVariable(Rossa::HASH_TO_DICTIONARY, &token, stack_trace).call({}, &token, stack_trace);
-					break;
-				}
-				default:
-					break;
-			}
-		case ARRAY:
-			switch (evalA.getValueType()) {
-				case ARRAY:
-					return evalA;
-				case DICTIONARY:
-				{
-					auto dict = evalA.getDictionary(&token, stack_trace);
-					std::vector<Symbol> nv;
-					for (auto &e : dict) {
-						std::vector<Symbol> l = { Symbol(e.first), e.second };
-						nv.push_back(Symbol(l));
-					}
-					return Symbol(nv);
-				}
-				case OBJECT:
-				{
-					auto o = evalA.getObject(&token, stack_trace);
-					if (o->hasValue(Rossa::HASH_TO_VECTOR))
-						return o->getVariable(Rossa::HASH_TO_VECTOR, &token, stack_trace).call({}, &token, stack_trace);
-					break;
-				}
-				case STRING:
 				{
 					std::string str = evalA.getString(&token, stack_trace);
 					std::vector<Symbol> nv;
@@ -1224,23 +1158,112 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 					}
 					return Symbol(nv);
 				}
+				case TYPE_NAME:
+				{
+					auto s = evalA.getString(&token, stack_trace);
+					if (s == KEYWORD_NUMBER)
+						return Symbol(static_cast<type_sll>(NUMBER));
+					if (s == KEYWORD_STRING)
+						return Symbol(static_cast<type_sll>(STRING));
+					if (s == KEYWORD_BOOLEAN)
+						return Symbol(static_cast<type_sll>(BOOLEAN_D));
+					if (s == KEYWORD_ARRAY)
+						return Symbol(static_cast<type_sll>(ARRAY));
+					if (s == KEYWORD_DICTIONARY)
+						return Symbol(static_cast<type_sll>(DICTIONARY));
+					if (s == KEYWORD_FUNCTION)
+						return Symbol(static_cast<type_sll>(FUNCTION));
+					if (s == KEYWORD_OBJECT)
+						return Symbol(static_cast<type_sll>(OBJECT));
+					if (s == KEYWORD_TYPE)
+						return Symbol(static_cast<type_sll>(TYPE_NAME));
+					if (s == KEYWORD_NIL_NAME)
+						return Symbol(static_cast<type_sll>(NIL));
+					if (s == KEYWORD_POINTER)
+						return Symbol(static_cast<type_sll>(POINTER));
+					return Symbol(static_cast<type_sll>(ROSSA_HASH(evalA.getString(&token, stack_trace))));
+				}
 				default:
 					break;
 			}
-		case TYPE_NAME:
+			break;
+		case BOOLEAN_D:
+			switch (convert) {
+				case NUMBER:
+					return Symbol(RNumber::Long(evalA.getBool(&token, stack_trace) ? 1 : 0));
+				case STRING:
+					return Symbol(evalA.getBool(&token, stack_trace) ? "true" : "false");
+				case BOOLEAN_D:
+					return evalA;
+				default:
+					break;
+			}
+			break;
+		case ARRAY:
+			switch (convert) {
+				case STRING:
+					return Symbol(evalA.toString(&token, stack_trace));
+				case ARRAY:
+					return evalA;
+				case DICTIONARY:
+				{
+					auto v = evalA.getVector(&token, stack_trace);
+					sym_map_t nd;
+					for (size_t i = 0; i < v.size(); i++)
+						nd[std::to_string(i)] = v[i];
+					return Symbol(nd);
+				}
+				default:
+					break;
+			}
+			break;
+		case DICTIONARY:
+			switch (convert) {
+				case STRING:
+					return Symbol(evalA.toString(&token, stack_trace));
+				case ARRAY:
+				{
+					auto dict = evalA.getDictionary(&token, stack_trace);
+					std::vector<Symbol> nv;
+					for (auto &e : dict) {
+						std::vector<Symbol> l = { Symbol(e.first), e.second };
+						nv.push_back(Symbol(l));
+					}
+					return Symbol(nv);
+				}
+				case DICTIONARY:
+					return evalA;
+				default:
+					break;
+			}
+			break;
+		case OBJECT:
 		{
-			auto a = evalA.getValueType();
-			if (a != OBJECT)
-				return Symbol(static_cast<type_sll>(a));
-			else
-				return Symbol(static_cast<type_sll>(evalA.getObject(&token, stack_trace)->getHashedKey()));
+			if (convert == evalA.getAugValueType())
+				return evalA;
+			auto fname = ROSSA_HASH("->" + sig::getTypeString(convert));
+			auto o = evalA.getObject(&token, stack_trace);
+			if (o->hasValue(fname))
+				return o->getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
+			break;
 		}
-		case NIL:
-			return Symbol();
+		case TYPE_NAME:
+			switch (convert) {
+				case STRING:
+					return Symbol(sig::getTypeString(evalA.getAugValueType()));
+				case TYPE_NAME:
+					return evalA;
+				default:
+					break;
+			}
+			break;
 		default:
 			break;
 	}
-	throw RTError(_FAILURE_CONVERT_, token, stack_trace);
+
+	auto fname = ROSSA_HASH("->" + sig::getTypeString(convert));
+	return scope->getVariable(fname, &token, stack_trace).call({ evalA }, &token, stack_trace);
+
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1521,4 +1544,17 @@ const Symbol ParseI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto tokens = Rossa::lexString(evalA, boost::filesystem::current_path() / KEYWORD_NIL);
 	NodeParser np(tokens, boost::filesystem::current_path() / KEYWORD_NIL);
 	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class TypeI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+TypeI::TypeI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(TYPE_I, a, token)
+{}
+
+const Symbol TypeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
+{
+	auto evalA = a->evaluate(scope, stack_trace);
+	return Symbol(evalA.getAugValueType());
 }

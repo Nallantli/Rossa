@@ -108,7 +108,7 @@ namespace rossa
 		TOK_DICTIONARY = -33,
 		TOK_OBJECT = -34,
 		TOK_FUNCTION = -35,
-		TOK_CAST = -36,
+		TOK_OF = -36,
 
 		TOK_LOAD = -37,
 		TOK_ALLOC = -38,
@@ -131,8 +131,7 @@ namespace rossa
 		TOK_UNTILT = -55,
 		TOK_UNTILF = -56,
 		TOK_PARSE = -57,
-		TOK_CONTINUE = -58,
-		TOK_OF = -59
+		TOK_CONTINUE = -58
 	};
 
 	enum SymbolType
@@ -209,7 +208,8 @@ namespace rossa
 		B_XOR,
 		B_SH_L,
 		B_SH_R,
-		DECLARE_VARS_I
+		DECLARE_VARS_I,
+		TYPE_I
 	};
 
 	enum ObjectType
@@ -426,7 +426,6 @@ namespace rossa
 		std::shared_ptr<Node> parseTrailingNode(std::shared_ptr<Node>, bool);
 		std::shared_ptr<Node> parseInsNode(std::shared_ptr<Node>);
 		std::shared_ptr<Node> parseUntilNode(std::shared_ptr<Node>, bool);
-		std::shared_ptr<Node> parseCastToNode(std::shared_ptr<Node>);
 		std::shared_ptr<Node> parseBinOpNode(std::shared_ptr<Node>);
 		std::shared_ptr<Node> parseCallNode(std::shared_ptr<Node>);
 		std::shared_ptr<Node> parseIndexNode(std::shared_ptr<Node>);
@@ -482,12 +481,6 @@ namespace rossa
 		static const hash_ull HASH_SET;
 		static const hash_ull HASH_CALL;
 		static const hash_ull HASH_RANGE;
-
-		static const hash_ull HASH_TO_STRING;
-		static const hash_ull HASH_TO_NUMBER;
-		static const hash_ull HASH_TO_BOOLEAN;
-		static const hash_ull HASH_TO_VECTOR;
-		static const hash_ull HASH_TO_DICTIONARY;
 
 		Rossa(std::vector<std::string>);
 		std::shared_ptr<Node> compileCode(const std::string &, boost::filesystem::path) const;

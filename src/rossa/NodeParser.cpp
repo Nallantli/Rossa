@@ -66,8 +66,6 @@ std::shared_ptr<Node> NodeParser::parseTrailingNode(std::shared_ptr<Node> ret, b
 			return parseUntilNode(ret, true);
 		case TOK_UNTILF:
 			return parseUntilNode(ret, false);
-		case TOK_CAST:
-			return parseCastToNode(ret);
 		case TOK_INNER:
 			if (allowInner)
 				return parseInsNode(ret);
@@ -452,51 +450,6 @@ std::shared_ptr<Node> NodeParser::parseIndexNode(std::shared_ptr<Node> a)
 	return nullptr;
 }
 
-std::shared_ptr<Node> NodeParser::parseCastToNode(std::shared_ptr<Node> a)
-{
-	nextToken();
-
-	ValueType convert;
-	switch (currentToken.type) {
-		case TOK_NIL_NAME:
-			convert = NIL;
-			break;
-		case TOK_BOOLEAN:
-			convert = BOOLEAN_D;
-			break;
-		case TOK_NUMBER:
-			convert = NUMBER;
-			break;
-		case TOK_ARRAY:
-			convert = ARRAY;
-			break;
-		case TOK_STRING:
-			convert = STRING;
-			break;
-		case TOK_DICTIONARY:
-			convert = DICTIONARY;
-			break;
-		case TOK_OBJECT:
-			convert = OBJECT;
-			break;
-		case TOK_FUNCTION:
-			convert = FUNCTION;
-			break;
-		case TOK_POINTER:
-			convert = POINTER;
-			break;
-		case TOK_TYPE_NAME:
-			convert = TYPE_NAME;
-			break;
-		default:
-			return logErrorN(_EXPECTED_BASE_CAST_, currentToken);
-	}
-
-	nextToken();
-	auto ret = std::make_shared<CastToNode>(convert, a, currentToken);
-	return parseTrailingNode(ret, true);
-}
-
 std::shared_ptr<Node> NodeParser::parseTypeNode()
 {
 	nextToken();
@@ -673,7 +626,7 @@ std::shared_ptr<Node> NodeParser::parseUnOpNode()
 	auto marker = currentToken;
 	nextToken();
 	if (Rossa::uOperators.find(opStr) != Rossa::uOperators.end()) {
-		if (auto a = parseEquNode())
+		if (auto a = parseUnitNode())
 			return std::make_shared<UnOpNode>(opStr, a, marker);
 		return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	} else {

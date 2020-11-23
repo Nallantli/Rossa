@@ -256,20 +256,6 @@ namespace rossa
 		std::shared_ptr<Node> fold() const override;
 	};
 
-	class CastToNode : public Node
-	{
-	private:
-		ValueType convert;
-		std::shared_ptr<Node> a;
-
-	public:
-		CastToNode(ValueType, std::shared_ptr<Node>, const Token &);
-		std::shared_ptr<Instruction> genParser() const override;
-		bool isConst() const override;
-		std::stringstream printTree(std::string, bool) const override;
-		std::shared_ptr<Node> fold() const override;
-	};
-
 	class InsNode : public Node
 	{
 	private:

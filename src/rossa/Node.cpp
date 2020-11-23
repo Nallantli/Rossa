@@ -879,6 +879,8 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 
 	if (op == "[]")
 		return std::make_shared<IndexI>(a->genParser(), b->genParser(), token);
+	if (op == "->")
+		return std::make_shared<CastToI>(a->genParser(), b->genParser(), token);
 
 	throw RTError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token, stack_trace);
 }
@@ -973,6 +975,8 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 		return std::make_shared<SubI>(std::make_unique<ContainerNode>(Symbol(RNumber::Long(0)), token)->genParser(), a->genParser(), token);
 	if (op == "!")
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
+	if (op == "$")
+		return std::make_shared<TypeI>(a->genParser(), token);
 
 	std::vector<Function> stack_trace;
 	throw RTError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token, stack_trace);
@@ -1059,56 +1063,6 @@ std::shared_ptr<Node> ParenNode::fold() const
 	}
 
 	return std::make_unique<ParenNode>(a->fold(), token);
-}
-
-//------------------------------------------------------------------------------------------------------
-
-CastToNode::CastToNode(
-	ValueType convert,
-	std::shared_ptr<Node> a,
-	const Token &token) : Node(CAST_TO_NODE,
-		token),
-	convert(convert),
-	a(a)
-{}
-
-std::shared_ptr<Instruction> CastToNode::genParser() const
-{
-	return std::make_shared<CastToI>(a->genParser(), convert, token);
-}
-
-bool CastToNode::isConst() const
-{
-	return a->isConst();
-}
-
-std::stringstream CastToNode::printTree(std::string indent, bool last) const
-{
-	std::stringstream ss;
-	ss << indent;
-	if (last) {
-		ss << "└─";
-		indent += "  ";
-	} else {
-		ss << "├─";
-		indent += "│ ";
-	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CAST : " << std::to_string(convert) << "\n" << colorASCII(RESET_TEXT);
-	ss << a->printTree(indent, true).str();
-	return ss;
-}
-
-std::shared_ptr<Node> CastToNode::fold() const
-{
-	if (isConst()) {
-		auto i = genParser();
-		Scope scope;
-		std::vector<Function> stack_trace;
-		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
-	}
-
-	return std::make_unique<CastToNode>(convert, a->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------

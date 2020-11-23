@@ -47,7 +47,7 @@ struct Path class {
 	`!=`(ref a) => this -> String != a -> String;
 
 	`/`(ref a) => {
-		if a -> Type == @Path then {
+		if $a == @Path then {
 			return new Path(extern_call libfs._path_append_path(ptr, a.ptr));
 		} else {
 			return new Path(extern_call libfs._path_append_string(ptr, a -> String));

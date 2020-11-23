@@ -337,13 +337,10 @@ namespace rossa
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
-	class CastToI : public UnaryI
+	class CastToI : public BinaryI
 	{
-	protected:
-		ValueType convert;
-
 	public:
-		CastToI(const std::shared_ptr<Instruction> &, const ValueType &, const Token &);
+		CastToI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 
@@ -465,6 +462,13 @@ namespace rossa
 	{
 	public:
 		ParseI(const std::shared_ptr<Instruction> &, const Token &);
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
+	};
+
+	class TypeI : public UnaryI
+	{
+	public:
+		TypeI(const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
 }

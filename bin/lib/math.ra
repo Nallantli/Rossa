@@ -2,7 +2,7 @@ struct Matrix class {
 	var a;
 
 	init(ref a : Array) => {
-		if (a[0] -> Type) != Array then {
+		if $a[0] != Array then {
 			this.init([a]);
 		} else {
 			last := a[0].size();
@@ -33,6 +33,16 @@ struct Matrix class {
 		return new Matrix(nm);
 	}
 
+	rsub(ref n : Number) => {
+		nm := a;
+		for r in nm do {
+			for c in r do {
+				c = n - c;
+			}
+		}
+		return new Matrix(nm);
+	}
+
 	`-`(ref n : Number) => `+`(-n);
 
 	`*`(ref n : Number) => {
@@ -54,7 +64,7 @@ struct Matrix class {
 
 		for i in 0 .. nm.size() do {
 			for j in 0 .. nm[0].size() do {
-				nm += m.a[i][j];
+				nm[i][j] += m.a[i][j];
 			}
 		}
 
@@ -129,7 +139,7 @@ struct Matrix class {
 			}
 			return new Matrix(col);
 		}
-		return new Matrix([[a[i][j]]];
+		return new Matrix([[a[i][j]]]);
 	}
 
 	`->Array`() => a;
@@ -138,7 +148,7 @@ struct Matrix class {
 }
 
 `+`(ref n : Number, ref m : @Matrix) => m + n;
-`-`(ref n : Number, ref m : @Matrix) => m - n;
+`-`(ref n : Number, ref m : @Matrix) => m.rsub(n);
 `*`(ref n : Number, ref m : @Matrix) => m * n;
 `+`(ref a : Array, ref m : @Matrix) => new Matrix(a) + m;
 `-`(ref a : Array, ref m : @Matrix) => new Matrix(a) - m;
