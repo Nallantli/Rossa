@@ -864,6 +864,11 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "||")
 		return std::make_shared<OrI>(a->genParser(), b->genParser(), token);
 
+	if (op == "&&=")
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<AndI>(a->genParser(), b->genParser(), token), false, token);
+	if (op == "||=")
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<OrI>(a->genParser(), b->genParser(), token), false, token);
+
 	if (op == "=")
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
 	if (op == ":=") {

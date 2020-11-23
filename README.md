@@ -155,9 +155,9 @@ Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
 `a !== b`|No|No|See Above|Left|7
 `a & b`|Yes|Yes|Bit-Wise And|Left|6
 `a ^ b`|Yes|Yes|Bit-Wise XOr|Left|5
-`a | b`|Yes|Yes|Bit-Wise Or|Left|4
-`a && b`|Yes|No|Logical And|Left|3
-`a || b`|Yes|No|Logical Or|Left|2
+`a \| b`|Yes|Yes|Bit-Wise Or|Left|4
+`a && b`|Yes|Yes|Logical And|Left|3
+`a \|\| b`|Yes|Yes|Logical Or|Left|2
 `a .. b`|Yes|~|Range of values from `a` to `b`|Left|1
 `a = b`|Yes|~|Value Assignment|Right|0
 `a := b`|No|~|Variable Declaration and Assignment|Right|0
