@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.7.2-alpha"
+#define _ROSSA_VERSION_ "v1.7.3-alpha"
 #define ROSSA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
