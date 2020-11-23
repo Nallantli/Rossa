@@ -1180,8 +1180,10 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 				{
 					auto dict = evalA.getDictionary(&token, stack_trace);
 					std::vector<Symbol> nv;
-					for (auto &e : dict)
-						nv.push_back(Symbol({ {"key", Symbol(e.first)}, {"value", e.second} }));
+					for (auto &e : dict) {
+						std::vector<Symbol> l = { Symbol(e.first), e.second };
+						nv.push_back(Symbol(l));
+					}
 					return Symbol(nv);
 				}
 				case OBJECT:

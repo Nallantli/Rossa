@@ -255,10 +255,6 @@ Array::back(ref a) => {
 	refer a[size(a) - 1];
 }
 
-Array::front(ref a) => {
-	refer a[0];
-}
-
 Array::empty(ref a) => {
 	return size(a) == 0;
 }
@@ -301,6 +297,14 @@ Array::sort(ref a) => {
 	return sort(left) + [ pivot ] + sort(right);
 }
 
+Array::first(ref a) => {
+	refer a[0];
+}
+
+Array::second(ref a) => {
+	refer a[1];
+}
+
 # STRING
 
 String::push(ref s, ref value : Number) => {
@@ -329,14 +333,6 @@ String::shift(ref s) => {
 
 String::reverse(ref s) => {
 	return (s -> Array).reverse().join();
-}
-
-String::back(ref s) => {
-	return (s -> Array).back();
-}
-
-String::front(ref s) => {
-	return (s -> Array).front();
 }
 
 String::empty(ref s) => {

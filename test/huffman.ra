@@ -40,7 +40,7 @@ static huffman class {
 				a := left.getKey();
 				b := right.getKey();
 				for e in b -> Array do {
-					a[e.key] = e.value;
+					a[e.first()] = e.second();
 				}
 				return a;
 			}
@@ -75,7 +75,7 @@ static huffman class {
 
 		nodes := [];
 		for e in freq -> Array do {
-			nodes.push(new Node(e.key, e.value));
+			nodes.push(new Node(e.first(), e.second()));
 		}
 
 		while nodes.size() > 1 do {
@@ -93,7 +93,7 @@ static huffman class {
 
 		decoder := {};
 		for e in d -> Array do {
-			decoder[e.value] = e.key;
+			decoder[e.first()] = e.second();
 		}
 
 		return { decoder : decoder, data : enc };
