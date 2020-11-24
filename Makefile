@@ -92,8 +92,8 @@ bin/rossa.exe: src/Main.cpp $(DIR)/librossa.a
 bin/rossa: src/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ src/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
-	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
+	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
 
 $(DIR)/Rossa.o: src/rossa/Rossa.cpp
 	$(CC) -o $@ src/rossa/Rossa.cpp -c $(OFLAGS)
@@ -124,3 +124,6 @@ $(DIR)/Symbol.o: src/rossa/Symbol.cpp
 
 $(DIR)/RTError.o: src/rossa/RTError.cpp
 	$(CC) -o $@ src/rossa/RTError.cpp -c $(OFLAGS)
+
+$(DIR)/Operator.o: src/rossa/Operator.cpp
+	$(CC) -o $@ src/rossa/Operator.cpp -c $(OFLAGS)

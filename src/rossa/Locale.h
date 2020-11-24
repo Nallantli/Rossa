@@ -58,6 +58,7 @@
 #define _EXPECTED_IDF_ "Expected identifier"
 #define _EXPECTED_EXPR_ "Expected expression"
 #define _EXPECTED_FILE_ "Expected filepath after `" KEYWORD_LOAD "`"
+#define _UNDECLARED_OPERATOR_ERROR_ "Operator `%1%` is not declared for the given types"
 #define _STACK_TRACE_MORE_ " ... (%1% more) ..."
 #endif
 
@@ -115,6 +116,7 @@
 #define _EXPECTED_IDF_ "Si aspettava identificatore"
 #define _EXPECTED_EXPR_ "Si aspettava espressione"
 #define _EXPECTED_FILE_ "Si aspettava un percorso dopo `" KEYWORD_LOAD "`"
+#define _UNDECLARED_OPERATOR_ERROR_ "L'operatore `%1%` non si declarava per i tipi dati"
 #define _STACK_TRACE_MORE_ " ... (%1% più) ..."
 #endif
 
@@ -172,6 +174,7 @@
 #define _EXPECTED_IDF_ "Nōmen exspectābātur"
 #define _EXPECTED_EXPR_ "Ēnūntiātiō exspectābātur"
 #define _EXPECTED_FILE_ "Post `" KEYWORD_LOAD "` ad scāpum via exspectābātur"
+#define _UNDECLARED_OPERATOR_ERROR_ "Iussus quī `%1%` nōminātur nōn dēclārātur cum valōribus datīs"
 #define _STACK_TRACE_MORE_ " ... (plūs %1%) ..."
 #endif
 
@@ -229,5 +232,6 @@
 #define _EXPECTED_IDF_ "識別名は思い設けられた"
 #define _EXPECTED_EXPR_ "表現は思い設けられた"
 #define _EXPECTED_FILE_ "「" KEYWORD_LOAD "」の後でファイルの道は思い設けられた"
+#define _UNDECLARED_OPERATOR_ERROR_ "作動の「%1%」はくれた種類に不明"
 #define _STACK_TRACE_MORE_ " ... （これから%1%以上） ..."
 #endif

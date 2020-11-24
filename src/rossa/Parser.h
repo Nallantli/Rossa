@@ -471,4 +471,15 @@ namespace rossa
 		TypeI(const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 	};
+
+	class CallOpI : public Instruction
+	{
+	protected:
+		const size_t id;
+		const std::vector<std::shared_ptr<Instruction>> children;
+
+	public:
+		CallOpI(const size_t &, const std::vector<std::shared_ptr<Instruction>> &, const Token &);
+		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
+	};
 }

@@ -222,25 +222,7 @@ const Symbol IndexI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case DICTIONARY:
-			if (evalB.getValueType() == NUMBER)
-				return evalA.indexDict(evalB.toString(&token, stack_trace));
-			return evalA.indexDict(evalB.getString(&token, stack_trace));
-		case ARRAY:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return evalA.indexVector(evalB.getNumber(&token, stack_trace).getLong(), &token, stack_trace);
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_INDEX))
-				return o->getVariable(Rossa::HASH_INDEX, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_INDEX, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::index(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -339,44 +321,7 @@ const Symbol AddI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) + evalB.getNumber(&token, stack_trace));
-		case ARRAY:
-		{
-			if (evalB.getValueType() != ARRAY)
-				break;
-			auto valA = evalA.getVector(&token, stack_trace);
-			auto valB = evalB.getVector(&token, stack_trace);
-			valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
-			return Symbol(valA);
-		}
-		case DICTIONARY:
-		{
-			if (evalB.getValueType() != DICTIONARY)
-				break;
-			auto valA = evalA.getDictionary(&token, stack_trace);
-			auto valB = evalB.getDictionary(&token, stack_trace);
-			valA.merge(valB);
-			return Symbol(valA);
-		}
-		case STRING:
-			if (evalB.getValueType() != STRING)
-				break;
-			return Symbol(evalA.getString(&token, stack_trace) + evalB.getString(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_ADD))
-				return o->getVariable(Rossa::HASH_ADD, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-
-	return scope->getVariable(Rossa::HASH_ADD, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::add(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -391,42 +336,7 @@ const Symbol SubI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) - evalB.getNumber(&token, stack_trace));
-		case ARRAY:
-		{
-			if (evalB.getValueType() != ARRAY)
-				break;
-			auto vA = evalA.getVector(&token, stack_trace);
-			auto vB = evalB.getVector(&token, stack_trace);
-			std::vector<Symbol> nv;
-			for (auto &e : vA) {
-				bool flag = true;
-				for (auto &e2 : vB) {
-					if (e.equals(&e2, &token, stack_trace)) {
-						flag = false;
-						break;
-					}
-				}
-				if (flag)
-					nv.push_back(e);
-			}
-			return Symbol(nv);
-		}
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_SUB)) {
-				return o->getVariable(Rossa::HASH_SUB, &token, stack_trace).call({ evalB }, &token, stack_trace);
-			}
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_SUB, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::sub(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -441,21 +351,7 @@ const Symbol MulI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) * evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_MUL))
-				return o->getVariable(Rossa::HASH_MUL, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_MUL, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::mul(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -470,21 +366,7 @@ const Symbol DivI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) / evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_DIV))
-				return o->getVariable(Rossa::HASH_DIV, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_DIV, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::div(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -499,21 +381,7 @@ const Symbol ModI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) % evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_MOD))
-				return o->getVariable(Rossa::HASH_MOD, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_MOD, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::mod(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -528,22 +396,7 @@ const Symbol PowI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace).pow(evalB.getNumber(&token, stack_trace)));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_POW)) {
-				return o->getVariable(Rossa::HASH_POW, &token, stack_trace).call({ evalB }, &token, stack_trace);
-			}
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_POW, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::pow(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -558,25 +411,7 @@ const Symbol LessI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return evalA.getNumber(&token, stack_trace) < evalB.getNumber(&token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
-				break;
-			return evalA.getString(&token, stack_trace) < evalB.getString(&token, stack_trace);
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_LESS))
-				return o->getVariable(Rossa::HASH_LESS, &token, stack_trace).call({ evalB }, &token, stack_trace).getBool(&token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_LESS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::less(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -591,25 +426,7 @@ const Symbol MoreI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return evalA.getNumber(&token, stack_trace) > evalB.getNumber(&token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
-				break;
-			return evalA.getString(&token, stack_trace) > evalB.getString(&token, stack_trace);
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_MORE))
-				return o->getVariable(Rossa::HASH_MORE, &token, stack_trace).call({ evalB }, &token, stack_trace).getBool(&token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_SUB, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::more(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -624,25 +441,7 @@ const Symbol ELessI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return evalA.getNumber(&token, stack_trace) <= evalB.getNumber(&token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
-				break;
-			return evalA.getString(&token, stack_trace) <= evalB.getString(&token, stack_trace);
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_ELESS))
-				return o->getVariable(Rossa::HASH_ELESS, &token, stack_trace).call({ evalB }, &token, stack_trace).getBool(&token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_ELESS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::eless(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -657,25 +456,7 @@ const Symbol EMoreI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return evalA.getNumber(&token, stack_trace) >= evalB.getNumber(&token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
-				break;
-			return evalA.getString(&token, stack_trace) >= evalB.getString(&token, stack_trace);
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_EMORE))
-				return o->getVariable(Rossa::HASH_EMORE, &token, stack_trace).call({ evalB }, &token, stack_trace).getBool(&token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_EMORE, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::emore(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -762,21 +543,7 @@ const Symbol BOrI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) | evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_B_OR))
-				return o->getVariable(Rossa::HASH_B_OR, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_B_OR, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::bor(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -791,21 +558,7 @@ const Symbol BXOrI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) ^ evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_B_XOR))
-				return o->getVariable(Rossa::HASH_B_XOR, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_B_XOR, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::bxor(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -820,38 +573,7 @@ const Symbol BAndI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) & evalB.getNumber(&token, stack_trace));
-		case STRING:
-		{
-			if (evalB.getValueType() != ARRAY)
-				break;
-			boost::format ret(evalA.getString(&token, stack_trace));
-			for (auto &e : evalB.getVector(&token, stack_trace)) {
-				std::string s;
-				if (e.getValueType() != STRING)
-					s = e.toString(&token, stack_trace);
-				else
-					s = e.getString(&token, stack_trace);
-				ret = ret % s;
-			}
-			if (ret.remaining_args() > 0)
-				throw RTError(_FAILURE_STRING_FORMAT_, token, stack_trace);
-			return Symbol(ret.str());
-		}
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_B_AND))
-				return o->getVariable(Rossa::HASH_B_AND, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_B_AND, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::band(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -866,21 +588,7 @@ const Symbol BShiftLeftI::evaluate(Scope *scope, std::vector<Function> &stack_tr
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) << evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_B_SH_L))
-				return o->getVariable(Rossa::HASH_B_SH_L, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_B_SH_L, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::bshl(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -895,21 +603,7 @@ const Symbol BShiftRightI::evaluate(Scope *scope, std::vector<Function> &stack_t
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
-				break;
-			return Symbol(evalA.getNumber(&token, stack_trace) >> evalB.getNumber(&token, stack_trace));
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_B_SH_R))
-				return o->getVariable(Rossa::HASH_B_SH_R, &token, stack_trace).call({ evalB }, &token, stack_trace);
-		}
-		default:
-			break;
-	}
-	return scope->getVariable(Rossa::HASH_B_SH_R, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+	return ops::bshr(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1293,41 +987,10 @@ const Symbol UntilI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 
-	switch (evalA.getValueType()) {
-		case NUMBER:
-		{
-			if (evalB.getValueType() != NUMBER)
-				break;
-			auto numA = evalA.getNumber(&token, stack_trace);
-			auto numB = evalB.getNumber(&token, stack_trace);
-			auto numStep = (step == nullptr ? RNumber::Long(1) : step->evaluate(scope, stack_trace).getNumber(&token, stack_trace));
-			std::vector<Symbol> nv;
-			if (inclusive) {
-				for (; numA <= numB; numA += numStep)
-					nv.push_back(Symbol(numA));
-			} else {
-				for (; numA < numB; numA += numStep)
-					nv.push_back(Symbol(numA));
-			}
-			return Symbol(nv);
-		}
-		case OBJECT:
-		{
-			auto o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_RANGE)) {
-				if (step == nullptr)
-					return o->getVariable(Rossa::HASH_RANGE, &token, stack_trace).call({ evalB }, &token, stack_trace);
-				else
-					return o->getVariable(Rossa::HASH_RANGE, &token, stack_trace).call({ evalB, step->evaluate(scope, stack_trace) }, &token, stack_trace);
-			}
-		}
-		default:
-			break;
-	}
 	if (step == nullptr)
-		return scope->getVariable(Rossa::HASH_RANGE, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
+		return ops::untilnostep(scope, inclusive, evalA, evalB, &token, stack_trace);
 	else
-		return scope->getVariable(Rossa::HASH_RANGE, &token, stack_trace).call({ evalA, evalB, step->evaluate(scope, stack_trace) }, &token, stack_trace);
+		return ops::untilstep(scope, inclusive, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1557,4 +1220,125 @@ const Symbol TypeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	return Symbol(evalA.getAugValueType());
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class CallOpI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+CallOpI::CallOpI(const size_t &id, const std::vector<std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(CALL_OP_I, token), id(id), children(children)
+{}
+
+const Symbol CallOpI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
+{
+	switch (id) {
+		case 0:
+			return ops::index(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 1:
+			return ops::untilnostep(NULL,
+				false,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 2:
+			return ops::untilstep(NULL,
+				false,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				children[2]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 3:
+			return ops::untilnostep(NULL,
+				true,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 4:
+			return ops::untilstep(NULL,
+				true,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				children[2]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 5:
+			return ops::add(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 6:
+			return ops::sub(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 7:
+			return ops::mul(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 8:
+			return ops::div(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 9:
+			return ops::mod(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 10:
+			return ops::pow(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 11:
+			return ops::less(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 12:
+			return ops::more(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 13:
+			return ops::eless(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 14:
+			return ops::emore(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 15:
+			return ops::bor(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 16:
+			return ops::bxor(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 17:
+			return ops::band(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 18:
+			return ops::bshl(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 19:
+			return ops::bshr(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		default:
+			return Symbol();
+	}
 }

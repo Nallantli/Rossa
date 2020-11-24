@@ -195,6 +195,37 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 	return std::make_shared<ExternCallNode>(libname + "$" + fname, args, marker);
 }
 
+std::shared_ptr<Node> NodeParser::parseCallOpNode()
+{
+	nextToken();
+	size_t id = currentToken.valueNumber.getLong();
+	auto marker = currentToken;
+	nextToken();
+
+	if (currentToken.type != '(')
+		return logErrorN((boost::format(_EXPECTED_ERROR_) % "(").str(), currentToken);
+	nextToken();
+
+	std::vector<std::shared_ptr<Node>> args;
+	int i = 0;
+	while (currentToken.type != ')') {
+		if (i > 0) {
+			if (currentToken.type != ',')
+				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+			nextToken();
+		}
+		i++;
+		if (auto b = parseEquNode())
+			args.push_back(b);
+		else
+			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
+		if (currentToken.type == NULL_TOK)
+			return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+	}
+	nextToken();
+	return std::make_shared<CallOpNode>(id, args, marker);
+}
+
 std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(ValueType start)
 {
 	if (currentToken.type != '(')
@@ -846,6 +877,8 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 			return parseTrailingNode(ret, true);
 		case TOK_EXTERN_CALL:
 			return parseExternCallNode();
+		case TOK_CALL_OP:
+			return parseCallOpNode();
 		case TOK_LENGTH:
 		case TOK_SIZE:
 		case TOK_ALLOC:

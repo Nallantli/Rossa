@@ -1656,3 +1656,54 @@ std::shared_ptr<Node> ThrowNode::fold() const
 {
 	return std::make_unique<ThrowNode>(throws->fold(), token);
 }
+
+//------------------------------------------------------------------------------------------------------
+
+CallOpNode::CallOpNode(
+	const size_t &id,
+	std::vector<std::shared_ptr<Node>> args,
+	const Token &token) : Node(CALL_OP_NODE,
+		token),
+	id(id),
+	args(args)
+{}
+
+std::shared_ptr<Instruction> CallOpNode::genParser() const
+{
+	std::vector<std::shared_ptr<Instruction>> fargs;
+	for (auto &c : args)
+		fargs.push_back(c->genParser());
+	return std::make_shared<CallOpI>(id, fargs, token);
+}
+
+bool CallOpNode::isConst() const
+{
+	return false;
+}
+
+std::stringstream CallOpNode::printTree(std::string indent, bool last) const
+{
+	std::stringstream ss;
+	ss << indent;
+	if (last) {
+		ss << "└─";
+		indent += "  ";
+	} else {
+		ss << "├─";
+		indent += "│ ";
+	}
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "CALL_OP : " << id << "\n" << colorASCII(RESET_TEXT);
+	for (size_t i = 0; i < args.size(); i++)
+		ss << args[i]->printTree(indent, i == args.size() - 1).str();
+	return ss;
+}
+
+std::shared_ptr<Node> CallOpNode::fold() const
+{
+	std::vector<std::shared_ptr<Node>> nargs;
+	for (auto &c : args)
+		nargs.push_back(c->fold());
+
+	return std::make_unique<CallOpNode>(id, nargs, token);
+}

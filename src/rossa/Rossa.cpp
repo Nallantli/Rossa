@@ -307,6 +307,8 @@ const int Rossa::getToken(
 			return TOK_PARSE;
 		else if (ID_STRING == KEYWORD_CONTINUE)
 			return TOK_CONTINUE;
+		else if (ID_STRING == KEYWORD_CALL_OP)
+			return TOK_CALL_OP;
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = RNumber::Double(INFINITY);
 			return TOK_NUM;

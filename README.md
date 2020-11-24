@@ -123,8 +123,8 @@ f(x, id) => {
 	}
 }
 
-t1 := new Thread(() => f(10, 1));
-t2 := new Thread(() => f(10, 2));
+t1 := new Thread(f, [10, 1]);
+t2 := new Thread(f, [10, 2]);
 
 t1.join();
 t2.join();
@@ -166,6 +166,7 @@ Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
 `!a`|No**|~|Unary Logical Negation: `a == false`|~|~
 `+a`|No**|~|Unary Addition (Superfluous in most cases): `0 + a`|~|~
 `-a`|No**|~|Unary Negation: `0 - a`|~|~
+`$a`|No|~|Returns Data Type|~|~
 
 _\* Can be used in compound-assignment operators, i.e. `a += b`. This is functionally equivalent to `a = a + b`._
 

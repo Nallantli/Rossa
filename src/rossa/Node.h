@@ -390,4 +390,18 @@ namespace rossa
 		std::stringstream printTree(std::string, bool) const override;
 		std::shared_ptr<Node> fold() const override;
 	};
+
+	class CallOpNode : public Node
+	{
+	private:
+		size_t id;
+		std::vector<std::shared_ptr<Node>> args;
+
+	public:
+		CallOpNode(const size_t &, std::vector<std::shared_ptr<Node>>, const Token &);
+		std::shared_ptr<Instruction> genParser() const override;
+		bool isConst() const override;
+		std::stringstream printTree(std::string, bool) const override;
+		std::shared_ptr<Node> fold() const override;
+	};
 }

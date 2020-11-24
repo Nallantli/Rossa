@@ -39,6 +39,32 @@ chars := ((ref x) => chars(x));
 
 parse := ((ref x) => parse(x));
 
+# OPERATOR LITERALS
+
+`[]`(ref a, ref b) => _call_op 0 (a, b);
+`..`(ref a, ref b) => _call_op 1 (a, b);
+`..`(ref a, ref b, ref c) => _call_op 2 (a, b, c);
+`.+`(ref a, ref b) => _call_op 3 (a, b);
+`.+`(ref a, ref b, ref c) => _call_op 4 (a, b, c);
+
+`+`(ref a, ref b) => _call_op 5 (a, b);
+`-`(ref a, ref b) => _call_op 6 (a, b);
+`*`(ref a, ref b) => _call_op 7 (a, b);
+`/`(ref a, ref b) => _call_op 8 (a, b);
+`%`(ref a, ref b) => _call_op 9 (a, b);
+`**`(ref a, ref b) => _call_op 10 (a, b);
+
+`<`(ref a, ref b) => _call_op 11 (a, b);
+`>`(ref a, ref b) => _call_op 12 (a, b);
+`<=`(ref a, ref b) => _call_op 13 (a, b);
+`>=`(ref a, ref b) => _call_op 14 (a, b);
+
+`|`(ref a, ref b) => _call_op 15 (a, b);
+`^`(ref a, ref b) => _call_op 16 (a, b);
+`&`(ref a, ref b) => _call_op 17 (a, b);
+`<<`(ref a, ref b) => _call_op 18 (a, b);
+`>>`(ref a, ref b) => _call_op 19 (a, b);
+
 # CONSOLE
 
 puts(ref s) => extern_call libstd._puts(s -> String);

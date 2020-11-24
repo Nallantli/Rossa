@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.7.4-alpha"
+#define _ROSSA_VERSION_ "v1.7.5-alpha"
 #define ROSSA_EXT_SYM(name, args, token, hash, stack_trace) extern "C" BOOST_SYMBOL_EXPORT const Symbol name(std::vector<Symbol> args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
@@ -131,7 +131,8 @@ namespace rossa
 		TOK_UNTILT = -55,
 		TOK_UNTILF = -56,
 		TOK_PARSE = -57,
-		TOK_CONTINUE = -58
+		TOK_CONTINUE = -58,
+		TOK_CALL_OP = -59
 	};
 
 	enum SymbolType
@@ -209,7 +210,8 @@ namespace rossa
 		B_SH_L,
 		B_SH_R,
 		DECLARE_VARS_I,
-		TYPE_I
+	TYPE_I,
+	CALL_OP_I
 	};
 
 	enum ObjectType
@@ -251,7 +253,8 @@ namespace rossa
 		BID_NODE,
 		TRY_CATCH_NODE,
 		THROW_NODE,
-		PAREN_NODE
+		PAREN_NODE,
+		CALL_OP_NODE
 	};
 
 	struct Hash
@@ -416,6 +419,7 @@ namespace rossa
 		std::shared_ptr<Node> parseLambdaNode();
 		std::shared_ptr<Node> parseExternNode();
 		std::shared_ptr<Node> parseExternCallNode();
+		std::shared_ptr<Node> parseCallOpNode();
 		std::shared_ptr<Node> parseCallBuiltNode();
 		std::shared_ptr<Node> parseClassNode();
 		std::shared_ptr<Node> parseNewNode();
@@ -578,6 +582,31 @@ namespace rossa
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
 	};
+
+	namespace ops
+	{
+		const Symbol index(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol untilstep(Scope *scope, const bool &inclusive, const Symbol &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol untilnostep(Scope *scope, const bool &inclusive, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		// Arithmetic
+		const Symbol add(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol sub(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol mul(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol div(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol mod(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol pow(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		// Comparison
+		const Symbol less(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol more(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol eless(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol emore(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		// Bit-Wise
+		const Symbol bor(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol bxor(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol band(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol bshl(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol bshr(Scope *scope, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+	}
 
 	namespace dir
 	{
