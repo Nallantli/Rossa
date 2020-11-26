@@ -16,4 +16,4 @@ jobs:
     - name: update
       run: sudo apt-get update
     - name: make
-      run: make
+      run: make GCC="g++-10"
