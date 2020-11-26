@@ -1,7 +1,9 @@
 locale=ENG
 
+GCC=g++
+
 CV=--std=c++17
-CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_ -Wall $(CV) -O3
+CC=$(GCC) -D_LOCALIZED_ -D_LOCALE_$(locale)_ -Wall $(CV) -O3
 
 ifeq ($(OS),Windows_NT)
 
