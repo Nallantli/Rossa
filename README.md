@@ -6,7 +6,7 @@
 -----
 <div align="center">
 
-![C/C++ CI](https://github.com/Nallantli/Rossa/workflows/C/C++%20CI/badge.svg)
+![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg)
 
 </div>
 
