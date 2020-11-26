@@ -1,11 +1,11 @@
-#include "Node.h"
+#include "../../bin/include/Rossa.h"
 #include <fstream>
 
 using namespace rossa;
 
 NodeParser::NodeParser(
 	const std::vector<Token> &tokens,
-	const boost::filesystem::path &currentFile) : tokens(tokens),
+	const std::filesystem::path &currentFile) : tokens(tokens),
 	currentFile(currentFile)
 {}
 
@@ -91,7 +91,7 @@ std::shared_ptr<Node> NodeParser::parseCallBuiltNode()
 	nextToken();
 	auto arg = parseEquNode();
 	if (currentToken.type != ')')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	nextToken();
 	auto ret = std::make_shared<CallBuiltNode>(t, arg, marker);
 	return parseTrailingNode(ret, true);
@@ -106,7 +106,7 @@ std::shared_ptr<Node> NodeParser::parseCallNode(std::shared_ptr<Node> a)
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -115,7 +115,7 @@ std::shared_ptr<Node> NodeParser::parseCallNode(std::shared_ptr<Node> a)
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 
 	nextToken();
@@ -160,7 +160,7 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 	std::string libname = currentToken.valueString;
 	nextToken();
 	if (currentToken.type != TOK_INNER)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % ".").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "." }), currentToken);
 	nextToken();
 	std::string fname = currentToken.valueString;
 
@@ -169,7 +169,7 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 	nextToken();
 
 	if (currentToken.type != '(')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "(").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
 	std::vector<std::shared_ptr<Node>> args;
@@ -177,7 +177,7 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 	while (currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -186,13 +186,11 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 
-	auto f = lib::loaded.at(libname + "$" + fname);
-
-	return std::make_shared<ExternCallNode>(libname + "$" + fname, args, marker);
+	return std::make_shared<ExternCallNode>(libname, fname, args, marker);
 }
 
 std::shared_ptr<Node> NodeParser::parseCallOpNode()
@@ -203,7 +201,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 	nextToken();
 
 	if (currentToken.type != '(')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "(").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
 	std::vector<std::shared_ptr<Node>> args;
@@ -211,7 +209,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 	while (currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -220,7 +218,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 	return std::make_shared<CallOpNode>(id, args, marker);
@@ -229,7 +227,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(ValueType start)
 {
 	if (currentToken.type != '(')
-		return logErrorSN((boost::format(_EXPECTED_ERROR_) % "(").str(), currentToken);
+		return logErrorSN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
 	std::vector<std::pair<LexerTokenType, hash_ull>> args;
@@ -239,7 +237,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorSN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				return logErrorSN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -322,7 +320,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 		types.push_back(ftype);
 
 		if (currentToken.type == NULL_TOK)
-			return logErrorSN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 
@@ -371,7 +369,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 		}
 		nextToken();
 		if (currentToken.type != TOK_DEF_TYPE)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "::").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "::" }), currentToken);
 		nextToken();
 	}
 
@@ -391,7 +389,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
 		if (currentToken.type != ';')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		nextToken();
 
 		return std::make_shared<DefineNode>(key, sig.first, sig.second, body, currentToken);
@@ -409,7 +407,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(vbody, true, currentToken);
@@ -459,7 +457,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(vbody, true, currentToken);
@@ -473,7 +471,7 @@ std::shared_ptr<Node> NodeParser::parseIndexNode(std::shared_ptr<Node> a)
 	nextToken();
 	if (auto b = parseEquNode()) {
 		if (currentToken.type != ']')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "]").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "]" }), currentToken);
 		nextToken();
 		auto ret = std::make_shared<BinOpNode>("[]", a, b, marker);
 		return parseTrailingNode(ret, true);
@@ -677,7 +675,7 @@ std::shared_ptr<Node> NodeParser::parseVectorNode()
 
 		if (i > 0) {
 			if (currentToken.type != ',' && currentToken.type != ';')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",` `;").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { ",` `;" }), currentToken);
 			delim = currentToken.type;
 			nextToken();
 		}
@@ -694,7 +692,7 @@ std::shared_ptr<Node> NodeParser::parseVectorNode()
 		else
 			return nullptr;
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "]").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "]" }), currentToken);
 	}
 	nextToken();
 	if (flag) {
@@ -713,7 +711,7 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -722,7 +720,7 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 		auto key = currentToken.valueString;
 		nextToken();
 		if (currentToken.type != ':')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ":").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ":" }), currentToken);
 		nextToken();
 		if (auto b = parseEquNode()) {
 			std::pair<std::string, std::shared_ptr<Node>> p = { key, b };
@@ -730,7 +728,7 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 		} else
 			return nullptr;
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	}
 	nextToken();
 	return std::make_shared<MapNode>(args, currentToken);
@@ -744,17 +742,17 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 
 	auto switchs = parseEquNode();
 	if (!switchs)
-		return logErrorN((boost::format(_EXPECTED_AFTER_) % KEYWORD_SWITCH).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_AFTER_, { KEYWORD_SWITCH }), currentToken);
 	if (currentToken.type != TOK_OF)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_OF).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_OF }), currentToken);
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (currentToken.type != TOK_CASE)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CASE).str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CASE }), currentToken);
 		nextToken();
 
 		std::vector<std::shared_ptr<Node>> keys;
@@ -763,7 +761,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 		while (currentToken.type != NULL_TOK) {
 			if (i++ > 0) {
 				if (currentToken.type != ',')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 				nextToken();
 			}
 			auto c = parseUnitNode();
@@ -775,7 +773,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 		}
 
 		if (currentToken.type != TOK_DO)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 		nextToken();
 
 		if (currentToken.type != '{') {
@@ -785,7 +783,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
 			if (currentToken.type != ';')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 
 			gotos.push_back(eq);
@@ -801,7 +799,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 			}
 			if (currentToken.type != '}')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 			nextToken();
 
 			if (body.size() == 1)
@@ -814,7 +812,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 			cases[c] = gotos.size();
 
 		if (currentToken.type == NULL_TOK)
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	}
 	nextToken();
 	auto ret = std::make_shared<SwitchNode>(switchs, cases, gotos, currentToken);
@@ -822,7 +820,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 	if (currentToken.type == TOK_ELSE) {
 		nextToken();
 		if (currentToken.type != '{')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 		nextToken();
 		std::vector<std::shared_ptr<Node>> elses;
 		while (currentToken.type != NULL_TOK) {
@@ -835,7 +833,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 		ret->setElse(std::make_shared<VectorNode>(elses, true, currentToken));
 	}
@@ -894,7 +892,7 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 			nextToken();
 			if (ret = parseEquNode()) {
 				if (currentToken.type != ')')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ")").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 				ret = std::make_shared<ParenNode>(ret, currentToken);
 				nextToken();
 				return parseTrailingNode(ret, true);
@@ -920,13 +918,13 @@ std::shared_ptr<Node> NodeParser::parseThenNode(std::shared_ptr<Node> a)
 	nextToken();
 	auto b = parseEquNode();
 	if (!b)
-		return logErrorN((boost::format(_EXPECTED_AFTER_) % "?").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_AFTER_, { "?" }), currentToken);
 	if (currentToken.type != ':')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % ":").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { ":" }), currentToken);
 	nextToken();
 	auto c = parseEquNode();
 	if (!c)
-		return logErrorN((boost::format(_EXPECTED_AFTER_) % ":").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_AFTER_, { ":" }), currentToken);
 	auto ret = std::make_shared<IfElseNode>(a, b, currentToken);
 	ret->setElse(c);
 	return ret;
@@ -963,13 +961,13 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type != TOK_THEN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_THEN).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> body;
 	while (currentToken.type != NULL_TOK) {
@@ -982,7 +980,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	std::shared_ptr<IfElseNode> ret;
@@ -1000,7 +998,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 		{
 			nextToken();
 			if (currentToken.type != '{')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 			nextToken();
 			std::vector<std::shared_ptr<Node>> elses;
 			while (currentToken.type != NULL_TOK) {
@@ -1013,7 +1011,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 			}
 			if (currentToken.type != '}')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 			nextToken();
 			if (elses.size() != 1)
 				ret->setElse(std::make_shared<VectorNode>(elses, true, currentToken));
@@ -1035,7 +1033,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 {
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> tbody;
 	while (currentToken.type != NULL_TOK) {
@@ -1048,11 +1046,11 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	if (currentToken.type != TOK_CATCH)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CATCH).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CATCH }), currentToken);
 	nextToken();
 
 	if (currentToken.type != TOK_IDF)
@@ -1061,11 +1059,11 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	nextToken();
 
 	if (currentToken.type != TOK_THEN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_THEN).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
 	nextToken();
 
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> cbody;
 	while (currentToken.type != NULL_TOK) {
@@ -1078,7 +1076,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	return std::make_shared<TryCatchNode>(std::make_shared<VectorNode>(tbody, true, currentToken), std::make_shared<VectorNode>(cbody, true, currentToken), key, currentToken);
@@ -1092,13 +1090,13 @@ std::shared_ptr<Node> NodeParser::parseWhileNode()
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type != TOK_DO)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> body;
 	while (currentToken.type != NULL_TOK) {
@@ -1111,7 +1109,7 @@ std::shared_ptr<Node> NodeParser::parseWhileNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	return std::make_shared<WhileNode>(ifs, body, marker);
@@ -1124,17 +1122,17 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 	auto id = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_IN }), currentToken);
 	nextToken();
 	auto fors = parseEquNode();
 	if (currentToken.type != TOK_DO)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_DO).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> body;
 	while (currentToken.type != NULL_TOK) {
@@ -1147,7 +1145,7 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	return std::make_shared<ForNode>(id, fors, body, marker);
@@ -1157,21 +1155,15 @@ std::shared_ptr<Node> NodeParser::parseExternNode()
 {
 
 	nextToken();
-	std::string fname = currentToken.valueString;
-	nextToken();
-
-	if (currentToken.type != TOK_IN)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_IN).str(), currentToken);
-	nextToken();
 
 	std::string libname = currentToken.valueString;
 
 	nextToken();
 	if (currentToken.type != ';')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 	nextToken();
 
-	lib::loadFunction(currentFile.parent_path(), libname, fname, &currentToken);
+	lib::loadLibrary(currentFile.parent_path(), libname, &currentToken);
 	return nullptr;
 }
 
@@ -1183,7 +1175,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type != TOK_CLASS)
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % KEYWORD_CLASS).str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CLASS }), currentToken);
 	nextToken();
 	std::shared_ptr<Node> extends = nullptr;
 	if (currentToken.type == ':') {
@@ -1191,7 +1183,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 		extends = parseUnitNode();
 	}
 	if (currentToken.type != '{')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "{").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 	std::vector<std::shared_ptr<Node>> body;
 	while (currentToken.type != NULL_TOK) {
@@ -1204,7 +1196,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % "}").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	return std::make_shared<ClassNode>(key, type, body, extends, currentToken);
@@ -1222,7 +1214,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 
 	if (std::find(dir::loaded.begin(), dir::loaded.end(), path) != dir::loaded.end()) {
 		if (currentToken.type != ';')
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		nextToken();
 		return nullptr;
 	}
@@ -1243,7 +1235,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 	auto n = np.parse();
 
 	if (currentToken.type != ';')
-		return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+		return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 	nextToken();
 
 	return n;
@@ -1287,7 +1279,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 			while (currentToken.type != NULL_TOK) {
 				if (i++ > 0) {
 					if (currentToken.type != ',')
-						return logErrorN((boost::format(_EXPECTED_ERROR_) % ",").str(), currentToken);
+						return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 					nextToken();
 				}
 				if (currentToken.type != TOK_IDF)
@@ -1299,7 +1291,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 					return std::make_shared<VarNode>(v, marker);
 				}
 			}
-			return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		}
 		case TOK_THROW:
 		{
@@ -1307,7 +1299,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 			nextToken();
 			if (auto ret = parseEquNode()) {
 				if (currentToken.type != ';')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ThrowNode>(ret, marker);
 			}
@@ -1316,20 +1308,20 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 		case TOK_BREAK:
 			nextToken();
 			if (currentToken.type != ';')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 			return std::make_shared<BreakNode>(currentToken);
 		case TOK_CONTINUE:
 			nextToken();
 			if (currentToken.type != ';')
-				return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 			return std::make_shared<ContinueNode>(currentToken);
 		case TOK_RETURN:
 			nextToken();
 			if (auto ret = parseEquNode()) {
 				if (currentToken.type != ';')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ReturnNode>(ret, currentToken);
 			}
@@ -1338,7 +1330,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 			nextToken();
 			if (auto ret = parseEquNode()) {
 				if (currentToken.type != ';')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ReferNode>(ret, currentToken);
 			}
@@ -1346,7 +1338,7 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 		default:
 			if (auto ret = parseEquNode()) {
 				if (currentToken.type != ';')
-					return logErrorN((boost::format(_EXPECTED_ERROR_) % ";").str(), currentToken);
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return ret;
 			}

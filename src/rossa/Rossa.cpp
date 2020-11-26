@@ -1,9 +1,7 @@
-#include "Rossa.h"
+#include "../../bin/include/Standard.h"
+#include <fstream>
 
 using namespace rossa;
-
-std::vector<boost::filesystem::path> dir::loaded = {};
-std::map<std::string, boost::function<const Symbol(std::vector<Symbol>, const Token *, Hash &)>> lib::loaded = {};
 
 Hash Rossa::MAIN_HASH = Hash();
 
@@ -36,6 +34,10 @@ const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
 Rossa::Rossa(std::vector<std::string> args)
 {
+	std::map<std::string, extf_t> fmap;
+	loadStandardFunctions(fmap);
+	lib::loaded["STANDARD"] = fmap;
+
 	std::vector<Symbol> argv;
 	for (auto &s : args)
 		argv.push_back(Symbol(s));
@@ -94,7 +96,7 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"!", -1},
 	{"$", -1} };
 
-std::shared_ptr<Node> Rossa::compileCode(const std::string &code, boost::filesystem::path currentFile) const
+std::shared_ptr<Node> Rossa::compileCode(const std::string &code, std::filesystem::path currentFile) const
 {
 	auto tokens = lexString(code, currentFile.filename().string());
 	NodeParser testnp(tokens, currentFile);
@@ -107,10 +109,52 @@ const Symbol Rossa::runCode(std::shared_ptr<Node> entry, bool tree)
 	if (tree)
 		std::cout << entry->printTree("", true).str();
 
-	auto g = NodeParser::genParser(std::move(entry));
+	auto g = NodeParser::genParser(entry);
 
 	std::vector<Function> stack_trace;
 	return g->evaluate(&main, stack_trace);
+}
+
+void Rossa::compile(std::shared_ptr<Node> entry, const std::string &output)
+{
+	std::cout << "Compiling to " << output << "...\n";
+
+	std::cout << "[0/6]\tParsing operators...\n";
+	auto g = NodeParser::genParser(entry);
+
+	std::cout << "[1/6]\tExporting hashtable...\n";
+	std::string hashs = "{";
+	size_t i = 0;
+	for (auto &e : MAIN_HASH.variable_hash) {
+		if (i++ > 0)
+			hashs += ", ";
+		hashs += "\"" + e + "\"";
+	}
+	hashs += "}";
+
+	std::cout << "[2/6]\tAdding library links...\n";
+	std::string libs = "";
+	for (auto &l : lib::loaded) {
+		if (l.first == "STANDARD")
+			continue;
+		libs += "lib::loadLibrary(dir::getRuntimePath().parent_path(), \"" + l.first + "\", &t);\n";
+	}
+
+	std::cout << "[3/6]\tTranspiling code...\n";
+	std::ofstream file((dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
+	file << "#include \"" + (dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\nusing namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(&r.main, stack_trace);\nreturn 0;\n}";
+	file.close();
+
+	std::cout << "[4/6]\tWriting executable...\n";
+#ifndef _WIN32
+	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -ldl -pthread", { output, (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+#else
+	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { output, (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+#endif
+	std::cout << "[5/6]\tCleaning...\n";
+	std::filesystem::remove(dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
+
+	std::cout << "[6/6]\tDone.\n";
 }
 
 void Rossa::printError(const RTError &e)
@@ -139,7 +183,7 @@ void Rossa::printError(const RTError &e)
 	auto trace = e.getTrace();
 	while (!trace.empty()) {
 		if (j++ > 10) {
-			PRINTC((boost::format(_STACK_TRACE_MORE_) % trace.size()).str(), MAGENTA_TEXT);
+			PRINTC(format::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
 			std::cout << "\n";
 			trace.clear();
 			break;
@@ -538,7 +582,7 @@ const int Rossa::getToken(
 	return ret;
 }
 
-const std::vector<Token> Rossa::lexString(const std::string &INPUT, const boost::filesystem::path &filename)
+const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::filesystem::path &filename)
 {
 	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);
@@ -601,4 +645,36 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const boost:
 	}
 
 	return tokens;
+}
+
+void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
+{
+	ADD_EXT(_ceil);
+	ADD_EXT(_clock_format);
+	ADD_EXT(_cos);
+	ADD_EXT(_cosh);
+	ADD_EXT(_exit);
+	ADD_EXT(_exit);
+	ADD_EXT(_floor);
+	ADD_EXT(_input_char);
+	ADD_EXT(_input_line);
+	ADD_EXT(_log);
+	ADD_EXT(_puts);
+	ADD_EXT(_rand_init);
+	ADD_EXT(_rand_nextFloat);
+	ADD_EXT(_rand_nextInt);
+	ADD_EXT(_regex_match);
+	ADD_EXT(_regex_replace);
+	ADD_EXT(_round);
+	ADD_EXT(_sin);
+	ADD_EXT(_sinh);
+	ADD_EXT(_sleep);
+	ADD_EXT(_system_call);
+	ADD_EXT(_system_call);
+	ADD_EXT(_tan);
+	ADD_EXT(_tanh);
+	ADD_EXT(_thread_detach);
+	ADD_EXT(_thread_init);
+	ADD_EXT(_thread_join);
+	ADD_EXT(_timeMS);
 }

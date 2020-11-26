@@ -136,8 +136,8 @@ Note the difference between `size` and `length`: The `String` value `"ルオタ"
 \* This operation takes a `String` value and an `Array` of values and inserts the latter into positions defined with `%n%` where `n` is the index in the `Array`. For instance:
 
 ```ruo
-"#1#, World!" & ["Hello"]; # "Hello, World!"
-"#2# is the last name of #1#" & ["John", "Smith"]; # "Smith is the last name of John"
+"{1}, World!" & ["Hello"]; # "Hello, World!"
+"{2} is the last name of {1}" & ["John", "Smith"]; # "Smith is the last name of John"
 ```
 
 This operation is one of the few that does not require explicit conversion, all elements of any type will have their `->String` method called for concatanation.

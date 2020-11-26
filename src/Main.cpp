@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "rossa/Rossa.h"
+#include "../bin/include/Rossa.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,13 +31,15 @@ int getch_n()
 }
 #endif
 
-std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
+inline const std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
 	std::map<std::string, std::string> options = {
 		{"tree", "false"},
 		{"version", "false"},
 		{"std", "true"},
-		{"file", ""} };
+		{"file", ""},
+		{"output", ""},
+		{"compile", "false"} };
 	std::vector<std::string> passed;
 
 	bool flag = false;
@@ -50,6 +52,10 @@ std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOpt
 				options["std"] = "false";
 			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
 				options["version"] = "true";
+			else if (std::string(argv[i]) == "--compile" || std::string(argv[i]) == "-c")
+				options["compile"] = "true";
+			else if (std::string(argv[i]) == "--output" || std::string(argv[i]) == "-o")
+				options["output"] = argv[++i];
 			else {
 				std::cerr << "Unknown command line option: " << argv[i] << "\n";
 				exit(1);
@@ -111,7 +117,7 @@ int main(int argc, char const *argv[])
 
 		if (options["std"] == "true") {
 			try {
-				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", boost::filesystem::current_path() / "*"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
 			} catch (const rossa::RTError &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
@@ -153,7 +159,7 @@ int main(int argc, char const *argv[])
 			if (!force) {
 				try {
 					flag = true;
-					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
+					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
 				} catch (const rossa::RTError &e) {
 					flag = false;
 					std::cout << "\n";
@@ -171,7 +177,7 @@ int main(int argc, char const *argv[])
 				force = false;
 				try {
 					flag = true;
-					comp = wrapper.compileCode(code, boost::filesystem::current_path() / "*");
+					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
 				} catch (const rossa::RTError &e) {
 					flag = false;
 					code = "";
@@ -219,8 +225,16 @@ int main(int argc, char const *argv[])
 
 		try {
 			if (options["std"] == "true")
-				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", boost::filesystem::current_path() / "*"), false);
-			wrapper.runCode(wrapper.compileCode(content, boost::filesystem::path(options["file"])), tree);
+				content = (KEYWORD_LOAD " \"std\";\n") + content;
+			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
+			if (options["compile"] == "true")
+#ifndef _WIN32
+				wrapper.compile(entry, (options["output"] == "" ? "a.out" : options["output"]));
+#else
+				wrapper.compile(entry, (options["output"] == "" ? "a.exe" : options["output"]));
+#endif
+			else
+				wrapper.runCode(entry, tree);
 		} catch (const rossa::RTError &e) {
 			rossa::Rossa::printError(e);
 			return 1;

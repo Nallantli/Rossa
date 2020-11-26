@@ -1,4 +1,4 @@
-#include "Rossa.h"
+#include "../../bin/include/Rossa.h"
 
 using namespace rossa;
 
@@ -109,7 +109,7 @@ const sym_map_t &Symbol::getDictionary(const Token *token, std::vector<Function>
 const Symbol &Symbol::indexVector(const size_t &i, const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (i >= d->valueVector.size())
-		throw RTError((boost::format(_INDEX_OUT_OF_BOUNDS_) % d->valueVector.size() % i).str(), *token, stack_trace);
+		throw RTError(format::format(_INDEX_OUT_OF_BOUNDS_, { std::to_string(d->valueVector.size()), std::to_string(i) }), *token, stack_trace);
 	return d->valueVector[i];
 }
 
@@ -160,7 +160,7 @@ const type_sll Symbol::getTypeName(const Token *token, std::vector<Function> &st
 	return d->valueType;
 }
 
-const std::shared_ptr<const Function> &Symbol::getFunction(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
+const std::shared_ptr<const Function> Symbol::getFunction(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (d->type != FUNCTION)
 		throw RTError(_NOT_FUNCTION_, *token, stack_trace);
@@ -304,10 +304,61 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 
 const std::string Symbol::toCodeString() const
 {
-	if (type == ID_BREAK)
-		return "<BREAK>";
 	std::vector<Function> stack_trace;
-	return sig::getTypeString(getAugValueType()) + "::" + toString(NULL, stack_trace);
+	switch (d->type) {
+		case NIL:
+			return "Symbol()";
+		case NUMBER:
+			return "Symbol(" + d->valueNumber.toCodeString() + ")";
+		case STRING:
+		{
+			std::string ret = "{";
+			unsigned int i = 0;
+			for (auto &c : d->valueString) {
+				if (i > 0)
+					ret += ", ";
+				ret += std::to_string(c);
+				i++;
+			}
+			return "Symbol(std::string(" + ret + "}))";
+		}
+		case FUNCTION:
+			return "<Function::" + toString(NULL, stack_trace) + ">";
+		case OBJECT:
+			return "<Object::" + toString(NULL, stack_trace) + ">";
+		case POINTER:
+			return "<Pointer>";
+		case BOOLEAN_D:
+			return "Symbol(" + std::string(d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE) + ")";
+		case ARRAY:
+		{
+			std::string ret = "Symbol(std::vector<Symbol>({";
+			unsigned int i = 0;
+			for (auto &d2 : d->valueVector) {
+				if (i > 0)
+					ret += ", ";
+				ret += d2.toCodeString();
+				i++;
+			}
+			return ret + "}))";
+		}
+		case DICTIONARY:
+		{
+			std::string ret = "Symbol(sym_map_t({";
+			unsigned int i = 0;
+			for (auto &e : getDictionary(NULL, stack_trace)) {
+				if (i > 0)
+					ret += ", ";
+				ret += "{\"" + e.first + "\", " + e.second.toCodeString() + "}";
+				i++;
+			}
+			return ret + "}))";
+		}
+		case TYPE_NAME:
+			return "Symbol(static_cast<type_sll>(" + std::to_string(d->valueType) + "))";
+		default:
+			return "<error-type>";
+	}
 }
 
 const Symbol Symbol::call(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const

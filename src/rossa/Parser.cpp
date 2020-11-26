@@ -1,4 +1,4 @@
-#include "Parser.h"
+#include "../../bin/include/Rossa.h"
 
 using namespace rossa;
 
@@ -65,6 +65,11 @@ const Symbol ContainerI::evaluate(Scope *scope, std::vector<Function> &stack_tra
 	return d;
 }
 
+const std::string ContainerI::compile() const
+{
+	return C_UNARY("ContainerI", d.toCodeString());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -80,6 +85,19 @@ const Symbol DefineI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 		return scope->createVariable(key, d, &token);
 	}
 	return Symbol(ftype, f);
+}
+
+const std::string DefineI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : params) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += "{static_cast<LexerTokenType>(" + std::to_string(e.first) + "), " + std::to_string(e.second) + "}";
+	}
+	ca += "}";
+	return C_QUATERNARY("DefineI", std::to_string(key), sig::toCodeString(ftype), ca, body->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -105,6 +123,19 @@ const Symbol SequenceI::evaluate(Scope *scope, std::vector<Function> &stack_trac
 	return Symbol(evals);
 }
 
+const std::string SequenceI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : children) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+	return C_UNARY("SequenceI", ca);
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class IFElseI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -121,6 +152,13 @@ const Symbol IfElseI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 	else if (elses)
 		return elses->evaluate(&newScope, stack_trace);
 	return Symbol();
+}
+
+const std::string IfElseI::compile() const
+{
+	if (elses)
+		return C_TRINARY("IfElseI", ifs->compile(), body->compile(), elses->compile());
+	return C_TRINARY("IfElseI", ifs->compile(), body->compile(), "nullptr");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -149,6 +187,11 @@ const Symbol WhileI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 		}
 	}
 	return Symbol();
+}
+
+const std::string WhileI::compile() const
+{
+	return C_BINARY("WhileI", whiles->compile(), body->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -181,6 +224,11 @@ const Symbol ForI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return Symbol();
 }
 
+const std::string ForI::compile() const
+{
+	return C_TRINARY("ForI", std::to_string(id), fors->compile(), body->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class VariableI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -193,6 +241,11 @@ const Symbol VariableI::evaluate(Scope *scope, std::vector<Function> &stack_trac
 	if (key == Rossa::HASH_THIS)
 		return scope->getThis(&token, stack_trace);
 	return scope->getVariable(key, &token, stack_trace);
+}
+
+const std::string VariableI::compile() const
+{
+	return C_UNARY("VariableI", std::to_string(key));
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -210,6 +263,11 @@ const Symbol DeclareI::evaluate(Scope *scope, std::vector<Function> &stack_trace
 	return v;
 }
 
+const std::string DeclareI::compile() const
+{
+	return C_QUATERNARY("DeclareI", std::to_string(key), std::to_string(vtype), a->compile(), isConst ? "true" : "false");
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class IndexI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -223,6 +281,11 @@ const Symbol IndexI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::index(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string IndexI::compile() const
+{
+	return C_BINARY("IndexI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -250,6 +313,11 @@ const Symbol InnerI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 		default:
 			throw RTError(_CANNOT_INDEX_VALUE_, token, stack_trace);
 	}
+}
+
+const std::string InnerI::compile() const
+{
+	return C_BINARY("InnerI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -309,6 +377,11 @@ const Symbol CallI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	}
 }
 
+const std::string CallI::compile() const
+{
+	return C_BINARY("CallI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class AddI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -322,6 +395,11 @@ const Symbol AddI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::add(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string AddI::compile() const
+{
+	return C_BINARY("AddI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -339,6 +417,11 @@ const Symbol SubI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return ops::sub(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string SubI::compile() const
+{
+	return C_BINARY("SubI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class MulI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -352,6 +435,11 @@ const Symbol MulI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::mul(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string MulI::compile() const
+{
+	return C_BINARY("MulI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -369,6 +457,11 @@ const Symbol DivI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return ops::div(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string DivI::compile() const
+{
+	return C_BINARY("DivI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ModI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -382,6 +475,11 @@ const Symbol ModI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::mod(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string ModI::compile() const
+{
+	return C_BINARY("ModI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -399,6 +497,11 @@ const Symbol PowI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return ops::pow(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string PowI::compile() const
+{
+	return C_BINARY("PowI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class LessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -412,6 +515,11 @@ const Symbol LessI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::less(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string LessI::compile() const
+{
+	return C_BINARY("LessI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -429,6 +537,11 @@ const Symbol MoreI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	return ops::more(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string MoreI::compile() const
+{
+	return C_BINARY("MoreI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ELessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -444,6 +557,11 @@ const Symbol ELessI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	return ops::eless(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string ELessI::compile() const
+{
+	return C_BINARY("ELessI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class EMoreI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -457,6 +575,11 @@ const Symbol EMoreI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::emore(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string EMoreI::compile() const
+{
+	return C_BINARY("EMoreI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -477,6 +600,11 @@ const Symbol EqualsI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 	return Symbol(evalA.equals(&evalB, &token, stack_trace));
 }
 
+const std::string EqualsI::compile() const
+{
+	return C_BINARY("EqualsI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -493,6 +621,11 @@ const Symbol NEqualsI::evaluate(Scope *scope, std::vector<Function> &stack_trace
 		return scope->getVariable(Rossa::HASH_NEQUALS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 
 	return Symbol(evalA.nequals(&evalB, &token, stack_trace));
+}
+
+const std::string NEqualsI::compile() const
+{
+	return C_BINARY("NEqualsI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -513,6 +646,11 @@ const Symbol AndI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return Symbol(false);
 }
 
+const std::string AndI::compile() const
+{
+	return C_BINARY("AndI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class OrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -531,6 +669,11 @@ const Symbol OrI::evaluate(Scope *scope, std::vector<Function> &stack_trace) con
 	return Symbol(false);
 }
 
+const std::string OrI::compile() const
+{
+	return C_BINARY("OrI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BOrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -544,6 +687,11 @@ const Symbol BOrI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::bor(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string BOrI::compile() const
+{
+	return C_BINARY("BOrI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -561,6 +709,11 @@ const Symbol BXOrI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	return ops::bxor(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string BXOrI::compile() const
+{
+	return C_BINARY("BXOrI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BAndI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -574,6 +727,11 @@ const Symbol BAndI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::band(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string BAndI::compile() const
+{
+	return C_BINARY("BAndI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -591,6 +749,11 @@ const Symbol BShiftLeftI::evaluate(Scope *scope, std::vector<Function> &stack_tr
 	return ops::bshl(scope, evalA, evalB, &token, stack_trace);
 }
 
+const std::string BShiftLeftI::compile() const
+{
+	return C_BINARY("BShiftLeftI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BShiftRightI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -604,6 +767,11 @@ const Symbol BShiftRightI::evaluate(Scope *scope, std::vector<Function> &stack_t
 	auto evalB = b->evaluate(scope, stack_trace);
 
 	return ops::bshr(scope, evalA, evalB, &token, stack_trace);
+}
+
+const std::string BShiftRightI::compile() const
+{
+	return C_BINARY("BShiftRightI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -630,6 +798,11 @@ const Symbol SetI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return evalA;
 }
 
+const std::string SetI::compile() const
+{
+	return C_TRINARY("SetI", a->compile(), b->compile(), isConst ? "true" : "false");
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ReturnI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -644,23 +817,28 @@ const Symbol ReturnI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 	return evalA;
 }
 
+const std::string ReturnI::compile() const
+{
+	return C_UNARY("ReturnI", a->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(const std::string &id, const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(EXTERN, a, token), id(id)
+ExternI::ExternI(const std::string &libname, const std::string &fname, const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(EXTERN, a, token), libname(libname), fname(fname)
 {
-	if (rossa::lib::loaded.find(id) != rossa::lib::loaded.end())
-		this->f = rossa::lib::loaded[id];
-	else {
-		std::vector<Function> stack_trace;
-		throw RTError((boost::format(_EXTERN_NOT_DEFINED_) % id).str(), token, stack_trace);
-	}
+	this->f = rossa::lib::loadFunction(libname, fname, &token);
 }
 
 const Symbol ExternI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
-	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Rossa::MAIN_HASH);
+	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Rossa::MAIN_HASH, stack_trace);
+}
+
+const std::string ExternI::compile() const
+{
+	return C_TRINARY("ExternI", ("\"" + libname + "\""), ("\"" + fname + "\""), a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -702,8 +880,13 @@ const Symbol LengthI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 	}
 }
 
+const std::string LengthI::compile() const
+{
+	return C_UNARY("LengthI", a->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
-/*class LengthI                                                                                          */
+/*class SizeI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
 SizeI::SizeI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(SIZE_I, a, token)
@@ -722,6 +905,11 @@ const Symbol SizeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 		default:
 			throw RTError(_FAILURE_SIZE_, token, stack_trace);
 	}
+}
+
+const std::string SizeI::compile() const
+{
+	return C_UNARY("SizeI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -758,6 +946,13 @@ const Symbol ClassI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	return scope->createVariable(key, Symbol(o), &token);
 }
 
+const std::string ClassI::compile() const
+{
+	if (extends)
+		return C_QUATERNARY("ClassI", std::to_string(key), ("static_cast<ObjectType>(" + std::to_string(type) + ")"), body->compile(), extends->compile());
+	return C_QUATERNARY("ClassI", std::to_string(key), ("static_cast<ObjectType>(" + std::to_string(type) + ")"), body->compile(), "nullptr");
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NewI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -772,6 +967,11 @@ const Symbol NewI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 
 	auto base = evalA.getObject(&token, stack_trace);
 	return base->instantiate(evalB, &token, stack_trace);
+}
+
+const std::string NewI::compile() const
+{
+	return C_BINARY("NewI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -815,7 +1015,7 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 						}
 						return Symbol(RNumber::Double(std::stold(s)));
 					} catch (const std::invalid_argument &e) {
-						throw RTError((boost::format(_FAILURE_STR_TO_NUM_) % evalA.getString(&token, stack_trace)).str(), token, stack_trace);
+						throw RTError(format::format(_FAILURE_STR_TO_NUM_, { evalA.getString(&token, stack_trace) }), token, stack_trace);
 					}
 				case STRING:
 					return evalA;
@@ -957,8 +1157,13 @@ const Symbol CastToI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 
 	auto fname = ROSSA_HASH("->" + sig::getTypeString(convert));
 	return scope->getVariable(fname, &token, stack_trace).call({ evalA }, &token, stack_trace);
-
 }
+
+const std::string CastToI::compile() const
+{
+	return C_BINARY("CastToI", a->compile(), b->compile());
+}
+
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class AllocI                                                                                           */
@@ -973,6 +1178,11 @@ const Symbol AllocI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	if (evalA < 0)
 		throw RTError(_FAILURE_ALLOC_, token, stack_trace);
 	return Symbol::allocate(evalA);
+}
+
+const std::string AllocI::compile() const
+{
+	return C_UNARY("AllocI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -993,6 +1203,14 @@ const Symbol UntilI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 		return ops::untilstep(scope, inclusive, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
+const std::string UntilI::compile() const
+{
+	if (step)
+		return C_QUATERNARY("UntilI", a->compile(), b->compile(), step->compile(), inclusive ? "true" : "false");
+	return C_QUATERNARY("UntilI", a->compile(), b->compile(), "nullptr", inclusive ? "true" : "false");
+}
+
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ScopeI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1008,6 +1226,19 @@ const Symbol ScopeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 			return eval;
 	}
 	return Symbol();
+}
+
+const std::string ScopeI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : children) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+	return C_UNARY("ScopeI", ca);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1029,6 +1260,19 @@ const Symbol MapI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 	return Symbol(evals);
 }
 
+const std::string MapI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : children) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += "{\"" + e.first + "\", " + e.second->compile() + "}";
+	}
+	ca += "}";
+	return C_UNARY("MapI", ca);
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ReferI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1041,6 +1285,11 @@ const Symbol ReferI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	evalA.setSymbolType(ID_REFER);
 	return evalA;
+}
+
+const std::string ReferI::compile() const
+{
+	return C_UNARY("ReferI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1075,6 +1324,40 @@ const Symbol SwitchI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 	return Symbol();
 }
 
+const std::string SwitchI::compile() const
+{
+	std::string cs = "{";
+	size_t i = 0;
+	for (auto &e : cases_solved) {
+		if (i++ > 0)
+			cs += ", ";
+		cs += "{\"" + e.first.toCodeString() + "\", " + std::to_string(e.second) + "}";
+	}
+	cs += "}";
+
+	std::string cu = "{";
+	i = 0;
+	for (auto &e : cases_unsolved) {
+		if (i++ > 0)
+			cu += ", ";
+		cu += "{\"" + e.first->compile() + "\", " + std::to_string(e.second) + "}";
+	}
+	cu += "}";
+
+	std::string ca = "{";
+	i = 0;
+	for (auto &e : cases) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+
+	if (elses)
+		return C_QUINARY("SwitchI", switchs->compile(), cs, cu, ca, elses->compile());
+	return C_QUINARY("SwitchI", switchs->compile(), cs, cu, ca, "nullptr");
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class TryCatchI                                                                                        */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1094,6 +1377,11 @@ const Symbol TryCatchI::evaluate(Scope *scope, std::vector<Function> &stack_trac
 	}
 }
 
+const std::string TryCatchI::compile() const
+{
+	return C_TRINARY("TryCatchI", a->compile(), b->compile(), std::to_string(key));
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ThrowI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1106,6 +1394,11 @@ const Symbol ThrowI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	auto evalA = a->evaluate(scope, stack_trace);
 	throw RTError(evalA.getString(&token, stack_trace), token, stack_trace);
 	return Symbol();
+}
+
+const std::string ThrowI::compile() const
+{
+	return C_UNARY("ThrowI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1122,6 +1415,11 @@ const Symbol PureEqualsI::evaluate(Scope *scope, std::vector<Function> &stack_tr
 	return Symbol(evalA.pureEquals(&evalB, &token, stack_trace));
 }
 
+const std::string PureEqualsI::compile() const
+{
+	return C_BINARY("PureEqualsI", a->compile(), b->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class PureNEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1134,6 +1432,11 @@ const Symbol PureNEqualsI::evaluate(Scope *scope, std::vector<Function> &stack_t
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
 	return Symbol(evalA.pureNEquals(&evalB, &token, stack_trace));
+}
+
+const std::string PureNEqualsI::compile() const
+{
+	return C_BINARY("PureNEqualsI", a->compile(), b->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1150,6 +1453,11 @@ const Symbol CharNI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	for (const unsigned char &c : evalA)
 		nv.push_back(Symbol(RNumber::Long(c)));
 	return Symbol(nv);
+}
+
+const std::string CharNI::compile() const
+{
+	return C_UNARY("CharNI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1178,6 +1486,11 @@ const Symbol CharSI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 	}
 }
 
+const std::string CharSI::compile() const
+{
+	return C_UNARY("CharSI", a->compile());
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DeclareVarsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1193,6 +1506,19 @@ const Symbol DeclareVarsI::evaluate(Scope *scope, std::vector<Function> &stack_t
 	return Symbol(newvs);
 }
 
+const std::string DeclareVarsI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : keys) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += std::to_string(e);
+	}
+	ca += "}";
+	return C_UNARY("DeclareVarsI", ca);
+}
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ParseI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1204,9 +1530,14 @@ const Symbol ParseI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 {
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
-	auto tokens = Rossa::lexString(evalA, boost::filesystem::current_path() / KEYWORD_NIL);
-	NodeParser np(tokens, boost::filesystem::current_path() / KEYWORD_NIL);
+	auto tokens = Rossa::lexString(evalA, std::filesystem::current_path() / KEYWORD_NIL);
+	NodeParser np(tokens, std::filesystem::current_path() / KEYWORD_NIL);
 	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
+}
+
+const std::string ParseI::compile() const
+{
+	return C_UNARY("ParseI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1220,6 +1551,11 @@ const Symbol TypeI::evaluate(Scope *scope, std::vector<Function> &stack_trace) c
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	return Symbol(evalA.getAugValueType());
+}
+
+const std::string TypeI::compile() const
+{
+	return C_UNARY("TypeI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1341,4 +1677,17 @@ const Symbol CallOpI::evaluate(Scope *scope, std::vector<Function> &stack_trace)
 		default:
 			return Symbol();
 	}
+}
+
+const std::string CallOpI::compile() const
+{
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : children) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+	return C_BINARY("CallOpI", std::to_string(id), ca);
 }

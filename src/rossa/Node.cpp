@@ -1,5 +1,4 @@
-#include "Node.h"
-#include "Parser.h"
+#include "../../bin/include/Rossa.h"
 
 using namespace rossa;
 
@@ -581,11 +580,13 @@ std::shared_ptr<Node> CallNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ExternCallNode::ExternCallNode(
-	const std::string &id,
+	const std::string &libname,
+	const std::string &fname,
 	std::vector<std::shared_ptr<Node>> args,
 	const Token &token) : Node(EXTERN_CALL_NODE,
 		token),
-	id(id),
+	libname(libname),
+	fname(fname),
 	args(args)
 {}
 
@@ -594,7 +595,7 @@ std::shared_ptr<Instruction> ExternCallNode::genParser() const
 	std::vector<std::shared_ptr<Instruction>> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	return std::make_shared<ExternI>(id, std::make_shared<SequenceI>(fargs, token), token);
+	return std::make_shared<ExternI>(libname, fname, std::make_shared<SequenceI>(fargs, token), token);
 }
 
 bool ExternCallNode::isConst() const
@@ -614,7 +615,7 @@ std::stringstream ExternCallNode::printTree(std::string indent, bool last) const
 		indent += "│ ";
 	}
 	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "EXTERN_CALL : " << id << "\n" << colorASCII(RESET_TEXT);
+	ss << "EXTERN_CALL : " << libname << "::" << fname << "\n" << colorASCII(RESET_TEXT);
 	for (size_t i = 0; i < args.size(); i++)
 		ss << args[i]->printTree(indent, i == args.size() - 1).str();
 	return ss;
@@ -626,7 +627,7 @@ std::shared_ptr<Node> ExternCallNode::fold() const
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<ExternCallNode>(id, nargs, token);
+	return std::make_unique<ExternCallNode>(libname, fname, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
@@ -660,7 +661,7 @@ std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 	}
 
 	std::vector<Function> stack_trace;
-	throw RTError((boost::format(_UNKNOWN_BUILT_CALL_) % t).str(), token, stack_trace);
+	throw RTError(format::format(_UNKNOWN_BUILT_CALL_, { std::to_string(t) }), token, stack_trace);
 	return nullptr;
 }
 
@@ -887,7 +888,7 @@ std::shared_ptr<Instruction> BinOpNode::genParser() const
 	if (op == "->")
 		return std::make_shared<CastToI>(a->genParser(), b->genParser(), token);
 
-	throw RTError((boost::format(_UNKNOWN_BINARY_OP_) % op).str(), token, stack_trace);
+	throw RTError(format::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
 }
 
 const std::string &BinOpNode::getOp() const
@@ -984,7 +985,7 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 		return std::make_shared<TypeI>(a->genParser(), token);
 
 	std::vector<Function> stack_trace;
-	throw RTError((boost::format(_UNKNOWN_UNARY_OP_) % op).str(), token, stack_trace);
+	throw RTError(format::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);
 	return nullptr;
 }
 

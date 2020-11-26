@@ -22,14 +22,18 @@
 
 There will be no downloadable binaries during the alpha stage - however everything can be built from the source rather easily.
 
-Building requires the following libraries:
+Building the main interpreter requires no exteral libraries.
 
-* Boost (https://www.boost.org/)
+Individual Libraries require certain libraries:
 
-For the SDL integration:
+*libsdl*
 
 * SDL (https://www.libsdl.org/)
 * SDL_image (https://www.libsdl.org/projects/SDL_image/)
+
+*libnet*
+
+* Boost (https://www.boost.org/)
 
 On Linux/OSX these libraries can be installed using a package manager. E.g. Debian-based systems:
 

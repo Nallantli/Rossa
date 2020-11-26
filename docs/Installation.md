@@ -9,11 +9,13 @@ git clone https://github.com/Nallantli/Rossa
 cd Rossa
 ```
 
-You will also need the following librar(y/ies) in order to build:
+You will also need the following librar(y/ies) in order to build certain libraries:
+
+*libnet*
 
 * Boost (https://www.boost.org/)
 
-For `libsdl`, these additionally will be necessary:
+*libsdl*
 
 * SDL (https://www.libsdl.org/)
 * SDL_image (https://www.libsdl.org/projects/SDL_image/)

@@ -388,4 +388,16 @@ public:
 				return "<undefined>";
 		}
 	}
+
+	inline const std::string toCodeString() const noexcept
+	{
+		switch (type) {
+			case DOUBLE_NUM:
+				return "RNumber::Double(" + std::to_string(valueDouble) + ")";
+			case LONG_NUM:
+				return "RNumber::Long(" + std::to_string(valueLong) + ")";
+			default:
+				return "<undefined>";
+		}
+	}
 };

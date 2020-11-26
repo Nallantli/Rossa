@@ -1,7 +1,6 @@
 locale=ENG
 
 CV=--std=c++17
-
 CC=g++ -D_LOCALIZED_ -D_LOCALE_$(locale)_ -Wall $(CV) -O3
 
 ifeq ($(OS),Windows_NT)
@@ -15,15 +14,16 @@ BOOST_VERSION_WIN=1_74
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
 SDL_IMAGE_PATH_WIN=C:/SDL2_image/x86_64-w64-mingw32
-SDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
 
-CFLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
-LFLAGS=-shared -L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lboost_filesystem$(SUFFIX_WIN)
+CFLAGS=
+LFLAGS=-shared
 OFLAGS=$(CFLAGS)
 
-LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
+LIBNET_FLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
+LIBFS_FLAGS=
+LIBSDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
 
-DIR=build\\win\\$(locale)
+DIR=build/win/$(locale)
 
 dir_target = $(DIR)-$(wildcard $(DIR))
 dir_present = $(DIR)-$(DIR)
@@ -31,23 +31,24 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/rossa.exe bin/lib/libstd$(LIB_EXT)
+$(dir_present): bin/rossa.exe
 
-$(dir_absent): $(DIR) bin/rossa.exe bin/lib/libstd$(LIB_EXT)
+$(dir_absent): $(DIR) bin/rossa.exe
 
 $(DIR):
-	mkdir $@
+	mkdir -p $@
 
 else
 
 LIB_EXT=.so
 
-SDL_FLAGS=-lSDL2 -lSDL2_image
-CFLAGS=-lboost_filesystem -lboost_system -ldl
-LFLAGS=-fPIC -shared -lboost_filesystem -ldl
+CFLAGS=-ldl -pthread
+LFLAGS=-fPIC -shared -ldl -pthread
 OFLAGS=-fPIC $(CFLAGS)
 
 LIBNET_FLAGS=-lboost_system
+LIBFS_FLAGS=
+LIBSDL_FLAGS=-lSDL2 -lSDL2_image
 
 DIR=build/nix/$(locale)
 
@@ -57,9 +58,9 @@ dir_absent = $(DIR)-
 
 all: | $(dir_target)
 
-$(dir_present): bin/rossa bin/lib/libstd$(LIB_EXT)
+$(dir_present): bin/rossa
 
-$(dir_absent): $(DIR) bin/rossa bin/lib/libstd$(LIB_EXT)
+$(dir_absent): $(DIR) bin/rossa
 
 $(DIR):
 	mkdir -p $@
@@ -74,25 +75,22 @@ libnet: bin/lib/libnet$(LIB_EXT)
 
 libsdl: bin/lib/libsdl$(LIB_EXT)
 
-bin/lib/libstd$(LIB_EXT): src/ext/libstd.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/ext/libstd.cpp $(DIR)/librossa.a $(LFLAGS)
+bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libfs.cpp bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
 
-bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/ext/libfs.cpp $(DIR)/librossa.a $(LFLAGS)
+bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libnet.cpp bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/ext/libnet.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libsdl.cpp bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
 
-bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/ext/libsdl.cpp $(DIR)/librossa.a $(LFLAGS) $(SDL_FLAGS)
+bin/rossa.exe: src/Main.cpp bin/include/librossa.a
+	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)
 
-bin/rossa.exe: src/Main.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/Main.cpp $(DIR)/librossa.a $(CFLAGS)
+bin/rossa: src/Main.cpp bin/include/librossa.a
+	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)
 
-bin/rossa: src/Main.cpp $(DIR)/librossa.a
-	$(CC) -o $@ src/Main.cpp $(DIR)/librossa.a $(CFLAGS)
-
-$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
+bin/include/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
 	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
 
 $(DIR)/Rossa.o: src/rossa/Rossa.cpp

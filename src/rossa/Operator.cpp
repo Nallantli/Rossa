@@ -1,4 +1,4 @@
-#include "Rossa.h"
+#include "../../bin/include/Rossa.h"
 
 using namespace rossa;
 
@@ -26,7 +26,7 @@ const Symbol ops::index(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_INDEX, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "[]").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
 }
 
 const Symbol ops::untilstep(Scope *scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Symbol &step, const Token *token, std::vector<Function> &stack_trace)
@@ -62,7 +62,7 @@ const Symbol ops::untilstep(Scope *scope, const bool &inclusive, const Symbol &e
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalA, evalB, step }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "..").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
 const Symbol ops::untilnostep(Scope *scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -98,7 +98,7 @@ const Symbol ops::untilnostep(Scope *scope, const bool &inclusive, const Symbol 
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "..").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
 const Symbol ops::add(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -143,7 +143,7 @@ const Symbol ops::add(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_ADD, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "+").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
 }
 
 const Symbol ops::sub(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -187,7 +187,7 @@ const Symbol ops::sub(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_SUB, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "-").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
 }
 
 const Symbol ops::mul(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -210,7 +210,7 @@ const Symbol ops::mul(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_MUL, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "*").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "*" }), *token, stack_trace);
 }
 
 const Symbol ops::div(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -233,7 +233,7 @@ const Symbol ops::div(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_DIV, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "/").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "/" }), *token, stack_trace);
 }
 
 const Symbol ops::mod(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -256,7 +256,7 @@ const Symbol ops::mod(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_MOD, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "%").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "%" }), *token, stack_trace);
 }
 
 const Symbol ops::pow(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -280,7 +280,7 @@ const Symbol ops::pow(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_POW, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "**").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "**" }), *token, stack_trace);
 }
 
 const Symbol ops::less(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -307,7 +307,7 @@ const Symbol ops::less(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_LESS, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "<").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<" }), *token, stack_trace);
 }
 
 const Symbol ops::more(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -334,7 +334,7 @@ const Symbol ops::more(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_MORE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % ">").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">" }), *token, stack_trace);
 }
 
 const Symbol ops::eless(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -361,7 +361,7 @@ const Symbol ops::eless(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_ELESS, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "<=").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<=" }), *token, stack_trace);
 }
 
 const Symbol ops::emore(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -388,7 +388,7 @@ const Symbol ops::emore(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_EMORE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % ">=").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">=" }), *token, stack_trace);
 }
 
 const Symbol ops::bor(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -411,7 +411,7 @@ const Symbol ops::bor(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_B_OR, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "|").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "|" }), *token, stack_trace);
 }
 
 const Symbol ops::bxor(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -434,7 +434,7 @@ const Symbol ops::bxor(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_B_XOR, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "^").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "^" }), *token, stack_trace);
 }
 
 const Symbol ops::band(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -448,18 +448,10 @@ const Symbol ops::band(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 		{
 			if (evalB.getValueType() != ARRAY)
 				break;
-			boost::format ret(evalA.getString(token, stack_trace));
-			for (auto &e : evalB.getVector(token, stack_trace)) {
-				std::string s;
-				if (e.getValueType() != STRING)
-					s = e.toString(token, stack_trace);
-				else
-					s = e.getString(token, stack_trace);
-				ret = ret % s;
-			}
-			if (ret.remaining_args() > 0)
-				throw RTError(_FAILURE_STRING_FORMAT_, *token, stack_trace);
-			return Symbol(ret.str());
+			std::vector<std::string> elems;
+			for (auto &e : evalB.getVector(token, stack_trace))
+				elems.push_back(e.getString(token, stack_trace));
+			return Symbol(format::format(evalA.getString(token, stack_trace), elems));
 		}
 		case OBJECT:
 		{
@@ -474,7 +466,7 @@ const Symbol ops::band(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_B_AND, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "&").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "&" }), *token, stack_trace);
 }
 
 const Symbol ops::bshl(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -497,7 +489,7 @@ const Symbol ops::bshl(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_B_SH_L, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % "<<").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<<" }), *token, stack_trace);
 }
 
 const Symbol ops::bshr(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
@@ -520,5 +512,5 @@ const Symbol ops::bshr(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_B_SH_R, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 
-	throw RTError((boost::format(_UNDECLARED_OPERATOR_ERROR_) % ">>").str(), *token, stack_trace);
+	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">>" }), *token, stack_trace);
 }

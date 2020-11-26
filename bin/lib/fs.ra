@@ -1,19 +1,4 @@
-extern _writer_init in "libfs";
-extern _writer_close in "libfs";
-extern _writer_write in "libfs";
-extern _writer_isOpen in "libfs";
-extern _reader_init in "libfs";
-extern _reader_close in "libfs";
-extern _reader_readLine in "libfs";
-extern _reader_read in "libfs";
-extern _reader_isOpen in "libfs";
-extern _path_init in "libfs";
-extern _path_filename in "libfs";
-extern _path_string in "libfs";
-extern _path_append_path in "libfs";
-extern _path_append_string in "libfs";
-extern _path_exists in "libfs";
-extern _path_mkdirs in "libfs";
+extern "libfs";
 
 struct Path class {
 	var ptr;

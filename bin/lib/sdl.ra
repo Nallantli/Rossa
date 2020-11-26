@@ -1,27 +1,4 @@
-extern _window_init in "libsdl";
-extern _window_getRenderer in "libsdl";
-extern _renderer_draw in "libsdl";
-extern _renderer_clear in "libsdl";
-extern _renderer_update in "libsdl";
-extern _renderer_flush in "libsdl";
-extern _window_register in "libsdl";
-extern _rect_init in "libsdl";
-extern _line_init in "libsdl";
-extern _point_init in "libsdl";
-extern _image_init_nokey in "libsdl";
-extern _image_init_key in "libsdl";
-extern _texture_init in "libsdl";
-extern _texture_setImage in "libsdl";
-extern _shape_setColor in "libsdl";
-extern _sizable_setSize in "libsdl";
-extern _sizable_setWidth in "libsdl";
-extern _sizable_setHeight in "libsdl";
-extern _rotatable_setAngle in "libsdl";
-extern _rotatable_setCenter in "libsdl";
-extern _rotatable_deCenter in "libsdl";
-extern _rotatable_setClip in "libsdl";
-extern _rotatable_deClip in "libsdl";
-extern _event_poll in "libsdl";
+extern "libsdl";
 
 static Event class {
 	NULL := 0;

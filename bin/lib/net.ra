@@ -1,16 +1,4 @@
-extern _service_init in "libnet";
-extern _socket_init in "libnet";
-extern _socket_send in "libnet";
-extern _socket_read in "libnet";
-extern _socket_read_until in "libnet";
-extern _socket_close in "libnet";
-extern _server_init in "libnet";
-extern _server_accept in "libnet";
-extern _tcp_stream_init in "libnet";
-extern _tcp_stream_request in "libnet";
-extern _tcp_stream_close in "libnet";
-extern _encodeURI in "libnet";
-extern _decodeURI in "libnet";
+extern "libnet";
 
 static net class {
 	encodeURI(ref s : String) => extern_call libnet._encodeURI(s);

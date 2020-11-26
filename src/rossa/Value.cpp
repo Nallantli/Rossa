@@ -1,4 +1,4 @@
-#include "Rossa.h"
+#include "../../bin/include/Rossa.h"
 
 using namespace rossa;
 
