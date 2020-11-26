@@ -69,6 +69,8 @@ $(DIR):
 
 endif
 
+dirs: $(DIR)
+
 libs: libfs libnet libsdl
 
 libfs: bin/lib/libfs$(LIB_EXT)
