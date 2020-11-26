@@ -1,0 +1,21 @@
+name: libsdl
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: update
+      run: sudo apt-get update
+    - name: sdl
+      run: sudo apt-get install libsdl2-dev && sudo apt-get install libsdl2-image-dev
+    - name: make
+      run: make GCC="g++-10" libsdl

@@ -1,0 +1,21 @@
+name: libnet
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: update
+      run: sudo apt-get update
+    - name: boost
+      run: sudo apt-get install libboost-all-dev
+    - name: make
+      run: make GCC="g++-10" libnet
