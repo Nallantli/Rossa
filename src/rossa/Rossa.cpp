@@ -34,6 +34,10 @@ const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
 Rossa::Rossa(std::vector<std::string> args)
 {
+#ifdef _WIN32
+	SetConsoleOutputCP(65001);
+	SetConsoleCP(65001);
+#endif
 	std::map<std::string, extf_t> fmap;
 	loadStandardFunctions(fmap);
 	lib::loaded["STANDARD"] = fmap;
@@ -113,48 +117,6 @@ const Symbol Rossa::runCode(std::shared_ptr<Node> entry, bool tree)
 
 	std::vector<Function> stack_trace;
 	return g->evaluate(&main, stack_trace);
-}
-
-void Rossa::compile(std::shared_ptr<Node> entry, const std::string &output)
-{
-	std::cout << "Compiling to " << output << "...\n";
-
-	std::cout << "[0/6]\tParsing operators...\n";
-	auto g = NodeParser::genParser(entry);
-
-	std::cout << "[1/6]\tExporting hashtable...\n";
-	std::string hashs = "{";
-	size_t i = 0;
-	for (auto &e : MAIN_HASH.variable_hash) {
-		if (i++ > 0)
-			hashs += ", ";
-		hashs += "\"" + e + "\"";
-	}
-	hashs += "}";
-
-	std::cout << "[2/6]\tAdding library links...\n";
-	std::string libs = "";
-	for (auto &l : lib::loaded) {
-		if (l.first == "STANDARD")
-			continue;
-		libs += "lib::loadLibrary(dir::getRuntimePath().parent_path(), \"" + l.first + "\", &t);\n";
-	}
-
-	std::cout << "[3/6]\tTranspiling code...\n";
-	std::ofstream file((dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
-	file << "#include \"" + (dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\nusing namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(&r.main, stack_trace);\nreturn 0;\n}";
-	file.close();
-
-	std::cout << "[4/6]\tWriting executable...\n";
-#ifndef _WIN32
-	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -ldl -pthread", { output, (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
-#else
-	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { output, (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
-#endif
-	std::cout << "[5/6]\tCleaning...\n";
-	std::filesystem::remove(dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
-
-	std::cout << "[6/6]\tDone.\n";
 }
 
 void Rossa::printError(const RTError &e)

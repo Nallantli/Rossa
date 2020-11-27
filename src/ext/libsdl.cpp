@@ -758,7 +758,7 @@ ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
 	return Symbol();
 }
 
-EXPORT_FUNCTIONS {
+EXPORT_FUNCTIONS{
 	ADD_EXT(_event_poll);
 	ADD_EXT(_image_init_key);
 	ADD_EXT(_image_init_nokey);

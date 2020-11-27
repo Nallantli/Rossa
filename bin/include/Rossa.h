@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.8.0-alpha"
+#define _ROSSA_VERSION_ "v1.8.1-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -511,7 +511,6 @@ namespace rossa
 		const Symbol runCode(std::shared_ptr<Node>, bool);
 		static void printError(const RTError &);
 		static const std::vector<Token> lexString(const std::string &, const std::filesystem::path &);
-		static void compile(std::shared_ptr<Node>, const std::string &);
 	};
 
 	class Value
@@ -1581,6 +1580,7 @@ namespace rossa
 	namespace lib
 	{
 		extern std::map<std::string, std::map<std::string, extf_t>> loaded;
+		extern std::vector<std::filesystem::path> libPaths;
 
 		void loadLibrary(const std::filesystem::path &, const std::string &, const Token *token);
 		extf_t loadFunction(const std::string &, const std::string &, const Token *);

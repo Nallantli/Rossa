@@ -95,21 +95,80 @@ void moveback(std::string &code, int c)
 	}
 }
 
+static void compile(std::shared_ptr<rossa::Node> entry, const std::string &output)
+{
+	std::filesystem::path outputDir = std::filesystem::absolute(output);
+	if (std::filesystem::exists(outputDir)) {
+		std::cout << "Output directory already exists, attempting to overwrite...\n";
+		std::filesystem::remove_all(outputDir);
+	}
+
+	std::filesystem::create_directories(outputDir);
+
+#ifndef _WIN32
+	std::filesystem::path outputExe = outputDir / outputDir.filename().string();
+#else
+	std::filesystem::path outputExe = outputDir / (outputDir.filename().string() + ".exe");
+#endif
+
+	std::cout << "Compiling to directory: " << output << "...\n";
+
+	std::cout << "[0/6]\tParsing operators...\n";
+	auto g = rossa::NodeParser::genParser(entry);
+
+	std::cout << "[1/6]\tExporting hashtable...\n";
+	std::string hashs = "{";
+	size_t i = 0;
+	for (auto &e : rossa::Rossa::MAIN_HASH.variable_hash) {
+		if (i++ > 0)
+			hashs += ", ";
+		hashs += "\"" + e + "\"";
+	}
+	hashs += "}";
+
+	std::cout << "[2/6]\tAdding library links...\n";
+	std::string libs = "";
+
+	if (!rossa::lib::libPaths.empty()) {
+		for (auto &l : rossa::lib::loaded) {
+			if (l.first == "STANDARD")
+				continue;
+			libs += "lib::loadLibrary(dir::getRuntimePath().parent_path(), \"" + l.first + "\", &t);\n";
+		}
+
+		for (auto &l : rossa::lib::libPaths) {
+			std::filesystem::copy_file(l, outputDir / l.filename().string());
+		}
+	}
+
+	std::cout << "[3/6]\tTranspiling code...\n";
+	std::ofstream file((rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
+	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\nusing namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(&r.main, stack_trace);\nreturn 0;\n}";
+	file.close();
+
+	std::cout << "[4/6]\tWriting executable...\n";
+#ifndef _WIN32
+	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -ldl -pthread", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+#else
+	system(format::format("g++ --std=c++17 -o \"{1}\" \"{2}\" \"{3}\" -O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+#endif
+	std::cout << "[5/6]\tCleaning...\n";
+	std::filesystem::remove(rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
+
+	std::cout << "[6/6]\tDone.\n";
+}
+
 int main(int argc, char const *argv[])
 {
-#ifdef _WIN32
-	SetConsoleOutputCP(65001);
-	SetConsoleCP(65001);
-#endif
-	PRINTC("", 0);
 	auto parsed = parseOptions(argc, argv);
 	auto options = parsed.first;
-
 	if (options["version"] == "true") {
 		std::cout << _ROSSA_VERSION_LONG_ << "\n";
 		return 0;
 	}
 	rossa::Rossa wrapper(parsed.second);
+
+	PRINTC("", 0);
 	bool tree = options["tree"] == "true";
 
 	if (options["file"] == "") {
@@ -228,11 +287,7 @@ int main(int argc, char const *argv[])
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
 			if (options["compile"] == "true")
-#ifndef _WIN32
-				wrapper.compile(entry, (options["output"] == "" ? "a.out" : options["output"]));
-#else
-				wrapper.compile(entry, (options["output"] == "" ? "a.exe" : options["output"]));
-#endif
+				compile(entry, (options["output"] == "" ? "out" : options["output"]));
 			else
 				wrapper.runCode(entry, tree);
 		} catch (const rossa::RTError &e) {

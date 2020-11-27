@@ -84,6 +84,7 @@ const std::string sig::getTypeString(const type_sll &i)
 
 std::vector<std::filesystem::path> dir::loaded = {};
 std::map<std::string, std::map<std::string, extf_t>> lib::loaded = {};
+std::vector<std::filesystem::path> lib::libPaths = {};
 
 const std::filesystem::path dir::getRuntimePath()
 {
@@ -135,7 +136,9 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 #else
 	std::string libname = rawlibname + ".dll";
 	if (loaded.find(rawlibname) == loaded.end()) {
-		auto library = LoadLibraryA(dir::findFile(currentDir, libname, token).string().c_str());
+		auto path = dir::findFile(currentDir, libname, token);
+		libPaths.push_back(path);
+		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
 			std::vector<Function> stack_trace;
 			throw RTError(format::format("External library does not exist: {1}", { libname }), *token, stack_trace);

@@ -304,6 +304,9 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 
 const std::string Symbol::toCodeString() const
 {
+	if (type != ID_CASUAL) {
+		return "Symbol(static_cast<SymbolType>(" + std::to_string(type) + "))";
+	}
 	std::vector<Function> stack_trace;
 	switch (d->type) {
 		case NIL:
