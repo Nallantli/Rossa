@@ -74,7 +74,7 @@ const std::string ContainerI::compile() const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const sig_t &ftype, std::vector<std::pair<LexerTokenType, hash_ull>> params, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body)
+DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body)
 {}
 
 const Symbol DefineI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
@@ -104,7 +104,7 @@ const std::string DefineI::compile() const
 /*class SequenceI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SequenceI::SequenceI(std::vector<std::shared_ptr<Instruction>> children, const Token &token) : Instruction(SEQUENCE, token), children(children)
+SequenceI::SequenceI(const std::vector<std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(SEQUENCE, token), children(children)
 {}
 
 const Symbol SequenceI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const

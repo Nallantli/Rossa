@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.8.1-alpha"
+#define _ROSSA_VERSION_ "v1.8.2-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -57,7 +57,7 @@ namespace rossa
 	typedef signed long long type_sll;
 	typedef std::vector<type_sll> sig_t;
 	typedef std::map<std::string, Symbol> sym_map_t;
-	typedef const Symbol(*extf_t)(const std::vector<Symbol>&, const Token *, Hash &, std::vector<Function> &);
+	typedef const Symbol(*extf_t)(const std::vector<Symbol> &, const Token *, Hash &, std::vector<Function> &);
 	typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
 
 	enum TextColor
@@ -433,7 +433,7 @@ namespace rossa
 		std::shared_ptr<Node> parseIfElseNode();
 		std::shared_ptr<Node> parseWhileNode();
 		std::shared_ptr<Node> parseForNode();
-		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(ValueType start);
+		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(const ValueType &start);
 		std::shared_ptr<Node> parseDefineNode();
 		std::shared_ptr<Node> parseLambdaNode();
 		std::shared_ptr<Node> parseExternNode();
@@ -446,21 +446,21 @@ namespace rossa
 		std::shared_ptr<Node> parseSwitchNode();
 		std::shared_ptr<Node> parseTryCatchNode();
 		std::shared_ptr<Node> parseTypeNode();
-		std::shared_ptr<Node> parseTrailingNode(std::shared_ptr<Node>, bool);
-		std::shared_ptr<Node> parseInsNode(std::shared_ptr<Node>);
-		std::shared_ptr<Node> parseUntilNode(std::shared_ptr<Node>, bool);
-		std::shared_ptr<Node> parseBinOpNode(std::shared_ptr<Node>);
-		std::shared_ptr<Node> parseCallNode(std::shared_ptr<Node>);
-		std::shared_ptr<Node> parseIndexNode(std::shared_ptr<Node>);
-		std::shared_ptr<Node> parseThenNode(std::shared_ptr<Node>);
+		std::shared_ptr<Node> parseTrailingNode(const std::shared_ptr<Node> &, const bool &);
+		std::shared_ptr<Node> parseInsNode(const std::shared_ptr<Node> &);
+		std::shared_ptr<Node> parseUntilNode(const std::shared_ptr<Node> &, const bool &);
+		std::shared_ptr<Node> parseBinOpNode(const std::shared_ptr<Node> &);
+		std::shared_ptr<Node> parseCallNode(const std::shared_ptr<Node> &);
+		std::shared_ptr<Node> parseIndexNode(const std::shared_ptr<Node> &);
+		std::shared_ptr<Node> parseThenNode(const std::shared_ptr<Node> &);
 
-		std::shared_ptr<Node> logErrorN(const std::string &, const Token);
-		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> logErrorSN(const std::string &, const Token);
+		std::shared_ptr<Node> logErrorN(const std::string &, const Token &);
+		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> logErrorSN(const std::string &, const Token &);
 
 	public:
 		NodeParser(const std::vector<Token> &, const std::filesystem::path &);
 		std::shared_ptr<Node> parse();
-		static std::shared_ptr<Instruction> genParser(std::shared_ptr<Node>);
+		static std::shared_ptr<Instruction> genParser(const std::shared_ptr<Node> &);
 	};
 
 	class Rossa
@@ -505,10 +505,10 @@ namespace rossa
 		static const hash_ull HASH_CALL;
 		static const hash_ull HASH_RANGE;
 
-		Rossa(std::vector<std::string>);
+		Rossa(const std::vector<std::string> &);
 		static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
-		std::shared_ptr<Node> compileCode(const std::string &, std::filesystem::path) const;
-		const Symbol runCode(std::shared_ptr<Node>, bool);
+		std::shared_ptr<Node> compileCode(const std::string &, const std::filesystem::path &) const;
+		const Symbol runCode(const std::shared_ptr<Node> &, const bool &);
 		static void printError(const RTError &);
 		static const std::vector<Token> lexString(const std::string &, const std::filesystem::path &);
 	};
@@ -655,7 +655,7 @@ namespace rossa
 		const std::shared_ptr<Instruction> body;
 
 	public:
-		DefineI(const hash_ull &, const sig_t &, std::vector<std::pair<LexerTokenType, hash_ull>>, const std::shared_ptr<Instruction> &, const Token &);
+		DefineI(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 		const std::string compile() const override;
 	};
@@ -666,7 +666,7 @@ namespace rossa
 		const std::vector<std::shared_ptr<Instruction>> children;
 
 	public:
-		SequenceI(std::vector<std::shared_ptr<Instruction>>, const Token &);
+		SequenceI(const std::vector<std::shared_ptr<Instruction>> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 		const std::string compile() const override;
 	};
@@ -1161,7 +1161,7 @@ namespace rossa
 		bool scoped;
 
 	public:
-		VectorNode(std::vector<std::shared_ptr<Node>>, bool, const Token &);
+		VectorNode(const std::vector<std::shared_ptr<Node>> &, const bool &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1192,10 +1192,10 @@ namespace rossa
 	class IDNode : public Node
 	{
 	private:
-		hash_ull key;
+		const hash_ull key;
 
 	public:
-		IDNode(hash_ull, const Token &);
+		IDNode(const hash_ull &, const Token &);
 		hash_ull getKey() const;
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
@@ -1206,7 +1206,7 @@ namespace rossa
 	class BIDNode : public Node
 	{
 	private:
-		std::string key;
+		const std::string key;
 
 	public:
 		BIDNode(const std::string &, const Token &);
@@ -1220,13 +1220,13 @@ namespace rossa
 	class DefineNode : public Node
 	{
 	private:
-		hash_ull key;
-		sig_t ftype;
-		std::vector<std::pair<LexerTokenType, hash_ull>> params;
-		std::shared_ptr<Node> body;
+		const hash_ull key;
+		const sig_t ftype;
+		const std::vector<std::pair<LexerTokenType, hash_ull>> params;
+		const std::shared_ptr<Node> body;
 
 	public:
-		DefineNode(hash_ull, sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>, std::shared_ptr<Node>, const Token &);
+		DefineNode(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1236,11 +1236,11 @@ namespace rossa
 	class NewNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> object;
-		std::shared_ptr<Node> params;
+		const std::shared_ptr<Node> object;
+		const std::shared_ptr<Node> params;
 
 	public:
-		NewNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
+		NewNode(const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1250,13 +1250,13 @@ namespace rossa
 	class ClassNode : public Node
 	{
 	private:
-		hash_ull key;
-		int type;
-		std::vector<std::shared_ptr<Node>> body;
-		std::shared_ptr<Node> extends;
+		const hash_ull key;
+		const int type;
+		const std::vector<std::shared_ptr<Node>> body;
+		const std::shared_ptr<Node> extends;
 
 	public:
-		ClassNode(hash_ull, int, std::vector<std::shared_ptr<Node>>, std::shared_ptr<Node>, const Token &);
+		ClassNode(const hash_ull &, const int &, const std::vector<std::shared_ptr<Node>> &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1266,10 +1266,10 @@ namespace rossa
 	class VarNode : public Node
 	{
 	private:
-		std::vector<hash_ull> keys;
+		const std::vector<hash_ull> keys;
 
 	public:
-		VarNode(std::vector<hash_ull>, const Token &);
+		VarNode(const std::vector<hash_ull> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1279,11 +1279,11 @@ namespace rossa
 	class CallNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> callee;
-		std::vector<std::shared_ptr<Node>> args;
+		const std::shared_ptr<Node> callee;
+		const std::vector<std::shared_ptr<Node>> args;
 
 	public:
-		CallNode(std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
+		CallNode(const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		std::shared_ptr<Node> getCallee();
 		std::vector<std::shared_ptr<Node>> getArgs();
@@ -1295,12 +1295,12 @@ namespace rossa
 	class ExternCallNode : public Node
 	{
 	private:
-		std::string libname;
-		std::string fname;
-		std::vector<std::shared_ptr<Node>> args;
+		const std::string libname;
+		const std::string fname;
+		const std::vector<std::shared_ptr<Node>> args;
 
 	public:
-		ExternCallNode(const std::string &, const std::string &, std::vector<std::shared_ptr<Node>>, const Token &);
+		ExternCallNode(const std::string &, const std::string &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1310,11 +1310,11 @@ namespace rossa
 	class CallBuiltNode : public Node
 	{
 	private:
-		LexerTokenType t;
-		std::shared_ptr<Node> arg;
+		const LexerTokenType t;
+		const std::shared_ptr<Node> arg;
 
 	public:
-		CallBuiltNode(LexerTokenType, std::shared_ptr<Node>, const Token &);
+		CallBuiltNode(const LexerTokenType &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1324,10 +1324,10 @@ namespace rossa
 	class ReturnNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> a;
+		const std::shared_ptr<Node> a;
 
 	public:
-		ReturnNode(std::shared_ptr<Node>, const Token &);
+		ReturnNode(const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1337,10 +1337,10 @@ namespace rossa
 	class ReferNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> a;
+		const std::shared_ptr<Node> a;
 
 	public:
-		ReferNode(std::shared_ptr<Node>, const Token &);
+		ReferNode(const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1350,18 +1350,18 @@ namespace rossa
 	class BinOpNode : public Node
 	{
 	private:
-		std::string op;
+		const std::string op;
 		std::shared_ptr<Node> a;
 		std::shared_ptr<Node> b;
 
 	public:
-		BinOpNode(const std::string &, std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
+		BinOpNode(const std::string &, const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		const std::string &getOp() const;
 		std::shared_ptr<Node> getA() const;
 		std::shared_ptr<Node> getB() const;
-		void setA(std::shared_ptr<Node>);
-		void setB(std::shared_ptr<Node>);
+		void setA(const std::shared_ptr<Node> &);
+		void setB(const std::shared_ptr<Node> &);
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
 		std::shared_ptr<Node> fold() const override;
@@ -1370,11 +1370,11 @@ namespace rossa
 	class UnOpNode : public Node
 	{
 	private:
-		std::string op;
-		std::shared_ptr<Node> a;
+		const std::string op;
+		const std::shared_ptr<Node> a;
 
 	public:
-		UnOpNode(const std::string &, std::shared_ptr<Node>, const Token &);
+		UnOpNode(const std::string &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1384,10 +1384,10 @@ namespace rossa
 	class ParenNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> a;
+		const std::shared_ptr<Node> a;
 
 	public:
-		ParenNode(std::shared_ptr<Node>, const Token &);
+		ParenNode(const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1397,11 +1397,11 @@ namespace rossa
 	class InsNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> callee;
-		std::shared_ptr<Node> arg;
+		const std::shared_ptr<Node> callee;
+		const std::shared_ptr<Node> arg;
 
 	public:
-		InsNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
+		InsNode(const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		std::shared_ptr<Node> getCallee();
 		std::shared_ptr<Node> getArg();
@@ -1413,13 +1413,13 @@ namespace rossa
 	class IfElseNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> ifs;
-		std::shared_ptr<Node> body;
+		const std::shared_ptr<Node> ifs;
+		const std::shared_ptr<Node> body;
 		std::shared_ptr<Node> elses = nullptr;
 
 	public:
-		IfElseNode(std::shared_ptr<Node>, std::shared_ptr<Node>, const Token &);
-		void setElse(std::shared_ptr<Node>);
+		IfElseNode(const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const Token &);
+		void setElse(const std::shared_ptr<Node> &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1429,11 +1429,11 @@ namespace rossa
 	class WhileNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> whiles;
-		std::vector<std::shared_ptr<Node>> body;
+		const std::shared_ptr<Node> whiles;
+		const std::vector<std::shared_ptr<Node>> body;
 
 	public:
-		WhileNode(std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
+		WhileNode(const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1448,7 +1448,7 @@ namespace rossa
 		std::vector<std::shared_ptr<Node>> body;
 
 	public:
-		ForNode(hash_ull, std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>, const Token &);
+		ForNode(const hash_ull &, const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1458,13 +1458,13 @@ namespace rossa
 	class UntilNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> a;
-		std::shared_ptr<Node> b;
-		std::shared_ptr<Node> step = nullptr;
-		bool inclusive;
+		const std::shared_ptr<Node> a;
+		const std::shared_ptr<Node> b;
+		const std::shared_ptr<Node> step;
+		const bool inclusive;
 
 	public:
-		UntilNode(std::shared_ptr<Node>, std::shared_ptr<Node>, std::shared_ptr<Node>, bool, const Token &);
+		UntilNode(const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const bool &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1474,10 +1474,10 @@ namespace rossa
 	class MapNode : public Node
 	{
 	private:
-		std::vector<std::pair<std::string, std::shared_ptr<Node>>> args;
+		const std::vector<std::pair<std::string, std::shared_ptr<Node>>> args;
 
 	public:
-		MapNode(std::vector<std::pair<std::string, std::shared_ptr<Node>>>, const Token &);
+		MapNode(const std::vector<std::pair<std::string, std::shared_ptr<Node>>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1487,15 +1487,15 @@ namespace rossa
 	class SwitchNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> switchs;
-		std::map<std::shared_ptr<Node>, size_t> cases;
-		std::vector<std::shared_ptr<Node>> gotos;
+		const std::shared_ptr<Node> switchs;
+		const std::map<std::shared_ptr<Node>, size_t> cases;
+		const std::vector<std::shared_ptr<Node>> gotos;
 		std::shared_ptr<Node> elses;
 
 	public:
-		SwitchNode(std::shared_ptr<Node>, std::map<std::shared_ptr<Node>, size_t>, std::vector<std::shared_ptr<Node>>, const Token &);
+		SwitchNode(const std::shared_ptr<Node> &, const std::map<std::shared_ptr<Node>, size_t> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
-		void setElse(std::shared_ptr<Node>);
+		void setElse(const std::shared_ptr<Node> &);
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
 		std::shared_ptr<Node> fold() const override;
@@ -1504,12 +1504,12 @@ namespace rossa
 	class TryCatchNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> trys;
-		std::shared_ptr<Node> catchs;
-		hash_ull key;
+		const std::shared_ptr<Node> trys;
+		const std::shared_ptr<Node> catchs;
+		const hash_ull key;
 
 	public:
-		TryCatchNode(std::shared_ptr<Node>, std::shared_ptr<Node>, hash_ull, const Token &);
+		TryCatchNode(const std::shared_ptr<Node> &, const std::shared_ptr<Node> &, const hash_ull &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1519,10 +1519,10 @@ namespace rossa
 	class ThrowNode : public Node
 	{
 	private:
-		std::shared_ptr<Node> throws;
+		const std::shared_ptr<Node> throws;
 
 	public:
-		ThrowNode(std::shared_ptr<Node>, const Token &);
+		ThrowNode(const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1532,11 +1532,11 @@ namespace rossa
 	class CallOpNode : public Node
 	{
 	private:
-		size_t id;
-		std::vector<std::shared_ptr<Node>> args;
+		const size_t id;
+		const std::vector<std::shared_ptr<Node>> args;
 
 	public:
-		CallOpNode(const size_t &, std::vector<std::shared_ptr<Node>>, const Token &);
+		CallOpNode(const size_t &, const std::vector<std::shared_ptr<Node>> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;

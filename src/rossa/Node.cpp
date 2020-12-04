@@ -61,8 +61,8 @@ std::shared_ptr<Node> ContainerNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 VectorNode::VectorNode(
-	std::vector<std::shared_ptr<Node>> args,
-	bool scoped,
+	const std::vector<std::shared_ptr<Node>> &args,
+	const bool &scoped,
 	const Token &token) : Node(VECTOR_NODE,
 		token),
 	args(args),
@@ -207,7 +207,7 @@ std::shared_ptr<Node> ContinueNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 IDNode::IDNode(
-	hash_ull key,
+	const hash_ull &key,
 	const Token &token) : Node(ID_NODE,
 		token),
 	key(key)
@@ -297,10 +297,10 @@ std::shared_ptr<Node> BIDNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 DefineNode::DefineNode(
-	hash_ull key,
-	sig_t ftype,
-	std::vector<std::pair<LexerTokenType, hash_ull>> params,
-	std::shared_ptr<Node> body,
+	const hash_ull &key,
+	const sig_t &ftype,
+	const std::vector<std::pair<LexerTokenType, hash_ull>> &params,
+	const std::shared_ptr<Node> &body,
 	const Token &token) : Node(DEFINE_NODE,
 		token),
 	key(key),
@@ -351,8 +351,8 @@ std::shared_ptr<Node> DefineNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 NewNode::NewNode(
-	std::shared_ptr<Node> object,
-	std::shared_ptr<Node> params,
+	const std::shared_ptr<Node> &object,
+	const std::shared_ptr<Node> &params,
 	const Token &token) : Node(NEW_NODE,
 		token),
 	object(object),
@@ -396,10 +396,10 @@ std::shared_ptr<Node> NewNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ClassNode::ClassNode(
-	hash_ull key,
-	int type,
-	std::vector<std::shared_ptr<Node>> body,
-	std::shared_ptr<Node> extends,
+	const hash_ull &key,
+	const int &type,
+	const std::vector<std::shared_ptr<Node>> &body,
+	const std::shared_ptr<Node> &extends,
 	const Token &token) : Node(CLASS_NODE,
 		token),
 	key(key),
@@ -477,7 +477,7 @@ std::shared_ptr<Node> ClassNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 VarNode::VarNode(
-	std::vector<hash_ull> keys,
+	const std::vector<hash_ull> &keys,
 	const Token &token) : Node(VAR_NODE,
 		token),
 	keys(keys)
@@ -517,8 +517,8 @@ std::shared_ptr<Node> VarNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 CallNode::CallNode(
-	std::shared_ptr<Node> callee,
-	std::vector<std::shared_ptr<Node>> args,
+	const std::shared_ptr<Node> &callee,
+	const std::vector<std::shared_ptr<Node>> &args,
 	const Token &token) : Node(CALL_NODE,
 		token),
 	callee(callee),
@@ -582,7 +582,7 @@ std::shared_ptr<Node> CallNode::fold() const
 ExternCallNode::ExternCallNode(
 	const std::string &libname,
 	const std::string &fname,
-	std::vector<std::shared_ptr<Node>> args,
+	const std::vector<std::shared_ptr<Node>> &args,
 	const Token &token) : Node(EXTERN_CALL_NODE,
 		token),
 	libname(libname),
@@ -633,8 +633,8 @@ std::shared_ptr<Node> ExternCallNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 CallBuiltNode::CallBuiltNode(
-	LexerTokenType t,
-	std::shared_ptr<Node> arg,
+	const LexerTokenType &t,
+	const std::shared_ptr<Node> &arg,
 	const Token &token) : Node(CALL_BUILT_NODE,
 		token),
 	t(t),
@@ -702,7 +702,7 @@ std::shared_ptr<Node> CallBuiltNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReturnNode::ReturnNode(
-	std::shared_ptr<Node> a,
+	const std::shared_ptr<Node> &a,
 	const Token &token) : Node(REFER_NODE,
 		token),
 	a(a)
@@ -743,7 +743,7 @@ std::shared_ptr<Node> ReturnNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ReferNode::ReferNode(
-	std::shared_ptr<Node> a,
+	const std::shared_ptr<Node> &a,
 	const Token &token) : Node(RETURN_NODE,
 		token),
 	a(a)
@@ -785,8 +785,8 @@ std::shared_ptr<Node> ReferNode::fold() const
 
 BinOpNode::BinOpNode(
 	const std::string &op,
-	std::shared_ptr<Node> a,
-	std::shared_ptr<Node> b,
+	const std::shared_ptr<Node> &a,
+	const std::shared_ptr<Node> &b,
 	const Token &token) : Node(BIN_OP_NODE,
 		token),
 	op(op),
@@ -906,12 +906,12 @@ std::shared_ptr<Node> BinOpNode::getB() const
 	return b;
 };
 
-void BinOpNode::setA(std::shared_ptr<Node> a)
+void BinOpNode::setA(const std::shared_ptr<Node> &a)
 {
 	this->a = (a);
 }
 
-void BinOpNode::setB(std::shared_ptr<Node> b)
+void BinOpNode::setB(const std::shared_ptr<Node> &b)
 {
 	this->b = (b);
 }
@@ -966,7 +966,7 @@ std::shared_ptr<Node> BinOpNode::fold() const
 
 UnOpNode::UnOpNode(
 	const std::string &op,
-	std::shared_ptr<Node> a,
+	const std::shared_ptr<Node> &a,
 	const Token &token) : Node(UN_OP_NODE,
 		token),
 	op(op),
@@ -1026,7 +1026,7 @@ std::shared_ptr<Node> UnOpNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ParenNode::ParenNode(
-	std::shared_ptr<Node> a,
+	const std::shared_ptr<Node> &a,
 	const Token &token) : Node(PAREN_NODE,
 		token),
 	a(a)
@@ -1074,8 +1074,8 @@ std::shared_ptr<Node> ParenNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 InsNode::InsNode(
-	std::shared_ptr<Node> callee,
-	std::shared_ptr<Node> arg,
+	const std::shared_ptr<Node> &callee,
+	const std::shared_ptr<Node> &arg,
 	const Token &token) : Node(INS_NODE,
 		token),
 	callee(callee),
@@ -1134,15 +1134,15 @@ std::shared_ptr<Node> InsNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 IfElseNode::IfElseNode(
-	std::shared_ptr<Node> ifs,
-	std::shared_ptr<Node> body,
+	const std::shared_ptr<Node> &ifs,
+	const std::shared_ptr<Node> &body,
 	const Token &token) : Node(IF_ELSE_NODE,
 		token),
 	ifs(ifs),
 	body(body)
 {}
 
-void IfElseNode::setElse(std::shared_ptr<Node> elses)
+void IfElseNode::setElse(const std::shared_ptr<Node> &elses)
 {
 	this->elses = (elses);
 }
@@ -1203,8 +1203,8 @@ std::shared_ptr<Node> IfElseNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 WhileNode::WhileNode(
-	std::shared_ptr<Node> whiles,
-	std::vector<std::shared_ptr<Node>> body,
+	const std::shared_ptr<Node> &whiles,
+	const std::vector<std::shared_ptr<Node>> &body,
 	const Token &token) : Node(WHILE_NODE,
 		token),
 	whiles(whiles),
@@ -1272,9 +1272,9 @@ std::shared_ptr<Node> WhileNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ForNode::ForNode(
-	hash_ull id,
-	std::shared_ptr<Node> fors,
-	std::vector<std::shared_ptr<Node>> body,
+	const hash_ull &id,
+	const std::shared_ptr<Node> &fors,
+	const std::vector<std::shared_ptr<Node>> &body,
 	const Token &token) : Node(FOR_NODE,
 		token),
 	id(id),
@@ -1343,10 +1343,10 @@ std::shared_ptr<Node> ForNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 UntilNode::UntilNode(
-	std::shared_ptr<Node> a,
-	std::shared_ptr<Node> b,
-	std::shared_ptr<Node> step,
-	bool inclusive,
+	const std::shared_ptr<Node> &a,
+	const std::shared_ptr<Node> &b,
+	const std::shared_ptr<Node> &step,
+	const bool &inclusive,
 	const Token &token) : Node(UNTIL_NODE,
 		token),
 	a(a),
@@ -1421,7 +1421,7 @@ std::shared_ptr<Node> UntilNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 MapNode::MapNode(
-	std::vector<std::pair<std::string, std::shared_ptr<Node>>> args,
+	const std::vector<std::pair<std::string, std::shared_ptr<Node>>> &args,
 	const Token &token) : Node(MAP_NODE,
 		token),
 	args(args)
@@ -1480,9 +1480,9 @@ std::shared_ptr<Node> MapNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 SwitchNode::SwitchNode(
-	std::shared_ptr<Node> switchs,
-	std::map<std::shared_ptr<Node>, size_t> cases,
-	std::vector<std::shared_ptr<Node>> gotos,
+	const std::shared_ptr<Node> &switchs,
+	const std::map<std::shared_ptr<Node>, size_t> &cases,
+	const std::vector<std::shared_ptr<Node>> &gotos,
 	const Token &token) : Node(SWITCH_NODE,
 		token),
 	switchs(switchs),
@@ -1513,7 +1513,7 @@ std::shared_ptr<Instruction> SwitchNode::genParser() const
 	return std::make_shared<SwitchI>(switchs->genParser(), cases_solved, cases_unsolved, goto_cases, nullptr, token);
 }
 
-void SwitchNode::setElse(std::shared_ptr<Node> elses)
+void SwitchNode::setElse(const std::shared_ptr<Node> &elses)
 {
 	this->elses = (elses);
 }
@@ -1575,9 +1575,9 @@ std::shared_ptr<Node> SwitchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 TryCatchNode::TryCatchNode(
-	std::shared_ptr<Node> trys,
-	std::shared_ptr<Node> catchs,
-	hash_ull key,
+	const std::shared_ptr<Node> &trys,
+	const std::shared_ptr<Node> &catchs,
+	const hash_ull &key,
 	const Token &token) : Node(TRY_CATCH_NODE,
 		token),
 	trys(trys),
@@ -1621,7 +1621,7 @@ std::shared_ptr<Node> TryCatchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 ThrowNode::ThrowNode(
-	std::shared_ptr<Node> throws,
+	const std::shared_ptr<Node> &throws,
 	const Token &token) : Node(THROW_NODE, token),
 	throws(throws)
 {}
@@ -1662,7 +1662,7 @@ std::shared_ptr<Node> ThrowNode::fold() const
 
 CallOpNode::CallOpNode(
 	const size_t &id,
-	std::vector<std::shared_ptr<Node>> args,
+	const std::vector<std::shared_ptr<Node>> &args,
 	const Token &token) : Node(CALL_OP_NODE,
 		token),
 	id(id),

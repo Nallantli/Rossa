@@ -56,7 +56,7 @@ std::shared_ptr<Node> NodeParser::parseEntryNode()
 	return std::make_shared<VectorNode>(v, false, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseTrailingNode(std::shared_ptr<Node> ret, bool allowInner)
+std::shared_ptr<Node> NodeParser::parseTrailingNode(const std::shared_ptr<Node> &ret, const bool &allowInner)
 {
 	if (currentToken.type == NULL_TOK)
 		return ret;
@@ -97,7 +97,7 @@ std::shared_ptr<Node> NodeParser::parseCallBuiltNode()
 	return parseTrailingNode(ret, true);
 }
 
-std::shared_ptr<Node> NodeParser::parseCallNode(std::shared_ptr<Node> a)
+std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
@@ -224,7 +224,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 	return std::make_shared<CallOpNode>(id, args, marker);
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(ValueType start)
+std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(const ValueType &start)
 {
 	if (currentToken.type != '(')
 		return logErrorSN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
@@ -465,7 +465,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseIndexNode(std::shared_ptr<Node> a)
+std::shared_ptr<Node> NodeParser::parseIndexNode(const std::shared_ptr<Node> &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
@@ -494,7 +494,7 @@ std::shared_ptr<Node> NodeParser::parseTypeNode()
 	return std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(ROSSA_HASH(typestr))), currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseUntilNode(std::shared_ptr<Node> a, bool inclusive)
+std::shared_ptr<Node> NodeParser::parseUntilNode(const std::shared_ptr<Node> &a, const bool &inclusive)
 {
 	nextToken();
 
@@ -514,7 +514,7 @@ std::shared_ptr<Node> NodeParser::parseUntilNode(std::shared_ptr<Node> a, bool i
 	return std::make_shared<UntilNode>(a, b, nullptr, inclusive, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseBinOpNode(std::shared_ptr<Node> a)
+std::shared_ptr<Node> NodeParser::parseBinOpNode(const std::shared_ptr<Node> &a)
 {
 	std::shared_ptr<Node> current = a;
 	int pastPrec = 999;
@@ -903,17 +903,18 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseInsNode(std::shared_ptr<Node> ret)
+std::shared_ptr<Node> NodeParser::parseInsNode(const std::shared_ptr<Node> &ret)
 {
+	auto curr = ret;
 	while (currentToken.type == TOK_INNER) {
 		nextToken();
-		ret = std::make_shared<InsNode>(ret, parseBIDNode(), currentToken);
+		curr = std::make_shared<InsNode>(curr, parseBIDNode(), currentToken);
 	}
 
-	return parseTrailingNode(ret, false);
+	return parseTrailingNode(curr, false);
 }
 
-std::shared_ptr<Node> NodeParser::parseThenNode(std::shared_ptr<Node> a)
+std::shared_ptr<Node> NodeParser::parseThenNode(const std::shared_ptr<Node> &a)
 {
 	nextToken();
 	auto b = parseEquNode();
@@ -1352,12 +1353,12 @@ std::shared_ptr<Node> NodeParser::parse()
 	return parseEntryNode();
 }
 
-std::shared_ptr<Instruction> NodeParser::genParser(std::shared_ptr<Node> n)
+std::shared_ptr<Instruction> NodeParser::genParser(const std::shared_ptr<Node> &n)
 {
 	return n->genParser();
 }
 
-std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token t)
+std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token &t)
 {
 	std::vector<Function> stack_trace;
 	if (t.type == NULL_TOK)
@@ -1367,7 +1368,7 @@ std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token t)
 	return nullptr;
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const Token t)
+std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const Token &t)
 {
 	logErrorN(s, t);
 	return { sig_t({}), {{NULL_TOK, -1}} };

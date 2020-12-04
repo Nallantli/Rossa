@@ -32,7 +32,7 @@ const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
 const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
 const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
-Rossa::Rossa(std::vector<std::string> args)
+Rossa::Rossa(const std::vector<std::string> &args)
 {
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
@@ -100,15 +100,15 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"!", -1},
 	{"$", -1} };
 
-std::shared_ptr<Node> Rossa::compileCode(const std::string &code, std::filesystem::path currentFile) const
+std::shared_ptr<Node> Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
 {
-	auto tokens = lexString(code, currentFile.filename().string());
+	auto tokens = lexString(code, currentFile);
 	NodeParser testnp(tokens, currentFile);
 	auto n = testnp.parse();
 	return n->fold();
 }
 
-const Symbol Rossa::runCode(std::shared_ptr<Node> entry, bool tree)
+const Symbol Rossa::runCode(const std::shared_ptr<Node> &entry, const bool &tree)
 {
 	if (tree)
 		std::cout << entry->printTree("", true).str();
