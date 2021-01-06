@@ -2,15 +2,15 @@
 
 using namespace rossa;
 
-Scope::Scope() : parent(NULL), type(SCOPE_O), hashed_key(0), name_trace({})
+Scope::Scope() : parent(nullptr), type(SCOPE_O), hashed_key(0), name_trace({})
 {}
 
-Scope::Scope(Scope *parent, const hash_ull &key) : parent(parent), type(SCOPE_O)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const hash_ull &key) : parent(parent), type(SCOPE_O)
 {
 	traceName(key);
 }
 
-Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &key, const Scope *ex, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &key, const std::shared_ptr<Scope> &ex, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body)
 {
 	if (ex != NULL) {
 		this->extensions = ex->extensions;
@@ -21,7 +21,7 @@ Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instru
 	traceName(key);
 }
 
-Scope::Scope(Scope *parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body), hashed_key(hashed_key), extensions(extensions)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body), hashed_key(hashed_key), extensions(extensions)
 {}
 
 void Scope::traceName(const hash_ull &key)
@@ -49,7 +49,7 @@ const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *
 		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
 	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions);
-	o->body->evaluate(o.get(), stack_trace);
+	o->body->evaluate(o, stack_trace);
 	auto d = Symbol(o);
 	o->getVariable(Rossa::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
 	return d;
@@ -91,7 +91,7 @@ void Scope::clear()
 	values.clear();
 }
 
-Scope *Scope::getParent() const
+const std::shared_ptr<Scope> &Scope::getParent() const
 {
 	return this->parent;
 }

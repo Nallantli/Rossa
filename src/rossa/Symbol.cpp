@@ -134,11 +134,11 @@ const bool Symbol::getBool(const Token *token, std::vector<Function> &stack_trac
 	return d->valueBool;
 }
 
-Scope *Symbol::getObject(const Token *token, std::vector<Function> &stack_trace) const
+const std::shared_ptr<Scope> &Symbol::getObject(const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (d->type != OBJECT)
 		throw RTError(_NOT_OBJECT_, *token, stack_trace);
-	return d->valueObject.get();
+	return d->valueObject;
 }
 
 const ValueType Symbol::getValueType() const

@@ -34,6 +34,7 @@ const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
+	main = std::make_shared<Scope>();
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
@@ -46,7 +47,7 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	for (auto &s : args)
 		argv.push_back(Symbol(s));
 	auto v = Symbol(argv);
-	main.createVariable(ROSSA_HASH("_args"), v, NULL);
+	main->createVariable(ROSSA_HASH("_args"), v, NULL);
 }
 
 const std::map<std::string, signed int> Rossa::bOperators = {
@@ -116,7 +117,7 @@ const Symbol Rossa::runCode(const std::shared_ptr<Node> &entry, const bool &tree
 	auto g = NodeParser::genParser(entry);
 
 	std::vector<Function> stack_trace;
-	return g->evaluate(&main, stack_trace);
+	return g->evaluate(main, stack_trace);
 }
 
 void Rossa::printError(const RTError &e)
@@ -607,6 +608,11 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 	}
 
 	return tokens;
+}
+
+Rossa::~Rossa()
+{
+	main->clear();
 }
 
 void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)

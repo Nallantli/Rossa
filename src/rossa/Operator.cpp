@@ -2,7 +2,7 @@
 
 using namespace rossa;
 
-const Symbol ops::index(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::index(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case DICTIONARY:
@@ -29,7 +29,7 @@ const Symbol ops::index(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
 }
 
-const Symbol ops::untilstep(Scope *scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Symbol &step, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::untilstep(const std::shared_ptr<Scope> &scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Symbol &step, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -65,7 +65,7 @@ const Symbol ops::untilstep(Scope *scope, const bool &inclusive, const Symbol &e
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
-const Symbol ops::untilnostep(Scope *scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::untilnostep(const std::shared_ptr<Scope> &scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -101,7 +101,7 @@ const Symbol ops::untilnostep(Scope *scope, const bool &inclusive, const Symbol 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
-const Symbol ops::add(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::add(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -146,7 +146,7 @@ const Symbol ops::add(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
 }
 
-const Symbol ops::sub(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::sub(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -190,7 +190,7 @@ const Symbol ops::sub(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
 }
 
-const Symbol ops::mul(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::mul(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -213,7 +213,7 @@ const Symbol ops::mul(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "*" }), *token, stack_trace);
 }
 
-const Symbol ops::div(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::div(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -236,7 +236,7 @@ const Symbol ops::div(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "/" }), *token, stack_trace);
 }
 
-const Symbol ops::mod(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::mod(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -259,7 +259,7 @@ const Symbol ops::mod(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "%" }), *token, stack_trace);
 }
 
-const Symbol ops::pow(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::pow(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -283,7 +283,7 @@ const Symbol ops::pow(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "**" }), *token, stack_trace);
 }
 
-const Symbol ops::less(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::less(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -310,7 +310,7 @@ const Symbol ops::less(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<" }), *token, stack_trace);
 }
 
-const Symbol ops::more(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::more(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -337,7 +337,7 @@ const Symbol ops::more(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">" }), *token, stack_trace);
 }
 
-const Symbol ops::eless(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::eless(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -364,7 +364,7 @@ const Symbol ops::eless(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<=" }), *token, stack_trace);
 }
 
-const Symbol ops::emore(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::emore(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -391,7 +391,7 @@ const Symbol ops::emore(Scope *scope, const Symbol &evalA, const Symbol &evalB, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">=" }), *token, stack_trace);
 }
 
-const Symbol ops::bor(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::bor(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -414,7 +414,7 @@ const Symbol ops::bor(Scope *scope, const Symbol &evalA, const Symbol &evalB, co
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "|" }), *token, stack_trace);
 }
 
-const Symbol ops::bxor(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::bxor(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -437,7 +437,7 @@ const Symbol ops::bxor(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "^" }), *token, stack_trace);
 }
 
-const Symbol ops::band(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::band(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -469,7 +469,7 @@ const Symbol ops::band(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "&" }), *token, stack_trace);
 }
 
-const Symbol ops::bshl(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::bshl(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
@@ -492,7 +492,7 @@ const Symbol ops::bshl(Scope *scope, const Symbol &evalA, const Symbol &evalB, c
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<<" }), *token, stack_trace);
 }
 
-const Symbol ops::bshr(Scope *scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
+const Symbol ops::bshr(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {
 		case NUMBER:
