@@ -2,7 +2,7 @@
 
 using namespace rossa;
 
-Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body) : key(key), parent(parent), params(params), body(body)
+Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures) : key(key), parent(parent), params(params), body(body), captures(captures)
 {}
 
 const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token, std::vector<Function> &stack_trace) const
@@ -23,6 +23,11 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 				break;
 			}
 		}
+	}
+
+	for(auto e : captures) {
+		std::cout << "CAPTURE: " << ROSSA_DEHASH(e.first) << "\n";
+		newScope.createVariable(e.first, e.second, token);
 	}
 
 	auto temp = body->evaluate(&newScope, stack_trace);

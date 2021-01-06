@@ -74,12 +74,17 @@ const std::string ContainerI::compile() const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body)
+DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::vector<hash_ull> &captures, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body), captures(captures)
 {}
 
 const Symbol DefineI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
-	auto f = std::make_shared<Function>(key, scope, params, body);
+	std::map<hash_ull, Symbol> capturedVars;
+	for (auto e : captures) {
+		capturedVars[e] = Symbol();
+		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
+	}
+	auto f = std::make_shared<Function>(key, scope, params, body, capturedVars);
 	if (key > 0) {
 		auto d = Symbol(ftype, f);
 		return scope->createVariable(key, d, &token);
@@ -170,8 +175,8 @@ WhileI::WhileI(const std::shared_ptr<Instruction> &whiles, const std::shared_ptr
 
 const Symbol WhileI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
-	Scope newScope(scope, 0);
 	while (whiles->evaluate(scope, stack_trace).getBool(&token, stack_trace)) {
+		Scope newScope(scope, 0);
 		auto temp = body->evaluate(&newScope, stack_trace);
 		switch (temp.getSymbolType()) {
 			case ID_REFER:
@@ -182,7 +187,6 @@ const Symbol WhileI::evaluate(Scope *scope, std::vector<Function> &stack_trace) 
 			case ID_CONTINUE:
 				continue;
 			default:
-				newScope.clear();
 				break;
 		}
 	}
@@ -204,8 +208,8 @@ ForI::ForI(const hash_ull &id, const std::shared_ptr<Instruction> &fors, const s
 const Symbol ForI::evaluate(Scope *scope, std::vector<Function> &stack_trace) const
 {
 	auto evalFor = fors->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-	Scope newScope(scope, 0);
 	for (auto &e : evalFor) {
+		Scope newScope(scope, 0);
 		newScope.createVariable(id, e, &token);
 		auto temp = body->evaluate(&newScope, stack_trace);
 		switch (temp.getSymbolType()) {
@@ -217,7 +221,6 @@ const Symbol ForI::evaluate(Scope *scope, std::vector<Function> &stack_trace) co
 			case ID_CONTINUE:
 				continue;
 			default:
-				newScope.clear();
 				break;
 		}
 	}

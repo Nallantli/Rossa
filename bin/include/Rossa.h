@@ -349,9 +349,10 @@ namespace rossa
 		Scope *parent;
 		const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 		const std::shared_ptr<Instruction> body;
+		const std::map<hash_ull, Symbol> captures;
 
 	public:
-		Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &);
+		Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::map<hash_ull, Symbol> &);
 		const Symbol evaluate(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
 		const size_t getArgSize() const;
 		const hash_ull getKey() const;
@@ -653,9 +654,10 @@ namespace rossa
 		const sig_t ftype;
 		const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 		const std::shared_ptr<Instruction> body;
+		const std::vector<hash_ull> captures;
 
 	public:
-		DefineI(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const Token &);
+		DefineI(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::vector<hash_ull> &, const Token &);
 		const Symbol evaluate(Scope *, std::vector<Function> &) const override;
 		const std::string compile() const override;
 	};
@@ -1224,9 +1226,10 @@ namespace rossa
 		const sig_t ftype;
 		const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 		const std::shared_ptr<Node> body;
+		const std::vector<hash_ull> captures;
 
 	public:
-		DefineNode(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Node> &, const Token &);
+		DefineNode(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Node> &, const std::vector<hash_ull> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;

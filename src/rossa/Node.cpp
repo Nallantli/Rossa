@@ -301,17 +301,19 @@ DefineNode::DefineNode(
 	const sig_t &ftype,
 	const std::vector<std::pair<LexerTokenType, hash_ull>> &params,
 	const std::shared_ptr<Node> &body,
+	const std::vector<hash_ull> &captures,
 	const Token &token) : Node(DEFINE_NODE,
 		token),
 	key(key),
 	ftype(ftype),
 	params(params),
-	body(body)
+	body(body),
+	captures(captures)
 {}
 
 std::shared_ptr<Instruction> DefineNode::genParser() const
 {
-	return std::make_shared<DefineI>(key, ftype, params, body->genParser(), token);
+	return std::make_shared<DefineI>(key, ftype, params, body->genParser(), captures, token);
 }
 
 bool DefineNode::isConst() const
@@ -345,7 +347,7 @@ std::shared_ptr<Node> DefineNode::fold() const
 		return std::make_unique<ContainerNode>(i->evaluate(&scope, stack_trace), token);
 	}
 
-	return std::make_unique<DefineNode>(key, ftype, params, body->fold(), token);
+	return std::make_unique<DefineNode>(key, ftype, params, body->fold(), captures, token);
 }
 
 //------------------------------------------------------------------------------------------------------
