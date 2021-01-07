@@ -153,11 +153,13 @@ const Symbol IfElseI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 	auto newScope = std::make_shared<Scope>(scope, 0);
 	auto evalIf = ifs->evaluate(newScope, stack_trace);
 	if (evalIf.getBool(&token, stack_trace)) {
+		auto r =  body->evaluate(newScope, stack_trace);
 		newScope->clear();
-		return body->evaluate(newScope, stack_trace);
+		return r;
 	} 	else if (elses) {
+		auto r = elses->evaluate(newScope, stack_trace);
 		newScope->clear();
-		return elses->evaluate(newScope, stack_trace);
+		return r;
 	}
 	newScope->clear();
 	return Symbol();
@@ -1325,11 +1327,13 @@ const Symbol SwitchI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 	}
 
 	if (index > 0) {
+		auto r = cases[index - 1]->evaluate(newScope, stack_trace);
 		newScope->clear();
-		return cases[index - 1]->evaluate(newScope, stack_trace);
+		return r;
 	} else if (elses) {
+		auto r = elses->evaluate(newScope, stack_trace);
 		newScope->clear();
-		return elses->evaluate(newScope, stack_trace);
+		return r;
 	}
 
 	newScope->clear();

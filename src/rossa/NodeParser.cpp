@@ -62,10 +62,6 @@ std::shared_ptr<Node> NodeParser::parseTrailingNode(const std::shared_ptr<Node> 
 		return ret;
 
 	switch (currentToken.type) {
-		case TOK_UNTILT:
-			return parseUntilNode(ret, true);
-		case TOK_UNTILF:
-			return parseUntilNode(ret, false);
 		case TOK_INNER:
 			if (allowInner)
 				return parseInsNode(ret);
@@ -965,6 +961,10 @@ std::shared_ptr<Node> NodeParser::parseEquNode()
 	if (auto ret = parseUnitNode()) {
 		if (currentToken.type != NULL_TOK) {
 			switch (currentToken.type) {
+				case TOK_UNTILT:
+					return parseUntilNode(ret, true);
+				case TOK_UNTILF:
+					return parseUntilNode(ret, false);
 				case TOK_OPR:
 					ret = parseBinOpNode(ret);
 					break;

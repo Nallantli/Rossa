@@ -158,9 +158,8 @@ static snake_game class {
 		start := clock.milliseconds();
 		while true do {
 			evaluateInput();
-			lapse := clock.milliseconds() - start;
-			if lapse > speed && !paused then {
-				start = clock.milliseconds();
+			if (lapse := clock.milliseconds()) - start > speed && !paused then {
+				start = lapse;
 				refresh();
 			}
 		}
