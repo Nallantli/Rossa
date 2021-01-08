@@ -385,11 +385,37 @@ static math class {
 
 	tan(ref x : Number) => extern_call STANDARD._tan(x);
 
+	csc(ref x : Number) => 1 / sin(x);
+
+	sec(ref x : Number) => 1 / cos(x);
+
+	cot(ref x : Number) => 1 / tan(x);
+
+	asin(ref x : Number) => extern_call STANDARD._asin(x);
+
+	acos(ref x : Number) => extern_call STANDARD._acos(x);
+
+	atan(ref x : Number) => extern_call STANDARD._atan(x);
+
 	sinh(ref x : Number) => extern_call STANDARD._sinh(x);
 
 	cosh(ref x : Number) => extern_call STANDARD._cosh(x);
 
 	tanh(ref x : Number) => extern_call STANDARD._tanh(x);
+
+	csch(ref x : Number) => 1 / sinh(x);
+
+	sech(ref x : Number) => 1 / cosh(x);
+
+	coth(ref x : Number) => 1 / tanh(x);
+
+	asinh(ref x : Number) => extern_call STANDARD._asinh(x);
+
+	acosh(ref x : Number) => extern_call STANDARD._acosh(x);
+
+	atanh(ref x : Number) => extern_call STANDARD._atanh(x);
+
+	PI := 2 * asin(1);
 }
 
 static regex class {

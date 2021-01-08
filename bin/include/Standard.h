@@ -101,14 +101,29 @@ namespace rossa
 		return Symbol(RNumber::Double(std::sin(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
+	ROSSA_EXT_SIG(_asin, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::asin(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
 	ROSSA_EXT_SIG(_cos, args, token, hash, stack_trace)
 	{
 		return Symbol(RNumber::Double(std::cos(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
+	ROSSA_EXT_SIG(_acos, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::acos(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
 	ROSSA_EXT_SIG(_tan, args, token, hash, stack_trace)
 	{
 		return Symbol(RNumber::Double(std::tan(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
+	ROSSA_EXT_SIG(_atan, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::atan(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	ROSSA_EXT_SIG(_sinh, args, token, hash, stack_trace)
@@ -124,6 +139,21 @@ namespace rossa
 	ROSSA_EXT_SIG(_tanh, args, token, hash, stack_trace)
 	{
 		return Symbol(RNumber::Double(std::tanh(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
+	ROSSA_EXT_SIG(_asinh, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::asinh(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
+	ROSSA_EXT_SIG(_acosh, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::acosh(args[0].getNumber(token, stack_trace).getDouble())));
+	}
+
+	ROSSA_EXT_SIG(_atanh, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Double(std::atanh(args[0].getNumber(token, stack_trace).getDouble())));
 	}
 
 	ROSSA_EXT_SIG(_floor, args, token, hash, stack_trace)

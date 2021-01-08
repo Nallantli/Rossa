@@ -617,6 +617,12 @@ Rossa::~Rossa()
 
 void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 {
+	ADD_EXT(_acos);
+	ADD_EXT(_asin);
+	ADD_EXT(_atan);
+	ADD_EXT(_acosh);
+	ADD_EXT(_asinh);
+	ADD_EXT(_atanh);
 	ADD_EXT(_ceil);
 	ADD_EXT(_clock_format);
 	ADD_EXT(_cos);
@@ -627,9 +633,9 @@ void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 	ADD_EXT(_input_char);
 	ADD_EXT(_input_line);
 	ADD_EXT(_log);
-	ADD_EXT(_puts);
 	ADD_EXT(_math_rand);
 	ADD_EXT(_math_srand);
+	ADD_EXT(_puts);
 	ADD_EXT(_rand_init);
 	ADD_EXT(_rand_nextFloat);
 	ADD_EXT(_rand_nextInt);
