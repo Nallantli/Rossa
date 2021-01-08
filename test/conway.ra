@@ -1,0 +1,114 @@
+load "sdl";
+
+static conway class {
+	var	height,
+		width,
+		scale,
+		rand,
+		cache,
+		buffer,
+		w,
+		r,
+		paused;
+
+	speed := 80;
+
+	getNeighborCount(ref x : Number, ref y : Number) => {
+		n := 0;
+		for i in -1 .+ 1 do {
+			for j in -1 .+ 1 do {
+				if i == 0 && j == 0 then {
+					continue;
+				}
+				if cache[(x + i + width) % width][(y + j + height) % height] then {
+					n += 1;
+				}
+			}
+		}
+		return n;
+	}
+
+	refresh() => {
+		tempCache := alloc(width).map((e) => alloc(height));
+
+		for x in 0 .. width do {
+			for y in 0 .. height do {
+				b := buffer[x][y];
+				n := getNeighborCount(x, y);
+				if cache[x][y] then {
+					if n == 2 || n == 3 then {
+						tempCache[x][y] = cache[x][y];
+					} else {
+						b.setColor(Color.WHITE);
+						tempCache[x][y] = false;
+					}
+				} else {
+					if n == 3 then {
+						b.setColor(Color.BLACK);
+						tempCache[x][y] = true;
+					} else {
+						tempCache[x][y] = cache[x][y];
+					}
+				}
+			}
+		}
+
+		cache = tempCache;
+
+		r.update();
+	}
+
+	evaluateInput() => {
+		e := Event.poll();
+		if e.type == Event.QUIT then {
+			exit();
+		} elif e.type == Event.KEY_DOWN then {
+			switch e.keysym.sym of {
+				case '1' do speed = 160;
+				case '2' do speed = 120;
+				case '3' do speed = 80;
+				case '4' do speed = 0;
+				case ' ', 'p' do paused = !paused;
+			}
+		}
+	}
+
+	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+		this.width = width;
+		this.height = height;
+		this.scale = scale;
+
+		rand = new Random();
+
+		cache = alloc(width).map((e) => alloc(height));
+		buffer = alloc(width).map((e) => alloc(height));
+
+		w = new Window("Conway's Game of Life", width * scale, height * scale);
+		r = w.getRenderer();
+
+		for x in 0 .. width do {
+			for y in 0 .. height do {
+				cache[x][y] = rand.nextb();
+				if cache[x][y] then {
+					buffer[x][y] = new SDL.Rect(scale, scale, Color.BLACK);
+				} else {
+					buffer[x][y] = new SDL.Rect(scale, scale, Color.WHITE);
+				}
+				r.put(buffer[x][y], x * scale, y * scale);
+			}
+		}
+
+		r.update();
+
+		start := clock.milliseconds();
+		while true do {
+			evaluateInput();
+			if (lapse := clock.milliseconds()) - start > speed && !paused then {
+				start = lapse;
+				refresh();
+			}
+		}
+	}
+}
+
+conway(50, 50, 10);

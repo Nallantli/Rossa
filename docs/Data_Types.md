@@ -251,6 +251,21 @@ abs(x) => {
 
 Note that when declared anonymously, the `Function` body declaration ends with a semi-colon.
 
+Anonymous function may also capture variables at the point of their initialization:
+
+```ruo
+x := "I'm captured!";
+
+f := ()[x] => {
+	putln(x)
+};
+
+x = "I'm not captured!";
+
+putln(x);	# I'm not captured!
+f();		# I'm captured!
+```
+
 Both declaration forms can be simplified for single-line methods as:
 
 ```ruo

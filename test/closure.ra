@@ -1,8 +1,8 @@
 for i in 0 .. 10 do {
-	f := ()[i] => {
-		putln("Delayed Call: " + (i -> String));
-	};
-	clock.timeout(f, 2000);
+	clock.timeout(
+		()[i] => putln("Delayed Call: " + (i -> String)),
+		2000);
 }
 
-clock.sleep(3000);
+clock.sleep(3000); 	# Timeout threads detatch, so this is here just to wait
+					# and see the results without the program ending

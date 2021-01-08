@@ -260,17 +260,11 @@ struct Window class {
 			refer shape;
 		}
 
-		clear() => {
-			extern_call libsdl._renderer_clear(ptr);
-		}
+		clear() => extern_call libsdl._renderer_clear(ptr);
 
-		update() => {
-			extern_call libsdl._renderer_update(ptr);
-		}
+		update() => extern_call libsdl._renderer_update(ptr);
 
-		flush() => {
-			extern_call libsdl._renderer_flush(ptr);
-		}
+		flush() => extern_call libsdl._renderer_flush(ptr);
 	}
 
 	var ptr, windowID, renderer;

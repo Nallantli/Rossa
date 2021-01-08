@@ -16,11 +16,11 @@
 
 namespace rossa
 {
-	inline void threadWrapper(const std::shared_ptr<const Function> &f, const std::vector<Symbol> &args)
+	inline void threadWrapper(const std::shared_ptr<const Function> &f)
 	{
 		std::vector<Function> stack_trace;
 		try {
-			f->evaluate(args, NULL, stack_trace);
+			f->evaluate({}, NULL, stack_trace);
 		} catch (const RTError &e) {
 			Rossa::printError(e);
 		}
@@ -36,6 +36,17 @@ namespace rossa
 	{
 		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
 		return Symbol(RNumber::Long(ms.count()));
+	}
+
+	ROSSA_EXT_SIG(_math_rand, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Long(rand()));
+	}
+
+	ROSSA_EXT_SIG(_math_srand, args, token, hash, stack_trace)
+	{
+		srand(args[0].getNumber(token, stack_trace).getLong());
+		return Symbol();
 	}
 
 	ROSSA_EXT_SIG(_rand_init, args, token, hash, stack_trace)
@@ -191,9 +202,9 @@ namespace rossa
 
 	ROSSA_EXT_SIG(_thread_init, args, token, hash, stack_trace)
 	{
-		auto params = args[1].getVector(token, stack_trace);
-		auto f = args[0].getFunction(params, token, stack_trace);
-		auto t = std::make_shared<std::thread>(threadWrapper, f, params);
+		//auto params = args[1].getVector(token, stack_trace);
+		auto f = args[0].getFunction({}, token, stack_trace);
+		auto t = std::make_shared<std::thread>(threadWrapper, f);
 		return Symbol(static_cast<std::shared_ptr<void>>(t));
 	}
 

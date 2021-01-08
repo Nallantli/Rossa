@@ -628,6 +628,8 @@ void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 	ADD_EXT(_input_line);
 	ADD_EXT(_log);
 	ADD_EXT(_puts);
+	ADD_EXT(_math_rand);
+	ADD_EXT(_math_srand);
 	ADD_EXT(_rand_init);
 	ADD_EXT(_rand_nextFloat);
 	ADD_EXT(_rand_nextInt);

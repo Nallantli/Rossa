@@ -164,13 +164,9 @@ struct Random class {
 
 # SYSTEM
 
-exit() => {
-	extern_call STANDARD._exit(0);
-}
+exit() => extern_call STANDARD._exit(0);
 
-exit(ref n : Number) => {
-	extern_call STANDARD._exit(n);
-}
+exit(ref n : Number) => extern_call STANDARD._exit(n);
 
 # TIME
 
@@ -181,14 +177,7 @@ static clock class {
 
 	format(ref s : String, ref time : Number) => extern_call STANDARD._clock_format(time, s);
 
-	timeout(ref f : Function, ref ms : Number) => {
-		g := ()[f, ms] => {
-			sleep(ms);
-			f();
-		};
-		t := new Thread(g);
-		t.detach();
-	}
+	timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { sleep(ms); f(); })).detach();
 }
 
 # ARRAY
@@ -370,6 +359,10 @@ static math class {
 		return eps;
 	})();
 
+	rand() => extern_call STANDARD._math_rand();
+
+	srand(ref x : Number) => extern_call STANDARD._math_srand(x);
+
 	log(ref x : Number) => extern_call STANDARD._log(x);
 
 	abs(ref x : Number) => (x < 0 ? -x : x);
@@ -409,20 +402,12 @@ struct Thread class {
 	var ptr;
 
 	init(ref f : Function) => {
-		ptr = (extern_call STANDARD._thread_init(f, []));
+		ptr = (extern_call STANDARD._thread_init(f));
 	}
 
-	init(ref f : Function, ref args : Array) => {
-		ptr = (extern_call STANDARD._thread_init(f, args));
-	}
+	join() => extern_call STANDARD._thread_join(ptr);
 
-	join() => {
-		extern_call STANDARD._thread_join(ptr);
-	}
-
-	detach() => {
-		extern_call STANDARD._thread_detach(ptr);
-	}
+	detach() => extern_call STANDARD._thread_detach(ptr);
 
 	~() => {
 		detach();
