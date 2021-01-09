@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.9.2-alpha"
+#define _ROSSA_VERSION_ "v1.9.3-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -149,7 +149,8 @@ namespace rossa
 		TOK_UNTILF = -56,
 		TOK_PARSE = -57,
 		TOK_CONTINUE = -58,
-		TOK_CALL_OP = -59
+		TOK_CALL_OP = -59,
+		TOK_NO_PARAM_LAMBDA = -60
 	};
 
 	enum SymbolType
@@ -437,6 +438,7 @@ namespace rossa
 		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(const ValueType &start);
 		std::shared_ptr<Node> parseDefineNode();
 		std::shared_ptr<Node> parseLambdaNode();
+		std::shared_ptr<Node> parseNPLambdaNode();
 		std::shared_ptr<Node> parseExternNode();
 		std::shared_ptr<Node> parseExternCallNode();
 		std::shared_ptr<Node> parseCallOpNode();

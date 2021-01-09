@@ -487,6 +487,43 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 	}
 }
 
+std::shared_ptr<Node> NodeParser::parseNPLambdaNode()
+{
+	nextToken();
+
+	sig_t sig;
+	std::vector<std::pair<LexerTokenType, hash_ull>> p;
+	std::vector<hash_ull> c;
+
+	if (currentToken.type != '{') {
+		auto body = parseEquNode();
+
+		if (!body)
+			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+
+		return std::make_shared<DefineNode>(0, sig, p, body, c, currentToken);
+	} else {
+		std::vector<std::shared_ptr<Node>> vbody;
+
+		nextToken();
+		while (currentToken.type != NULL_TOK) {
+			if (currentToken.type == NULL_TOK || currentToken.type == '}')
+				break;
+
+			if (auto e = parseExprNode())
+				vbody.push_back(e);
+			else
+				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		}
+		if (currentToken.type != '}')
+			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		nextToken();
+
+		auto body = std::make_shared<VectorNode>(vbody, true, currentToken);
+		return std::make_shared<DefineNode>(0, sig, p, body, c, currentToken);
+	}
+}
+
 std::shared_ptr<Node> NodeParser::parseIndexNode(const std::shared_ptr<Node> &a)
 {
 	auto marker = tokens.at(index - 2);
@@ -620,6 +657,8 @@ std::shared_ptr<Node> NodeParser::parseBaseNode()
 			return parseBoolNode();
 		case '@':
 			return parseTypeNode();
+		case TOK_NO_PARAM_LAMBDA:
+			return parseNPLambdaNode();
 		case TOK_LAMBDA:
 			return parseLambdaNode();
 		case '[':
@@ -892,6 +931,7 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 		case TOK_FUNCTION:
 		case TOK_TYPE_NAME:
 		case TOK_POINTER:
+		case TOK_NO_PARAM_LAMBDA:
 		case TOK_LAMBDA:
 			ret = parseBaseNode();
 			return parseTrailingNode(ret, true);

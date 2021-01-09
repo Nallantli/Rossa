@@ -100,8 +100,7 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1},
-	{"$", -1},
-	{"|>", -1} };
+	{"$", -1} };
 
 std::shared_ptr<Node> Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
 {
@@ -395,6 +394,8 @@ const int Rossa::getToken(
 			return TOK_UNTILF;
 		if (ID_STRING == ".+")
 			return TOK_UNTILT;
+		if (ID_STRING == "|>")
+			return TOK_NO_PARAM_LAMBDA;
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
