@@ -12,8 +12,6 @@
 
 [Docs](https://nallantli.github.io/Rossa/#/)
 
-[Formerly named _Ruota_](misc/namechange.md)
-
 -----
 
 ## Building
@@ -67,13 +65,13 @@ The binary will be located in `bin/` and the dll/so libraries in `bin/lib/`.
 
 Hello World:
 
-```rossa
+```ra
 putln("Hello World!");
 ```
 
 Factorial:
 
-```rossa
+```ra
 fact(x) => {
 	if x > 1 then {
 		return x * fact(x - 1);
@@ -87,7 +85,7 @@ putln(fact(5)); # 120
 
 FizzBuzz:
 
-```rossa
+```ra
 for i in 1 .+ 100 do {
 	if i % 3 == 0 && i % 5 == 0 then {
 		putln("FizzBuzz");
@@ -104,7 +102,7 @@ for i in 1 .+ 100 do {
 Basic File/Folder Output:
 (Note that the `/` operator is overloaded in class `Path`)
 
-```rossa
+```ra
 load "fs";
 
 p := new Path();
@@ -120,15 +118,15 @@ io.close();
 
 Threading:
 
-```rossa
-f(x, id) => {
+```ra
+f(ref x : Number, ref id : Number) => {
 	for i in 0 .. x do {
-		putln("Thread " + (id -> String) + ": " + (i -> String));
+		putln("Thread " + id -> String + " says " + i -> String);
 	}
 }
 
-t1 := new Thread(f, [10, 1]);
-t2 := new Thread(f, [10, 2]);
+t1 := new Thread(|> f(10, 1));
+t2 := new Thread(|> f(10, 2));
 
 t1.join();
 t2.join();

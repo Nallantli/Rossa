@@ -6,7 +6,7 @@ There are common element in all control structures: the general syntax of a cont
 
 Additionally, expressions declared between the control keywords are evaluated as being scoped within the control-block's body:
 
-```ruo
+```ra
 if a := true then { # `a` is declared with the value `true`
 	# `a` can be accessed here
 } # `a` is deleted as the scope terminates
@@ -22,7 +22,7 @@ If statements are perhaps the most important control structure in a programming 
 
 The general syntax is as follows:
 
-```ruo
+```ra
 if <BOOLEAN> then {
 
 }
@@ -32,7 +32,7 @@ Note that the element designated by `<BOOLEAN>` must reflect an expression that 
 
 To demonstrate, a quick example:
 
-```ruo
+```ra
 var a;
 
 # the variable `a` is given a value somewhere
@@ -48,7 +48,7 @@ Note the lack of parentheses surrounding the statement, a general mark of C-base
 
 If-statements can be given an `else` clause likewise:
 
-```ruo
+```ra
 if <BOOLEAN> then {
 	...
 } else {
@@ -58,7 +58,7 @@ if <BOOLEAN> then {
 
 This `else` encompasses all situations in which the `<BOOLEAN>` expression evaluates to `false`. To specify more cases, `elif` is used:
 
-```ruo
+```ra
 if a == 1 then {
 	...
 } elif a == 2 then {
@@ -74,7 +74,7 @@ An if-statement's `else` clause must be the final clause. There is no limit to t
 
 Underlyingly, the former example is equivalent to:
 
-```ruo
+```ra
 if a == 1 then {
 	...
 } else {
@@ -96,7 +96,7 @@ The while-loop is a structure that continues executing its body until that initi
 
 The keywords binding the while-loop are `while` and `do`, used in the same manner as the if-statement above:
 
-```ruo
+```ra
 while true do {
 	...
 }
@@ -106,7 +106,7 @@ Note that this loop will continue indefinitely, as the condition always evaluate
 
 For an example using a proper conditional:
 
-```ruo
+```ra
 while (line := input.line()) != "quit" do {
 	putln(line);
 }
@@ -116,7 +116,7 @@ This short sequence requests user input at each loop, and checks if it is equal 
 
 There is an important component here that was discussed in the parent category: the `while` structure's statement declares the variable `line` inside of the clause, which generates it as available for the interior scope of the while-loop. While the following is possible:
 
-```ruo
+```ra
 line := input.line();
 while line != "quit" do {
 	line = input.line();
@@ -150,7 +150,7 @@ For this reason it is not really within the goal of this language to have a stru
 
 What is becoming more widely available to programmers is the for-each structure (in C++/Java this uses `for (<ELEMENT> : <ITERABLE>)`, JS `Array.protoype.forEach()`, etc.). This procedure makes more sense for a high level of abstraction compared to the DCA format, and in this vein Rossa reflects for-each only:
 
-```ruo
+```ra
 for i in 0 .. 10 do {
 	...
 }
@@ -160,7 +160,7 @@ The for-loop is composed of 3 statements, the first being a variable identifier 
 
 In the above example, the operataor `..` generates a set of values from `0` to `10` exclusive (i.e. `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]`). `Array` values outside of for-loops can be declared with the same syntax:
 
-```ruo
+```ra
 a := [0 .. 10];
 ```
 
@@ -170,13 +170,13 @@ Additional range operations include `.+` which produces an _inclusive_ set (`[0 
 
 In this way, constructing a list of values from `0` to `100`, inclusive, where the values are all even:
 
-```ruo
+```ra
 a := [0 .+ 100 : 2];
 ```
 
 In the for-loop, and `Array` value that is iterated upon is mutable, and the values of the `Array` need not be restricted to `Number` types:
 
-```ruo
+```ra
 a := [
 	"hello",
 	"ciao",
@@ -209,7 +209,7 @@ A switch-statement allows the code to branch based on a hashed table of possible
 
 The syntax is as follows:
 
-```ruo
+```ra
 switch <EXPRESSION> of {
 	case <VALUE> do {
 		...
@@ -220,13 +220,13 @@ switch <EXPRESSION> of {
 
 For the sake of brevity, a case-statement may be given in a single line:
 
-```ruo
+```ra
 case <VALUE> do <EXPRESSION>;
 ```
 
 The `default` case for a switch statement is defined with an `else` clause coming after the switch block, like so:
 
-```ruo
+```ra
 switch <EXPRESSION> of {
 	...
 } else {
@@ -240,7 +240,7 @@ The switch-statement can also have cases for values that are not constant or bas
 
 For instance:
 
-```ruo
+```ra
 switch a of {
 	case 1 do {
 		...

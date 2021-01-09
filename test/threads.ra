@@ -4,8 +4,8 @@ f(ref x : Number, ref id : Number) => {
 	}
 }
 
-t1 := new Thread(() => f(10, 1));
-t2 := new Thread(() => f(10, 2));
+t1 := new Thread(|> f(10, 1));
+t2 := new Thread(|> f(10, 2));
 
 t1.join();
 t2.join();

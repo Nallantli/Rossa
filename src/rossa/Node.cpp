@@ -994,6 +994,12 @@ std::shared_ptr<Instruction> UnOpNode::genParser() const
 		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(Symbol(false), token)->genParser(), a->genParser(), token);
 	if (op == "$")
 		return std::make_shared<TypeI>(a->genParser(), token);
+	if (op == "|>") {
+		sig_t s;
+		std::vector<std::pair<LexerTokenType, hash_ull>> p;
+		std::vector<hash_ull> c;
+		return std::make_shared<DefineI>(0, s, p, a->genParser(), c, token);
+	}
 
 	std::vector<Function> stack_trace;
 	throw RTError(format::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);

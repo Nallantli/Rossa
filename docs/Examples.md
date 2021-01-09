@@ -6,7 +6,7 @@ It is easiest to delve into a language not through rote memorization of its API,
 
 There is no avoiding the classic K&R schema:
 
-```ruo
+```ra
 putln("Hello World!");
 ```
 
@@ -16,7 +16,7 @@ Foremost, function calls reflect the C style paradigm of `<fname>(<args>)`, wher
 
 In this manner, a hypothetical function `a` with 0 arguments will return the function value itself with
 
-```ruo
+```ra
 a;
 ```
 
@@ -26,10 +26,10 @@ Secondly, string literal values in Rossa are bordered by double quotes `"<string
 
 Lastly, lines of instruction are terminated in the C-style with the semi-colon `;`. The compiler will throw an error if no semi-colon is found.
 
-To run the code, save a file the single line to `hello.ruo`, and run the interpreter over the file:
+To run the code, save a file the single line to `hello.ra`, and run the interpreter over the file:
 
 ```bash
-rossa hello.ruo
+rossa hello.ra
 ```
 
 The output should appear thus:
@@ -44,7 +44,7 @@ One of my favorite programs to start out with when learning a new language is th
 
 To start, we need to initialize a random number generator. To do this, the standard library includes the object `Random`, which is what contains the generator:
 
-```ruo
+```ra
 random := new Random();
 ```
 
@@ -52,7 +52,7 @@ The operator `:=` might be a little unfamiliar to some, it is the declaration-as
 
 Next, we will use that generator to give us our _correct_ answer:
 
-```ruo
+```ra
 correct := random.nexti(0, 100);
 ```
 
@@ -60,7 +60,7 @@ Again, we have the operator `:=`, and on the right side we are calling the funct
 
 Now that we have a variable for the correct answer, we need to set a variable for our guess:
 
-```ruo
+```ra
 var guess;
 ```
 
@@ -68,13 +68,13 @@ Using `var` only _declares_ a variable, it does not set it to any value in parti
 
 Now we must iterate until our `guess` is equivalent to our `correct` number, and to do this we use a `while` loop. The syntax for the loop in Rossa is slightly more explicit than C-style languages:
 
-```ruo
+```ra
 while guess != correct do {
 ```
 
 The syntax asks for the keyword `while`, followed by a statement that evaluates to a Boolean, and then asks for `do`. Following is a new scope declaration with curly-brackets `{}`. Here we've left it open since we are adding code within the scope.
 
-```ruo
+```ra
 	puts("Enter guess: ");
 	guess = input.line() -> Number;
 ```
@@ -87,7 +87,7 @@ The static object `input` has a member `line()`, which reads a single line from 
 
 For comparing the value to the correct answer, we may use `if-else` statements:
 
-```ruo
+```ra
 	if guess < correct then {
 		putln("Too low!");
 	} elif guess > correct then {
@@ -101,13 +101,13 @@ Else statements with a following `if` are tokenized with `elif` rather than `els
 
 This completes our while loop, which ends with a simple closing bracket:
 
-```ruo
+```ra
 }
 ```
 
 Now the program will end, but if you wish to offer a message of victory:
 
-```ruo
+```ra
 putln("You win! The number was " + (correct -> String));
 ```
 
@@ -115,7 +115,7 @@ Strings may be concatanated with `+`, but doing so requires that `correct` be co
 
 Full code:
 
-```ruo
+```ra
 random := new Random();
 
 correct := random.nexti(0, 100);

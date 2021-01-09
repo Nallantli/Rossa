@@ -28,7 +28,7 @@ Numbers can be expressed in three different literal manners:
 
 This is the most general form; it follows the syntax expressed by a sequence of digits with an optional single radix.
 
-```ruo
+```ra
 1;
 1234.56;
 0012342.00012; # Note that trailing zeros on both ends are trimmed
@@ -38,7 +38,7 @@ This is the most general form; it follows the syntax expressed by a sequence of 
 
 Hexadecimal numbers are given by using the digits `0` to `f`, with an initial prefix of `0x`.
 
-```ruo
+```ra
 0xff; # 255
 0xabcdef; # 11259375
 ```
@@ -49,7 +49,7 @@ Hexadecimal "digits" are not case-sensitive, nor is the `x` in the prefix. Thus,
 
 Binary numbers are expressed in a similar manner to Hexadecimal, with the prefix `0b` and digits of `0` and `1`.
 
-```ruo
+```ra
 0b01; # 1
 0b10; # 2
 ```
@@ -62,7 +62,7 @@ Because of the importance of character values in programming, it is helpful for 
 
 The literal follows the standard representation using single quotes:
 
-```ruo
+```ra
 'a'; # 97
 ```
 
@@ -94,7 +94,7 @@ Operator|Function|Return
 
 ### Literals
 
-```ruo
+```ra
 true;
 false;
 ```
@@ -114,7 +114,7 @@ The `String` type is a base value in itself, unlike in other languages where it 
 
 Strings are declared with double quotes:
 
-```ruo
+```ra
 "Hello World";
 ```
 
@@ -135,7 +135,7 @@ Note the difference between `size` and `length`: The `String` value `"ルオタ"
 
 \* This operation takes a `String` value and an `Array` of values and inserts the latter into positions defined with `%n%` where `n` is the index in the `Array`. For instance:
 
-```ruo
+```ra
 "{1}, World!" & ["Hello"]; # "Hello, World!"
 "{2} is the last name of {1}" & ["John", "Smith"]; # "Smith is the last name of John"
 ```
@@ -150,7 +150,7 @@ An `Array` need not be declared for any particular element type; `Array` values 
 
 `Array` literals are declared using square brackets:
 
-```ruo
+```ra
 [1, 2, 3];
 [1, "Hello", true, [1, 2, 3]];
 ```
@@ -175,7 +175,7 @@ The syntax is designed to be compatible with JSON.
 
 `Dictionary` literals are declared using curly brackets, and each value-pair inside is separated by a colon:
 
-```ruo
+```ra
 {
 	greeting: "Hello",
 	location: "World",
@@ -214,7 +214,7 @@ If `P[i]` is not explicitly declared with a type, +1
 
 Thus, given two overloads:
 
-```ruo
+```ra
 f(a : Number, b : Number) => {}
 f(a : Number, b) => {}
 ```
@@ -229,7 +229,7 @@ Calling `f("Hello", "World")` gives `0` for both. Neither is chosen and the inte
 
 `Function` values may be declared explicitly for the scope using an identifier as such:
 
-```ruo
+```ra
 abs(x) => {
 	if x < 0 then {
 		return -x;
@@ -240,7 +240,7 @@ abs(x) => {
 
 `Function` values may also be declared anonymously without an identifier:
 
-```ruo
+```ra
 (x) => {
 	if x < 0 then {
 		return -x;
@@ -253,7 +253,7 @@ Note that when declared anonymously, the `Function` body declaration ends with a
 
 Anonymous function may also capture variables at the point of their initialization:
 
-```ruo
+```ra
 x := "I'm captured!";
 
 f := ()[x] => {
@@ -268,7 +268,7 @@ f();		# I'm captured!
 
 Both declaration forms can be simplified for single-line methods as:
 
-```ruo
+```ra
 abs(x) => (x < 0 ? -x : x);
 ```
 

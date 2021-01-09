@@ -93,13 +93,15 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"&&=", -1},
 	{":", 0},
 	{"::", 0},
-	{"=>", 0} };
+	{"=>", 0},
+	{"|>", 0} };
 
 const std::map<std::string, signed int> Rossa::uOperators = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1},
-	{"$", -1} };
+	{"$", -1},
+	{"|>", -1} };
 
 std::shared_ptr<Node> Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
 {

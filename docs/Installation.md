@@ -20,7 +20,7 @@ You will also need the following librar(y/ies) in order to build certain librari
 * SDL (https://www.libsdl.org/)
 * SDL_image (https://www.libsdl.org/projects/SDL_image/)
 
-The first is used ubiquituously by the interpreter, and the second two SDL dependencies related solely to `libsdl.cpp` and its corresponding `.ruo` file `bin/lib/sdl.ruo`.
+The first is used ubiquituously by the interpreter, and the second two SDL dependencies related solely to `libsdl.cpp` and its corresponding `.ra` file `bin/lib/sdl.ra`.
 
 ## *Nix
 
@@ -57,7 +57,7 @@ All systems need only type the `make` command.
 make
 ```
 
-The libraries (other than the standard `libstd`/`sdl.ruo`) need to be compiled before use:
+The libraries (other than the standard `libstd`/`sdl.ra`) need to be compiled before use:
 
 ```bash
 make libnet
