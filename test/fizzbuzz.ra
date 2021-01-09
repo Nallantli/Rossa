@@ -1,0 +1,25 @@
+# Different ways to do FizzBuzz
+
+for i in 1 .+ 100 do {
+	if i % 3 == 0 && i % 5 == 0 then {
+		putln("FizzBuzz");
+	} elif i % 3 == 0 then {
+		putln("Fizz");
+	} elif i % 5 == 0 then {
+		putln("Buzz");
+	} else {
+		putln(i);
+	}
+}
+
+for i in 1 .+ 100 do {
+	putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i);
+}
+
+[1.+100].map((i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i).map(putln);
+
+map(map(1.+100,(i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i),putln);
+
+[1.+100].map((i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
+
+map(1.+100,(i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
