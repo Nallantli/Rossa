@@ -15,7 +15,9 @@ static snake_game class {
 		w,
 		r,
 		paused,
-		LOST;
+		LOST,
+		font,
+		scoreText;
 
 	speed := 80;
 
@@ -66,6 +68,7 @@ static snake_game class {
 	}
 
 	setApple() => {
+		scoreText.setText("Score: " + ((snake_size - 1) -> String));
 		var x, y;
 		while true do {
 			x = rand.nexti(0, width - 1);
@@ -94,10 +97,11 @@ static snake_game class {
 	}
 
 	evaluateInput() => {
-		e := Event.poll();
-		if e.type == Event.QUIT then {
+		e := SDL.Event.poll();
+		if e.type == SDL.Event.QUIT then {
+			SDL.QUIT();
 			exit();
-		} elif e.type == Event.KEY_DOWN then {
+		} elif e.type == SDL.Event.KEY_DOWN then {
 			switch e.keysym.sym of {
 				case 'w', 'k' do {
 					if direction != 2 then {
@@ -130,6 +134,8 @@ static snake_game class {
 	}
 
 	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+		SDL.INIT();
+
 		this.width = width;
 		this.height = height;
 		this.scale = scale;
@@ -139,8 +145,11 @@ static snake_game class {
 		cache = alloc(width).map((e) => alloc(height));
 		buffer = alloc(width).map((e) => alloc(height));
 
-		w = new Window("Snake", width * scale, height * scale);
+		w = new SDL.Window("Snake", width * scale, height * scale);
 		r = w.getRenderer();
+
+		font = new SDL.Font("misc/unifont.ttf", 16);
+		scoreText = new SDL.Text(font, "Score: 0", Color.WHITE);
 
 		for x in 0 .. width do {
 			for y in 0 .. height do {
@@ -148,6 +157,8 @@ static snake_game class {
 				r.put(buffer[x][y], x * scale, y * scale);
 			}
 		}
+
+		r.put(scoreText, 0, 0);
 
 		reset();
 

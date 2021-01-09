@@ -16,6 +16,7 @@ BOOST_VERSION_WIN=1_74
 SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
 
 SDL_IMAGE_PATH_WIN=C:/SDL2_image/x86_64-w64-mingw32
+SDL_TTF_PATH_WIN=C:/SDL2_ttf/x86_64-w64-mingw32
 
 CFLAGS=
 LFLAGS=-shared
@@ -23,7 +24,7 @@ OFLAGS=$(CFLAGS)
 
 LIBNET_FLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
 LIBFS_FLAGS=
-LIBSDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
+LIBSDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -I"$(SDL_TTF_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -L"$(SDL_TTF_PATH_WIN)/lib" -lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
 
 DIR=build/win/$(locale)
 
@@ -50,7 +51,7 @@ OFLAGS=-fPIC $(CFLAGS)
 
 LIBNET_FLAGS=-lboost_system
 LIBFS_FLAGS=
-LIBSDL_FLAGS=-lSDL2 -lSDL2_image
+LIBSDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
 
 DIR=build/nix/$(locale)
 
@@ -79,14 +80,23 @@ libnet: bin/lib/libnet$(LIB_EXT)
 
 libsdl: bin/lib/libsdl$(LIB_EXT)
 
-bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libfs.cpp bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
+bin/lib/libfs$(LIB_EXT): $(DIR)/libfs.o bin/include/librossa.a
+	$(CC) -o $@ $(DIR)/libfs.o bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libnet.cpp bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/lib/libnet$(LIB_EXT): $(DIR)/libnet.o bin/include/librossa.a
+	$(CC) -o $@ $(DIR)/libnet.o bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
 
-bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libsdl.cpp bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+bin/lib/libsdl$(LIB_EXT): $(DIR)/libsdl.o bin/include/librossa.a
+	$(CC) -o $@ $(DIR)/libsdl.o bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+
+$(DIR)/libfs.o: src/ext/libfs.cpp
+	$(CC) -o $@ src/ext/libfs.cpp -c $(OFLAGS) $(LIBFS_FLAGS)
+
+$(DIR)/libnet.o: src/ext/libnet.cpp
+	$(CC) -o $@ src/ext/libnet.cpp -c $(OFLAGS) $(LIBNET_FLAGS)
+
+$(DIR)/libsdl.o: src/ext/libsdl.cpp
+	$(CC) -o $@ src/ext/libsdl.cpp -c $(OFLAGS) $(LIBSDL_FLAGS)
 
 bin/rossa.exe: src/Main.cpp bin/include/librossa.a
 	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)

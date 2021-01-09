@@ -59,10 +59,11 @@ static conway class {
 	}
 
 	evaluateInput() => {
-		e := Event.poll();
-		if e.type == Event.QUIT then {
+		e := SDL.Event.poll();
+		if e.type == SDL.Event.QUIT then {
+			SDL.QUIT();
 			exit();
-		} elif e.type == Event.KEY_DOWN then {
+		} elif e.type == SDL.Event.KEY_DOWN then {
 			switch e.keysym.sym of {
 				case '1' do speed = 160;
 				case '2' do speed = 120;
@@ -74,6 +75,8 @@ static conway class {
 	}
 
 	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+		SDL.INIT();
+
 		this.width = width;
 		this.height = height;
 		this.scale = scale;
@@ -83,7 +86,7 @@ static conway class {
 		cache = alloc(width).map((e) => alloc(height));
 		buffer = alloc(width).map((e) => alloc(height));
 
-		w = new Window("Conway's Game of Life", width * scale, height * scale);
+		w = new SDL.Window("Conway's Game of Life", width * scale, height * scale);
 		r = w.getRenderer();
 
 		for x in 0 .. width do {

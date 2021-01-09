@@ -1,5 +1,7 @@
 load "sdl";
 
+SDL.INIT();
+
 x := -0.5;
 y := 0;
 scale := 1;
@@ -8,7 +10,7 @@ height := 64;
 
 windowScale := 10;
 
-window := new Window("Mandelbrot", width * windowScale, height * windowScale);
+window := new SDL.Window("Mandelbrot", width * windowScale, height * windowScale);
 renderer := window.getRenderer();
 
 cache := alloc(width).map((e) => alloc(height));
@@ -63,8 +65,9 @@ static mandel class {
 
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
-	while (e := Event.poll()).type != Event.KEY_DOWN do {
-		if (e.type == Event.QUIT) then {
+	while (e := SDL.Event.poll()).type != SDL.Event.KEY_DOWN do {
+		if (e.type == SDL.Event.QUIT) then {
+			SDL.QUIT();
 			exit();
 		}
 	}

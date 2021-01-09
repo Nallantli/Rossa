@@ -3,9 +3,11 @@
 #ifdef __unix__
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #else
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #endif
 #include <algorithm>
 
@@ -14,7 +16,6 @@ using namespace rossa;
 namespace libsdl
 {
 	typedef unsigned char color_t;
-	static bool SDL_INITIALIZED = false;
 
 	static std::map<Uint32, Symbol> registered = {};
 
@@ -58,6 +59,23 @@ namespace libsdl
 				SDL_FreeSurface(loaded);
 			if (image != NULL)
 				SDL_DestroyTexture(image);
+		}
+	};
+
+	struct Font
+	{
+		TTF_Font *font;
+
+		Font(const std::string &path, const int &size, const Token *token, std::vector<Function> &stack_trace)
+		{
+			font = TTF_OpenFont(path.c_str(), size);
+			if (font == NULL)
+				throw RTError(format::format("Failure to initialize font: {1}", { TTF_GetError() }), *token, stack_trace);
+		}
+
+		~Font()
+		{
+			TTF_CloseFont(font);
 		}
 	};
 
@@ -266,6 +284,74 @@ namespace libsdl
 		}
 	};
 
+	struct Text : Shape
+	{
+	private:
+		SDL_Surface *loaded = NULL;
+		SDL_Texture *image = NULL;
+		int width;
+		int height;
+		std::string text;
+		Symbol font;
+
+	public:
+		Text(const Symbol &font, const std::string &s, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a)
+		{
+			this->font = font;
+			setText(s, token, stack_trace);
+		}
+
+		SDL_Texture *renderFont(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace)
+		{
+			if (image == NULL) {
+				image = SDL_CreateTextureFromSurface(renderer, loaded);
+				if (image == NULL)
+					throw RTError(format::format("Cannot create renderable image: {1}", { SDL_GetError() }), *token, stack_trace);
+				SDL_QueryTexture(image, NULL, NULL, &width, &height);
+				SDL_FreeSurface(loaded);
+				loaded = NULL;
+			}
+			return image;
+		}
+
+		void setText(const std::string &s, const Token *token, std::vector<Function> &stack_trace)
+		{
+			if (s == text && loaded != NULL)
+				return;
+			freeData();
+			if (s == "")
+				return;
+			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), libsdl::Font))->font;
+			loaded = TTF_RenderText_Solid(fdata, s.c_str(), { r, g, b, a });
+			if (loaded == NULL)
+				throw RTError(format::format("Font rendering error: {1}", { TTF_GetError() }), *token, stack_trace);
+			text = s;
+		}
+
+		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		{
+			if (text == "")
+				return;
+			SDL_Rect temp = { x, y, width, height };
+			SDL_RenderCopy(renderer, renderFont(renderer, token, stack_trace), NULL, &temp);
+		}
+
+		void freeData()
+		{
+			if (loaded != NULL)
+				SDL_FreeSurface(loaded);
+			loaded = NULL;
+			if (image != NULL)
+				SDL_DestroyTexture(image);
+			image = NULL;
+		}
+
+		~Text()
+		{
+			freeData();
+		}
+	};
+
 	struct Window
 	{
 		Uint32 windowID;
@@ -294,18 +380,31 @@ namespace libsdl
 	};
 }
 
+ROSSA_EXT_SIG(_sdl_init, args, token, hash, stack_trace)
+{
+	if (SDL_Init(SDL_INIT_VIDEO) < 0)
+		throw RTError(format::format("Failure to initialize SDL: {1}", { SDL_GetError() }), *token, stack_trace);
+
+	int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
+	if (!(IMG_Init(imgFlags) & imgFlags))
+		throw RTError(format::format("Failure to initialize SDL_image: {1}", { IMG_GetError() }), *token, stack_trace);
+
+	if (TTF_Init() < 0)
+		throw RTError(format::format("Failure to initialize SDL_ttf: {1}", { TTF_GetError() }), *token, stack_trace);
+
+	return Symbol();
+}
+
+ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
+{
+	SDL_Quit();
+	IMG_Quit();
+	TTF_Quit();
+	return Symbol();
+}
+
 ROSSA_EXT_SIG(_window_init, args, token, hash, stack_trace)
 {
-	if (!libsdl::SDL_INITIALIZED) {
-		libsdl::SDL_INITIALIZED = true;
-		if (SDL_Init(SDL_INIT_VIDEO) < 0)
-			throw RTError(format::format("Failure to initialize SDL: {1}", { SDL_GetError() }), *token, stack_trace);
-
-		int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
-		if (!(IMG_Init(imgFlags) & imgFlags))
-			throw RTError(format::format("Failure to initialize SDL_image: {1}", { IMG_GetError() }), *token, stack_trace);
-	}
-
 	auto w = std::make_shared<libsdl::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
 	std::vector<Symbol> v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(RNumber::Long(w->windowID)) };
 	return Symbol(v);
@@ -717,6 +816,39 @@ ROSSA_EXT_SIG(_texture_init, args, token, hash, stack_trace)
 	return Symbol(static_cast<std::shared_ptr<void>>(texture));
 }
 
+ROSSA_EXT_SIG(_font_init, args, token, hash, stack_trace)
+{
+	std::string fpath = args[0].getString(token, stack_trace);
+	int fsize = args[1].getNumber(token, stack_trace).getLong();
+
+	auto font = std::make_shared<libsdl::Font>(fpath, fsize, token, stack_trace);
+	return Symbol(static_cast<std::shared_ptr<void>>(font));
+}
+
+ROSSA_EXT_SIG(_text_init, args, token, hash, stack_trace)
+{
+	auto font = args[0];
+	std::string s = args[1].getString(token, stack_trace);
+
+	libsdl::color_t r = args[2].getNumber(token, stack_trace).getLong();
+	libsdl::color_t g = args[3].getNumber(token, stack_trace).getLong();
+	libsdl::color_t b = args[4].getNumber(token, stack_trace).getLong();
+	libsdl::color_t a = args[5].getNumber(token, stack_trace).getLong();
+
+	auto text = std::make_shared<libsdl::Text>(font, s, token, stack_trace, r, g, b, a);
+	return Symbol(static_cast<std::shared_ptr<void>>(text));
+}
+
+ROSSA_EXT_SIG(_text_setText, args, token, hash, stack_trace)
+{
+	auto text = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		libsdl::Text);
+
+	text->setText(args[1].getString(token, stack_trace), token, stack_trace);
+	return Symbol();
+}
+
 ROSSA_EXT_SIG(_texture_setImage, args, token, hash, stack_trace)
 {
 	auto texture = COERCE_PTR(
@@ -758,8 +890,9 @@ ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
 	return Symbol();
 }
 
-EXPORT_FUNCTIONS{
+EXPORT_FUNCTIONS(libsdl) {
 	ADD_EXT(_event_poll);
+	ADD_EXT(_font_init);
 	ADD_EXT(_image_init_key);
 	ADD_EXT(_image_init_nokey);
 	ADD_EXT(_line_init);
@@ -774,10 +907,14 @@ EXPORT_FUNCTIONS{
 	ADD_EXT(_rotatable_setAngle);
 	ADD_EXT(_rotatable_setCenter);
 	ADD_EXT(_rotatable_setClip);
+	ADD_EXT(_sdl_init);
+	ADD_EXT(_sdl_quit);
 	ADD_EXT(_shape_setColor);
 	ADD_EXT(_sizable_setHeight);
 	ADD_EXT(_sizable_setSize);
 	ADD_EXT(_sizable_setWidth);
+	ADD_EXT(_text_init);
+	ADD_EXT(_text_setText);
 	ADD_EXT(_texture_init);
 	ADD_EXT(_texture_setImage);
 	ADD_EXT(_window_getRenderer);

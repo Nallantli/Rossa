@@ -132,7 +132,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 			std::vector<Function> stack_trace;
 			throw RTError(format::format("External library does not exist: `{1}`", { libname }), *token, stack_trace);
 		}
-		auto f = dlsym(library, "_rossaExportFunctions");
+		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 #else
 	std::string libname = rawlibname + ".dll";
 	if (loaded.find(rawlibname) == loaded.end()) {
@@ -143,7 +143,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 			std::vector<Function> stack_trace;
 			throw RTError(format::format("External library does not exist: {1}", { libname }), *token, stack_trace);
 		}
-		auto f = GetProcAddress(library, "_rossaExportFunctions");
+		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
 #endif
 		if (f == NULL) {
 			std::vector<Function> stack_trace;

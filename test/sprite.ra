@@ -1,6 +1,8 @@
 load "sdl";
 
-w := new Window("Sprite Clipping", 512, 512);
+SDL.INIT();
+
+w := new SDL.Window("Sprite Clipping", 512, 512);
 r := w.getRenderer();
 rand := new Random();
 
@@ -27,10 +29,12 @@ randomize() => {
 randomize();
 
 var e;
-while (e = Event.poll()).type != Event.QUIT do {
-	if e.type == Event.KEY_DOWN then {
+while (e = SDL.Event.poll()).type != SDL.Event.QUIT do {
+	if e.type == SDL.Event.KEY_DOWN then {
 		if e.keysym.sym == ' ' then {
 			randomize();
 		}
 	}
 }
+
+SDL.QUIT();

@@ -19,6 +19,7 @@ You will also need the following librar(y/ies) in order to build certain librari
 
 * SDL (https://www.libsdl.org/)
 * SDL_image (https://www.libsdl.org/projects/SDL_image/)
+* SDL_ttf (https://www.libsdl.org/projects/SDL_ttf/)
 
 The first is used ubiquituously by the interpreter, and the second two SDL dependencies related solely to `libsdl.cpp` and its corresponding `.ra` file `bin/lib/sdl.ra`.
 
@@ -30,6 +31,7 @@ On *nix systems, installing these libraries is very simple. Most package manager
 sudo apt-get install libboost-all-dev
 sudo apt-get install libsdl2-dev
 sudo apt-get install libsdl2-image-dev
+sudo apt-get install libsdl2-ttf-dev
 ```
 
 ## Windows

@@ -16,6 +16,6 @@ jobs:
     - name: update
       run: sudo apt-get update
     - name: sdl
-      run: sudo apt-get install libsdl2-dev && sudo apt-get install libsdl2-image-dev
+      run: sudo apt-get install libsdl2-dev && sudo apt-get install libsdl2-image-dev && sudo apt-get install libsdl2-ttf-dev
     - name: make
       run: make dirs && make GCC="g++-10" libsdl

@@ -1,5 +1,7 @@
 load "sdl";
 
+SDL.INIT();
+
 world := [
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
@@ -72,13 +74,16 @@ size_y := world[0].size();
 planeX := 0;
 planeY := width / height / 2;
 
-w := new Window("Raycaster", width, height);
+w := new SDL.Window("Raycaster", width, height);
 r := w.getRenderer();
 
 cache := alloc(width);
 for x in 0 .. width do {
 	cache[x] = new SDL.Rect(1, height, Color.WHITE);
 }
+
+font := new SDL.Font("misc/unifont.ttf", 16);
+fpsText := new SDL.Text(font, "", Color.WHITE);
 
 refresh() => {
 	for x in 0 .. width do {
@@ -146,6 +151,7 @@ refresh() => {
 		cache[x].setHeight(lineHeight);
 		r.put(cache[x], x, drawStart);
 	}
+	r.put(fpsText, 0, 0);
 	r.flush();
 }
 
@@ -192,23 +198,33 @@ evaluateMovement(ref lapse : Number) => {
 }
 
 evaluateInput() => {
-	e := Event.poll();
-	if e.type == Event.QUIT then {
+	e := SDL.Event.poll();
+	if e.type == SDL.Event.QUIT then {
+		SDL.QUIT();
 		exit();
-	} elif e.type == Event.KEY_DOWN then {
+	} elif e.type == SDL.Event.KEY_DOWN then {
 		keys[e.keysym.sym] = true;
-	} elif e.type == Event.KEY_UP then {
+	} elif e.type == SDL.Event.KEY_UP then {
 		keys[e.keysym.sym] = false;
 	}
 }
 
 start := clock.milliseconds();
+fpsCounter := 0;
+fpsTimer := clock.milliseconds();
 while true do {
 	evaluateInput();
-	lapse := clock.milliseconds() - start;
-	if lapse > 1000/60 then {
-		start = clock.milliseconds();
-		evaluateMovement(lapse);
+	if (lapse := clock.milliseconds()) - start > 1000/60 then {
+		tick := lapse - start;
+		start = lapse;
+		evaluateMovement(tick);
 		refresh();
+		fpsCounter += 1;
+
+		if lapse - fpsTimer > 1000 then {
+			fpsTimer = lapse;
+			fpsText.setText("FPS: " + (fpsCounter -> String));
+			fpsCounter = 0;
+		}
 	}
 }

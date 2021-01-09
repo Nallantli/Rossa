@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.9.3-alpha"
+#define _ROSSA_VERSION_ "v1.9.4-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -31,11 +31,11 @@
 #include <limits.h>
 #include <unistd.h>
 #include <dlfcn.h>
-#define EXPORT_FUNCTIONS extern "C" void _rossaExportFunctions(std::map<std::string, extf_t> &fmap)
+#define EXPORT_FUNCTIONS(name) extern "C" void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define EXPORT_FUNCTIONS extern "C" __declspec(dllexport) void _rossaExportFunctions(std::map<std::string, extf_t> &fmap)
+#define EXPORT_FUNCTIONS(name) extern "C" __declspec(dllexport) void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
 #endif
 
 namespace rossa

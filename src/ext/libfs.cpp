@@ -174,7 +174,7 @@ ROSSA_EXT_SIG(_path_append_string, args, token, hash, stack_trace)
 	return Symbol((*path1 / path2).string());
 }
 
-EXPORT_FUNCTIONS{
+EXPORT_FUNCTIONS(libfs) {
 	ADD_EXT(_path_append_path);
 	ADD_EXT(_path_append_string);
 	ADD_EXT(_path_exists);

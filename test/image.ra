@@ -1,6 +1,8 @@
 load "sdl";
 
-w := new Window("Image Test", 800, 600);
+SDL.INIT();
+
+w := new SDL.Window("Image Test", 800, 600);
 r := w.getRenderer();
 
 image1 := new SDL.Image("misc/logo/Logo.png");
@@ -21,7 +23,7 @@ r2 := 0;
 r3 := 0;
 
 start := clock.milliseconds();
-while Event.poll().type != Event.QUIT do {
+while SDL.Event.poll().type != SDL.Event.QUIT do {
 	lapse := clock.milliseconds() - start;
 	if lapse > 10 then {
 		start = clock.milliseconds();
@@ -36,3 +38,5 @@ while Event.poll().type != Event.QUIT do {
 		r.update();
 	}
 }
+
+SDL.QUIT();
