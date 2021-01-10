@@ -261,4 +261,9 @@ namespace rossa
 
 		return Symbol();
 	}
+
+	ROSSA_EXT_SIG(_string_size, args, token, hash, stack_trace)
+	{
+		return Symbol(RNumber::Long(args[0].getString(token, stack_trace).size()));
+	}
 }

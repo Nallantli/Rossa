@@ -2,11 +2,9 @@
 
 alloc := ((ref x) => alloc(x));
 
-length := ((ref x) => length(x));
+len := ((ref x) => len(x));
 
-size := ((ref x) => size(x));
-
-charn := ((ref x) => charn(x));
+codes := ((ref x) => codes(x));
 
 chars := ((ref x) => chars(x));
 
@@ -199,16 +197,16 @@ Array::unshift(ref a, ref value) => {
 }
 
 Array::pop(ref a, ref count : Number) => {
-	nv := alloc(length(a) - count);
-	for i in 0 .. (length(a) - count) do {
+	nv := alloc(len(a) - count);
+	for i in 0 .. (len(a) - count) do {
 		nv[i] = a[i];
 	}
 	refer a = nv;
 }
 
 Array::shift(ref a, ref count : Number) => {
-	nv := alloc(length(a) - count);
-	for i in count .. length(a) do {
+	nv := alloc(len(a) - count);
+	for i in count .. len(a) do {
 		nv[i - count] = a[i];
 	}
 	refer a = nv;
@@ -241,30 +239,30 @@ Array::filter(ref a, ref f : Function) => {
 }
 
 Array::reverse(ref a) => {
-	nv := alloc(length(a));
-	for i in 0 .. length(a) do {
-		nv[i] = a[length(a) - i - 1];
+	nv := alloc(len(a));
+	for i in 0 .. len(a) do {
+		nv[i] = a[len(a) - i - 1];
 	}
 	return nv;
 }
 
 Array::back(ref a) => {
-	refer a[size(a) - 1];
+	refer a[len(a) - 1];
 }
 
 Array::empty(ref a) => {
-	return size(a) == 0;
+	return len(a) == 0;
 }
 
 Array::sort(ref a, ref comp : Function) => {
-	if a.size() < 2 then {
+	if a.len() < 2 then {
 		return a;
 	}
 
 	left := [];
 	right := [];
 	pivot := a[0];
-	for i in 1 .. a.size() do {
+	for i in 1 .. a.len() do {
 		if comp(a[i], pivot) then {
 			left.push(a[i]);
 		} else {
@@ -276,14 +274,14 @@ Array::sort(ref a, ref comp : Function) => {
 }
 
 Array::sort(ref a) => {
-	if a.size() < 2 then {
+	if a.len() < 2 then {
 		return a;
 	}
 
 	left := [];
 	right := [];
 	pivot := a[0];
-	for i in 1 .. a.size() do {
+	for i in 1 .. a.len() do {
 		if a[i] < pivot then {
 			left.push(a[i]);
 		} else {
@@ -333,7 +331,7 @@ String::reverse(ref s) => {
 }
 
 String::empty(ref s) => {
-	return size(s) == 0;
+	return len(s) == 0;
 }
 
 String::`[]`(ref s, ref i : Number) => {
@@ -341,12 +339,14 @@ String::`[]`(ref s, ref i : Number) => {
 }
 
 String::`..`(ref a, ref b : String) => {
-	return [charn(a)[0] .. charn(b)[0]];
+	return [codes(a)[0] .. codes(b)[0]];
 }
 
 String::parseDict(ref a) => {
 	return parse(a + ";")[0];
 }
+
+String::size(ref a) => extern_call STANDARD._string_size(a);
 
 # MATH
 

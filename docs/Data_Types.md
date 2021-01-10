@@ -128,8 +128,7 @@ Operator|Function|Return
 `a > b`|Lexical More Comparison|`Boolean`
 `a <= b`|Lexical Less or Equal Comparison|`Boolean`
 `a >= b`|Lexical More or Equal Comparison|`Boolean`
-`size(a)`/`a.size()`|ASCII Char-length of String|`Number`
-`length(a)`/`a.length()`|Unicode Char-length of String|`Number`
+`len(a)`/`a.len()`|Unicode Char-length of String|`Number`
 
 Note the difference between `size` and `length`: The `String` value `"ルオタ"` has a `size` of `9` (CJK characters take up 3 bytes each), but a `length` of `3`.
 
@@ -162,8 +161,7 @@ Operator|Function|Return
 `a + b`|Array Concatanation|`Array`
 `a - b`|Returns an `Array` of elements in `a` that do not exist in `b`|`Array`
 `a[b]`|Indexes `a` at (`Number`) `b`|Value at index `b`
-`size(a)`/`a.size()`|Element Count|`Number`
-`length(a)`/`a.length()`|Equivalent to `size`|`Number`
+`len(a)`/`a.len()`|Equivalent to `size`|`Number`
 
 ## Dictionary
 
@@ -191,8 +189,7 @@ Operator|Function|Return
 -|-|-
 `a[b]`|Indexes `a` at `b`|Value at index `b`
 `a.b`|Syntactic sugar for `[]`, where `b` can be expressed as an identifier value|Value at index `b`
-`size(a)`/`a.size()`|Element Count|`Number`
-`length(a)`/`a.length()`|Equivalent to `size`|`Number`
+`len(a)`/`a.len()`|Equivalent to `size`|`Number`
 
 ## Function
 

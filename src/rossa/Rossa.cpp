@@ -269,8 +269,6 @@ const int Rossa::getToken(
 			return TOK_EXTERN;
 		else if (ID_STRING == KEYWORD_EXTERN_CALL)
 			return TOK_EXTERN_CALL;
-		else if (ID_STRING == KEYWORD_SIZE)
-			return TOK_SIZE;
 		else if (ID_STRING == KEYWORD_LENGTH)
 			return TOK_LENGTH;
 		else if (ID_STRING == KEYWORD_STRUCT)
@@ -581,7 +579,7 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == '~' || tokens.back().type == TOK_SIZE || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
+			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == '~' || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
 				temp.push_back(tokens.back());
 				tokens.pop_back();
 				if (tokens.back().type == TOK_DEF_TYPE) {
@@ -656,4 +654,5 @@ void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 	ADD_EXT(_thread_init);
 	ADD_EXT(_thread_join);
 	ADD_EXT(_timeMS);
+	ADD_EXT(_string_size);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.9.5-alpha"
+#define _ROSSA_VERSION_ "v1.9.6-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -116,7 +116,7 @@ namespace rossa
 		TOK_EXTERN_CALL = -25,
 
 		TOK_LENGTH = -26,
-		TOK_SIZE = -27,
+		//TOK_SIZE = -27,
 		TOK_CLASS = -28,
 		TOK_STRUCT = -29,
 		TOK_STATIC = -30,
@@ -190,7 +190,6 @@ namespace rossa
 		RETURN,
 		EXTERN,
 		LENGTH,
-		SIZE_I,
 		CLASS_I,
 		NEW_I,
 		CAST_TO_I,
@@ -948,14 +947,6 @@ namespace rossa
 	{
 	public:
 		LengthI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
-		const std::string compile() const override;
-	};
-
-	class SizeI : public UnaryI
-	{
-	public:
-		SizeI(const std::shared_ptr<Instruction> &, const Token &);
 		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
 		const std::string compile() const override;
 	};

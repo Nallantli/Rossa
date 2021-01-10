@@ -44,11 +44,11 @@ test(ref MAX : Number) => {
 	result := SOE(MAX);
 	time := clock.milliseconds() - start;
 
-	putln(result.length() -> String + " Primes found for numbers below " + MAX -> String);
+	putln(result.len() -> String + " Primes found for numbers below " + MAX -> String);
 	putln("Total Time: " + time -> String + "ms");
 }
 
-if _args.size() == 1 then {
+if _args.len() == 1 then {
 	test(_args[0] -> Number);
 } else {
 	putln("Usage requires numerical argument");

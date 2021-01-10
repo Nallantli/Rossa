@@ -5,9 +5,9 @@ struct Matrix class {
 		if $a[0] != Array then {
 			this.init([a]);
 		} else {
-			last := a[0].size();
+			last := a[0].len();
 			for e in a do {
-				if e.size() != last then {
+				if e.len() != last then {
 					throw "Matrix is not properly defined by array: " + (a -> String);
 				}
 			}
@@ -56,14 +56,14 @@ struct Matrix class {
 	}
 
 	`+`(ref m : @Matrix) => {
-		if m.a.size() != a.size() || m.a[0].size() != a[0].size() then {
+		if m.a.len() != a.len() || m.a[0].len() != a[0].len() then {
 			throw "Cannot conduct arithmatic on matrices of different sizes";
 		}
 
 		nm := a;
 
-		for i in 0 .. nm.size() do {
-			for j in 0 .. nm[0].size() do {
+		for i in 0 .. nm.len() do {
+			for j in 0 .. nm[0].len() do {
 				nm[i][j] += m.a[i][j];
 			}
 		}
@@ -78,16 +78,16 @@ struct Matrix class {
 	`-`(ref m : Array) => `-`(new Matrix(m));
 
 	`*`(ref m : @Matrix) => {
-		if a.size() != m.a[0].size() then {
+		if a.len() != m.a[0].len() then {
 			throw "Cannot multiply these Matrices";
 		}
 
-		nm := alloc(m.a.size()).map((e) => alloc(a[0].size()));
+		nm := alloc(m.a.len()).map((e) => alloc(a[0].len()));
 
-		for i in 0 .. nm.size() do {
-			for j in 0 .. nm[0].size() do {
+		for i in 0 .. nm.len() do {
+			for j in 0 .. nm[0].len() do {
 				nm[i][j] = 0;
-				for k in 0 .. m.a[0].size() do {
+				for k in 0 .. m.a[0].len() do {
 					nm[i][j] += a[k][j] * m.a[i][k];
 				}
 			}
@@ -99,21 +99,21 @@ struct Matrix class {
 	`*`(ref m : Array) => `*`(new Matrix(m));
 
 	det() => {
-		if a.size() != a[0].size() then {
+		if a.len() != a[0].len() then {
 			throw "Determinants are undefined for non-square Matrices";
 		}
 
-		if a.size() == 2 then {
+		if a.len() == 2 then {
 			return a[0][0] * a[1][1] - a[1][0] * a[0][1];
 		}
 
 		sum := 0;
-		for i in 0 .. a.size() do {
-			nm := alloc(a.size() - 1).map((e) => alloc(a.size() - 1));
+		for i in 0 .. a.len() do {
+			nm := alloc(a.len() - 1).map((e) => alloc(a.len() - 1));
 			y := 0;
-			for j in 1 .. a.size() do {
+			for j in 1 .. a.len() do {
 				x := 0;
-				for k in 0 .. a.size() do {
+				for k in 0 .. a.len() do {
 					if k != i then {
 						nm[x][y] = a[k][j];
 						x += 1;
@@ -134,7 +134,7 @@ struct Matrix class {
 		}
 		if i == nil then {
 			col := [];
-			for k in 0 .. a.size() do {
+			for k in 0 .. a.len() do {
 				col += [[a[k][j]]];
 			}
 			return new Matrix(col);

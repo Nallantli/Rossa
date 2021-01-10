@@ -650,8 +650,6 @@ CallBuiltNode::CallBuiltNode(
 std::shared_ptr<Instruction> CallBuiltNode::genParser() const
 {
 	switch (t) {
-		case TOK_SIZE:
-			return std::make_shared<SizeI>(arg->genParser(), token);
 		case TOK_LENGTH:
 			return std::make_shared<LengthI>(arg->genParser(), token);
 		case TOK_ALLOC:

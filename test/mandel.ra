@@ -49,7 +49,7 @@ static mandel class {
 		s := "";
 		for i in [0 .. height] do {
 			for j in [0 .. width] do {
-				s += ASCII[mandelConverger(start_x + j * dx, end_y - i * dy, ASCII.size())];
+				s += ASCII[mandelConverger(start_x + j * dx, end_y - i * dy, ASCII.len())];
 			}
 			s += "\n";
 		}

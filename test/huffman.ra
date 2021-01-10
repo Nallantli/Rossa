@@ -78,7 +78,7 @@ static huffman class {
 			nodes.push(new Node(e.first(), e.second()));
 		}
 
-		while nodes.size() > 1 do {
+		while nodes.len() > 1 do {
 			nodes = nodes.sort();
 			nodes.push(new Node(nodes[0], nodes[1]));
 			nodes.shift(2);

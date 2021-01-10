@@ -128,8 +128,6 @@ std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
 
 			if (key == KEYWORD_LENGTH)
 				ret = std::make_shared<CallBuiltNode>(TOK_LENGTH, a_a, marker);
-			if (key == KEYWORD_SIZE)
-				ret = std::make_shared<CallBuiltNode>(TOK_SIZE, a_a, marker);
 			if (key == KEYWORD_ALLOC)
 				ret = std::make_shared<CallBuiltNode>(TOK_ALLOC, a_a, marker);
 			if (key == KEYWORD_PARSE)
@@ -333,7 +331,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 	std::vector<hash_ull> captures;
 
 	ValueType ftype = NIL;
-	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE) {
+	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE) {
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
 				ftype = BOOLEAN_D;
@@ -371,7 +369,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 		nextToken();
 	}
 
-	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_SIZE && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
+	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
@@ -940,7 +938,6 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 		case TOK_CALL_OP:
 			return parseCallOpNode();
 		case TOK_LENGTH:
-		case TOK_SIZE:
 		case TOK_ALLOC:
 		case TOK_CHARN:
 		case TOK_CHARS:

@@ -68,8 +68,8 @@ dirY := 0;
 width := 800;
 height := 600;
 
-size_x := world.size();
-size_y := world[0].size();
+size_x := world.len();
+size_y := world[0].len();
 
 planeX := 0;
 planeY := width / height / 2;

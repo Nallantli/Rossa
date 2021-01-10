@@ -25,7 +25,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 		}
 	}
 
-	for(auto e : captures) {
+	for (auto e : captures) {
 		newScope->createVariable(e.first, e.second, token);
 	}
 

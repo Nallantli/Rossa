@@ -161,10 +161,10 @@ const Symbol IfElseI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 	auto newScope = std::make_shared<Scope>(scope, 0);
 	auto evalIf = ifs->evaluate(newScope, stack_trace);
 	if (evalIf.getBool(&token, stack_trace)) {
-		auto r =  body->evaluate(newScope, stack_trace);
+		auto r = body->evaluate(newScope, stack_trace);
 		newScope->clear();
 		return r;
-	} 	else if (elses) {
+	} else if (elses) {
 		auto r = elses->evaluate(newScope, stack_trace);
 		newScope->clear();
 		return r;
@@ -902,33 +902,6 @@ const Symbol LengthI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 const std::string LengthI::compile() const
 {
 	return C_UNARY("LengthI", a->compile());
-}
-
-/*-------------------------------------------------------------------------------------------------------*/
-/*class SizeI                                                                                          */
-/*-------------------------------------------------------------------------------------------------------*/
-
-SizeI::SizeI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(SIZE_I, a, token)
-{}
-
-const Symbol SizeI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
-{
-	auto evalA = a->evaluate(scope, stack_trace);
-	switch (evalA.getValueType()) {
-		case STRING:
-			return Symbol(RNumber::Long(evalA.getString(&token, stack_trace).size()));
-		case DICTIONARY:
-			return Symbol(RNumber::Long(evalA.dictionarySize(&token, stack_trace)));
-		case ARRAY:
-			return Symbol(RNumber::Long(evalA.vectorSize()));
-		default:
-			throw RTError(_FAILURE_SIZE_, token, stack_trace);
-	}
-}
-
-const std::string SizeI::compile() const
-{
-	return C_UNARY("SizeI", a->compile());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

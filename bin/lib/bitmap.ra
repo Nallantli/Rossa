@@ -40,7 +40,7 @@ static bitmap class {
 		fileSize := 54 + (stride * height);
 
 		fileHeader := [
-			charn("B")[0], charn("M")[0],
+			codes("B")[0], codes("M")[0],
 			fileSize, fileSize >> 8, fileSize >> 16, fileSize >> 24,
 			0, 0, 0, 0,
 			54, 0, 0, 0
