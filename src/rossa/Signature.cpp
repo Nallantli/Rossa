@@ -124,9 +124,9 @@ const std::vector<std::string> dir::compiledOptions(int argc, char const *argv[]
 
 void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string &rawlibname, const Token *token)
 {
-#ifndef _WIN32
-	std::string libname = rawlibname + ".so";
 	if (loaded.find(rawlibname) == loaded.end()) {
+#ifndef _WIN32
+		std::string libname = rawlibname + ".so";
 		auto library = dlopen(dir::findFile(currentDir, libname, token).string().c_str(), RTLD_LAZY);
 		if (library == NULL) {
 			std::vector<Function> stack_trace;
@@ -134,8 +134,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 #else
-	std::string libname = rawlibname + ".dll";
-	if (loaded.find(rawlibname) == loaded.end()) {
+		std::string libname = rawlibname + ".dll";
 		auto path = dir::findFile(currentDir, libname, token);
 		libPaths.push_back(path);
 		auto library = LoadLibraryA(path.string().c_str());
@@ -156,7 +155,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 	}
 }
 
-extf_t lib::loadFunction(const std::string & rawlibname, const std::string & fname, const Token * token)
+extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname, const Token *token)
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 		std::vector<Function> stack_trace;

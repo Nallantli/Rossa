@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "libnet.h"
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
@@ -181,7 +181,8 @@ ROSSA_EXT_SIG(_decodeURI, args, token, hash, stack_trace)
 	return Symbol(decodeURIComponent(s));
 }
 
-EXPORT_FUNCTIONS(libnet) {
+EXPORT_FUNCTIONS(libnet)
+{
 	ADD_EXT(_decodeURI);
 	ADD_EXT(_encodeURI);
 	ADD_EXT(_server_accept);

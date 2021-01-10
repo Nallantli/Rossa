@@ -74,29 +74,41 @@ dirs: $(DIR)
 
 libs: libfs libnet libsdl
 
-libfs: bin/lib/libfs$(LIB_EXT)
+libfs: bin/lib/libfs$(LIB_EXT) bin/include/libfs.a
 
-libnet: bin/lib/libnet$(LIB_EXT)
+libnet: bin/lib/libnet$(LIB_EXT) bin/include/libnet.a
 
-libsdl: bin/lib/libsdl$(LIB_EXT)
+libsdl: bin/lib/libsdl$(LIB_EXT) bin/include/libsdl.a
 
-bin/lib/libfs$(LIB_EXT): $(DIR)/libfs.o bin/include/librossa.a
-	$(CC) -o $@ $(DIR)/libfs.o bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
+bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libfs.cpp bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): $(DIR)/libnet.o bin/include/librossa.a
-	$(CC) -o $@ $(DIR)/libnet.o bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/include/libfs.a: $(DIR)/libfs_static.o
+	ar rcs $@ $(DIR)/libfs_static.o && cp -f src/ext/libfs.h bin/include/libfs.h
 
-bin/lib/libsdl$(LIB_EXT): $(DIR)/libsdl.o bin/include/librossa.a
-	$(CC) -o $@ $(DIR)/libsdl.o bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+$(DIR)/libfs_static.o: src/ext/libfs.cpp
+	$(CC) -D_STATIC_ -o $@ src/ext/libfs.cpp -c $(OFLAGS) $(LIBFS_FLAGS)
 
-$(DIR)/libfs.o: src/ext/libfs.cpp
-	$(CC) -o $@ src/ext/libfs.cpp -c $(OFLAGS) $(LIBFS_FLAGS)
 
-$(DIR)/libnet.o: src/ext/libnet.cpp
-	$(CC) -o $@ src/ext/libnet.cpp -c $(OFLAGS) $(LIBNET_FLAGS)
+bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libnet.cpp bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
 
-$(DIR)/libsdl.o: src/ext/libsdl.cpp
-	$(CC) -o $@ src/ext/libsdl.cpp -c $(OFLAGS) $(LIBSDL_FLAGS)
+bin/include/libnet.a: $(DIR)/libnet_static.o
+	ar rcs $@ $(DIR)/libnet_static.o && cp -f src/ext/libnet.h bin/include/libnet.h
+
+$(DIR)/libnet_static.o: src/ext/libnet.cpp
+	$(CC) -D_STATIC_ -o $@ src/ext/libnet.cpp -c $(OFLAGS) $(LIBNET_FLAGS)
+
+
+bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libsdl.cpp bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+
+bin/include/libsdl.a: $(DIR)/libsdl_static.o
+	ar rcs $@ $(DIR)/libsdl_static.o && cp -f src/ext/libsdl.h bin/include/libsdl.h
+
+$(DIR)/libsdl_static.o: src/ext/libsdl.cpp
+	$(CC) -D_STATIC_ -o $@ src/ext/libsdl.cpp -c $(OFLAGS) $(LIBSDL_FLAGS)
+
 
 bin/rossa.exe: src/Main.cpp bin/include/librossa.a
 	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)

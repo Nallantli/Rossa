@@ -102,7 +102,15 @@ const std::string DefineI::compile() const
 		ca += "{static_cast<LexerTokenType>(" + std::to_string(e.first) + "), " + std::to_string(e.second) + "}";
 	}
 	ca += "}";
-	return C_QUATERNARY("DefineI", std::to_string(key), sig::toCodeString(ftype), ca, body->compile());
+	std::string cc = "{";
+	i = 0;
+	for (auto &e : captures) {
+		if (i++ > 0)
+			cc += ", ";
+		cc += "static_cast<hash_ull>(" + std::to_string(e) + ")";
+	}
+	cc += "}";
+	return C_QUINARY("DefineI", std::to_string(key), sig::toCodeString(ftype), ca, body->compile(), cc);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

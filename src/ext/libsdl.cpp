@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "libsdl.h"
 
 #ifdef __unix__
 #include <SDL2/SDL.h>
@@ -890,7 +890,8 @@ ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
 	return Symbol();
 }
 
-EXPORT_FUNCTIONS(libsdl) {
+EXPORT_FUNCTIONS(libsdl)
+{
 	ADD_EXT(_event_poll);
 	ADD_EXT(_font_init);
 	ADD_EXT(_image_init_key);

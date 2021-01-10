@@ -97,21 +97,13 @@ void moveback(std::string &code, int c)
 
 static void compile(std::shared_ptr<rossa::Node> entry, const std::string &output)
 {
-	std::filesystem::path outputDir = std::filesystem::absolute(output);
-	if (std::filesystem::exists(outputDir)) {
-		std::cout << "Output directory already exists, attempting to overwrite...\n";
-		std::filesystem::remove_all(outputDir);
-	}
-
-	std::filesystem::create_directories(outputDir);
-
 #ifndef _WIN32
-	std::filesystem::path outputExe = outputDir / outputDir.filename().string();
+	std::filesystem::path outputExe = output;
 #else
-	std::filesystem::path outputExe = outputDir / (outputDir.filename().string() + ".exe");
+	std::filesystem::path outputExe = output + ".exe";
 #endif
 
-	std::cout << "Compiling to directory: " << output << "...\n";
+	std::cout << "Compiling to exe: " << output << "...\n";
 
 	std::cout << "[0/6]\tParsing operators...\n";
 	auto g = rossa::NodeParser::genParser(entry);
@@ -127,30 +119,31 @@ static void compile(std::shared_ptr<rossa::Node> entry, const std::string &outpu
 	hashs += "}";
 
 	std::cout << "[2/6]\tAdding library links...\n";
-	std::string libs = "";
+	std::string libs = "std::map<std::string, extf_t> fmap;\n";
+	std::string libincludes = "";
+	std::string libpaths = "\"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() + "\" ";
 
 	if (!rossa::lib::libPaths.empty()) {
 		for (auto &l : rossa::lib::loaded) {
 			if (l.first == "STANDARD")
 				continue;
-			libs += "lib::loadLibrary(dir::getRuntimePath().parent_path(), \"" + l.first + "\", &t);\n";
-		}
-
-		for (auto &l : rossa::lib::libPaths) {
-			std::filesystem::copy_file(l, outputDir / l.filename().string());
+			libincludes += "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / (l.first + ".h")).string() + "\"\n";
+			libs += "fmap.clear();\n" + l.first + "_rossaExportFunctions(fmap);\nlib::loaded[\"" + l.first + "\"] = fmap;\n";
+			libpaths += "\"" + (rossa::dir::getRuntimePath().parent_path() / "include" / (l.first + ".a")).string() + "\" ";
 		}
 	}
 
 	std::cout << "[3/6]\tTranspiling code...\n";
 	std::ofstream file((rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
-	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\nusing namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(&r.main, stack_trace);\nreturn 0;\n}";
+	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "using namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
 	file.close();
 
 	std::cout << "[4/6]\tWriting executable...\n";
 #ifndef _WIN32
-	system(format::format("g++ --std=c++17 -o {1} {2} {3} -O3 -ldl -pthread", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+	system(format::format("g++ -D_STATIC_ --std=c++17 -o {1} {2} {3}-O3 -ldl -pthread", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths }).c_str());
 #else
-	system(format::format("g++ --std=c++17 -o \"{1}\" \"{2}\" \"{3}\" -O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() }).c_str());
+	std::cout << "system: " << format::format("g++ -D_STATIC_ --std=c++17 -o \"{1}\" \"{2}\" {3}-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths });
+	system(format::format("g++ -D_STATIC_ --std=c++17 -o \"{1}\" \"{2}\" {3}-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths }).c_str());
 #endif
 	std::cout << "[5/6]\tCleaning...\n";
 	std::filesystem::remove(rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
