@@ -43,7 +43,7 @@ Value::Value(const std::vector<Symbol> &valueVector)
 
 Value::Value(const sym_map_t &valueDictionary)
 	: type{ DICTIONARY }
-	, valueDictionary(valueDictionary)
+	, valueDictionary{ valueDictionary }
 {}
 
 Value::Value(const std::string &valueString)

@@ -264,6 +264,16 @@ Array::filter(ref a, ref f : Function<Any>) => {
 	return nv;
 }
 
+Array::filter(ref a, ref f : Function<Any, Number>) => {
+	nv := [];
+	for i in 0 .. a.len() do {
+		if f(a[i], i) then {
+			nv += [a[i]];
+		}
+	}
+	return nv;
+}
+
 Array::reverse(ref a) => {
 	nv := alloc(len(a));
 	for i in 0 .. len(a) do {
