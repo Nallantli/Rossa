@@ -14,7 +14,7 @@ const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check
 			auto base = values[i].getBase();
 			if (base == vt)
 				v += 3;
-			else if (base == NIL)
+			else if (base == ANY)
 				v += 1;
 			else if (check[i].getValueType() == OBJECT) {
 				if (base == OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
@@ -82,6 +82,8 @@ const std::string sig::getTypeString(const type_sll &i)
 	else {
 		switch (i) {
 			case NIL:
+				return KEYWORD_NIL_NAME;
+			case ANY:
 				return KEYWORD_ANY;
 			case NUMBER:
 				return KEYWORD_NUMBER;
@@ -265,7 +267,7 @@ const bool ParamType::operator<(const ParamType &pt) const
 // Function<Nil, Function<@extendsF<Number>, Function<String>>>
 const size_t ParamType::operator&(const ParamType &pt) const
 {
-	if (base == NIL)
+	if (base == ANY)
 		return 2;
 	if (base != pt.base && pt.base < 0)
 		return 0;

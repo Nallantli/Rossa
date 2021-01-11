@@ -182,7 +182,7 @@ const type_sll Symbol::getTypeName(const Token *token, std::vector<Function> &st
 	return d->valueType;
 }
 
-const std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> Symbol::getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const
+const f_map_t &Symbol::getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (d->type == FUNCTION)
 		return this->d->valueFunction;

@@ -234,7 +234,7 @@ ParamType NodeParser::parseParamTypeNode(const type_sll &base)
 				return logErrorPT(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
-		type_sll qbase = NIL;
+		type_sll qbase = ANY;
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
 				qbase = BOOLEAN_D;
@@ -335,9 +335,9 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		ParamType pt(NIL);
+		ParamType pt(ANY);
 		if (currentToken.type == ':') {
-			type_sll ftype = NIL;
+			type_sll ftype = ANY;
 			nextToken();
 			switch (currentToken.type) {
 				case TOK_BOOLEAN:
@@ -412,7 +412,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	}
 	nextToken();
 
-	if (start != NIL && !types.empty())
+	if (start != ANY && !types.empty())
 		types[0] = start;
 
 	return { types, args };
@@ -424,7 +424,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 
 	std::vector<hash_ull> captures;
 
-	ValueType ftype = NIL;
+	ValueType ftype = ANY;
 	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE) {
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
@@ -522,7 +522,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 {
 	nextToken();
 
-	auto sig = parseSigNode(NIL);
+	auto sig = parseSigNode(ANY);
 	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
 

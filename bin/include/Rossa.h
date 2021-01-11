@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.10.1-alpha"
+#define _ROSSA_VERSION_ "v1.10.2-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -60,6 +60,7 @@ namespace rossa
 	typedef std::map<std::string, Symbol> sym_map_t;
 	typedef const Symbol(*extf_t)(const std::vector<Symbol> &, const Token *, Hash &, std::vector<Function> &);
 	typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
+	typedef std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> f_map_t;
 
 	enum TextColor
 	{
@@ -174,7 +175,8 @@ namespace rossa
 		DICTIONARY = -7,
 		OBJECT = -8,
 		TYPE_NAME = -9,
-		POINTER = -10
+		POINTER = -10,
+		ANY = -11
 	};
 
 	enum InstructionType
@@ -554,7 +556,7 @@ namespace rossa
 		std::string valueString;
 		std::shared_ptr<void> valuePointer;
 		std::vector<Symbol> valueVector;
-		std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> valueFunction;
+		f_map_t valueFunction;
 		sym_map_t valueDictionary;
 		std::shared_ptr<Scope> valueObject;
 		refc_ull references = 1;
@@ -625,7 +627,7 @@ namespace rossa
 		const bool operator==(const Symbol &) const;
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
-		const std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const;
+		const f_map_t &getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const;
 	};
 
 	// INSTRUCTIONS -----------------------------------------------------------------------------
