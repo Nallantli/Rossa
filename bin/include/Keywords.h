@@ -49,3 +49,4 @@
 #define KEYWORD_VAR "var"
 #define KEYWORD_VIRTUAL "virtual"
 #define KEYWORD_WHILE "while"
+#define KEYWORD_ANY "Any"

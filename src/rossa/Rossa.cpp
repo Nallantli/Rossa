@@ -315,6 +315,8 @@ const int Rossa::getToken(
 			return TOK_CONTINUE;
 		else if (ID_STRING == KEYWORD_CALL_OP)
 			return TOK_CALL_OP;
+		else if (ID_STRING == KEYWORD_ANY)
+			return TOK_ANY;
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = RNumber::Double(INFINITY);
 			return TOK_NUM;
@@ -574,7 +576,15 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 		if (t.type == TOK_DEF) {
 			std::vector<Token> temp;
 			while (tokens.back().type != '(') {
-				temp.push_back(tokens.back());
+				if (tokens.back().valueString == ">>") {
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
+				} else if (tokens.back().valueString == "<<") {
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
+				} else {
+					temp.push_back(tokens.back());
+				}
 				tokens.pop_back();
 			}
 			temp.push_back(tokens.back());

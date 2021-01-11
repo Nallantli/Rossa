@@ -1,0 +1,15 @@
+levDist(ref _a, ref _b) => {
+	a := _a -> Array;
+	b := _b -> Array;
+	if a.len() == 0 then {
+		return b.len();
+	}
+	if b.len() == 0 then {
+		return a.len();
+	}
+	if a[0] == b[0] then {
+		return levDist(a.tail(), b.tail());
+	}
+
+	return 1 + math.min(math.min(levDist(a.tail(), b), levDist(a, b.tail())), levDist(a.tail(), b.tail()));
+}

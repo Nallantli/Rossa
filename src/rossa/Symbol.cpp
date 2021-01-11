@@ -2,37 +2,59 @@
 
 using namespace rossa;
 
-Symbol::Symbol() : type(ID_CASUAL), d(new Value())
+Symbol::Symbol()
+	: type{ ID_CASUAL }
+	, d{ new Value() }
 {}
 
-Symbol::Symbol(const SymbolType &type) : type(type), d(new Value())
+Symbol::Symbol(const SymbolType &type)
+	: type{ type }
+	, d{ new Value() }
 {}
 
-Symbol::Symbol(const std::shared_ptr<void> &valuePointer) : type(ID_CASUAL), d(new Value(valuePointer))
+Symbol::Symbol(const std::shared_ptr<void> &valuePointer)
+	: type{ ID_CASUAL }
+	, d{ new Value(valuePointer) }
 {}
 
-Symbol::Symbol(const type_sll &valueType) : type(ID_CASUAL), d(new Value(valueType))
+Symbol::Symbol(const type_sll &valueType)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueType) }
 {}
 
-Symbol::Symbol(const RNumber &valueNumber) : type(ID_CASUAL), d(new Value(valueNumber))
+Symbol::Symbol(const RNumber &valueNumber)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueNumber) }
 {}
 
-Symbol::Symbol(const bool &valueBool) : type(ID_CASUAL), d(new Value(valueBool))
+Symbol::Symbol(const bool &valueBool)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueBool) }
 {}
 
-Symbol::Symbol(const std::vector<Symbol> &valueVector) : type(ID_CASUAL), d(new Value(valueVector))
+Symbol::Symbol(const std::vector<Symbol> &valueVector)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueVector) }
 {}
 
-Symbol::Symbol(const std::shared_ptr<Scope> &valueObject) : type(ID_CASUAL), d(new Value(valueObject))
+Symbol::Symbol(const std::shared_ptr<Scope> &valueObject)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueObject) }
 {}
 
-Symbol::Symbol(const sig_t &ftype, const std::shared_ptr<const Function> &valueFunction) : type(ID_CASUAL), d(new Value(ftype, valueFunction))
+Symbol::Symbol(const sig_t &ftype, const std::shared_ptr<const Function> &valueFunction)
+	: type{ ID_CASUAL }
+	, d{ new Value(ftype, valueFunction) }
 {}
 
-Symbol::Symbol(const std::string &valueString) : type(ID_CASUAL), d(new Value(valueString))
+Symbol::Symbol(const std::string &valueString)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueString) }
 {}
 
-Symbol::Symbol(const sym_map_t &valueDictionary) : type(ID_CASUAL), d(new Value(valueDictionary))
+Symbol::Symbol(const sym_map_t &valueDictionary)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueDictionary) }
 {}
 
 Symbol::Symbol(const Symbol &s)
@@ -160,6 +182,15 @@ const type_sll Symbol::getTypeName(const Token *token, std::vector<Function> &st
 	return d->valueType;
 }
 
+const std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> Symbol::getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const
+{
+	if (d->type == FUNCTION)
+		return this->d->valueFunction;
+	if (d->type == OBJECT)
+		return d->valueObject->getVariable(Rossa::HASH_CALL, token, stack_trace).getFunctionOverloads(token, stack_trace);
+	throw RTError(_NOT_FUNCTION_, *token, stack_trace);
+}
+
 const std::shared_ptr<const Function> Symbol::getFunction(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
 {
 	if (d->type != FUNCTION)
@@ -167,10 +198,6 @@ const std::shared_ptr<const Function> Symbol::getFunction(const std::vector<Symb
 
 	if (d->valueFunction.find(params.size()) == d->valueFunction.end())
 		throw RTError(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
-
-	std::vector<type_sll> ftypes;
-	for (auto &e : params)
-		ftypes.push_back(e.getAugValueType());
 
 	std::map<sig_t, std::shared_ptr<const Function>> foftype = d->valueFunction[params.size()];
 	bool flag = false;
@@ -182,7 +209,7 @@ const std::shared_ptr<const Function> Symbol::getFunction(const std::vector<Symb
 			cur_v = v;
 			key = f2.first;
 			flag = true;
-			if (v == ftypes.size() * 2)
+			if (v == params.size() * 3)
 				break;
 		}
 	}

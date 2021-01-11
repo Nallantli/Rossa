@@ -218,6 +218,91 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 	return std::make_shared<CallOpNode>(id, args, marker);
 }
 
+
+ParamType NodeParser::parseParamTypeNode(const type_sll &base)
+{
+	if (base < 0 && base != FUNCTION)
+		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { sig::getTypeString(base) }), currentToken);
+
+	ParamType pt(base);
+	nextToken();
+
+	int i = 0;
+	while (currentToken.valueString != ">") {
+		if (i++ > 0) {
+			if (currentToken.type != ',')
+				return logErrorPT(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+			nextToken();
+		}
+		type_sll qbase = NIL;
+		switch (currentToken.type) {
+			case TOK_BOOLEAN:
+				qbase = BOOLEAN_D;
+				nextToken();
+				break;
+			case TOK_NUMBER:
+				qbase = NUMBER;
+				nextToken();
+				break;
+			case TOK_ARRAY:
+				qbase = ARRAY;
+				nextToken();
+				break;
+			case TOK_STRING:
+				qbase = STRING;
+				nextToken();
+				break;
+			case TOK_DICTIONARY:
+				qbase = DICTIONARY;
+				nextToken();
+				break;
+			case TOK_OBJECT:
+				qbase = OBJECT;
+				nextToken();
+				break;
+			case TOK_FUNCTION:
+				qbase = FUNCTION;
+				nextToken();
+				break;
+			case TOK_POINTER:
+				qbase = POINTER;
+				nextToken();
+				break;
+			case TOK_ANY:
+				nextToken();
+				break;
+			case TOK_TYPE_NAME:
+				qbase = TYPE_NAME;
+				nextToken();
+				break;
+			case '@':
+			{
+				nextToken();
+				std::string typestr = "";
+				while (currentToken.type == TOK_IDF) {
+					typestr += currentToken.valueString;
+					nextToken();
+					if (currentToken.type != TOK_INNER)
+						break;
+					typestr += ".";
+					nextToken();
+				}
+				qbase = ROSSA_HASH(typestr);
+				break;
+			}
+			default:
+				return logErrorPT(_EXPECTED_BASE_TYPE_, currentToken);
+		}
+		if (currentToken.valueString == "<") {
+			pt.addQualifier(parseParamTypeNode(qbase));
+		} else {
+			pt.addQualifier(ParamType(qbase));
+		}
+	}
+	nextToken();
+	return pt;
+}
+
 std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(const ValueType &start)
 {
 	if (currentToken.type != '(')
@@ -225,7 +310,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	nextToken();
 
 	std::vector<std::pair<LexerTokenType, hash_ull>> args;
-	std::vector<type_sll> types;
+	std::vector<ParamType> types;
 
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
@@ -250,8 +335,9 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		type_sll ftype = NIL;
+		ParamType pt(NIL);
 		if (currentToken.type == ':') {
+			type_sll ftype = NIL;
 			nextToken();
 			switch (currentToken.type) {
 				case TOK_BOOLEAN:
@@ -286,6 +372,9 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 					ftype = POINTER;
 					nextToken();
 					break;
+				case TOK_ANY:
+					nextToken();
+					break;
 				case TOK_TYPE_NAME:
 					ftype = TYPE_NAME;
 					nextToken();
@@ -308,10 +397,15 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 				default:
 					return logErrorSN(_EXPECTED_BASE_TYPE_, currentToken);
 			}
+			if (currentToken.valueString == "<") {
+				pt = parseParamTypeNode(ftype);
+			} else {
+				pt = ParamType(ftype);
+			}
 		}
 
 		args.push_back({ static_cast<LexerTokenType>(type), ROSSA_HASH(arg) });
-		types.push_back(ftype);
+		types.push_back(pt);
 
 		if (currentToken.type == NULL_TOK)
 			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
@@ -321,7 +415,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	if (start != NIL && !types.empty())
 		types[0] = start;
 
-	return { sig_t(types), args };
+	return { types, args };
 }
 
 std::shared_ptr<Node> NodeParser::parseDefineNode()
@@ -1435,4 +1529,10 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::l
 {
 	logErrorN(s, t);
 	return { sig_t({}), {{NULL_TOK, -1}} };
+}
+
+ParamType NodeParser::logErrorPT(const std::string &s, const Token &t)
+{
+	logErrorN(s, t);
+	return ParamType(NIL);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.9.6-alpha"
+#define _ROSSA_VERSION_ "v1.10.0-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -51,11 +51,12 @@ namespace rossa
 	class Rossa;
 	class Value;
 	class Symbol;
+	class ParamType;
 
 	typedef unsigned long long hash_ull;
 	typedef unsigned long long refc_ull;
 	typedef signed long long type_sll;
-	typedef std::vector<type_sll> sig_t;
+	typedef std::vector<ParamType> sig_t;
 	typedef std::map<std::string, Symbol> sym_map_t;
 	typedef const Symbol(*extf_t)(const std::vector<Symbol> &, const Token *, Hash &, std::vector<Function> &);
 	typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
@@ -116,7 +117,7 @@ namespace rossa
 		TOK_EXTERN_CALL = -25,
 
 		TOK_LENGTH = -26,
-		//TOK_SIZE = -27,
+		TOK_ANY = -27,
 		TOK_CLASS = -28,
 		TOK_STRUCT = -29,
 		TOK_STATIC = -30,
@@ -305,6 +306,23 @@ namespace rossa
 		const std::string toCodeString(const sig_t &);
 	}
 
+	class ParamType
+	{
+	private:
+		type_sll base;
+		std::vector<ParamType> qualifiers;
+	public:
+		ParamType(const type_sll &);
+		ParamType(const type_sll &, const std::vector<ParamType> &);
+		void addQualifier(const ParamType &);
+		const std::vector<ParamType> getQualifiers() const;
+		const type_sll getBase() const;
+		const std::string toString() const;
+		const std::string toCodeString() const;
+		const bool operator<(const ParamType &) const;
+		const size_t operator&(const ParamType &) const;
+	};
+
 	struct Token
 	{
 		std::filesystem::path filename;
@@ -448,6 +466,7 @@ namespace rossa
 		std::shared_ptr<Node> parseSwitchNode();
 		std::shared_ptr<Node> parseTryCatchNode();
 		std::shared_ptr<Node> parseTypeNode();
+		ParamType parseParamTypeNode(const type_sll &);
 		std::shared_ptr<Node> parseTrailingNode(const std::shared_ptr<Node> &, const bool &);
 		std::shared_ptr<Node> parseInsNode(const std::shared_ptr<Node> &);
 		std::shared_ptr<Node> parseUntilNode(const std::shared_ptr<Node> &, const bool &);
@@ -457,6 +476,7 @@ namespace rossa
 		std::shared_ptr<Node> parseThenNode(const std::shared_ptr<Node> &);
 
 		std::shared_ptr<Node> logErrorN(const std::string &, const Token &);
+		ParamType logErrorPT(const std::string &, const Token &);
 		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> logErrorSN(const std::string &, const Token &);
 
 	public:
@@ -534,7 +554,7 @@ namespace rossa
 		std::string valueString;
 		std::shared_ptr<void> valuePointer;
 		std::vector<Symbol> valueVector;
-		std::unordered_map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> valueFunction;
+		std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> valueFunction;
 		sym_map_t valueDictionary;
 		std::shared_ptr<Scope> valueObject;
 		refc_ull references = 1;
@@ -605,6 +625,7 @@ namespace rossa
 		const bool operator==(const Symbol &) const;
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
+		const std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const;
 	};
 
 	// INSTRUCTIONS -----------------------------------------------------------------------------

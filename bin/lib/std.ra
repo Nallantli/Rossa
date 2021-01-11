@@ -212,6 +212,24 @@ Array::shift(ref a, ref count : Number) => {
 	refer a = nv;
 }
 
+Array::tail(ref a, ref count : Number) => {
+	nv := a;
+	return nv.shift(count);
+}
+
+Array::tail(ref a) => {
+	return a.tail(1);
+}
+
+Array::head(ref a, ref count : Number) => {
+	nv := a;
+	return nv.pop(count);
+}
+
+Array::head(ref a) => {
+	return a.pop(1);
+}
+
 Array::pop(ref a) => {
 	refer pop(a, 1);
 }
@@ -220,7 +238,7 @@ Array::shift(ref a) => {
 	refer shift(a, 1);
 }
 
-Array::map(ref a, ref f : Function) => {
+Array::map(ref a, ref f : Function<Any>) => {
 	nv := a;
 	for e in nv do {
 		e = f(e);
@@ -228,7 +246,15 @@ Array::map(ref a, ref f : Function) => {
 	return nv;
 }
 
-Array::filter(ref a, ref f : Function) => {
+Array::map(ref a, ref f : Function<Any, Number>) => {
+	nv := a;
+	for i in 0 .. nv.len() do {
+		nv[i] = f(nv[i], i);
+	}
+	return nv;
+}
+
+Array::filter(ref a, ref f : Function<Any>) => {
 	nv := [];
 	for e in a do {
 		if f(e) then {
@@ -254,7 +280,7 @@ Array::empty(ref a) => {
 	return len(a) == 0;
 }
 
-Array::sort(ref a, ref comp : Function) => {
+Array::sort(ref a, ref comp : Function<Any, Any>) => {
 	if a.len() < 2 then {
 		return a;
 	}
@@ -274,22 +300,7 @@ Array::sort(ref a, ref comp : Function) => {
 }
 
 Array::sort(ref a) => {
-	if a.len() < 2 then {
-		return a;
-	}
-
-	left := [];
-	right := [];
-	pivot := a[0];
-	for i in 1 .. a.len() do {
-		if a[i] < pivot then {
-			left.push(a[i]);
-		} else {
-			right.push(a[i]);
-		}
-	}
-
-	return sort(left) + [ pivot ] + sort(right);
+	return a.sort(`<`);
 }
 
 Array::first(ref a) => {

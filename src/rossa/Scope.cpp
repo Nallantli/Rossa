@@ -2,15 +2,24 @@
 
 using namespace rossa;
 
-Scope::Scope() : parent(nullptr), type(SCOPE_O), hashed_key(0), name_trace({})
+Scope::Scope()
+	: parent{ nullptr }
+	, type{ SCOPE_O }
+	, hashed_key{ 0 }
+	//, name_trace{ {} }
 {}
 
-Scope::Scope(const std::shared_ptr<Scope> &parent, const hash_ull &key) : parent(parent), type(SCOPE_O)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const hash_ull &key)
+	: parent{ parent }
+	, type{ SCOPE_O }
 {
 	traceName(key);
 }
 
-Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &key, const std::shared_ptr<Scope> &ex, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &key, const std::shared_ptr<Scope> &ex, const std::vector<type_sll> &extensions)
+	: parent{ parent }
+	, type{ type }
+	, body{ body }
 {
 	if (ex != NULL) {
 		this->extensions = ex->extensions;
@@ -21,7 +30,12 @@ Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const
 	traceName(key);
 }
 
-Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions) : parent(parent), type(type), body(body), hashed_key(hashed_key), extensions(extensions)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions)
+	: parent{ parent }
+	, type{ type }
+	, body{ body }
+	, hashed_key{ hashed_key }
+	, extensions{ extensions }
 {}
 
 void Scope::traceName(const hash_ull &key)

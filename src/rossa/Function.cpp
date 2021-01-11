@@ -2,7 +2,12 @@
 
 using namespace rossa;
 
-Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures) : key(key), parent(parent), params(params), body(body), captures(captures)
+Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures)
+	: key{ key }
+	, parent{ parent }
+	, params{ params }
+	, body{ body }
+	, captures{ captures }
 {}
 
 const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token, std::vector<Function> &stack_trace) const

@@ -85,7 +85,12 @@ namespace libsdl
 		const hash_ull id;
 		static hash_ull id_count;
 
-		Shape(const color_t &r, const color_t &b, const color_t &g, const color_t &a) : r(r), g(g), b(b), a(a), id(id_count++)
+		Shape(const color_t &r, const color_t &b, const color_t &g, const color_t &a)
+			: r{ r }
+			, g{ g }
+			, b{ b }
+			, a{ a }
+			, id{ id_count++ }
 		{}
 
 		virtual void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) = 0;
@@ -111,7 +116,10 @@ namespace libsdl
 		int width;
 		int height;
 
-		Sizable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a), width(width), height(height)
+		Sizable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Shape(r, g, b, a)
+			, width{ width }
+			, height{ height }
 		{}
 
 		void setSize(const int &width, const int &height)
@@ -137,7 +145,8 @@ namespace libsdl
 		SDL_Point *center = NULL;
 		SDL_Rect *clip = NULL;
 
-		Rotatable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
+		Rotatable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Sizable(width, height, r, g, b, a)
 		{}
 
 		void setAngle(const double &angle)
@@ -184,7 +193,8 @@ namespace libsdl
 
 	struct Rectangle : public Sizable
 	{
-		Rectangle(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
+		Rectangle(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Sizable(width, height, r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -199,7 +209,8 @@ namespace libsdl
 
 	struct Line : public Sizable
 	{
-		Line(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Sizable(width, height, r, g, b, a)
+		Line(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Sizable(width, height, r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -213,7 +224,8 @@ namespace libsdl
 
 	struct Point : public Shape
 	{
-		Point(const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a)
+		Point(const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Shape(r, g, b, a)
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
@@ -229,7 +241,9 @@ namespace libsdl
 	{
 		Symbol image;
 
-		Texture(const Symbol &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b) : Rotatable(width, height, r, g, b, 0), image(image)
+		Texture(const Symbol &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b)
+			: Rotatable(width, height, r, g, b, 0)
+			, image{ image }
 		{}
 
 		void setImage(const Symbol &image)
@@ -295,7 +309,8 @@ namespace libsdl
 		Symbol font;
 
 	public:
-		Text(const Symbol &font, const std::string &s, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a) : Shape(r, g, b, a)
+		Text(const Symbol &font, const std::string &s, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Shape(r, g, b, a)
 		{
 			this->font = font;
 			setText(s, token, stack_trace);

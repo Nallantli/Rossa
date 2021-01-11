@@ -10,17 +10,42 @@ const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check
 	size_t v = 0;
 	for (size_t i = 0; i < values.size(); i++) {
 		type_sll vt = check[i].getAugValueType();
-		if (values[i] == vt)
-			v += 3;
-		else if (values[i] == NIL)
-			v += 1;
-		else if (check[i].getValueType() == OBJECT) {
-			if (values[i] == OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(values[i]))
-				v += 2;
+		if (values[i].getQualifiers().empty()) {
+			auto base = values[i].getBase();
+			if (base == vt)
+				v += 3;
+			else if (base == NIL)
+				v += 1;
+			else if (check[i].getValueType() == OBJECT) {
+				if (base == OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
+					v += 2;
+				else
+					return 0;
+			} else
+				return 0;
+		} else {
+			auto ql = values[i].getQualifiers();
+			auto fo = check[i].getFunctionOverloads(NULL, stack_trace);
+			if (fo.find(ql.size()) == fo.end())
+				return 0;
+			size_t flag = 0;
+			for (auto f : fo[ql.size()]) {
+				for (size_t i = 0; i < ql.size(); i++) {
+					auto val = ql[i] & f.first[i];
+					if (val > flag) {
+						flag = val;
+						if (val == 3)
+							break;
+					}
+				}
+				if (flag == 3)
+					break;
+			}
+			if (flag > 0)
+				v += flag;
 			else
 				return 0;
-		} else
-			return 0;
+		}
 	}
 	return v;
 }
@@ -32,7 +57,7 @@ const std::string sig::toCodeString(const sig_t &values)
 	for (auto &v : values) {
 		if (i++ > 0)
 			s += ", ";
-		s += "static_cast<type_sll>(" + std::to_string(v) + ")";
+		s += v.toCodeString();
 	}
 	return s + "}";
 }
@@ -44,7 +69,7 @@ const std::string sig::toString(const sig_t &values)
 	for (auto &v : values) {
 		if (i++ > 0)
 			s += ", ";
-		s += getTypeString(v);
+		s += v.toString();
 	}
 	return s + ")";
 }
@@ -166,4 +191,97 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 		throw RTError(format::format("Library `{1}` has not exported named function: {2}", { rawlibname, fname }), *token, stack_trace);
 	}
 	return loaded[rawlibname][fname];
+}
+
+ParamType::ParamType(const type_sll &base)
+	: base{ base }
+{}
+
+ParamType::ParamType(const type_sll &base, const std::vector<ParamType> &qualifiers)
+	: base{ base }
+	, qualifiers(qualifiers)
+{}
+
+void ParamType::addQualifier(const ParamType &param)
+{
+	this->qualifiers.push_back(param);
+}
+
+const std::string ParamType::toString() const
+{
+	std::string s = sig::getTypeString(base);
+	if (!qualifiers.empty()) {
+		s += "<";
+		size_t i = 0;
+		for (auto &v : qualifiers) {
+			if (i++ > 0)
+				s += ", ";
+			s += v.toString();
+		}
+		s += ">";
+	}
+	return s;
+}
+
+const std::string ParamType::toCodeString() const
+{
+	std::string s = "ParamType(static_cast<type_sll>(" + std::to_string(base) + "), ";
+	s += "{";
+	size_t i = 0;
+	for (auto &v : qualifiers) {
+		if (i++ > 0)
+			s += ", ";
+		s += v.toCodeString();
+	}
+	s += "}";
+	return s + ")";
+}
+
+const std::vector<ParamType> ParamType::getQualifiers() const
+{
+	return this->qualifiers;
+}
+
+const type_sll ParamType::getBase() const
+{
+	return this->base;
+}
+
+const bool ParamType::operator<(const ParamType &pt) const
+{
+	if (base != pt.base)
+		return base < pt.base;
+	if (qualifiers.size() != pt.qualifiers.size())
+		return qualifiers.size() < pt.qualifiers.size();
+	for (size_t i = 0; i < qualifiers.size(); i++) {
+		if (qualifiers[i] < pt.qualifiers[i])
+			return true;
+	}
+	return false;
+}
+
+// Function<Number, Function<Function, Nil>>
+// Function<Nil, Function<Function, Number>>
+// Function<Nil, Function<@extendsF<Number>, Function<String>>>
+const size_t ParamType::operator&(const ParamType &pt) const
+{
+	if (base == NIL)
+		return 2;
+	if (base != pt.base && pt.base < 0)
+		return 0;
+	if (qualifiers.empty() && pt.qualifiers.empty())
+		return 3;
+	if (qualifiers.empty() && !pt.qualifiers.empty())
+		return 2;
+	if (!qualifiers.empty() && qualifiers.size() != pt.qualifiers.size())
+		return 0;
+	size_t v = 3;
+	for (size_t i = 0; i < qualifiers.size(); i++) {
+		auto val = qualifiers[i] & pt.qualifiers[i];
+		if (val == 0)
+			return 0;
+		if (val < v)
+			v = val;
+	}
+	return v;
 }
