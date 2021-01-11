@@ -1565,6 +1565,7 @@ namespace rossa
 	namespace ops
 	{
 		const Symbol index(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol call(const std::shared_ptr<Scope> &, const std::shared_ptr<Instruction> &, const std::vector<Symbol> &, const Token *, std::vector<Function> &);
 		const Symbol untilstep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
 		const Symbol untilnostep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
 		// Arithmetic

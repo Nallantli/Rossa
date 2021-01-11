@@ -251,16 +251,16 @@ const std::string Symbol::toString(const Token *token, std::vector<Function> &st
 			return "\"" + d->valueString + "\"";
 		case FUNCTION:
 		{
-			std::string ret = "<Function:{";
+			std::string ret = "[";
 			size_t i = 0;
 			for (auto &e : d->valueFunction) {
 				for (auto &t : e.second) {
 					if (i++ > 0)
 						ret += ", ";
-					ret += sig::toString(t.first);
+					ret += "Function<" + sig::toString(t.first) + ">";
 				}
 			}
-			return ret + "}>";
+			return ret + "]";
 		}
 		case OBJECT:
 		{

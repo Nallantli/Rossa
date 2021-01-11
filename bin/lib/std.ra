@@ -36,6 +36,17 @@ parse := ((ref x) => parse(x));
 `<<`(ref a, ref b) => _call_op 18 (a, b);
 `>>`(ref a, ref b) => _call_op 19 (a, b);
 
+`()`(ref a, ref b : Array) => _call_op 20 (a, b);
+
+# CASTING
+
+`->Number`(ref a) => a -> Number;
+`->Boolean`(ref a) => a -> Boolean;
+`->String`(ref a) => a -> String;
+`->Array`(ref a) => a -> Array;
+`->Dictionary`(ref a) => a -> Dictionary;
+`->Type`(ref a) => a -> Type;
+
 # CONSOLE
 
 puts(ref s) => extern_call STANDARD._puts(s -> String);
@@ -369,6 +380,29 @@ String::parseDict(ref a) => {
 
 String::size(ref a) => extern_call STANDARD._string_size(a);
 
+String::split(ref s, ref c : Number) => s.split(chars(c));
+
+String::split(ref s, ref d : String) => {
+	if d.len() != 1 then {
+		throw "Cannot split a String where the delimiter's length is not 1";
+	}
+
+	a := (s -> Array) + [d];
+	c := "";
+	r := [];
+
+	for e in a do {
+		if e == d then {
+			r += [c];
+			c = "";
+		} else {
+			c += e;
+		}
+	}
+
+	return r;
+}
+
 # MATH
 
 static math class {
@@ -460,3 +494,5 @@ struct Thread class {
 		detach();
 	}
 }
+
+Function::split(f) => extern_call STANDARD._function_split(f);

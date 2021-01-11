@@ -1,0 +1,8 @@
+putln("Hello World".split("l"));
+
+putln("Hello World".split('l'));
+
+putln("わがはいはねこである。なまえはまだない。".split("は"));
+
+# This will throw an error
+putln("You can't split with that delim!".split("th"));

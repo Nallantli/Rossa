@@ -29,6 +29,55 @@ const Symbol ops::index(const std::shared_ptr<Scope> &scope, const Symbol &evalA
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
 }
 
+const Symbol ops::call(const std::shared_ptr<Scope> &scope, const std::shared_ptr<Instruction> &a, const std::vector<Symbol> &args, const Token *token, std::vector<Function> &stack_trace)
+{
+	switch (a->getType()) {
+		case INNER:
+		{
+			auto evalA = reinterpret_cast<InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
+			switch (evalA.getValueType()) {
+				case OBJECT:
+				{
+					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
+					return evalB.call(args, token, stack_trace);
+				}
+				case DICTIONARY:
+				{
+					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+					return evalB.call(args, token, stack_trace);
+				}
+				default:
+				{
+					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+					std::vector<Symbol> params;
+					params.push_back(evalA);
+					params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
+
+					if (evalB.getValueType() == OBJECT) {
+						auto o = evalB.getObject(token, stack_trace);
+						if (o->hasValue(Rossa::HASH_CALL))
+							return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
+					}
+
+					return evalB.call(params, token, stack_trace);
+				}
+			}
+		}
+		default:
+		{
+			auto evalA = a->evaluate(scope, stack_trace);
+
+			if (evalA.getValueType() == OBJECT) {
+				auto o = evalA.getObject(token, stack_trace);
+				if (o->hasValue(Rossa::HASH_CALL))
+					return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
+			}
+
+			return evalA.call(args, token, stack_trace);
+		}
+	}
+}
+
 const Symbol ops::untilstep(const std::shared_ptr<Scope> &scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Symbol &step, const Token *token, std::vector<Function> &stack_trace)
 {
 	switch (evalA.getValueType()) {

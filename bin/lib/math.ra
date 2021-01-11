@@ -150,9 +150,8 @@ struct Matrix class {
 `+`(ref n : Number, ref m : @Matrix) => m + n;
 `-`(ref n : Number, ref m : @Matrix) => m.rsub(n);
 `*`(ref n : Number, ref m : @Matrix) => m * n;
-`+`(ref a : Array, ref m : @Matrix) => new Matrix(a) + m;
-`-`(ref a : Array, ref m : @Matrix) => new Matrix(a) - m;
-`*`(ref a : Array, ref m : @Matrix) => new Matrix(a) * m;
+
+Array::`->@Matrix`(ref a) => new Matrix(a);
 
 v := new Matrix([2,1,0]);
 m := new Matrix([1,0;-1,-3;2,1]);

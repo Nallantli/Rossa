@@ -349,51 +349,7 @@ CallI::CallI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instru
 const Symbol CallI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
 	auto args = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-	switch (a->getType()) {
-		case INNER:
-		{
-			auto evalA = reinterpret_cast<InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
-			switch (evalA.getValueType()) {
-				case OBJECT:
-				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(&token, stack_trace), stack_trace);
-					return evalB.call(args, &token, stack_trace);
-				}
-				case DICTIONARY:
-				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
-					return evalB.call(args, &token, stack_trace);
-				}
-				default:
-				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
-					std::vector<Symbol> params;
-					params.push_back(evalA);
-					params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
-
-					if (evalB.getValueType() == OBJECT) {
-						auto o = evalB.getObject(&token, stack_trace);
-						if (o->hasValue(Rossa::HASH_CALL))
-							return o->getVariable(Rossa::HASH_CALL, &token, stack_trace).call(args, &token, stack_trace);
-					}
-
-					return evalB.call(params, &token, stack_trace);
-				}
-			}
-		}
-		default:
-		{
-			auto evalA = a->evaluate(scope, stack_trace);
-
-			if (evalA.getValueType() == OBJECT) {
-				auto o = evalA.getObject(&token, stack_trace);
-				if (o->hasValue(Rossa::HASH_CALL))
-					return o->getVariable(Rossa::HASH_CALL, &token, stack_trace).call(args, &token, stack_trace);
-			}
-
-			return evalA.call(args, &token, stack_trace);
-		}
-	}
+	return ops::call(scope, a, args, &token, stack_trace);
 }
 
 const std::string CallI::compile() const
@@ -1674,6 +1630,11 @@ const Symbol CallOpI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 			return ops::bshr(NULL,
 				children[0]->evaluate(scope, stack_trace),
 				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 20:
+			return ops::call(scope,
+				children[0],
+				children[1]->evaluate(scope, stack_trace).getVector(&token, stack_trace),
 				&token, stack_trace);
 		default:
 			return Symbol();

@@ -266,4 +266,22 @@ namespace rossa
 	{
 		return Symbol(RNumber::Long(args[0].getString(token, stack_trace).size()));
 	}
+
+	ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
+	{
+		auto f = args[0].getFunctionOverloads(token, stack_trace);
+		sym_map_t m;
+		for (auto &e : f) {
+			if (e.first == 0) {
+				m["0"] = Symbol({}, e.second.at({}));
+			} else {
+				sym_map_t m2;
+				for (auto &e2 : e.second) {
+					m2["Function<" + sig::toString(e2.first) + ">"] = Symbol(e2.first, e2.second);
+				}
+				m[std::to_string(e.first)] = Symbol(m2);
+			}
+		}
+		return Symbol(m);
+	}
 }

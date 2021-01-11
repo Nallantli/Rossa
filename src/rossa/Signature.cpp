@@ -64,14 +64,14 @@ const std::string sig::toCodeString(const sig_t &values)
 
 const std::string sig::toString(const sig_t &values)
 {
-	std::string s = "(";
+	std::string s = "";
 	size_t i = 0;
 	for (auto &v : values) {
 		if (i++ > 0)
 			s += ", ";
 		s += v.toString();
 	}
-	return s + ")";
+	return s;
 }
 
 
@@ -82,7 +82,7 @@ const std::string sig::getTypeString(const type_sll &i)
 	else {
 		switch (i) {
 			case NIL:
-				return KEYWORD_NIL_NAME;
+				return KEYWORD_ANY;
 			case NUMBER:
 				return KEYWORD_NUMBER;
 			case STRING:
