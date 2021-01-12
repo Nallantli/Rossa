@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.10.2-alpha"
+#define _ROSSA_VERSION_ "v1.10.3-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -230,8 +230,9 @@ namespace rossa
 		B_SH_L,
 		B_SH_R,
 		DECLARE_VARS_I,
-	TYPE_I,
-	CALL_OP_I
+		TYPE_I,
+		CALL_OP_I,
+		GET_THIS_I
 	};
 
 	enum ObjectType
@@ -741,6 +742,14 @@ namespace rossa
 	{
 	public:
 		VariableI(const hash_ull &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const std::string compile() const override;
+	};
+
+	class GetThisI : public CastingI
+	{
+	public:
+		GetThisI(const Token &);
 		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
 		const std::string compile() const override;
 	};

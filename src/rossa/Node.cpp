@@ -222,6 +222,8 @@ hash_ull IDNode::getKey() const
 
 std::shared_ptr<Instruction> IDNode::genParser() const
 {
+	if (key == Rossa::HASH_THIS)
+		return std::make_shared<GetThisI>(token);
 	return std::make_shared<VariableI>(key, token);
 }
 

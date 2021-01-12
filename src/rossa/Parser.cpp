@@ -81,13 +81,11 @@ const Symbol DefineI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 {
 	std::map<hash_ull, Symbol> capturedVars;
 	for (auto e : captures) {
-		capturedVars[e] = Symbol();
 		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
 	}
 	auto f = std::make_shared<Function>(key, scope, params, body, capturedVars);
 	if (key > 0) {
-		auto d = Symbol(ftype, f);
-		return scope->createVariable(key, d, &token);
+		return scope->createVariable(key, Symbol(ftype, f), &token);
 	}
 	return Symbol(ftype, f);
 }
@@ -125,12 +123,10 @@ const Symbol SequenceI::evaluate(const std::shared_ptr<Scope> &scope, std::vecto
 	std::vector<Symbol> evals;
 	for (auto &e : children) {
 		if (e->getType() == UNTIL_I) {
-			auto eval = e->evaluate(scope, stack_trace);
-			auto v = eval.getVector(&token, stack_trace);
+			auto v = e->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 			evals.insert(evals.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
 		} else {
-			auto eval = e->evaluate(scope, stack_trace);
-			evals.push_back(eval);
+			evals.push_back(e->evaluate(scope, stack_trace));
 		}
 	}
 	return Symbol(evals);
@@ -159,8 +155,7 @@ IfElseI::IfElseI(const std::shared_ptr<Instruction> &ifs, const std::shared_ptr<
 const Symbol IfElseI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
 	auto newScope = std::make_shared<Scope>(scope, 0);
-	auto evalIf = ifs->evaluate(newScope, stack_trace);
-	if (evalIf.getBool(&token, stack_trace)) {
+	if (ifs->evaluate(newScope, stack_trace).getBool(&token, stack_trace)) {
 		auto r = body->evaluate(newScope, stack_trace);
 		newScope->clear();
 		return r;
@@ -257,14 +252,31 @@ VariableI::VariableI(const hash_ull &key, const Token &token) : CastingI(VARIABL
 
 const Symbol VariableI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
-	if (key == Rossa::HASH_THIS)
-		return scope->getThis(&token, stack_trace);
+	/*if (key == Rossa::HASH_THIS)
+		return scope->getThis(&token, stack_trace);*/
 	return scope->getVariable(key, &token, stack_trace);
 }
 
 const std::string VariableI::compile() const
 {
 	return C_UNARY("VariableI", std::to_string(key));
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class GetThisI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+GetThisI::GetThisI(const Token &token) : CastingI(GET_THIS_I, key, token)
+{}
+
+const Symbol GetThisI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+{
+	return scope->getThis(&token, stack_trace);
+}
+
+const std::string GetThisI::compile() const
+{
+	return C_NONE("GetThisI");
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -348,8 +360,7 @@ CallI::CallI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instru
 
 const Symbol CallI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
-	auto args = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-	return ops::call(scope, a, args, &token, stack_trace);
+	return ops::call(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
 
 const std::string CallI::compile() const
@@ -910,10 +921,10 @@ NewI::NewI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruct
 
 const Symbol NewI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
-	auto evalA = a->evaluate(scope, stack_trace);
+	auto &evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 
-	auto base = evalA.getObject(&token, stack_trace);
+	auto &base = evalA.getObject(&token, stack_trace);
 	return base->instantiate(evalB, &token, stack_trace);
 }
 

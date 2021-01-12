@@ -23,7 +23,7 @@ const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const To
 				break;
 			default:
 			{
-				auto temp = newScope->createVariable(params[i].second, token);
+				auto &temp = newScope->createVariable(params[i].second, token);
 				temp.set(&paramValues[i], token, false, stack_trace);
 				break;
 			}
