@@ -6,7 +6,7 @@
 -----
 <div align="center">
 
-[![Code Example](misc/code.png)](test/fibonacci.ra)
+[<img src="misc/code.png" width="400">](test/fibonacci.ra)
 
 ![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg)
 
