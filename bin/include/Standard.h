@@ -184,6 +184,13 @@ namespace rossa
 		return Symbol(line);
 	}
 
+	ROSSA_EXT_SIG(_input_token, args, token, hash, stack_trace)
+	{
+		std::string tok;
+		std::cin >> tok;
+		return Symbol(tok);
+	}
+
 	ROSSA_EXT_SIG(_input_char, args, token, hash, stack_trace)
 	{
 #ifdef __unix__

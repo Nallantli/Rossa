@@ -666,4 +666,5 @@ void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 	ADD_EXT(_timeMS);
 	ADD_EXT(_string_size);
 	ADD_EXT(_function_split);
+	ADD_EXT(_input_token);
 }

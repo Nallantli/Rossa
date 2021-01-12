@@ -140,6 +140,8 @@ static cons class {
 static input class {
 	line() => extern_call STANDARD._input_line();
 
+	token() => extern_call STANDARD._input_token();
+
 	char() => extern_call STANDARD._input_char();
 }
 
