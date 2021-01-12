@@ -499,7 +499,7 @@ const Symbol ops::band(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 				break;
 			std::vector<std::string> elems;
 			for (auto &e : evalB.getVector(token, stack_trace))
-				elems.push_back(e.getString(token, stack_trace));
+				elems.push_back(e.toString(token, stack_trace));
 			return Symbol(format::format(evalA.getString(token, stack_trace), elems));
 		}
 		case OBJECT:

@@ -1,0 +1,40 @@
+load "sdl";
+
+SDL.INIT();
+
+length := 128;
+window := new SDL.Window("Pythagoras Tree", length * 6, length * 4);
+renderer := window.getRenderer();
+
+struct Point class {
+	var x, y;
+	init(ref x : Number, ref y : Number) => {
+		this.x = x;
+		this.y = y;
+	}
+}
+
+drawSquare(ref pA : @Point, ref pB : @Point, ref i : Number) => {
+	color := Color.HSL(i / 10, 1, 0.5);
+	pC := new Point(pB.x - (pA.y - pB.y), pB.y - (pB.x - pA.x));
+	pD := new Point(pA.x - (pA.y - pB.y), pA.y - (pB.x - pA.x));
+	pE := new Point(pD.x + (pB.x - pA.x - (pA.y - pB.y)) / 2, pD.y - (pB.x - pA.x + pA.y - pB.y) / 2);
+	renderer.put(new SDL.Line(pA.x, pA.y, color), pB.x, pB.y);
+	renderer.put(new SDL.Line(pC.x, pC.y, color), pB.x, pB.y);
+	renderer.put(new SDL.Line(pC.x, pC.y, color), pD.x, pD.y);
+	renderer.put(new SDL.Line(pD.x, pD.y, color), pA.x, pA.y);
+	if i > 0 then {
+		drawSquare(pD, pE, i - 1);
+		drawSquare(pE, pC, i - 1);
+	}
+}
+
+drawSquare(
+	new Point(6 * length / 2 - length / 2, 4 * length),
+	new Point(6 * length / 2 + length / 2, 4 * length),
+	10);
+
+renderer.flush();
+
+while SDL.Event.poll().type != SDL.Event.QUIT do {}
+SDL.QUIT();

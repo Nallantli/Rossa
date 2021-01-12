@@ -6,6 +6,8 @@
 -----
 <div align="center">
 
+[![Code Example](misc/code.png)](test/fibonacci.ra)
+
 ![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg)
 
 </div>
@@ -133,45 +135,3 @@ t2 := new Thread(|> f(10, 2));
 t1.join();
 t2.join();
 ```
-
------
-
-## Operators
-
-Token|Overridable?|Compound Assignment?*|Usage| Associativity|Precedence
--|-|-|-|-|-
-`a.b`|No|No|Object Indexing|Right|15
-`a -> b`|No|No|Value Casting `a` to `b`, e.g. `"1" -> Number == 1`|Left|14
-`a ** b`|Yes|Yes|Exponent|Right|13
-`a * b`|Yes|Yes|Multiplication|Left|12
-`a / b`|Yes|Yes|Division|Left|12
-`a + b`|Yes|Yes|Addition, Concatanation|Left|11
-`a - b`|Yes|Yes|Subtraction|Left|11
-`a << b`|Yes|Yes|Left Bit-shift|Left|10
-`a >> b`|Yes|Yes|Right Bit-shift|Left|10
-`a < b`|Yes|No|`a` Less Than `b`|Left|8
-`a > b`|Yes|No|`a` Greater Than `b`|Left|8
-`a <= b`|Yes|No|`a` Less Than `b` or Equal|Left|8
-`a >= b`|Yes|No|`a` Greater Than `b` or Equal|Left|8
-`a == b`|Yes|No|`a` Equals `b`|Left|7
-`a != b`|Yes|No|`a` Does Not Equal `b`|Left|7
-`a === b`|No|No|Equivalent to `==` in all cases except where `==` is overridden for an object value - this compares equivalency based on reference.|Left|7
-`a !== b`|No|No|See Above|Left|7
-`a & b`|Yes|Yes|Bit-Wise And|Left|6
-`a ^ b`|Yes|Yes|Bit-Wise XOr|Left|5
-`a \| b`|Yes|Yes|Bit-Wise Or|Left|4
-`a && b`|Yes|Yes|Logical And|Left|3
-`a \|\| b`|Yes|Yes|Logical Or|Left|2
-`a .. b`|Yes|~|Range of values from `a` to `b`|Left|1
-`a = b`|Yes|~|Value Assignment|Right|0
-`a := b`|No|~|Variable Declaration and Assignment|Right|0
-`a[b]`|Yes (via `` `[]` ``)|~|Indexing|~|~
-`a(b,...)`|Yes (via `` `()` ``)|~|Function Calling|~|~
-`!a`|No**|~|Unary Logical Negation: `a == false`|~|~
-`+a`|No**|~|Unary Addition (Superfluous in most cases): `0 + a`|~|~
-`-a`|No**|~|Unary Negation: `0 - a`|~|~
-`$a`|No|~|Returns Data Type|~|~
-
-_\* Can be used in compound-assignment operators, i.e. `a += b`. This is functionally equivalent to `a = a + b`._
-
-_\*\* The interpreter expands these operators to their binary equivalents during pre-compilation, consequently if their binary equivalents have been overridden, they too will reflect that._

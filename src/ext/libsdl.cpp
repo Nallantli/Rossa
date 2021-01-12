@@ -207,17 +207,21 @@ namespace libsdl
 		}
 	};
 
-	struct Line : public Sizable
+	struct Line : public Shape
 	{
-		Line(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
-			: Sizable(width, height, r, g, b, a)
+		int x1;
+		int y1;
+		Line(const int &x1, const int &y1, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+			: Shape(r, g, b, a)
+			, x1{ x1 }
+			, y1{ y1 }
 		{}
 
 		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RTError(format::format("Error setting shape color: {1}", { SDL_GetError() }), *token, stack_trace);
-			if (SDL_RenderDrawLine(renderer, x, y, x + width, y + height) < 0)
+			if (SDL_RenderDrawLine(renderer, x, y, x1, y1) < 0)
 				throw RTError(format::format("Error drawing shape: {1}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};

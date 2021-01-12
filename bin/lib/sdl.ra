@@ -224,7 +224,7 @@ static SDL class {
 		}
 	}
 
-	struct Line class : Sizable {
+	struct Line class : Prototype {
 		init(ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
 			ptr = (extern_call libsdl._line_init(x2, y2, r, g, b, a));
 		}

@@ -623,11 +623,9 @@ AndI::AndI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruct
 
 const Symbol AndI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
-	auto evalA = a->evaluate(scope, stack_trace);
-	if (!evalA.getBool(&token, stack_trace))
+	if (!a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(false);
-	auto evalB = b->evaluate(scope, stack_trace);
-	if (evalB.getBool(&token, stack_trace))
+	if (b->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(true);
 	return Symbol(false);
 }
@@ -646,11 +644,9 @@ OrI::OrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instructio
 
 const Symbol OrI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
 {
-	auto evalA = a->evaluate(scope, stack_trace);
-	if (evalA.getBool(&token, stack_trace))
+	if (a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(true);
-	auto evalB = b->evaluate(scope, stack_trace);
-	if (evalB.getBool(&token, stack_trace))
+	if (b->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(true);
 	return Symbol(false);
 }
