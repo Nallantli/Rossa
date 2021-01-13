@@ -9,22 +9,13 @@ ifeq ($(OS),Windows_NT)
 
 LIB_EXT=.dll
 
-BOOST_PATH_WIN=C:/boost
-SDL_PATH_WIN=C:/SDL2/x86_64-w64-mingw32
-
-BOOST_VERSION_WIN=1_74
-SUFFIX_WIN=-mgw8-mt-x64-$(BOOST_VERSION_WIN)
-
-SDL_IMAGE_PATH_WIN=C:/SDL2_image/x86_64-w64-mingw32
-SDL_TTF_PATH_WIN=C:/SDL2_ttf/x86_64-w64-mingw32
-
 CFLAGS=
 LFLAGS=-shared
 OFLAGS=$(CFLAGS)
 
-LIBNET_FLAGS=-L"$(BOOST_PATH_WIN)/lib" -I"$(BOOST_PATH_WIN)/include/boost-$(BOOST_VERSION_WIN)" -lwsock32 -lws2_32 -lboost_system$(SUFFIX_WIN)
-LIBFS_FLAGS=
-LIBSDL_FLAGS=-I"$(SDL_PATH_WIN)/include/SDL2" -I"$(SDL_IMAGE_PATH_WIN)/include/SDL2" -I"$(SDL_TTF_PATH_WIN)/include/SDL2" -L"$(SDL_PATH_WIN)/lib" -L"$(SDL_IMAGE_PATH_WIN)/lib" -L"$(SDL_TTF_PATH_WIN)/lib" -lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system-mt
+LIBFS_FLAGS=-lzip
+LIBSDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
 
 DIR=build/win/$(locale)
 
@@ -50,7 +41,7 @@ LFLAGS=-fPIC -shared -ldl -pthread
 OFLAGS=-fPIC $(CFLAGS)
 
 LIBNET_FLAGS=-lboost_system
-LIBFS_FLAGS=
+LIBFS_FLAGS=-lzip
 LIBSDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
 
 DIR=build/nix/$(locale)

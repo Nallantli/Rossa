@@ -4,64 +4,24 @@
 </div>
 
 -----
+
 <div align="center">
 
 [<img src="misc/code.png" width="400">](test/tpk.ra)
 
-![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg)
+![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
 
 </div>
 
-[Docs](https://nallantli.github.io/Rossa/#/)
-
 -----
 
-## Building
+## Building & Installation
 
-### Libraries
+See [Installation](https://nallantli.github.io/Rossa/#/Installation)
 
-There will be no downloadable binaries during the alpha stage - however everything can be built from the source rather easily.
+## Documentation
 
-Building the main interpreter requires no exteral libraries.
-
-Individual Libraries require certain libraries:
-
-*libsdl*
-
-* SDL (https://www.libsdl.org/)
-* SDL_image (https://www.libsdl.org/projects/SDL_image/)
-* SDL_ttf (https://www.libsdl.org/projects/SDL_ttf/)
-
-*libnet*
-
-* Boost (https://www.boost.org/)
-
-On Linux/OSX these libraries can be installed using a package manager. E.g. Debian-based systems:
-
-```sh
-sudo apt-get install libboost-all-dev
-sudo apt-get install libsdl2-dev
-sudo apt-get install libsdl2-image-dev
-sudo apt-get install libsdl2-ttf-dev
-```
-
-On Windows, you will have to download the development libraries from the websites above and then edit the paths in the makefile.
-
-### Cloning
-
-```sh
-git clone https://github.com/Nallantli/Rossa
-cd Rossa
-make
-```
-
-`make` can also be used with optional `locale` to specify a language. Current options are `ENG` (Default), `LAT`, `JPN`, `ITA`.
-
-e.g. `make locale=LAT`
-
-Changing the locale variable merely alters the language of the error messages.
-
-The binary will be located in `bin/` and the dll/so libraries in `bin/lib/`.
+Scant, but progressing: https://nallantli.github.io/Rossa/#/
 
 -----
 

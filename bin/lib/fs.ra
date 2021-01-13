@@ -19,6 +19,16 @@ struct Path class {
 
 	exists() => extern_call libfs._path_exists(ptr);
 
+	unzip(ref path : @Path) => {
+		extern_call libfs._path_unzip_a(ptr, path.ptr);
+		refer path;
+	}
+
+	unzip(ref path : String) => {
+		extern_call libfs._path_unzip_b(ptr, path);
+		return new Path(path);
+	}
+
 	`=`(ref a : @Path) => {
 		this.ptr = a.ptr;
 	}

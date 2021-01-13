@@ -15,5 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: update
       run: sudo apt-get update
+    - name: libzip
+      run: sudo apt-get install libzip-dev
     - name: make
       run: make dirs && make GCC="g++-10" libfs

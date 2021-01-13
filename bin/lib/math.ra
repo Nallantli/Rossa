@@ -152,6 +152,3 @@ struct Matrix class {
 `*`(ref n : Number, ref m : @Matrix) => m * n;
 
 Array::`->@Matrix`(ref a) => new Matrix(a);
-
-v := new Matrix([2,1,0]);
-m := new Matrix([1,0;-1,-3;2,1]);
