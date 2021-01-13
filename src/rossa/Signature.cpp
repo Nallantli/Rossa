@@ -2,7 +2,7 @@
 
 using namespace rossa;
 
-const size_t sig::validity(const sig_t &values, const std::vector<Symbol> &check, std::vector<Function> &stack_trace)
+const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t &stack_trace)
 {
 	if (values.size() == 0)
 		return 1;
@@ -134,7 +134,7 @@ const std::filesystem::path dir::findFile(const std::filesystem::path &currentDi
 	auto libDirCheck = getRuntimePath().parent_path() / "lib" / filename;
 	if (std::filesystem::exists(libDirCheck))
 		return libDirCheck;
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	throw RTError(format::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
 }
 
@@ -156,7 +156,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		std::string libname = rawlibname + ".so";
 		auto library = dlopen(dir::findFile(currentDir, libname, token).string().c_str(), RTLD_LAZY);
 		if (library == NULL) {
-			std::vector<Function> stack_trace;
+			trace_t stack_trace;
 			throw RTError(format::format("External library does not exist: `{1}`", { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
@@ -166,13 +166,13 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		libPaths.push_back(path);
 		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
-			std::vector<Function> stack_trace;
+			trace_t stack_trace;
 			throw RTError(format::format("External library does not exist: {1}", { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
 #endif
 		if (f == NULL) {
-			std::vector<Function> stack_trace;
+			trace_t stack_trace;
 			throw RTError(format::format("No export function found in library `{1}`", { libname }), *token, stack_trace);
 		}
 		std::map<std::string, extf_t> fns;
@@ -185,11 +185,11 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname, const Token *token)
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
-		std::vector<Function> stack_trace;
+		trace_t stack_trace;
 		throw RTError(format::format("Library has not yet been loaded into memory: {1}", { rawlibname }), *token, stack_trace);
 	}
 	if (loaded[rawlibname].find(fname) == loaded[rawlibname].end()) {
-		std::vector<Function> stack_trace;
+		trace_t stack_trace;
 		throw RTError(format::format("Library `{1}` has not exported named function: {2}", { rawlibname, fname }), *token, stack_trace);
 	}
 	return loaded[rawlibname][fname];
@@ -201,7 +201,7 @@ ParamType::ParamType(const type_sll &base)
 
 ParamType::ParamType(const type_sll &base, const std::vector<ParamType> &qualifiers)
 	: base{ base }
-	, qualifiers(qualifiers)
+	, qualifiers{ qualifiers }
 {}
 
 void ParamType::addQualifier(const ParamType &param)

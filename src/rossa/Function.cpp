@@ -10,7 +10,7 @@ Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, co
 	, captures{ captures }
 {}
 
-const Symbol Function::evaluate(const std::vector<Symbol> &paramValues, const Token *token, std::vector<Function> &stack_trace) const
+const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token, trace_t &stack_trace) const
 {
 	stack_trace.push_back(*this);
 

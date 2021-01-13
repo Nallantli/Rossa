@@ -36,7 +36,7 @@ Value::Value(const RNumber &valueNumber)
 	, valueNumber{ valueNumber }
 {}
 
-Value::Value(const std::vector<Symbol> &valueVector)
+Value::Value(const sym_vec_t &valueVector)
 	: type{ ARRAY }
 	, valueVector(valueVector)
 {}

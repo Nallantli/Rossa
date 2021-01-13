@@ -43,7 +43,7 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	loadStandardFunctions(fmap);
 	lib::loaded["STANDARD"] = fmap;
 
-	std::vector<Symbol> argv;
+	sym_vec_t argv;
 	for (auto &s : args)
 		argv.push_back(Symbol(s));
 	auto v = Symbol(argv);
@@ -117,7 +117,7 @@ const Symbol Rossa::runCode(const std::shared_ptr<Node> &entry, const bool &tree
 
 	auto g = NodeParser::genParser(entry);
 
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	return g->evaluate(main, stack_trace);
 }
 

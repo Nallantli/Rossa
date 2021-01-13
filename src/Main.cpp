@@ -135,7 +135,7 @@ static void compile(std::shared_ptr<rossa::Node> entry, const std::string &outpu
 
 	std::cout << "[3/6]\tTranspiling code...\n";
 	std::ofstream file((rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
-	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "using namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "std::vector<Function> stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
+	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "using namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "trace_t stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
 	file.close();
 
 	std::cout << "[4/6]\tWriting executable...\n";

@@ -26,7 +26,7 @@ namespace libsdl
 		SDL_Texture *image = NULL;
 
 	public:
-		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b)
+		Image(const std::string &path, const Token *token, trace_t &stack_trace, const color_t &r, const color_t &g, const color_t &b)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
@@ -34,14 +34,14 @@ namespace libsdl
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
-		Image(const std::string &path, const Token *token, std::vector<Function> &stack_trace)
+		Image(const std::string &path, const Token *token, trace_t &stack_trace)
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
 				throw RTError(format::format("Texture file `{1}` loading error: {2}", { path, IMG_GetError() }), *token, stack_trace);
 		}
 
-		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace)
+		SDL_Texture *getImage(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace)
 		{
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
@@ -66,7 +66,7 @@ namespace libsdl
 	{
 		TTF_Font *font;
 
-		Font(const std::string &path, const int &size, const Token *token, std::vector<Function> &stack_trace)
+		Font(const std::string &path, const int &size, const Token *token, trace_t &stack_trace)
 		{
 			font = TTF_OpenFont(path.c_str(), size);
 			if (font == NULL)
@@ -93,7 +93,7 @@ namespace libsdl
 			, id{ id_count++ }
 		{}
 
-		virtual void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) = 0;
+		virtual void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) = 0;
 
 		void setColor(const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 		{
@@ -197,7 +197,7 @@ namespace libsdl
 			: Sizable(width, height, r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
@@ -217,7 +217,7 @@ namespace libsdl
 			, y1{ y1 }
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RTError(format::format("Error setting shape color: {1}", { SDL_GetError() }), *token, stack_trace);
@@ -232,7 +232,7 @@ namespace libsdl
 			: Shape(r, g, b, a)
 		{}
 
-		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
 				throw RTError(format::format("Error setting shape color: {1}", { SDL_GetError() }), *token, stack_trace);
@@ -255,7 +255,7 @@ namespace libsdl
 			this->image = image;
 		}
 
-		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			auto img = COERCE_PTR(image.getPointer(token, stack_trace), Image)->getImage(renderer, token, stack_trace);
 			SDL_SetTextureColorMod(img, r, g, b);
@@ -270,7 +270,7 @@ namespace libsdl
 		SDL_Renderer *renderer = NULL;
 		std::vector<std::pair<Symbol, std::pair<int, int>>> shapes;
 
-		Renderer(SDL_Window *window, const Token *token, std::vector<Function> &stack_trace)
+		Renderer(SDL_Window *window, const Token *token, trace_t &stack_trace)
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
@@ -287,7 +287,7 @@ namespace libsdl
 			shapes.clear();
 		}
 
-		void draw(const Token *token, std::vector<Function> &stack_trace)
+		void draw(const Token *token, trace_t &stack_trace)
 		{
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
 			SDL_RenderClear(renderer);
@@ -313,14 +313,14 @@ namespace libsdl
 		Symbol font;
 
 	public:
-		Text(const Symbol &font, const std::string &s, const Token *token, std::vector<Function> &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+		Text(const Symbol &font, const std::string &s, const Token *token, trace_t &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 			: Shape(r, g, b, a)
 		{
 			this->font = font;
 			setText(s, token, stack_trace);
 		}
 
-		SDL_Texture *renderFont(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace)
+		SDL_Texture *renderFont(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace)
 		{
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
@@ -333,7 +333,7 @@ namespace libsdl
 			return image;
 		}
 
-		void setText(const std::string &s, const Token *token, std::vector<Function> &stack_trace)
+		void setText(const std::string &s, const Token *token, trace_t &stack_trace)
 		{
 			if (s == text && loaded != NULL)
 				return;
@@ -347,7 +347,7 @@ namespace libsdl
 			text = s;
 		}
 
-		void draw(SDL_Renderer *renderer, const Token *token, std::vector<Function> &stack_trace, const int &x, const int &y) override
+		void draw(SDL_Renderer *renderer, const Token *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (text == "")
 				return;
@@ -376,7 +376,7 @@ namespace libsdl
 		Uint32 windowID;
 		SDL_Window *window = NULL;
 
-		Window(const std::string &title, const int &width, const int &height, const Token *token, std::vector<Function> &stack_trace)
+		Window(const std::string &title, const int &width, const int &height, const Token *token, trace_t &stack_trace)
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
@@ -385,7 +385,7 @@ namespace libsdl
 			this->windowID = SDL_GetWindowID(window);
 		}
 
-		std::shared_ptr<Renderer> getRenderer(const Token *token, std::vector<Function> &stack_trace)
+		std::shared_ptr<Renderer> getRenderer(const Token *token, trace_t &stack_trace)
 		{
 			auto g = std::make_shared<Renderer>(window, token, stack_trace);
 			return g;
@@ -425,7 +425,7 @@ ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
 ROSSA_EXT_SIG(_window_init, args, token, hash, stack_trace)
 {
 	auto w = std::make_shared<libsdl::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
-	std::vector<Symbol> v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(RNumber::Long(w->windowID)) };
+	sym_vec_t v = { Symbol(static_cast<std::shared_ptr<void>>(w)), Symbol(RNumber::Long(w->windowID)) };
 	return Symbol(v);
 }
 

@@ -6,7 +6,9 @@ using namespace rossa;
 /*class Instruction                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-Instruction::Instruction(const InstructionType &type, const Token &token) : type(type), token(token)
+Instruction::Instruction(const InstructionType &type, const Token &token)
+	: type{ type }
+	, token{ token }
 {}
 
 InstructionType Instruction::getType() const
@@ -21,7 +23,9 @@ Instruction::~Instruction()
 /*class UnaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UnaryI::UnaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const Token &token) : Instruction(type, token), a(a)
+UnaryI::UnaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const Token &token)
+	: Instruction(type, token)
+	, a{ a }
 {}
 
 const std::shared_ptr<Instruction> UnaryI::getA() const
@@ -33,7 +37,9 @@ const std::shared_ptr<Instruction> UnaryI::getA() const
 /*class CastingI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastingI::CastingI(const InstructionType &type, const hash_ull &key, const Token &token) : Instruction(type, token), key(key)
+CastingI::CastingI(const InstructionType &type, const hash_ull &key, const Token &token)
+	: Instruction(type, token)
+	, key{ key }
 {}
 
 const hash_ull CastingI::getKey() const
@@ -45,7 +51,9 @@ const hash_ull CastingI::getKey() const
 /*class BinaryI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BinaryI::BinaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : UnaryI(type, a, token), b(b)
+BinaryI::BinaryI(const InstructionType &type, const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: UnaryI(type, a, token)
+	, b{ b }
 {}
 
 const std::shared_ptr<Instruction> BinaryI::getB() const
@@ -57,10 +65,12 @@ const std::shared_ptr<Instruction> BinaryI::getB() const
 /*class ContainerI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ContainerI::ContainerI(const Symbol &d, const Token &token) : Instruction(CONTAINER, token), d(d)
+ContainerI::ContainerI(const Symbol &d, const Token &token)
+	: Instruction(CONTAINER, token)
+	, d{ d }
 {}
 
-const Symbol ContainerI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ContainerI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	return d;
 }
@@ -74,10 +84,16 @@ const std::string ContainerI::compile() const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::vector<hash_ull> &captures, const Token &token) : Instruction(DEFINE, token), key(key), ftype(ftype), params(params), body(body), captures(captures)
+DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::vector<hash_ull> &captures, const Token &token)
+	: Instruction(DEFINE, token)
+	, key{ key }
+	, ftype{ ftype }
+	, params{ params }
+	, body{ body }
+	, captures{ captures }
 {}
 
-const Symbol DefineI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol DefineI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	std::map<hash_ull, Symbol> capturedVars;
 	for (auto e : captures) {
@@ -115,12 +131,14 @@ const std::string DefineI::compile() const
 /*class SequenceI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SequenceI::SequenceI(const std::vector<std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(SEQUENCE, token), children(children)
+SequenceI::SequenceI(const i_vec_t &children, const Token &token)
+	: Instruction(SEQUENCE, token)
+	, children{ children }
 {}
 
-const Symbol SequenceI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol SequenceI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
-	std::vector<Symbol> evals;
+	sym_vec_t evals;
 	for (auto &e : children) {
 		if (e->getType() == UNTIL_I) {
 			auto v = e->evaluate(scope, stack_trace).getVector(&token, stack_trace);
@@ -149,10 +167,14 @@ const std::string SequenceI::compile() const
 /*class IFElseI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-IfElseI::IfElseI(const std::shared_ptr<Instruction> &ifs, const std::shared_ptr<Instruction> &body, const std::shared_ptr<Instruction> &elses, const Token &token) : Instruction(IFELSE, token), ifs(ifs), body(body), elses(elses)
+IfElseI::IfElseI(const std::shared_ptr<Instruction> &ifs, const std::shared_ptr<Instruction> &body, const std::shared_ptr<Instruction> &elses, const Token &token)
+	: Instruction(IFELSE, token)
+	, ifs{ ifs }
+	, body{ body }
+	, elses{ elses }
 {}
 
-const Symbol IfElseI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol IfElseI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto newScope = std::make_shared<Scope>(scope, 0);
 	if (ifs->evaluate(newScope, stack_trace).getBool(&token, stack_trace)) {
@@ -179,25 +201,35 @@ const std::string IfElseI::compile() const
 /*class WhileI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-WhileI::WhileI(const std::shared_ptr<Instruction> &whiles, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(WHILE, token), whiles(whiles), body(body)
+WhileI::WhileI(const std::shared_ptr<Instruction> &whiles, const i_vec_t &body, const Token &token)
+	: Instruction(WHILE, token)
+	, whiles{ whiles }
+	, body{ body }
 {}
 
-const Symbol WhileI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol WhileI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	while (whiles->evaluate(scope, stack_trace).getBool(&token, stack_trace)) {
 		auto newScope = std::make_shared<Scope>(scope, 0);
-		auto temp = body->evaluate(newScope, stack_trace);
-		newScope->clear();
-		switch (temp.getSymbolType()) {
-			case ID_REFER:
-			case ID_RETURN:
-				return temp;
-			case ID_BREAK:
-				return Symbol();
-			case ID_CONTINUE:
+		for (auto &i : body) {
+			auto temp = i->evaluate(newScope, stack_trace);
+			bool cflag = false;
+			switch (temp.getSymbolType()) {
+				case ID_REFER:
+				case ID_RETURN:
+					newScope->clear();
+					return temp;
+				case ID_BREAK:
+					newScope->clear();
+					return Symbol();
+				case ID_CONTINUE:
+					cflag = true;
+					break;
+				default:
+					break;
+			}
+			if (cflag)
 				continue;
-			default:
-				break;
 		}
 	}
 	return Symbol();
@@ -205,52 +237,81 @@ const Symbol WhileI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<F
 
 const std::string WhileI::compile() const
 {
-	return C_BINARY("WhileI", whiles->compile(), body->compile());
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : body) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+	return C_BINARY("WhileI", whiles->compile(), ca);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ForI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ForI::ForI(const hash_ull &id, const std::shared_ptr<Instruction> &fors, const std::shared_ptr<Instruction> &body, const Token &token) : Instruction(FOR, token), id(id), fors(fors), body(body)
+ForI::ForI(const hash_ull &id, const std::shared_ptr<Instruction> &fors, const i_vec_t &body, const Token &token)
+	: Instruction(FOR, token)
+	, id{ id }
+	, fors{ fors }
+	, body{ body }
 {}
 
-const Symbol ForI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ForI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalFor = fors->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 	for (auto &e : evalFor) {
 		auto newScope = std::make_shared<Scope>(scope, 0);
 		newScope->createVariable(id, e, &token);
-		auto temp = body->evaluate(newScope, stack_trace);
-		newScope->clear();
-		switch (temp.getSymbolType()) {
-			case ID_REFER:
-			case ID_RETURN:
-				return temp;
-			case ID_BREAK:
-				return Symbol();
-			case ID_CONTINUE:
+		bool cflag = false;
+		for (auto &i : body) {
+			auto temp = i->evaluate(newScope, stack_trace);
+			switch (temp.getSymbolType()) {
+				case ID_REFER:
+				case ID_RETURN:
+					newScope->clear();
+					return temp;
+				case ID_BREAK:
+					newScope->clear();
+					return Symbol();
+				case ID_CONTINUE:
+					cflag = true;
+					break;
+				default:
+					break;
+			}
+			if (cflag)
 				continue;
-			default:
-				break;
 		}
+		newScope->clear();
 	}
 	return Symbol();
 }
 
 const std::string ForI::compile() const
 {
-	return C_TRINARY("ForI", std::to_string(id), fors->compile(), body->compile());
+	std::string ca = "{";
+	size_t i = 0;
+	for (auto &e : body) {
+		if (i++ > 0)
+			ca += ", ";
+		ca += e->compile();
+	}
+	ca += "}";
+	return C_TRINARY("ForI", std::to_string(id), fors->compile(), ca);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class VariableI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-VariableI::VariableI(const hash_ull &key, const Token &token) : CastingI(VARIABLE, key, token)
+VariableI::VariableI(const hash_ull &key, const Token &token)
+	: CastingI(VARIABLE, key, token)
 {}
 
-const Symbol VariableI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol VariableI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	/*if (key == Rossa::HASH_THIS)
 		return scope->getThis(&token, stack_trace);*/
@@ -266,10 +327,11 @@ const std::string VariableI::compile() const
 /*class GetThisI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-GetThisI::GetThisI(const Token &token) : CastingI(GET_THIS_I, key, token)
+GetThisI::GetThisI(const Token &token)
+	: CastingI(GET_THIS_I, key, token)
 {}
 
-const Symbol GetThisI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol GetThisI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	return scope->getThis(&token, stack_trace);
 }
@@ -283,10 +345,14 @@ const std::string GetThisI::compile() const
 /*class DeclareI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeclareI::DeclareI(const hash_ull &key, const type_sll &vtype, const std::shared_ptr<Instruction> &a, const bool &isConst, const Token &token) : CastingI(DECLARE, key, token), vtype(vtype), a(a), isConst(isConst)
+DeclareI::DeclareI(const hash_ull &key, const type_sll &vtype, const std::shared_ptr<Instruction> &a, const bool &isConst, const Token &token)
+	: CastingI(DECLARE, key, token)
+	, vtype{ vtype }
+	, a{ a }
+	, isConst{ isConst }
 {}
 
-const Symbol DeclareI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol DeclareI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto v = scope->createVariable(key, &token);
 	auto evalA = a->evaluate(scope, stack_trace);
@@ -303,10 +369,11 @@ const std::string DeclareI::compile() const
 /*class IndexI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-IndexI::IndexI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(INDEX, a, b, token)
+IndexI::IndexI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(INDEX, a, b, token)
 {}
 
-const Symbol IndexI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol IndexI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -323,10 +390,11 @@ const std::string IndexI::compile() const
 /*class InnerI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-InnerI::InnerI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(INNER, a, b, token)
+InnerI::InnerI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(INNER, a, b, token)
 {}
 
-const Symbol InnerI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol InnerI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
@@ -355,10 +423,11 @@ const std::string InnerI::compile() const
 /*class CallI                                                                                            */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CallI::CallI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(INDEX, a, b, token)
+CallI::CallI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(INDEX, a, b, token)
 {}
 
-const Symbol CallI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol CallI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	return ops::call(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
@@ -372,10 +441,11 @@ const std::string CallI::compile() const
 /*class AddI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AddI::AddI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(ADD, a, b, token)
+AddI::AddI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(ADD, a, b, token)
 {}
 
-const Symbol AddI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol AddI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -392,10 +462,11 @@ const std::string AddI::compile() const
 /*class SubI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SubI::SubI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(SUB, a, b, token)
+SubI::SubI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(SUB, a, b, token)
 {}
 
-const Symbol SubI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol SubI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -412,10 +483,11 @@ const std::string SubI::compile() const
 /*class MulI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MulI::MulI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(MUL, a, b, token)
+MulI::MulI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(MUL, a, b, token)
 {}
 
-const Symbol MulI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol MulI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -432,10 +504,11 @@ const std::string MulI::compile() const
 /*class DivI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DivI::DivI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(DIV, a, b, token)
+DivI::DivI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(DIV, a, b, token)
 {}
 
-const Symbol DivI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol DivI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -452,10 +525,11 @@ const std::string DivI::compile() const
 /*class ModI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ModI::ModI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(MOD, a, b, token)
+ModI::ModI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(MOD, a, b, token)
 {}
 
-const Symbol ModI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ModI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -472,10 +546,11 @@ const std::string ModI::compile() const
 /*class PowI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PowI::PowI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(POW_I, a, b, token)
+PowI::PowI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(POW_I, a, b, token)
 {}
 
-const Symbol PowI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol PowI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -492,10 +567,11 @@ const std::string PowI::compile() const
 /*class LessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-LessI::LessI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(LESS, a, b, token)
+LessI::LessI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(LESS, a, b, token)
 {}
 
-const Symbol LessI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol LessI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -512,10 +588,11 @@ const std::string LessI::compile() const
 /*class MoreI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MoreI::MoreI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(MORE, a, b, token)
+MoreI::MoreI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(MORE, a, b, token)
 {}
 
-const Symbol MoreI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol MoreI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -532,10 +609,11 @@ const std::string MoreI::compile() const
 /*class ELessI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ELessI::ELessI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(ELESS, a, b, token)
+ELessI::ELessI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(ELESS, a, b, token)
 {}
 
-const Symbol ELessI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ELessI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -552,10 +630,11 @@ const std::string ELessI::compile() const
 /*class EMoreI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-EMoreI::EMoreI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(EMORE, a, b, token)
+EMoreI::EMoreI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(EMORE, a, b, token)
 {}
 
-const Symbol EMoreI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol EMoreI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -572,10 +651,11 @@ const std::string EMoreI::compile() const
 /*class EqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-EqualsI::EqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(EQUALS, a, b, token)
+EqualsI::EqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(EQUALS, a, b, token)
 {}
 
-const Symbol EqualsI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol EqualsI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -595,10 +675,11 @@ const std::string EqualsI::compile() const
 /*class NEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-NEqualsI::NEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(NEQUALS, a, b, token)
+NEqualsI::NEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(NEQUALS, a, b, token)
 {}
 
-const Symbol NEqualsI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol NEqualsI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -618,10 +699,11 @@ const std::string NEqualsI::compile() const
 /*class AndI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AndI::AndI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(AND, a, b, token)
+AndI::AndI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(AND, a, b, token)
 {}
 
-const Symbol AndI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol AndI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	if (!a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(false);
@@ -639,10 +721,11 @@ const std::string AndI::compile() const
 /*class OrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-OrI::OrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(OR, a, b, token)
+OrI::OrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(OR, a, b, token)
 {}
 
-const Symbol OrI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol OrI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	if (a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return Symbol(true);
@@ -660,10 +743,11 @@ const std::string OrI::compile() const
 /*class BOrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BOrI::BOrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(B_OR, a, b, token)
+BOrI::BOrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(B_OR, a, b, token)
 {}
 
-const Symbol BOrI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol BOrI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -680,10 +764,11 @@ const std::string BOrI::compile() const
 /*class BXOrI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BXOrI::BXOrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(B_XOR, a, b, token)
+BXOrI::BXOrI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(B_XOR, a, b, token)
 {}
 
-const Symbol BXOrI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol BXOrI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -700,10 +785,11 @@ const std::string BXOrI::compile() const
 /*class BAndI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BAndI::BAndI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(B_AND, a, b, token)
+BAndI::BAndI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(B_AND, a, b, token)
 {}
 
-const Symbol BAndI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol BAndI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -720,10 +806,11 @@ const std::string BAndI::compile() const
 /*class BShiftLeftI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftLeftI::BShiftLeftI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(B_SH_L, a, b, token)
+BShiftLeftI::BShiftLeftI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(B_SH_L, a, b, token)
 {}
 
-const Symbol BShiftLeftI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol BShiftLeftI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -740,10 +827,11 @@ const std::string BShiftLeftI::compile() const
 /*class BShiftRightI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-BShiftRightI::BShiftRightI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(B_SH_R, a, b, token)
+BShiftRightI::BShiftRightI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(B_SH_R, a, b, token)
 {}
 
-const Symbol BShiftRightI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol BShiftRightI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -760,10 +848,12 @@ const std::string BShiftRightI::compile() const
 /*class SetI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SetI::SetI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const bool &isConst, const Token &token) : BinaryI(SET, a, b, token), isConst(isConst)
+SetI::SetI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const bool &isConst, const Token &token)
+	: BinaryI(SET, a, b, token)
+	, isConst{ isConst }
 {}
 
-const Symbol SetI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol SetI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -789,10 +879,11 @@ const std::string SetI::compile() const
 /*class ReturnI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ReturnI::ReturnI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(RETURN, a, token)
+ReturnI::ReturnI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(RETURN, a, token)
 {}
 
-const Symbol ReturnI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ReturnI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	evalA.setSymbolType(ID_RETURN);
@@ -808,12 +899,15 @@ const std::string ReturnI::compile() const
 /*class ExternI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ExternI::ExternI(const std::string &libname, const std::string &fname, const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(EXTERN, a, token), libname(libname), fname(fname)
+ExternI::ExternI(const std::string &libname, const std::string &fname, const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(EXTERN, a, token)
+	, libname{ libname }
+	, fname{ fname }
 {
 	this->f = rossa::lib::loadFunction(libname, fname, &token);
 }
 
-const Symbol ExternI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ExternI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Rossa::MAIN_HASH, stack_trace);
 }
@@ -827,10 +921,11 @@ const std::string ExternI::compile() const
 /*class LengthI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-LengthI::LengthI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(LENGTH, a, token)
+LengthI::LengthI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(LENGTH, a, token)
 {}
 
-const Symbol LengthI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol LengthI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
@@ -871,10 +966,15 @@ const std::string LengthI::compile() const
 /*class ClassI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ClassI::ClassI(const hash_ull &key, const ObjectType &type, const std::shared_ptr<Instruction> &body, const std::shared_ptr<Instruction> &extends, const Token &token) : Instruction(CLASS_I, token), key(key), type(type), body(body), extends(extends)
+ClassI::ClassI(const hash_ull &key, const ObjectType &type, const std::shared_ptr<Instruction> &body, const std::shared_ptr<Instruction> &extends, const Token &token)
+	: Instruction(CLASS_I, token)
+	, key{ key }
+	, type{ type }
+	, body{ body }
+	, extends{ extends }
 {}
 
-const Symbol ClassI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ClassI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	std::shared_ptr<Instruction> nbody = body;
 	std::shared_ptr<Scope> o;
@@ -889,7 +989,7 @@ const Symbol ClassI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<F
 			if (ex->getType() == STATIC_O)
 				throw RTError(_FAILURE_EXTEND_, token, stack_trace);
 			auto eb = ex->getBody();
-			std::vector<std::shared_ptr<Instruction>> temp;
+			i_vec_t temp;
 			temp.push_back(body);
 			temp.push_back(eb);
 			nbody = std::make_shared<ScopeI>(temp, token);
@@ -912,10 +1012,11 @@ const std::string ClassI::compile() const
 /*class NewI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-NewI::NewI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(NEW_I, a, b, token)
+NewI::NewI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(NEW_I, a, b, token)
 {}
 
-const Symbol NewI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol NewI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto &evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
@@ -933,10 +1034,11 @@ const std::string NewI::compile() const
 /*class CastToI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CastToI::CastToI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(CAST_TO_I, a, b, token)
+CastToI::CastToI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(CAST_TO_I, a, b, token)
 {}
 
-const Symbol CastToI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol CastToI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
@@ -979,7 +1081,7 @@ const Symbol CastToI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 				case ARRAY:
 				{
 					std::string str = evalA.getString(&token, stack_trace);
-					std::vector<Symbol> nv;
+					sym_vec_t nv;
 					int last = 0;
 					int c, i, ix, q, s;
 					for (q = 0, i = 0, ix = str.size(); i < ix; i++, q++) {
@@ -1073,9 +1175,9 @@ const Symbol CastToI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<
 				case ARRAY:
 				{
 					auto dict = evalA.getDictionary(&token, stack_trace);
-					std::vector<Symbol> nv;
+					sym_vec_t nv;
 					for (auto &e : dict) {
-						std::vector<Symbol> l = { Symbol(e.first), e.second };
+						sym_vec_t l = { Symbol(e.first), e.second };
 						nv.push_back(Symbol(l));
 					}
 					return Symbol(nv);
@@ -1124,10 +1226,11 @@ const std::string CastToI::compile() const
 /*class AllocI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AllocI::AllocI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(ALLOC_I, a, token)
+AllocI::AllocI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(ALLOC_I, a, token)
 {}
 
-const Symbol AllocI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol AllocI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace).getNumber(&token, stack_trace).getLong();
 	if (evalA < 0)
@@ -1144,10 +1247,13 @@ const std::string AllocI::compile() const
 /*class UntilI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UntilI::UntilI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const std::shared_ptr<Instruction> &step, const bool &inclusive, const Token &token) : BinaryI(UNTIL_I, a, b, token), step(step), inclusive(inclusive)
+UntilI::UntilI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const std::shared_ptr<Instruction> &step, const bool &inclusive, const Token &token)
+	: BinaryI(UNTIL_I, a, b, token)
+	, step(step)
+	, inclusive{ inclusive }
 {}
 
-const Symbol UntilI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol UntilI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -1170,10 +1276,12 @@ const std::string UntilI::compile() const
 /*class ScopeI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ScopeI::ScopeI(const std::vector<std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(SCOPE_I, token), children(children)
+ScopeI::ScopeI(const i_vec_t &children, const Token &token)
+	: Instruction(SCOPE_I, token)
+	, children{ children }
 {}
 
-const Symbol ScopeI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ScopeI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	for (auto &e : children) {
 		auto eval = e->evaluate(scope, stack_trace);
@@ -1200,10 +1308,12 @@ const std::string ScopeI::compile() const
 /*class MapI                                                                                             */
 /*-------------------------------------------------------------------------------------------------------*/
 
-MapI::MapI(const std::map<std::string, std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(MAP_I, token), children(children)
+MapI::MapI(const std::map<std::string, std::shared_ptr<Instruction>> &children, const Token &token)
+	: Instruction(MAP_I, token)
+	, children{ children }
 {}
 
-const Symbol MapI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol MapI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	sym_map_t evals;
 	for (auto &e : children) {
@@ -1232,10 +1342,11 @@ const std::string MapI::compile() const
 /*class ReferI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ReferI::ReferI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(REFER_I, a, token)
+ReferI::ReferI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(REFER_I, a, token)
 {}
 
-const Symbol ReferI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ReferI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	evalA.setSymbolType(ID_REFER);
@@ -1251,10 +1362,16 @@ const std::string ReferI::compile() const
 /*class SwitchI                                                                                          */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SwitchI::SwitchI(const std::shared_ptr<Instruction> &switchs, const std::map<Symbol, size_t> &cases_solved, const std::map<std::shared_ptr<Instruction>, size_t> &cases_unsolved, const std::vector<std::shared_ptr<Instruction>> &cases, const std::shared_ptr<Instruction> &elses, const Token &token) : Instruction(SWITCH_I, token), switchs(switchs), cases_solved(cases_solved), cases_unsolved(cases_unsolved), cases(cases), elses(elses)
+SwitchI::SwitchI(const std::shared_ptr<Instruction> &switchs, const std::map<Symbol, size_t> &cases_solved, const std::map<std::shared_ptr<Instruction>, size_t> &cases_unsolved, const i_vec_t &cases, const std::shared_ptr<Instruction> &elses, const Token &token)
+	: Instruction(SWITCH_I, token)
+	, switchs{ switchs }
+	, cases_solved{ cases_solved }
+	, cases_unsolved{ cases_unsolved }
+	, cases{ cases }
+	, elses{ elses }
 {}
 
-const Symbol SwitchI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol SwitchI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto newScope = std::make_shared<Scope>(scope, 0);
 	auto eval = switchs->evaluate(newScope, stack_trace);
@@ -1322,10 +1439,12 @@ const std::string SwitchI::compile() const
 /*class TryCatchI                                                                                        */
 /*-------------------------------------------------------------------------------------------------------*/
 
-TryCatchI::TryCatchI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const hash_ull &key, const Token &token) : BinaryI(TRY_CATCH_I, a, b, token), key(key)
+TryCatchI::TryCatchI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const hash_ull &key, const Token &token)
+	: BinaryI(TRY_CATCH_I, a, b, token)
+	, key{ key }
 {}
 
-const Symbol TryCatchI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol TryCatchI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	try {
 		auto newScope = std::make_shared<Scope>(scope, 0);
@@ -1350,10 +1469,11 @@ const std::string TryCatchI::compile() const
 /*class ThrowI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ThrowI::ThrowI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(THROW_I, a, token)
+ThrowI::ThrowI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(THROW_I, a, token)
 {}
 
-const Symbol ThrowI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ThrowI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	throw RTError(evalA.getString(&token, stack_trace), token, stack_trace);
@@ -1369,10 +1489,11 @@ const std::string ThrowI::compile() const
 /*class PureEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureEqualsI::PureEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(PURE_EQUALS, a, b, token)
+PureEqualsI::PureEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(PURE_EQUALS, a, b, token)
 {}
 
-const Symbol PureEqualsI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol PureEqualsI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -1388,10 +1509,11 @@ const std::string PureEqualsI::compile() const
 /*class PureNEqualsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-PureNEqualsI::PureNEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token) : BinaryI(PURE_NEQUALS, a, b, token)
+PureNEqualsI::PureNEqualsI(const std::shared_ptr<Instruction> &a, const std::shared_ptr<Instruction> &b, const Token &token)
+	: BinaryI(PURE_NEQUALS, a, b, token)
 {}
 
-const Symbol PureNEqualsI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol PureNEqualsI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	auto evalB = b->evaluate(scope, stack_trace);
@@ -1407,13 +1529,14 @@ const std::string PureNEqualsI::compile() const
 /*class CharNI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CharNI::CharNI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(CHARN_I, a, token)
+CharNI::CharNI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(CHARN_I, a, token)
 {}
 
-const Symbol CharNI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol CharNI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
-	std::vector<Symbol> nv;
+	sym_vec_t nv;
 	for (const unsigned char &c : evalA)
 		nv.push_back(Symbol(RNumber::Long(c)));
 	return Symbol(nv);
@@ -1428,10 +1551,11 @@ const std::string CharNI::compile() const
 /*class CharSI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CharSI::CharSI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(CHARS_I, a, token)
+CharSI::CharSI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(CHARS_I, a, token)
 {}
 
-const Symbol CharSI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol CharSI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
@@ -1459,12 +1583,14 @@ const std::string CharSI::compile() const
 /*class DeclareVarsI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeclareVarsI::DeclareVarsI(const std::vector<hash_ull> &keys, const Token &token) : Instruction(DECLARE_VARS_I, token), keys(keys)
+DeclareVarsI::DeclareVarsI(const std::vector<hash_ull> &keys, const Token &token)
+	: Instruction(DECLARE_VARS_I, token)
+	, keys{ keys }
 {}
 
-const Symbol DeclareVarsI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol DeclareVarsI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
-	std::vector<Symbol> newvs;
+	sym_vec_t newvs;
 	for (auto &k : keys)
 		newvs.push_back(scope->createVariable(k, &token));
 	return Symbol(newvs);
@@ -1487,10 +1613,11 @@ const std::string DeclareVarsI::compile() const
 /*class ParseI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ParseI::ParseI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(ALLOC_I, a, token)
+ParseI::ParseI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(ALLOC_I, a, token)
 {}
 
-const Symbol ParseI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol ParseI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
@@ -1508,10 +1635,11 @@ const std::string ParseI::compile() const
 /*class TypeI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-TypeI::TypeI(const std::shared_ptr<Instruction> &a, const Token &token) : UnaryI(TYPE_I, a, token)
+TypeI::TypeI(const std::shared_ptr<Instruction> &a, const Token &token)
+	: UnaryI(TYPE_I, a, token)
 {}
 
-const Symbol TypeI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol TypeI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	auto evalA = a->evaluate(scope, stack_trace);
 	return Symbol(evalA.getAugValueType());
@@ -1526,10 +1654,13 @@ const std::string TypeI::compile() const
 /*class CallOpI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-CallOpI::CallOpI(const size_t &id, const std::vector<std::shared_ptr<Instruction>> &children, const Token &token) : Instruction(CALL_OP_I, token), id(id), children(children)
+CallOpI::CallOpI(const size_t &id, const i_vec_t &children, const Token &token)
+	: Instruction(CALL_OP_I, token)
+	, id{ id }
+	, children{ children }
 {}
 
-const Symbol CallOpI::evaluate(const std::shared_ptr<Scope> &scope, std::vector<Function> &stack_trace) const
+const Symbol CallOpI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
 {
 	switch (id) {
 		case 0:

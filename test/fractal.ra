@@ -1,0 +1,32 @@
+load "sdl";
+
+SDL.INIT();
+
+window := new SDL.Window("Fractal Tree", 700, 500);
+renderer := window.getRenderer();
+
+drawBranch(ref x : Number, ref y : Number, ref a : Number, ref size : Number, ref afl : Number, ref afr : Number, ref sf : Number, ref i : Number) => {
+	color := Color.HSL(i / 13, 1, 0.5);
+	ca := math.cos(a) * size;
+	sa := math.sin(a) * size;
+	renderer.put(new SDL.Line(x + ca, y + sa, color), x, y);
+	if i > 0 then {
+		drawBranch(x + ca, y + sa, a + afl, size * sf, afl, afr, sf, i - 1);
+		drawBranch(x + ca, y + sa, a + afr, size * sf, afl, afr, sf, i - 1);
+	}
+}
+
+drawBranch(
+	370,
+	500,
+	-math.PI / 2,
+	150,
+	0.5,
+	-1,
+	(2 ** (1/2)) / 2,
+	13);
+
+renderer.flush();
+
+while SDL.Event.poll().type != SDL.Event.QUIT do {}
+SDL.QUIT();

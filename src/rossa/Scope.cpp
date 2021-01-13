@@ -57,7 +57,7 @@ void Scope::traceName(const hash_ull &key)
 	}
 }
 
-const Symbol Scope::instantiate(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
+const Symbol Scope::instantiate(const sym_vec_t &params, const Token *token, trace_t &stack_trace) const
 {
 	if (type != STRUCT_O)
 		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
@@ -74,7 +74,7 @@ const hash_ull Scope::getHashedKey() const
 	return hashed_key;
 }
 
-const Symbol &Scope::getVariable(const hash_ull &key, const Token *token, std::vector<Function> &stack_trace) const
+const Symbol &Scope::getVariable(const hash_ull &key, const Token *token, trace_t &stack_trace) const
 {
 	if (values.find(key) != values.end())
 		return values.at(key);
@@ -124,7 +124,7 @@ const std::shared_ptr<Instruction> Scope::getBody() const
 {
 	return body;
 }
-const Symbol Scope::getThis(const Token *token, std::vector<Function> &stack_trace)
+const Symbol Scope::getThis(const Token *token, trace_t &stack_trace)
 {
 	if (type != SCOPE_O)
 		return Symbol(shared_from_this());
@@ -142,7 +142,7 @@ const bool Scope::hasValue(const hash_ull &key) const
 Scope::~Scope()
 {
 	if (hasValue(Rossa::HASH_DELETER)) {
-		std::vector<Function> stack_trace;
+		trace_t stack_trace;
 		values[Rossa::HASH_DELETER].call({}, NULL, stack_trace);
 	}
 }

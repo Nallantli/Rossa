@@ -20,7 +20,7 @@ drawSquare(ref pA : @Point, ref pB : @Point, ref i : Number) => {
 	pD := new Point(pA.x - (pA.y - pB.y), pA.y - (pB.x - pA.x));
 	pE := new Point(pD.x + (pB.x - pA.x - (pA.y - pB.y)) / 2, pD.y - (pB.x - pA.x + pA.y - pB.y) / 2);
 	renderer.put(new SDL.Line(pA.x, pA.y, color), pB.x, pB.y);
-	renderer.put(new SDL.Line(pC.x, pC.y, color), pB.x, pB.y);
+	renderer.put(new SDL.Line(pB.x, pB.y, color), pC.x, pC.y);
 	renderer.put(new SDL.Line(pC.x, pC.y, color), pD.x, pD.y);
 	renderer.put(new SDL.Line(pD.x, pD.y, color), pA.x, pA.y);
 	if i > 0 then {

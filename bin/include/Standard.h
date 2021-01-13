@@ -18,7 +18,7 @@ namespace rossa
 {
 	inline void threadWrapper(const std::shared_ptr<const Function> &f)
 	{
-		std::vector<Function> stack_trace;
+		trace_t stack_trace;
 		try {
 			f->evaluate({}, NULL, stack_trace);
 		} catch (const RTError &e) {
@@ -211,7 +211,7 @@ namespace rossa
 	{
 		std::regex r(args[0].getString(token, stack_trace));
 		std::string s = args[1].getString(token, stack_trace);
-		std::vector<Symbol> v;
+		sym_vec_t v;
 		for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++) {
 			std::string m = (*i).str();
 			v.push_back(Symbol(m));

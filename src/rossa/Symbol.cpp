@@ -32,7 +32,7 @@ Symbol::Symbol(const bool &valueBool)
 	, d{ new Value(valueBool) }
 {}
 
-Symbol::Symbol(const std::vector<Symbol> &valueVector)
+Symbol::Symbol(const sym_vec_t &valueVector)
 	: type{ ID_CASUAL }
 	, d{ new Value(valueVector) }
 {}
@@ -100,21 +100,21 @@ void Symbol::setSymbolType(const SymbolType &type)
 	this->type = type;
 }
 
-const RNumber &Symbol::getNumber(const Token *token, std::vector<Function> &stack_trace) const
+const RNumber &Symbol::getNumber(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != NUMBER)
 		throw RTError(_NOT_NUMBER_, *token, stack_trace);
 	return d->valueNumber;
 }
 
-void *Symbol::getPointer(const Token *token, std::vector<Function> &stack_trace) const
+void *Symbol::getPointer(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != POINTER)
 		throw RTError(_NOT_POINTER_, *token, stack_trace);
 	return d->valuePointer.get();
 }
 
-const sym_map_t &Symbol::getDictionary(const Token *token, std::vector<Function> &stack_trace) const
+const sym_map_t &Symbol::getDictionary(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != DICTIONARY)
 		throw RTError(_NOT_DICTIONARY_, *token, stack_trace);
@@ -128,35 +128,35 @@ const sym_map_t &Symbol::getDictionary(const Token *token, std::vector<Function>
 	return d->valueDictionary;
 }
 
-const Symbol &Symbol::indexVector(const size_t &i, const Token *token, std::vector<Function> &stack_trace) const
+const Symbol &Symbol::indexVector(const size_t &i, const Token *token, trace_t &stack_trace) const
 {
 	if (i >= d->valueVector.size())
 		throw RTError(format::format(_INDEX_OUT_OF_BOUNDS_, { std::to_string(d->valueVector.size()), std::to_string(i) }), *token, stack_trace);
 	return d->valueVector[i];
 }
 
-const std::vector<Symbol> &Symbol::getVector(const Token *token, std::vector<Function> &stack_trace) const
+const sym_vec_t &Symbol::getVector(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != ARRAY)
 		throw RTError(_NOT_VECTOR_, *token, stack_trace);
 	return d->valueVector;
 }
 
-const std::string &Symbol::getString(const Token *token, std::vector<Function> &stack_trace) const
+const std::string &Symbol::getString(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != STRING)
 		throw RTError(_NOT_STRING_, *token, stack_trace);
 	return d->valueString;
 }
 
-const bool Symbol::getBool(const Token *token, std::vector<Function> &stack_trace) const
+const bool Symbol::getBool(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != BOOLEAN_D)
 		throw RTError(_NOT_BOOLEAN_, *token, stack_trace);
 	return d->valueBool;
 }
 
-const std::shared_ptr<Scope> &Symbol::getObject(const Token *token, std::vector<Function> &stack_trace) const
+const std::shared_ptr<Scope> &Symbol::getObject(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != OBJECT)
 		throw RTError(_NOT_OBJECT_, *token, stack_trace);
@@ -175,14 +175,14 @@ const type_sll Symbol::getAugValueType() const
 	return d->type;
 }
 
-const type_sll Symbol::getTypeName(const Token *token, std::vector<Function> &stack_trace) const
+const type_sll Symbol::getTypeName(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != TYPE_NAME)
 		throw RTError(_NOT_TYPE_, *token, stack_trace);
 	return d->valueType;
 }
 
-const f_map_t &Symbol::getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const
+const f_map_t &Symbol::getFunctionOverloads(const Token *token, trace_t &stack_trace) const
 {
 	if (d->type == FUNCTION)
 		return this->d->valueFunction;
@@ -191,7 +191,7 @@ const f_map_t &Symbol::getFunctionOverloads(const Token *token, std::vector<Func
 	throw RTError(_NOT_FUNCTION_, *token, stack_trace);
 }
 
-const std::shared_ptr<const Function> Symbol::getFunction(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
+const std::shared_ptr<const Function> Symbol::getFunction(const sym_vec_t &params, const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != FUNCTION)
 		throw RTError(_NOT_FUNCTION_, *token, stack_trace);
@@ -235,12 +235,12 @@ const size_t Symbol::vectorSize() const
 	return d->valueVector.size();
 }
 
-const size_t Symbol::dictionarySize(const Token *token, std::vector<Function> &stack_trace) const
+const size_t Symbol::dictionarySize(const Token *token, trace_t &stack_trace) const
 {
 	return getDictionary(token, stack_trace).size();
 }
 
-const std::string Symbol::toString(const Token *token, std::vector<Function> &stack_trace) const
+const std::string Symbol::toString(const Token *token, trace_t &stack_trace) const
 {
 	switch (d->type) {
 		case NIL:
@@ -334,7 +334,7 @@ const std::string Symbol::toCodeString() const
 	if (type != ID_CASUAL) {
 		return "Symbol(static_cast<SymbolType>(" + std::to_string(type) + "))";
 	}
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	switch (d->type) {
 		case NIL:
 			return "Symbol()";
@@ -362,7 +362,7 @@ const std::string Symbol::toCodeString() const
 			return "Symbol(" + std::string(d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE) + ")";
 		case ARRAY:
 		{
-			std::string ret = "Symbol(std::vector<Symbol>({";
+			std::string ret = "Symbol(sym_vec_t({";
 			unsigned int i = 0;
 			for (auto &d2 : d->valueVector) {
 				if (i > 0)
@@ -391,7 +391,7 @@ const std::string Symbol::toCodeString() const
 	}
 }
 
-const Symbol Symbol::call(const std::vector<Symbol> &params, const Token *token, std::vector<Function> &stack_trace) const
+const Symbol Symbol::call(const sym_vec_t &params, const Token *token, trace_t &stack_trace) const
 {
 	return getFunction(params, token, stack_trace)->evaluate(params, token, stack_trace);
 }
@@ -404,7 +404,7 @@ void Symbol::addFunctions(const Symbol *b, const Token *token) const
 			d->valueFunction[f.first][t.first] = t.second;
 }
 
-void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, std::vector<Function> &stack_trace) const
+void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, trace_t &stack_trace) const
 {
 	if (b->d == d)
 		return;
@@ -469,7 +469,7 @@ void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, std::
 	}
 }
 
-const bool Symbol::equals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
+const bool Symbol::equals(const Symbol *b, const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != b->d->type && d->type != OBJECT)
 		return false;
@@ -512,7 +512,7 @@ const bool Symbol::equals(const Symbol *b, const Token *token, std::vector<Funct
 	}
 }
 
-const bool Symbol::nequals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
+const bool Symbol::nequals(const Symbol *b, const Token *token, trace_t &stack_trace) const
 {
 	switch (d->type) {
 		case OBJECT:
@@ -526,7 +526,7 @@ const bool Symbol::nequals(const Symbol *b, const Token *token, std::vector<Func
 	}
 }
 
-const bool Symbol::pureEquals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
+const bool Symbol::pureEquals(const Symbol *b, const Token *token, trace_t &stack_trace) const
 {
 	switch (d->type) {
 		case OBJECT:
@@ -536,20 +536,20 @@ const bool Symbol::pureEquals(const Symbol *b, const Token *token, std::vector<F
 	}
 }
 
-const bool Symbol::pureNEquals(const Symbol *b, const Token *token, std::vector<Function> &stack_trace) const
+const bool Symbol::pureNEquals(const Symbol *b, const Token *token, trace_t &stack_trace) const
 {
 	return !this->pureEquals(b, token, stack_trace);
 }
 
 const bool Symbol::operator==(const Symbol &b) const
 {
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	return this->equals(&b, NULL, stack_trace);
 }
 
 const bool Symbol::operator!=(const Symbol &b) const
 {
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	return this->nequals(&b, NULL, stack_trace);
 }
 

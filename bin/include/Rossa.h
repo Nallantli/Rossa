@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.10.3-alpha"
+#define _ROSSA_VERSION_ "v1.10.4-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <filesystem>
 
-#define ROSSA_EXT_SIG(name, args, token, hash, stack_trace) inline const Symbol name(const std::vector<Symbol> &args, const Token *token, Hash &hash, std::vector<Function> &stack_trace)
+#define ROSSA_EXT_SIG(name, args, token, hash, stack_trace) inline const Symbol name(const sym_vec_t &args, const Token *token, Hash &hash, trace_t &stack_trace)
 #define ADD_EXT(name) fmap[#name] = name
 
 #ifndef _WIN32
@@ -56,9 +56,13 @@ namespace rossa
 	typedef unsigned long long hash_ull;
 	typedef unsigned long long refc_ull;
 	typedef signed long long type_sll;
+	typedef std::vector<Function> trace_t;
+	typedef std::vector<Symbol> sym_vec_t;
 	typedef std::vector<ParamType> sig_t;
+	typedef std::vector<std::shared_ptr<Node>> node_vec_t;
+	typedef std::vector<std::shared_ptr<Instruction>> i_vec_t;
 	typedef std::map<std::string, Symbol> sym_map_t;
-	typedef const Symbol(*extf_t)(const std::vector<Symbol> &, const Token *, Hash &, std::vector<Function> &);
+	typedef const Symbol(*extf_t)(const sym_vec_t &, const Token *, Hash &, trace_t &);
 	typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
 	typedef std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> f_map_t;
 
@@ -230,9 +234,9 @@ namespace rossa
 		B_SH_L,
 		B_SH_R,
 		DECLARE_VARS_I,
-		TYPE_I,
-		CALL_OP_I,
-		GET_THIS_I
+	TYPE_I,
+	CALL_OP_I,
+	GET_THIS_I
 	};
 
 	enum ObjectType
@@ -303,7 +307,7 @@ namespace rossa
 
 	namespace sig
 	{
-		const size_t validity(const sig_t &, const std::vector<Symbol> &, std::vector<Function> &stack_trace);
+		const size_t validity(const sig_t &, const sym_vec_t &, trace_t &stack_trace);
 		const std::string toString(const sig_t &);
 		const std::string getTypeString(const type_sll &);
 		const std::string toCodeString(const sig_t &);
@@ -341,12 +345,12 @@ namespace rossa
 	{
 	private:
 		const Token token;
-		const std::vector<Function> stack_trace;
+		const trace_t stack_trace;
 
 	public:
-		RTError(const std::string &, const Token &, const std::vector<Function> &);
+		RTError(const std::string &, const Token &, const trace_t &);
 		const Token &getToken() const;
-		const std::vector<Function> &getTrace() const;
+		const trace_t &getTrace() const;
 	};
 
 	class Instruction
@@ -357,7 +361,7 @@ namespace rossa
 
 	public:
 		Instruction(const InstructionType &, const Token &);
-		virtual const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const = 0;
+		virtual const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const = 0;
 		InstructionType getType() const;
 		virtual const std::string compile() const = 0;
 		virtual ~Instruction();
@@ -374,7 +378,7 @@ namespace rossa
 
 	public:
 		Function(const hash_ull &, const std::shared_ptr<Scope> &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::map<hash_ull, Symbol> &);
-		const Symbol evaluate(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
+		const Symbol evaluate(const sym_vec_t &, const Token *, trace_t &) const;
 		const size_t getArgSize() const;
 		const hash_ull getKey() const;
 		const std::shared_ptr<Scope> &getParent() const;
@@ -399,13 +403,13 @@ namespace rossa
 		Scope(const std::shared_ptr<Scope> &, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::shared_ptr<Scope> &, const std::vector<type_sll> &);
 		Scope(const std::shared_ptr<Scope> &, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::vector<type_sll> &);
 		const std::shared_ptr<Scope> &getParent() const;
-		const Symbol instantiate(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
+		const Symbol instantiate(const sym_vec_t &, const Token *, trace_t &) const;
 		void clear();
-		const Symbol getThis(const Token *, std::vector<Function> &);
+		const Symbol getThis(const Token *, trace_t &);
 		const bool extendsObject(const type_sll &) const;
 		const ObjectType getType() const;
 		const std::shared_ptr<Instruction> getBody() const;
-		const Symbol &getVariable(const hash_ull &, const Token *, std::vector<Function> &) const;
+		const Symbol &getVariable(const hash_ull &, const Token *, trace_t &) const;
 		const Symbol &createVariable(const hash_ull &, const Token *);
 		const Symbol &createVariable(const hash_ull &, const Symbol &, const Token *);
 		const hash_ull getHashedKey() const;
@@ -556,7 +560,7 @@ namespace rossa
 
 		std::string valueString;
 		std::shared_ptr<void> valuePointer;
-		std::vector<Symbol> valueVector;
+		sym_vec_t valueVector;
 		f_map_t valueFunction;
 		sym_map_t valueDictionary;
 		std::shared_ptr<Scope> valueObject;
@@ -569,7 +573,7 @@ namespace rossa
 		Value(const std::shared_ptr<Scope> &);
 		Value(const sig_t &, const std::shared_ptr<const Function> &);
 		Value(const RNumber &);
-		Value(const std::vector<Symbol> &);
+		Value(const sym_vec_t &);
 		Value(const sym_map_t &);
 		Value(const std::string &);
 		void clearData();
@@ -588,7 +592,7 @@ namespace rossa
 		Symbol(const type_sll &);
 		Symbol(const RNumber &);
 		Symbol(const bool &);
-		Symbol(const std::vector<Symbol> &);
+		Symbol(const sym_vec_t &);
 		Symbol(const std::shared_ptr<Scope> &);
 		Symbol(const sig_t &, const std::shared_ptr<const Function> &);
 		Symbol(const std::string &);
@@ -600,35 +604,35 @@ namespace rossa
 		static const Symbol allocate(const size_t &);
 		const SymbolType getSymbolType() const;
 		void setSymbolType(const SymbolType &);
-		const RNumber &getNumber(const Token *, std::vector<Function> &) const;
-		void *getPointer(const Token *, std::vector<Function> &) const;
-		const sym_map_t &getDictionary(const Token *, std::vector<Function> &) const;
-		const Symbol &indexVector(const size_t &, const Token *, std::vector<Function> &) const;
-		const std::vector<Symbol> &getVector(const Token *, std::vector<Function> &) const;
-		const std::string &getString(const Token *, std::vector<Function> &) const;
-		const bool getBool(const Token *, std::vector<Function> &) const;
-		const std::shared_ptr<Scope> &getObject(const Token *, std::vector<Function> &) const;
+		const RNumber &getNumber(const Token *, trace_t &) const;
+		void *getPointer(const Token *, trace_t &) const;
+		const sym_map_t &getDictionary(const Token *, trace_t &) const;
+		const Symbol &indexVector(const size_t &, const Token *, trace_t &) const;
+		const sym_vec_t &getVector(const Token *, trace_t &) const;
+		const std::string &getString(const Token *, trace_t &) const;
+		const bool getBool(const Token *, trace_t &) const;
+		const std::shared_ptr<Scope> &getObject(const Token *, trace_t &) const;
 		const ValueType getValueType() const;
 		const type_sll getAugValueType() const;
-		const type_sll getTypeName(const Token *, std::vector<Function> &) const;
-		const std::shared_ptr<const Function> getFunction(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
+		const type_sll getTypeName(const Token *, trace_t &) const;
+		const std::shared_ptr<const Function> getFunction(const sym_vec_t &, const Token *, trace_t &) const;
 		const Symbol &indexDict(const std::string &) const;
 		const bool hasDictionaryKey(const std::string &) const;
 		const size_t vectorSize() const;
-		const size_t dictionarySize(const Token *, std::vector<Function> &) const;
-		const std::string toString(const Token *, std::vector<Function> &) const;
+		const size_t dictionarySize(const Token *, trace_t &) const;
+		const std::string toString(const Token *, trace_t &) const;
 		const std::string toCodeString() const;
-		const Symbol call(const std::vector<Symbol> &, const Token *, std::vector<Function> &) const;
+		const Symbol call(const sym_vec_t &, const Token *, trace_t &) const;
 		void addFunctions(const Symbol *, const Token *) const;
-		void set(const Symbol *, const Token *, const bool &, std::vector<Function> &) const;
-		const bool equals(const Symbol *, const Token *, std::vector<Function> &) const;
-		const bool nequals(const Symbol *, const Token *, std::vector<Function> &) const;
-		const bool pureEquals(const Symbol *, const Token *, std::vector<Function> &) const;
-		const bool pureNEquals(const Symbol *, const Token *, std::vector<Function> &) const;
+		void set(const Symbol *, const Token *, const bool &, trace_t &) const;
+		const bool equals(const Symbol *, const Token *, trace_t &) const;
+		const bool nequals(const Symbol *, const Token *, trace_t &) const;
+		const bool pureEquals(const Symbol *, const Token *, trace_t &) const;
+		const bool pureNEquals(const Symbol *, const Token *, trace_t &) const;
 		const bool operator==(const Symbol &) const;
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
-		const f_map_t &getFunctionOverloads(const Token *token, std::vector<Function> &stack_trace) const;
+		const f_map_t &getFunctionOverloads(const Token *token, trace_t &stack_trace) const;
 	};
 
 	// INSTRUCTIONS -----------------------------------------------------------------------------
@@ -670,7 +674,7 @@ namespace rossa
 
 	public:
 		ContainerI(const Symbol &d, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -685,18 +689,18 @@ namespace rossa
 
 	public:
 		DefineI(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::vector<hash_ull> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
 	class SequenceI : public Instruction
 	{
 	protected:
-		const std::vector<std::shared_ptr<Instruction>> children;
+		const i_vec_t children;
 
 	public:
-		SequenceI(const std::vector<std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		SequenceI(const i_vec_t &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -709,7 +713,7 @@ namespace rossa
 
 	public:
 		IfElseI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -717,11 +721,11 @@ namespace rossa
 	{
 	protected:
 		const std::shared_ptr<Instruction> whiles;
-		const std::shared_ptr<Instruction> body;
+		const i_vec_t body;
 
 	public:
-		WhileI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		WhileI(const std::shared_ptr<Instruction> &, const i_vec_t &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -730,11 +734,11 @@ namespace rossa
 	protected:
 		const hash_ull id;
 		const std::shared_ptr<Instruction> fors;
-		const std::shared_ptr<Instruction> body;
+		const i_vec_t body;
 
 	public:
-		ForI(const hash_ull &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		ForI(const hash_ull &, const std::shared_ptr<Instruction> &, const i_vec_t &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -742,7 +746,7 @@ namespace rossa
 	{
 	public:
 		VariableI(const hash_ull &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -750,7 +754,7 @@ namespace rossa
 	{
 	public:
 		GetThisI(const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -763,7 +767,7 @@ namespace rossa
 
 	public:
 		DeclareI(const hash_ull &, const type_sll &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -771,7 +775,7 @@ namespace rossa
 	{
 	public:
 		IndexI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -779,7 +783,7 @@ namespace rossa
 	{
 	public:
 		InnerI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -787,7 +791,7 @@ namespace rossa
 	{
 	public:
 		CallI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -795,7 +799,7 @@ namespace rossa
 	{
 	public:
 		AddI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -803,7 +807,7 @@ namespace rossa
 	{
 	public:
 		SubI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -811,7 +815,7 @@ namespace rossa
 	{
 	public:
 		MulI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -819,7 +823,7 @@ namespace rossa
 	{
 	public:
 		DivI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -827,7 +831,7 @@ namespace rossa
 	{
 	public:
 		ModI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -835,7 +839,7 @@ namespace rossa
 	{
 	public:
 		PowI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -843,7 +847,7 @@ namespace rossa
 	{
 	public:
 		LessI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -851,7 +855,7 @@ namespace rossa
 	{
 	public:
 		MoreI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -859,7 +863,7 @@ namespace rossa
 	{
 	public:
 		ELessI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -867,7 +871,7 @@ namespace rossa
 	{
 	public:
 		EMoreI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -875,7 +879,7 @@ namespace rossa
 	{
 	public:
 		EqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -883,7 +887,7 @@ namespace rossa
 	{
 	public:
 		NEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -891,7 +895,7 @@ namespace rossa
 	{
 	public:
 		AndI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -899,7 +903,7 @@ namespace rossa
 	{
 	public:
 		OrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -907,7 +911,7 @@ namespace rossa
 	{
 	public:
 		BOrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -915,7 +919,7 @@ namespace rossa
 	{
 	public:
 		BAndI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -923,7 +927,7 @@ namespace rossa
 	{
 	public:
 		BXOrI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -931,7 +935,7 @@ namespace rossa
 	{
 	public:
 		BShiftLeftI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -939,7 +943,7 @@ namespace rossa
 	{
 	public:
 		BShiftRightI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -950,7 +954,7 @@ namespace rossa
 
 	public:
 		SetI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -958,7 +962,7 @@ namespace rossa
 	{
 	public:
 		ReturnI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -971,7 +975,7 @@ namespace rossa
 
 	public:
 		ExternI(const std::string &, const std::string &, const std::shared_ptr<Instruction> &a, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -979,7 +983,7 @@ namespace rossa
 	{
 	public:
 		LengthI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -993,7 +997,7 @@ namespace rossa
 
 	public:
 		ClassI(const hash_ull &, const ObjectType &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1001,7 +1005,7 @@ namespace rossa
 	{
 	public:
 		NewI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1009,7 +1013,7 @@ namespace rossa
 	{
 	public:
 		CastToI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1017,7 +1021,7 @@ namespace rossa
 	{
 	public:
 		AllocI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1029,18 +1033,18 @@ namespace rossa
 
 	public:
 		UntilI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const bool &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
 	class ScopeI : public Instruction
 	{
 	protected:
-		const std::vector<std::shared_ptr<Instruction>> children;
+		const i_vec_t children;
 
 	public:
-		ScopeI(const std::vector<std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		ScopeI(const i_vec_t &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1051,7 +1055,7 @@ namespace rossa
 
 	public:
 		MapI(const std::map<std::string, std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1059,7 +1063,7 @@ namespace rossa
 	{
 	public:
 		ReferI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1069,12 +1073,12 @@ namespace rossa
 		const std::shared_ptr<Instruction> switchs;
 		const std::map<Symbol, size_t> cases_solved;
 		const std::map<std::shared_ptr<Instruction>, size_t> cases_unsolved;
-		const std::vector<std::shared_ptr<Instruction>> cases;
+		const i_vec_t cases;
 		const std::shared_ptr<Instruction> elses;
 
 	public:
-		SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, size_t> &, const std::map<std::shared_ptr<Instruction>, size_t> &, const std::vector<std::shared_ptr<Instruction>> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		SwitchI(const std::shared_ptr<Instruction> &, const std::map<Symbol, size_t> &, const std::map<std::shared_ptr<Instruction>, size_t> &, const i_vec_t &, const std::shared_ptr<Instruction> &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1085,7 +1089,7 @@ namespace rossa
 
 	public:
 		TryCatchI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const hash_ull &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1093,7 +1097,7 @@ namespace rossa
 	{
 	public:
 		ThrowI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1101,7 +1105,7 @@ namespace rossa
 	{
 	public:
 		PureEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1109,7 +1113,7 @@ namespace rossa
 	{
 	public:
 		PureNEqualsI(const std::shared_ptr<Instruction> &, const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1117,7 +1121,7 @@ namespace rossa
 	{
 	public:
 		CharNI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1125,7 +1129,7 @@ namespace rossa
 	{
 	public:
 		CharSI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1136,7 +1140,7 @@ namespace rossa
 
 	public:
 		DeclareVarsI(const std::vector<hash_ull> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1144,7 +1148,7 @@ namespace rossa
 	{
 	public:
 		ParseI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1152,7 +1156,7 @@ namespace rossa
 	{
 	public:
 		TypeI(const std::shared_ptr<Instruction> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1160,11 +1164,11 @@ namespace rossa
 	{
 	protected:
 		const size_t id;
-		const std::vector<std::shared_ptr<Instruction>> children;
+		const i_vec_t children;
 
 	public:
-		CallOpI(const size_t &, const std::vector<std::shared_ptr<Instruction>> &, const Token &);
-		const Symbol evaluate(const std::shared_ptr<Scope> &, std::vector<Function> &) const override;
+		CallOpI(const size_t &, const i_vec_t &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
 
@@ -1186,16 +1190,16 @@ namespace rossa
 	class VectorNode : public Node
 	{
 	private:
-		const std::vector<std::shared_ptr<Node>> args;
+		const node_vec_t args;
 		bool scoped;
 
 	public:
-		VectorNode(const std::vector<std::shared_ptr<Node>> &, const bool &, const Token &);
+		VectorNode(const node_vec_t &, const bool &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
 		std::shared_ptr<Node> fold() const override;
-		const std::vector<std::shared_ptr<Node>> &getChildren();
+		const node_vec_t &getChildren();
 	};
 
 	class BreakNode : public Node
@@ -1282,11 +1286,11 @@ namespace rossa
 	private:
 		const hash_ull key;
 		const int type;
-		const std::vector<std::shared_ptr<Node>> body;
+		const node_vec_t body;
 		const std::shared_ptr<Node> extends;
 
 	public:
-		ClassNode(const hash_ull &, const int &, const std::vector<std::shared_ptr<Node>> &, const std::shared_ptr<Node> &, const Token &);
+		ClassNode(const hash_ull &, const int &, const node_vec_t &, const std::shared_ptr<Node> &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1310,13 +1314,13 @@ namespace rossa
 	{
 	private:
 		const std::shared_ptr<Node> callee;
-		const std::vector<std::shared_ptr<Node>> args;
+		const node_vec_t args;
 
 	public:
-		CallNode(const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		CallNode(const std::shared_ptr<Node> &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		std::shared_ptr<Node> getCallee();
-		std::vector<std::shared_ptr<Node>> getArgs();
+		node_vec_t getArgs();
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
 		std::shared_ptr<Node> fold() const override;
@@ -1327,10 +1331,10 @@ namespace rossa
 	private:
 		const std::string libname;
 		const std::string fname;
-		const std::vector<std::shared_ptr<Node>> args;
+		const node_vec_t args;
 
 	public:
-		ExternCallNode(const std::string &, const std::string &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		ExternCallNode(const std::string &, const std::string &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1460,10 +1464,10 @@ namespace rossa
 	{
 	private:
 		const std::shared_ptr<Node> whiles;
-		const std::vector<std::shared_ptr<Node>> body;
+		const node_vec_t body;
 
 	public:
-		WhileNode(const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		WhileNode(const std::shared_ptr<Node> &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1475,10 +1479,10 @@ namespace rossa
 	private:
 		hash_ull id;
 		std::shared_ptr<Node> fors;
-		std::vector<std::shared_ptr<Node>> body;
+		node_vec_t body;
 
 	public:
-		ForNode(const hash_ull &, const std::shared_ptr<Node> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		ForNode(const hash_ull &, const std::shared_ptr<Node> &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1519,11 +1523,11 @@ namespace rossa
 	private:
 		const std::shared_ptr<Node> switchs;
 		const std::map<std::shared_ptr<Node>, size_t> cases;
-		const std::vector<std::shared_ptr<Node>> gotos;
+		const node_vec_t gotos;
 		std::shared_ptr<Node> elses;
 
 	public:
-		SwitchNode(const std::shared_ptr<Node> &, const std::map<std::shared_ptr<Node>, size_t> &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		SwitchNode(const std::shared_ptr<Node> &, const std::map<std::shared_ptr<Node>, size_t> &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		void setElse(const std::shared_ptr<Node> &);
 		bool isConst() const override;
@@ -1563,10 +1567,10 @@ namespace rossa
 	{
 	private:
 		const size_t id;
-		const std::vector<std::shared_ptr<Node>> args;
+		const node_vec_t args;
 
 	public:
-		CallOpNode(const size_t &, const std::vector<std::shared_ptr<Node>> &, const Token &);
+		CallOpNode(const size_t &, const node_vec_t &, const Token &);
 		std::shared_ptr<Instruction> genParser() const override;
 		bool isConst() const override;
 		std::stringstream printTree(std::string, bool) const override;
@@ -1575,28 +1579,28 @@ namespace rossa
 
 	namespace ops
 	{
-		const Symbol index(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol call(const std::shared_ptr<Scope> &, const std::shared_ptr<Instruction> &, const std::vector<Symbol> &, const Token *, std::vector<Function> &);
-		const Symbol untilstep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol untilnostep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol index(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol call(const std::shared_ptr<Scope> &, const std::shared_ptr<Instruction> &, const sym_vec_t &, const Token *, trace_t &);
+		const Symbol untilstep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol untilnostep(const std::shared_ptr<Scope> &, const bool &, const Symbol &, const Symbol &, const Token *, trace_t &);
 		// Arithmetic
-		const Symbol add(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol sub(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol mul(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol div(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol mod(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol pow(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol add(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol sub(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol mul(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol div(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol mod(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol pow(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
 		// Comparison
-		const Symbol less(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol more(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol eless(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol emore(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol less(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol more(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol eless(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol emore(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
 		// Bit-Wise
-		const Symbol bor(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol bxor(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol band(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol bshl(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
-		const Symbol bshr(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, std::vector<Function> &);
+		const Symbol bor(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol bxor(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol band(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol bshl(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
+		const Symbol bshr(const std::shared_ptr<Scope> &, const Symbol &, const Symbol &, const Token *, trace_t &);
 	}
 
 	namespace dir

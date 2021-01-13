@@ -50,7 +50,7 @@ std::shared_ptr<Node> NodeParser::parseBIDNode()
 
 std::shared_ptr<Node> NodeParser::parseEntryNode()
 {
-	std::vector<std::shared_ptr<Node>> v;
+	node_vec_t v;
 	while (currentToken.type != NULL_TOK)
 		v.push_back(parseExprNode());
 	return std::make_shared<VectorNode>(v, false, currentToken);
@@ -97,7 +97,7 @@ std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> args;
+	node_vec_t args;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
 		if (i > 0) {
@@ -166,7 +166,7 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
-	std::vector<std::shared_ptr<Node>> args;
+	node_vec_t args;
 	int i = 0;
 	while (currentToken.type != ')') {
 		if (i > 0) {
@@ -198,7 +198,7 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
-	std::vector<std::shared_ptr<Node>> args;
+	node_vec_t args;
 	int i = 0;
 	while (currentToken.type != ')') {
 		if (i > 0) {
@@ -484,7 +484,7 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 
 		return std::make_shared<DefineNode>(key, sig.first, sig.second, body, captures, currentToken);
 	} else {
-		std::vector<std::shared_ptr<Node>> vbody;
+		node_vec_t vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -558,7 +558,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 
 		return std::make_shared<DefineNode>(0, sig.first, sig.second, body, captures, currentToken);
 	} else {
-		std::vector<std::shared_ptr<Node>> vbody;
+		node_vec_t vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -595,7 +595,7 @@ std::shared_ptr<Node> NodeParser::parseNPLambdaNode()
 
 		return std::make_shared<DefineNode>(0, sig, p, body, c, currentToken);
 	} else {
-		std::vector<std::shared_ptr<Node>> vbody;
+		node_vec_t vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -819,8 +819,8 @@ std::shared_ptr<Node> NodeParser::parseUnOpNode()
 std::shared_ptr<Node> NodeParser::parseVectorNode()
 {
 	nextToken();
-	std::vector<std::shared_ptr<Node>> args;
-	std::vector<std::shared_ptr<Node>> curr;
+	node_vec_t args;
+	node_vec_t curr;
 	bool flag = false;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ']') {
@@ -891,7 +891,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 {
 	nextToken();
 	std::map<std::shared_ptr<Node>, size_t> cases;
-	std::vector<std::shared_ptr<Node>> gotos;
+	node_vec_t gotos;
 
 	auto switchs = parseEquNode();
 	if (!switchs)
@@ -908,7 +908,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 			return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CASE }), currentToken);
 		nextToken();
 
-		std::vector<std::shared_ptr<Node>> keys;
+		node_vec_t keys;
 
 		size_t i = 0;
 		while (currentToken.type != NULL_TOK) {
@@ -942,7 +942,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 			gotos.push_back(eq);
 		} else {
 			nextToken();
-			std::vector<std::shared_ptr<Node>> body;
+			node_vec_t body;
 			while (currentToken.type != NULL_TOK) {
 				if (currentToken.type == '}')
 					break;
@@ -975,7 +975,7 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 		if (currentToken.type != '{')
 			return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 		nextToken();
-		std::vector<std::shared_ptr<Node>> elses;
+		node_vec_t elses;
 		while (currentToken.type != NULL_TOK) {
 			if (currentToken.type == '}')
 				break;
@@ -1127,7 +1127,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> body;
+	node_vec_t body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1158,7 +1158,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 			if (currentToken.type != '{')
 				return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 			nextToken();
-			std::vector<std::shared_ptr<Node>> elses;
+			node_vec_t elses;
 			while (currentToken.type != NULL_TOK) {
 				if (currentToken.type == '}')
 					break;
@@ -1193,7 +1193,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> tbody;
+	node_vec_t tbody;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1223,7 +1223,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> cbody;
+	node_vec_t cbody;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1256,7 +1256,7 @@ std::shared_ptr<Node> NodeParser::parseWhileNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> body;
+	node_vec_t body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1292,7 +1292,7 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> body;
+	node_vec_t body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1343,7 +1343,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 	if (currentToken.type != '{')
 		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	std::vector<std::shared_ptr<Node>> body;
+	node_vec_t body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1517,7 +1517,7 @@ std::shared_ptr<Instruction> NodeParser::genParser(const std::shared_ptr<Node> &
 
 std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token &t)
 {
-	std::vector<Function> stack_trace;
+	trace_t stack_trace;
 	if (t.type == NULL_TOK)
 		throw RTError(s, tokens.at(index - 1), stack_trace);
 	else
