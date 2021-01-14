@@ -47,6 +47,11 @@ Symbol::Symbol(const sig_t &ftype, const std::shared_ptr<const Function> &valueF
 	, d{ new Value(ftype, valueFunction) }
 {}
 
+Symbol::Symbol(const std::shared_ptr<const Function> &valueFunction)
+	: type{ ID_CASUAL }
+	, d{ new Value(valueFunction) }
+{}
+
 Symbol::Symbol(const std::string &valueString)
 	: type{ ID_CASUAL }
 	, d{ new Value(valueString) }
@@ -191,13 +196,25 @@ const f_map_t &Symbol::getFunctionOverloads(const Token *token, trace_t &stack_t
 	throw RTError(_NOT_FUNCTION_, *token, stack_trace);
 }
 
+const bool Symbol::hasVarg(const Token *token, trace_t &stack_trace) const
+{
+	if (d->type == FUNCTION)
+		return this->d->valueVARGFunction != nullptr;
+	if (d->type == OBJECT)
+		return d->valueObject->getVariable(Rossa::HASH_CALL, token, stack_trace).hasVarg(token, stack_trace);
+	throw RTError(_NOT_FUNCTION_, *token, stack_trace);
+}
+
 const std::shared_ptr<const Function> Symbol::getFunction(const sym_vec_t &params, const Token *token, trace_t &stack_trace) const
 {
 	if (d->type != FUNCTION)
 		throw RTError(_NOT_FUNCTION_, *token, stack_trace);
 
-	if (d->valueFunction.find(params.size()) == d->valueFunction.end())
+	if (d->valueFunction.find(params.size()) == d->valueFunction.end()) {
+		if (d->valueVARGFunction != nullptr)
+			return d->valueVARGFunction;
 		throw RTError(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
+	}
 
 	std::map<sig_t, std::shared_ptr<const Function>> foftype = d->valueFunction[params.size()];
 	bool flag = false;
@@ -214,8 +231,11 @@ const std::shared_ptr<const Function> Symbol::getFunction(const sym_vec_t &param
 		}
 	}
 
-	if (!flag)
+	if (!flag) {
+		if (d->valueVARGFunction != nullptr)
+			return d->valueVARGFunction;
 		throw RTError(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
+	}
 
 	return foftype[key];
 }
@@ -259,6 +279,11 @@ const std::string Symbol::toString(const Token *token, trace_t &stack_trace) con
 						ret += ", ";
 					ret += "Function<" + sig::toString(t.first) + ">";
 				}
+			}
+			if (d->valueVARGFunction != nullptr) {
+				if (i > 0)
+					ret += ", ";
+				ret += "Function<...>";
 			}
 			return ret + "]";
 		}
@@ -402,6 +427,18 @@ void Symbol::addFunctions(const Symbol *b, const Token *token) const
 	for (auto &f : fs)
 		for (auto &t : f.second)
 			d->valueFunction[f.first][t.first] = t.second;
+	if (b->d->valueVARGFunction != nullptr)
+		d->valueVARGFunction = b->d->valueVARGFunction;
+}
+
+
+const std::shared_ptr<const Function> Symbol::getVARGFunction(const Token *token, trace_t &stack_trace) const
+{
+	if (d->type == FUNCTION)
+		return this->d->valueVARGFunction;
+	if (d->type == OBJECT)
+		return d->valueObject->getVariable(Rossa::HASH_CALL, token, stack_trace).getVARGFunction(token, stack_trace);
+	throw RTError(_NOT_FUNCTION_, *token, stack_trace);
 }
 
 void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, trace_t &stack_trace) const
@@ -426,6 +463,7 @@ void Symbol::set(const Symbol *b, const Token *token, const bool &isConst, trace
 			break;
 		case FUNCTION:
 			d->valueFunction = b->d->valueFunction;
+			d->valueVARGFunction = b->d->valueVARGFunction;
 			break;
 		case OBJECT:
 			d->valueObject = b->d->valueObject;

@@ -31,6 +31,7 @@ const hash_ull Rossa::HASH_NEQUALS = ROSSA_HASH("!=");
 const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
 const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
 const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
+const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("vargs");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
@@ -91,8 +92,8 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"^=", -1},
 	{"||=", -1},
 	{"&&=", -1},
+	{"...", 0},
 	{":", 0},
-	{"::", 0},
 	{"=>", 0},
 	{"|>", 0} };
 
@@ -386,14 +387,14 @@ const int Rossa::getToken(
 		ID_STRING = opStr;
 		if (ID_STRING == "=>")
 			return TOK_DEF;
-		if (ID_STRING == "::")
-			return TOK_DEF_TYPE;
 		if (ID_STRING == ".")
 			return TOK_INNER;
 		if (ID_STRING == "..")
 			return TOK_UNTILF;
 		if (ID_STRING == ".+")
 			return TOK_UNTILT;
+		if (ID_STRING == "...")
+			return TOK_VAR_ARGS;
 		if (ID_STRING == "|>")
 			return TOK_NO_PARAM_LAMBDA;
 		if (ID_STRING == ":")
@@ -592,12 +593,6 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == '~' || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
 				temp.push_back(tokens.back());
 				tokens.pop_back();
-				if (tokens.back().type == TOK_DEF_TYPE) {
-					temp.push_back(tokens.back());
-					tokens.pop_back();
-					temp.push_back(tokens.back());
-					tokens.pop_back();
-				}
 				tokens.push_back(t);
 			} else {
 				tokens.push_back({ filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, TOK_LAMBDA });

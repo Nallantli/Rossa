@@ -5,6 +5,14 @@
 #include <iostream>
 #include "encode.h"
 
+#ifndef _STATIC_
+#ifdef __unix__
+COMPILER_COMMANDS(libsdl, "-lboost_system")
+#else
+COMPILER_COMMANDS(libsdl, "-lwsock32 -lws2_32 -lboost_system-mt")
+#endif
+#endif
+
 using namespace rossa;
 
 ROSSA_EXT_SIG(_service_init, args, token, hash, stack_trace)

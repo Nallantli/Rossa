@@ -8,10 +8,21 @@ Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, co
 	, params{ params }
 	, body{ body }
 	, captures{ captures }
+	, isVargs{ false }
+{}
+
+Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures)
+	: key{ key }
+	, parent{ parent }
+	, body{ body }
+	, captures{ captures }
+	, isVargs{ true }
 {}
 
 const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token, trace_t &stack_trace) const
 {
+	if (isVargs)
+		return evaluateVARGS(paramValues, token, stack_trace);
 	stack_trace.push_back(*this);
 
 	auto newScope = std::make_shared<Scope>(parent, 0);
@@ -29,6 +40,34 @@ const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token
 			}
 		}
 	}
+
+	for (auto e : captures) {
+		newScope->createVariable(e.first, e.second, token);
+	}
+
+	auto temp = body->evaluate(newScope, stack_trace);
+	newScope->clear();
+
+	if (temp.getSymbolType() == ID_REFER) {
+		temp.setSymbolType(ID_CASUAL);
+		return temp;
+	}
+
+	auto ret = Symbol();
+	ret.set(&temp, token, false, stack_trace);
+
+	stack_trace.pop_back();
+
+	return ret;
+}
+
+const Symbol Function::evaluateVARGS(const sym_vec_t &paramValues, const Token *token, trace_t &stack_trace) const
+{
+	stack_trace.push_back(*this);
+
+	auto newScope = std::make_shared<Scope>(parent, 0);
+
+	newScope->createVariable(Rossa::HASH_VAR_ARGS, Symbol(paramValues), token);
 
 	for (auto e : captures) {
 		newScope->createVariable(e.first, e.second, token);

@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.10.4-alpha"
+#define _ROSSA_VERSION_ "v1.11.0-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -32,10 +32,12 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #define EXPORT_FUNCTIONS(name) extern "C" void name##_rossaExportFunctions(std::map<std::string, rossa::extf_t> &fmap)
+#define COMPILER_COMMANDS(name, commands) extern "C" std::string name##_rossaCompilerCommands() { return commands; }
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define EXPORT_FUNCTIONS(name) extern "C" __declspec(dllexport) void name##_rossaExportFunctions(std::map<std::string, rossa::extf_t> &fmap)
+#define COMPILER_COMMANDS(name, commands) extern "C" __declspec(dllexport) std::string name##_rossaCompilerCommands() { return commands; }
 #endif
 
 namespace rossa
@@ -64,6 +66,7 @@ namespace rossa
 	typedef std::map<std::string, Symbol> sym_map_t;
 	typedef const Symbol(*extf_t)(const sym_vec_t &, const Token *, Hash &, trace_t &);
 	typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
+	typedef std::string (*cm_fns_t)();
 	typedef std::map<size_t, std::map<sig_t, std::shared_ptr<const Function>>> f_map_t;
 
 	enum TextColor
@@ -138,7 +141,7 @@ namespace rossa
 		TOK_INNER = -39,
 		TOK_REF = -40,
 		TOK_CASE = -41,
-		TOK_DEF_TYPE = -42,
+		//TOK_DEF_TYPE = -42,
 		TOK_BREAK = -43,
 		TOK_REFER = -44,
 		TOK_NIL_NAME = -45,
@@ -156,7 +159,8 @@ namespace rossa
 		TOK_PARSE = -57,
 		TOK_CONTINUE = -58,
 		TOK_CALL_OP = -59,
-		TOK_NO_PARAM_LAMBDA = -60
+		TOK_NO_PARAM_LAMBDA = -60,
+		TOK_VAR_ARGS = -61
 	};
 
 	enum SymbolType
@@ -194,6 +198,7 @@ namespace rossa
 		IFELSE,
 		WHILE,
 		DEFINE,
+		VARG_DEFINE,
 		RETURN,
 		EXTERN,
 		LENGTH,
@@ -279,7 +284,8 @@ namespace rossa
 		TRY_CATCH_NODE,
 		THROW_NODE,
 		PAREN_NODE,
-		CALL_OP_NODE
+		CALL_OP_NODE,
+		VARG_DEFINE_NODE
 	};
 
 	struct Hash
@@ -375,9 +381,12 @@ namespace rossa
 		const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 		const std::shared_ptr<Instruction> body;
 		const std::map<hash_ull, Symbol> captures;
+		const bool isVargs;
+		const Symbol evaluateVARGS(const sym_vec_t &, const Token *, trace_t &) const;
 
 	public:
 		Function(const hash_ull &, const std::shared_ptr<Scope> &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::map<hash_ull, Symbol> &);
+		Function(const hash_ull &, const std::shared_ptr<Scope> &, const std::shared_ptr<Instruction> &, const std::map<hash_ull, Symbol> &);
 		const Symbol evaluate(const sym_vec_t &, const Token *, trace_t &) const;
 		const size_t getArgSize() const;
 		const hash_ull getKey() const;
@@ -459,7 +468,7 @@ namespace rossa
 		std::shared_ptr<Node> parseIfElseNode();
 		std::shared_ptr<Node> parseWhileNode();
 		std::shared_ptr<Node> parseForNode();
-		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(const ValueType &start);
+		std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode();
 		std::shared_ptr<Node> parseDefineNode();
 		std::shared_ptr<Node> parseLambdaNode();
 		std::shared_ptr<Node> parseNPLambdaNode();
@@ -533,6 +542,7 @@ namespace rossa
 		static const hash_ull HASH_SET;
 		static const hash_ull HASH_CALL;
 		static const hash_ull HASH_RANGE;
+		static const hash_ull HASH_VAR_ARGS;
 
 		Rossa(const std::vector<std::string> &);
 		static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
@@ -562,6 +572,7 @@ namespace rossa
 		std::shared_ptr<void> valuePointer;
 		sym_vec_t valueVector;
 		f_map_t valueFunction;
+		std::shared_ptr<const Function> valueVARGFunction = nullptr;
 		sym_map_t valueDictionary;
 		std::shared_ptr<Scope> valueObject;
 		refc_ull references = 1;
@@ -572,6 +583,7 @@ namespace rossa
 		Value(const std::shared_ptr<void> &);
 		Value(const std::shared_ptr<Scope> &);
 		Value(const sig_t &, const std::shared_ptr<const Function> &);
+		Value(const std::shared_ptr<const Function> &);
 		Value(const RNumber &);
 		Value(const sym_vec_t &);
 		Value(const sym_map_t &);
@@ -595,6 +607,7 @@ namespace rossa
 		Symbol(const sym_vec_t &);
 		Symbol(const std::shared_ptr<Scope> &);
 		Symbol(const sig_t &, const std::shared_ptr<const Function> &);
+		Symbol(const std::shared_ptr<const Function> &);
 		Symbol(const std::string &);
 		Symbol(const sym_map_t &);
 		Symbol(const Symbol &);
@@ -611,11 +624,13 @@ namespace rossa
 		const sym_vec_t &getVector(const Token *, trace_t &) const;
 		const std::string &getString(const Token *, trace_t &) const;
 		const bool getBool(const Token *, trace_t &) const;
+		const bool hasVarg(const Token *, trace_t &) const;
 		const std::shared_ptr<Scope> &getObject(const Token *, trace_t &) const;
 		const ValueType getValueType() const;
 		const type_sll getAugValueType() const;
 		const type_sll getTypeName(const Token *, trace_t &) const;
 		const std::shared_ptr<const Function> getFunction(const sym_vec_t &, const Token *, trace_t &) const;
+		const std::shared_ptr<const Function> getVARGFunction(const Token *, trace_t &) const;
 		const Symbol &indexDict(const std::string &) const;
 		const bool hasDictionaryKey(const std::string &) const;
 		const size_t vectorSize() const;
@@ -632,7 +647,7 @@ namespace rossa
 		const bool operator==(const Symbol &) const;
 		const bool operator!=(const Symbol &) const;
 		const bool operator<(const Symbol &) const;
-		const f_map_t &getFunctionOverloads(const Token *token, trace_t &stack_trace) const;
+		const f_map_t &getFunctionOverloads(const Token *, trace_t &) const;
 	};
 
 	// INSTRUCTIONS -----------------------------------------------------------------------------
@@ -689,6 +704,19 @@ namespace rossa
 
 	public:
 		DefineI(const hash_ull &, const sig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const std::shared_ptr<Instruction> &, const std::vector<hash_ull> &, const Token &);
+		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
+		const std::string compile() const override;
+	};
+
+	class VargDefineI : public Instruction
+	{
+	protected:
+		const hash_ull key;
+		const std::shared_ptr<Instruction> body;
+		const std::vector<hash_ull> captures;
+
+	public:
+		VargDefineI(const hash_ull &, const std::shared_ptr<Instruction> &, const std::vector<hash_ull> &, const Token &);
 		const Symbol evaluate(const std::shared_ptr<Scope> &, trace_t &) const override;
 		const std::string compile() const override;
 	};
@@ -1267,6 +1295,21 @@ namespace rossa
 		std::shared_ptr<Node> fold() const override;
 	};
 
+	class VargDefineNode : public Node
+	{
+	private:
+		const hash_ull key;
+		const std::shared_ptr<Node> body;
+		const std::vector<hash_ull> captures;
+
+	public:
+		VargDefineNode(const hash_ull &, const std::shared_ptr<Node> &, const std::vector<hash_ull> &, const Token &);
+		std::shared_ptr<Instruction> genParser() const override;
+		bool isConst() const override;
+		std::stringstream printTree(std::string, bool) const override;
+		std::shared_ptr<Node> fold() const override;
+	};
+
 	class NewNode : public Node
 	{
 	private:
@@ -1615,7 +1658,7 @@ namespace rossa
 	namespace lib
 	{
 		extern std::map<std::string, std::map<std::string, extf_t>> loaded;
-		extern std::vector<std::filesystem::path> libPaths;
+		extern std::map<std::string, std::string> compilerCommands;
 
 		void loadLibrary(const std::filesystem::path &, const std::string &, const Token *token);
 		extf_t loadFunction(const std::string &, const std::string &, const Token *);

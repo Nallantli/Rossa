@@ -358,6 +358,60 @@ std::shared_ptr<Node> DefineNode::fold() const
 
 //------------------------------------------------------------------------------------------------------
 
+VargDefineNode::VargDefineNode(
+	const hash_ull &key,
+	const std::shared_ptr<Node> &body,
+	const std::vector<hash_ull> &captures,
+	const Token &token) : Node(VARG_DEFINE_NODE,
+		token),
+	key(key),
+	body(body),
+	captures(captures)
+{}
+
+std::shared_ptr<Instruction> VargDefineNode::genParser() const
+{
+	return std::make_shared<VargDefineI>(key, body->genParser(), captures, token);
+}
+
+bool VargDefineNode::isConst() const
+{
+	return false;
+}
+
+std::stringstream VargDefineNode::printTree(std::string indent, bool last) const
+{
+	std::stringstream ss;
+	ss << indent;
+	if (last) {
+		ss << "└─";
+		indent += "  ";
+	} else {
+		ss << "├─";
+		indent += "│ ";
+	}
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n" << colorASCII(RESET_TEXT);
+	ss << body->printTree(indent, true).str();
+	return ss;
+}
+
+std::shared_ptr<Node> VargDefineNode::fold() const
+{
+	if (isConst()) {
+		auto i = genParser();
+		auto newScope = std::make_shared<Scope>();
+		trace_t stack_trace;
+		auto r = i->evaluate(newScope, stack_trace);
+		newScope->clear();
+		return std::make_unique<ContainerNode>(r, token);
+	}
+
+	return std::make_unique<VargDefineNode>(key, body->fold(), captures, token);
+}
+
+//------------------------------------------------------------------------------------------------------
+
 NewNode::NewNode(
 	const std::shared_ptr<Node> &object,
 	const std::shared_ptr<Node> &params,

@@ -51,7 +51,20 @@ parse := ((ref x) => parse(x));
 
 puts(ref s) => extern_call STANDARD._puts(s -> String);
 
-putln(ref s) => puts((s -> String) + "\n");
+puts(...) => {
+	for s in vargs do {
+		extern_call STANDARD._puts(s -> String);
+	}
+}
+
+putln(ref s) => extern_call STANDARD._puts((s -> String) + "\n");
+
+putln(...) => {
+	for s in vargs do {
+		extern_call STANDARD._puts(s -> String);
+	}
+	extern_call STANDARD._puts("\n");
+}
 
 putln() => puts("\n");
 
@@ -193,7 +206,7 @@ static clock class {
 
 # ARRAY
 
-Array::join(ref a) => {
+join(ref a : Array) => {
 	s := "";
 	for e in a do {
 		s += (e -> String);
@@ -201,15 +214,15 @@ Array::join(ref a) => {
 	return s;
 }
 
-Array::push(ref a, ref value) => {
+push(ref a : Array, ref value) => {
 	refer a += [value];
 }
 
-Array::unshift(ref a, ref value) => {
+unshift(ref a : Array, ref value) => {
 	refer a = [value] + a;
 }
 
-Array::pop(ref a, ref count : Number) => {
+pop(ref a : Array, ref count : Number) => {
 	nv := alloc(len(a) - count);
 	for i in 0 .. (len(a) - count) do {
 		nv[i] = a[i];
@@ -217,7 +230,7 @@ Array::pop(ref a, ref count : Number) => {
 	refer a = nv;
 }
 
-Array::shift(ref a, ref count : Number) => {
+shift(ref a : Array, ref count : Number) => {
 	nv := alloc(len(a) - count);
 	for i in count .. len(a) do {
 		nv[i - count] = a[i];
@@ -225,33 +238,33 @@ Array::shift(ref a, ref count : Number) => {
 	refer a = nv;
 }
 
-Array::tail(ref a, ref count : Number) => {
+tail(ref a : Array, ref count : Number) => {
 	nv := a;
 	return nv.shift(count);
 }
 
-Array::tail(ref a) => {
+tail(ref a : Array) => {
 	return a.tail(1);
 }
 
-Array::head(ref a, ref count : Number) => {
+head(ref a : Array, ref count : Number) => {
 	nv := a;
 	return nv.pop(count);
 }
 
-Array::head(ref a) => {
+head(ref a : Array) => {
 	return a.pop(1);
 }
 
-Array::pop(ref a) => {
+pop(ref a : Array) => {
 	refer pop(a, 1);
 }
 
-Array::shift(ref a) => {
+shift(ref a : Array) => {
 	refer shift(a, 1);
 }
 
-Array::map(ref a, ref f : Function<Any>) => {
+map(ref a : Array, ref f : Function<Any>) => {
 	nv := a;
 	for e in nv do {
 		e = f(e);
@@ -259,7 +272,7 @@ Array::map(ref a, ref f : Function<Any>) => {
 	return nv;
 }
 
-Array::map(ref a, ref f : Function<Any, Number>) => {
+map(ref a : Array, ref f : Function<Any, Number>) => {
 	nv := a;
 	for i in 0 .. nv.len() do {
 		nv[i] = f(nv[i], i);
@@ -267,7 +280,7 @@ Array::map(ref a, ref f : Function<Any, Number>) => {
 	return nv;
 }
 
-Array::filter(ref a, ref f : Function<Any>) => {
+filter(ref a : Array, ref f : Function<Any>) => {
 	nv := [];
 	for e in a do {
 		if f(e) then {
@@ -277,7 +290,7 @@ Array::filter(ref a, ref f : Function<Any>) => {
 	return nv;
 }
 
-Array::filter(ref a, ref f : Function<Any, Number>) => {
+filter(ref a : Array, ref f : Function<Any, Number>) => {
 	nv := [];
 	for i in 0 .. a.len() do {
 		if f(a[i], i) then {
@@ -287,7 +300,7 @@ Array::filter(ref a, ref f : Function<Any, Number>) => {
 	return nv;
 }
 
-Array::reverse(ref a) => {
+reverse(ref a : Array) => {
 	nv := alloc(len(a));
 	for i in 0 .. len(a) do {
 		nv[i] = a[len(a) - i - 1];
@@ -295,15 +308,15 @@ Array::reverse(ref a) => {
 	return nv;
 }
 
-Array::back(ref a) => {
+back(ref a : Array) => {
 	refer a[len(a) - 1];
 }
 
-Array::empty(ref a) => {
+empty(ref a : Array) => {
 	return len(a) == 0;
 }
 
-Array::sort(ref a, ref comp : Function<Any, Any>) => {
+sort(ref a : Array, ref comp : Function<Any, Any>) => {
 	if a.len() < 2 then {
 		return a;
 	}
@@ -322,69 +335,69 @@ Array::sort(ref a, ref comp : Function<Any, Any>) => {
 	return sort(left) + [ pivot ] + sort(right);
 }
 
-Array::sort(ref a) => {
+sort(ref a : Array) => {
 	return a.sort(`<`);
 }
 
-Array::first(ref a) => {
+first(ref a : Array) => {
 	refer a[0];
 }
 
-Array::second(ref a) => {
+second(ref a : Array) => {
 	refer a[1];
 }
 
 # STRING
 
-String::push(ref s, ref value : Number) => {
+push(ref s : String, ref value : Number) => {
 	refer s += chars(value);
 }
 
-String::unshift(ref s, ref value : Number) => {
+unshift(ref s : String, ref value : Number) => {
 	refer s = chars(value) + s;
 }
 
-String::pop(ref s, ref count : Number) => {
+pop(ref s : String, ref count : Number) => {
 	refer s = (s -> Array).pop(count).join();
 }
 
-String::shift(ref s, ref count : Number) => {
+shift(ref s : String, ref count : Number) => {
 	refer s = (s -> Array).shift(count).join();
 }
 
-String::pop(ref s) => {
+pop(ref s : String) => {
 	refer s = pop(s, 1);
 }
 
-String::shift(ref s) => {
+shift(ref s : String) => {
 	refer s = shift(s, 1);
 }
 
-String::reverse(ref s) => {
+reverse(ref s : String) => {
 	return (s -> Array).reverse().join();
 }
 
-String::empty(ref s) => {
+empty(ref s : String) => {
 	return len(s) == 0;
 }
 
-String::`[]`(ref s, ref i : Number) => {
+`[]`(ref s : String, ref i : Number) => {
 	return (s -> Array)[i];
 }
 
-String::`..`(ref a, ref b : String) => {
+`..`(ref a : String, ref b : String) => {
 	return [codes(a)[0] .. codes(b)[0]];
 }
 
-String::parseDict(ref a) => {
+parseDict(ref a : String) => {
 	return parse(a + ";")[0];
 }
 
-String::size(ref a) => extern_call STANDARD._string_size(a);
+size(ref a : String) => extern_call STANDARD._string_size(a);
 
-String::split(ref s, ref c : Number) => s.split(chars(c));
+split(ref s : String, ref c : Number) => s.split(chars(c));
 
-String::split(ref s, ref d : String) => {
+split(ref s : String, ref d : String) => {
 	if d.len() != 1 then {
 		throw "Cannot split a String where the delimiter's length is not 1";
 	}
@@ -497,4 +510,8 @@ struct Thread class {
 	}
 }
 
-Function::split(f) => extern_call STANDARD._function_split(f);
+split(ref f : Function) => extern_call STANDARD._function_split(f);
+
+`+`(ref f : Function, ref g : Function<Any>) => {
+	return (...)[f, g] => g(`()`(f, vargs));
+}

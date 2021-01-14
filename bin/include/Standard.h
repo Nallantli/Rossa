@@ -277,6 +277,7 @@ namespace rossa
 	ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	{
 		auto f = args[0].getFunctionOverloads(token, stack_trace);
+		auto varg = args[0].getVARGFunction(token, stack_trace);
 		sym_map_t m;
 		for (auto &e : f) {
 			if (e.first == 0) {
@@ -289,6 +290,8 @@ namespace rossa
 				m[std::to_string(e.first)] = Symbol(m2);
 			}
 		}
+		if (varg != nullptr)
+			m["..."] = Symbol(varg);
 		return Symbol(m);
 	}
 }

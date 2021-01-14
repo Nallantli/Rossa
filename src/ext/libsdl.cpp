@@ -5,6 +5,14 @@
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 
+#ifndef _STATIC_
+#ifdef __unix__
+COMPILER_COMMANDS(libsdl, "-lSDL2 -lSDL2_image -lSDL2_ttf")
+#else
+COMPILER_COMMANDS(libsdl, "-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf")
+#endif
+#endif
+
 using namespace rossa;
 
 namespace libsdl

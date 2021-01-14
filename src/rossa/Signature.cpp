@@ -26,25 +26,34 @@ const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t 
 		} else {
 			auto ql = values[i].getQualifiers();
 			auto fo = check[i].getFunctionOverloads(NULL, stack_trace);
-			if (fo.find(ql.size()) == fo.end())
-				return 0;
-			size_t flag = 0;
-			for (auto f : fo[ql.size()]) {
-				for (size_t i = 0; i < ql.size(); i++) {
-					auto val = ql[i] & f.first[i];
-					if (val > flag) {
-						flag = val;
-						if (val == 3)
-							break;
+			if (fo.find(ql.size()) == fo.end()) {
+				if (check[i].hasVarg(NULL, stack_trace))
+					v += 1;
+				else
+					return 0;
+			} else {
+				size_t flag = 0;
+				for (auto f : fo[ql.size()]) {
+					for (size_t i = 0; i < ql.size(); i++) {
+						auto val = ql[i] & f.first[i];
+						if (val > flag) {
+							flag = val;
+							if (val == 3)
+								break;
+						}
 					}
+					if (flag == 3)
+						break;
 				}
-				if (flag == 3)
-					break;
+				if (flag > 0)
+					v += flag;
+				else {
+					if (check[i].hasVarg(NULL, stack_trace))
+						v += 1;
+					else
+						return 0;
+				}
 			}
-			if (flag > 0)
-				v += flag;
-			else
-				return 0;
 		}
 	}
 	return v;
@@ -111,7 +120,7 @@ const std::string sig::getTypeString(const type_sll &i)
 
 std::vector<std::filesystem::path> dir::loaded = {};
 std::map<std::string, std::map<std::string, extf_t>> lib::loaded = {};
-std::vector<std::filesystem::path> lib::libPaths = {};
+std::map<std::string, std::string> lib::compilerCommands = {};
 
 const std::filesystem::path dir::getRuntimePath()
 {
@@ -160,16 +169,17 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 			throw RTError(format::format("External library does not exist: `{1}`", { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
+		auto cm = dlsym(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #else
 		std::string libname = rawlibname + ".dll";
 		auto path = dir::findFile(currentDir, libname, token);
-		libPaths.push_back(path);
 		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
 			trace_t stack_trace;
 			throw RTError(format::format("External library does not exist: {1}", { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
+		auto cm = GetProcAddress(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #endif
 		if (f == NULL) {
 			trace_t stack_trace;
@@ -179,6 +189,9 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto ef = (export_fns_t)f;
 		ef(fns);
 		loaded[rawlibname] = fns;
+
+		auto ecm = (cm_fns_t)cm;
+		compilerCommands[rawlibname] = ecm();
 	}
 }
 

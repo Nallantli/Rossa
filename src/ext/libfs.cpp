@@ -3,6 +3,14 @@
 
 #include <fstream>
 
+#ifndef _STATIC_
+#ifdef __unix__
+COMPILER_COMMANDS(libsdl, "-lzip")
+#else
+COMPILER_COMMANDS(libsdl, "-lzip")
+#endif
+#endif
+
 using namespace rossa;
 
 namespace libfs

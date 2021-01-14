@@ -128,6 +128,43 @@ const std::string DefineI::compile() const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
+/*class VargDefineI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+VargDefineI::VargDefineI(const hash_ull &key, const std::shared_ptr<Instruction> &body, const std::vector<hash_ull> &captures, const Token &token)
+	: Instruction(VARG_DEFINE, token)
+	, key{ key }
+	, body{ body }
+	, captures{ captures }
+{}
+
+const Symbol VargDefineI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &stack_trace) const
+{
+	std::map<hash_ull, Symbol> capturedVars;
+	for (auto e : captures) {
+		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
+	}
+	auto f = std::make_shared<Function>(key, scope, body, capturedVars);
+	if (key > 0) {
+		return scope->createVariable(key, Symbol(static_cast<std::shared_ptr<const Function>>(f)), &token);
+	}
+	return Symbol(static_cast<std::shared_ptr<const Function>>(f));
+}
+
+const std::string VargDefineI::compile() const
+{
+	std::string cc = "{";
+	int i = 0;
+	for (auto &e : captures) {
+		if (i++ > 0)
+			cc += ", ";
+		cc += "static_cast<hash_ull>(" + std::to_string(e) + ")";
+	}
+	cc += "}";
+	return C_TRINARY("VargDefineI", std::to_string(key), body->compile(), cc);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
 /*class SequenceI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 

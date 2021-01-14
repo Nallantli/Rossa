@@ -31,6 +31,11 @@ Value::Value(const sig_t &ftype, const std::shared_ptr<const Function> &function
 	, valueFunction{ {function->getArgSize(), {{ftype, function}}} }
 {}
 
+Value::Value(const std::shared_ptr<const Function> &function)
+	: type{ FUNCTION }
+	, valueVARGFunction{ function }
+{}
+
 Value::Value(const RNumber &valueNumber)
 	: type{ NUMBER }
 	, valueNumber{ valueNumber }
@@ -56,6 +61,7 @@ void Value::clearData()
 	switch (type) {
 		case FUNCTION:
 			valueFunction.clear();
+			valueVARGFunction = nullptr;
 			break;
 		case ARRAY:
 			valueVector.clear();

@@ -303,14 +303,22 @@ ParamType NodeParser::parseParamTypeNode(const type_sll &base)
 	return pt;
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(const ValueType &start)
+std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode()
 {
 	if (currentToken.type != '(')
 		return logErrorSN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
+	if (currentToken.type == TOK_VAR_ARGS) {
+		nextToken();
+		if (currentToken.type != ')')
+			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+		nextToken();
+		return { {}, {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
+	}
+
 	std::vector<std::pair<LexerTokenType, hash_ull>> args;
-	std::vector<ParamType> types;
+	sig_t types;
 
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
@@ -412,9 +420,6 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	}
 	nextToken();
 
-	if (start != ANY && !types.empty())
-		types[0] = start;
-
 	return { types, args };
 }
 
@@ -424,53 +429,17 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 
 	std::vector<hash_ull> captures;
 
-	ValueType ftype = ANY;
-	if (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE) {
-		switch (currentToken.type) {
-			case TOK_BOOLEAN:
-				ftype = BOOLEAN_D;
-				break;
-			case TOK_NUMBER:
-				ftype = NUMBER;
-				break;
-			case TOK_ARRAY:
-				ftype = ARRAY;
-				break;
-			case TOK_STRING:
-				ftype = STRING;
-				break;
-			case TOK_DICTIONARY:
-				ftype = DICTIONARY;
-				break;
-			case TOK_OBJECT:
-				ftype = OBJECT;
-				break;
-			case TOK_FUNCTION:
-				ftype = FUNCTION;
-				break;
-			case TOK_POINTER:
-				ftype = POINTER;
-				break;
-			case TOK_TYPE_NAME:
-				ftype = TYPE_NAME;
-				break;
-			default:
-				return logErrorN(_EXPECTED_BASE_TYPE_, currentToken);
-		}
-		nextToken();
-		if (currentToken.type != TOK_DEF_TYPE)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "::" }), currentToken);
-		nextToken();
-	}
-
 	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 
-	auto sig = parseSigNode(ftype);
+	bool isVargs = false;
+	auto sig = parseSigNode();
 	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
+	if (!sig.second.empty() && sig.second[0].first == 1)
+		isVargs = true;
 
 	if (currentToken.type != '{') {
 		auto body = parseEquNode();
@@ -482,7 +451,10 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		nextToken();
 
-		return std::make_shared<DefineNode>(key, sig.first, sig.second, body, captures, currentToken);
+		if (isVargs)
+			return std::make_shared<VargDefineNode>(key, body, captures, currentToken);
+		else
+			return std::make_shared<DefineNode>(key, sig.first, sig.second, body, captures, currentToken);
 	} else {
 		node_vec_t vbody;
 
@@ -501,7 +473,10 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(vbody, true, currentToken);
-		return std::make_shared<DefineNode>(key, sig.first, sig.second, body, captures, currentToken);
+		if (isVargs)
+			return std::make_shared<VargDefineNode>(key, body, captures, currentToken);
+		else
+			return std::make_shared<DefineNode>(key, sig.first, sig.second, body, captures, currentToken);
 	}
 }
 
@@ -522,9 +497,12 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 {
 	nextToken();
 
-	auto sig = parseSigNode(ANY);
+	bool isVargs;
+	auto sig = parseSigNode();
 	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
+	if (!sig.second.empty() && sig.second[0].first == 1)
+		isVargs = true;
 
 	int i = 0;
 	std::vector<hash_ull> captures;
@@ -556,7 +534,10 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 		if (!body)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
-		return std::make_shared<DefineNode>(0, sig.first, sig.second, body, captures, currentToken);
+		if (isVargs)
+			return std::make_shared<VargDefineNode>(0, body, captures, currentToken);
+		else
+			return std::make_shared<DefineNode>(0, sig.first, sig.second, body, captures, currentToken);
 	} else {
 		node_vec_t vbody;
 
@@ -575,7 +556,10 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(vbody, true, currentToken);
-		return std::make_shared<DefineNode>(0, sig.first, sig.second, body, captures, currentToken);
+		if (isVargs)
+			return std::make_shared<VargDefineNode>(0, body, captures, currentToken);
+		else
+			return std::make_shared<DefineNode>(0, sig.first, sig.second, body, captures, currentToken);
 	}
 }
 

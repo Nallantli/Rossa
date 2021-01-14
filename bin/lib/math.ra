@@ -151,4 +151,4 @@ struct Matrix class {
 `-`(ref n : Number, ref m : @Matrix) => m.rsub(n);
 `*`(ref n : Number, ref m : @Matrix) => m * n;
 
-Array::`->@Matrix`(ref a) => new Matrix(a);
+`->@Matrix`(ref a : Array) => new Matrix(a);
