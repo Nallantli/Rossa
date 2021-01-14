@@ -5,12 +5,11 @@ SDL.INIT();
 w := new SDL.Window("Image Test", 800, 600);
 r := w.getRenderer();
 
-image1 := new SDL.Image("misc/logo/Logo.png");
-image2 := new SDL.Image("misc/logo/Logo-Solid.png");
+image1 := new SDL.Image("misc/suki.png");
 t1 := new SDL.Texture(image1, 200, 200);
 t2 := new SDL.Texture(image1, 200, 200);
 t3 := new SDL.Texture(image1, 200, 200);
-t4 := new SDL.Texture(image2, 600, 600);
+t4 := new SDL.Texture(image1, 600, 600);
 
 r.put(t1, 0, 0);
 r.put(t2, 0, 200);
@@ -22,11 +21,16 @@ r1 := 0;
 r2 := 0;
 r3 := 0;
 
+font := new SDL.Font("misc/unifont.ttf", 16);
+fpsText := new SDL.Text(font, "", Color.WHITE);
+r.put(fpsText, 0, 0);
+
 start := clock.milliseconds();
+fpsCounter := 0;
+fpsTimer := clock.milliseconds();
 while SDL.Event.poll().type != SDL.Event.QUIT do {
-	lapse := clock.milliseconds() - start;
-	if lapse > 10 then {
-		start = clock.milliseconds();
+	if (lapse := clock.milliseconds()) - start > 10 then {
+		start = lapse;
 		hue = (hue + 0.1) % 360;
 		r1 = (r1 + 1) % 360;
 		r2 = (r2 + 0.5) % 360;
@@ -36,6 +40,13 @@ while SDL.Event.poll().type != SDL.Event.QUIT do {
 		t2.setAngle(r2);
 		t3.setAngle(r3);
 		r.update();
+		fpsCounter += 1;
+
+		if lapse - fpsTimer > 1000 then {
+			fpsTimer = lapse;
+			fpsText.setText("FPS: " + (fpsCounter -> String));
+			fpsCounter = 0;
+		}
 	}
 }
 
