@@ -989,6 +989,12 @@ const Symbol LengthI::evaluate(const std::shared_ptr<Scope> &scope, trace_t &sta
 			return Symbol(RNumber::Long(evalA.dictionarySize(&token, stack_trace)));
 		case ARRAY:
 			return Symbol(RNumber::Long(evalA.vectorSize()));
+		case OBJECT:
+		{
+			auto o = evalA.getObject(&token, stack_trace);
+			if (o->hasValue(Rossa::HASH_LENGTH))
+				return o->getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
+		}
 		default:
 			throw RTError(_FAILURE_LENGTH_, token, stack_trace);
 	}

@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.11.3-alpha"
+#define _ROSSA_VERSION_ "v1.11.4-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -543,6 +543,7 @@ namespace rossa
 		static const hash_ull HASH_CALL;
 		static const hash_ull HASH_RANGE;
 		static const hash_ull HASH_VAR_ARGS;
+		static const hash_ull HASH_LENGTH;
 
 		Rossa(const std::vector<std::string> &);
 		static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);

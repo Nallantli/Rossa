@@ -32,6 +32,7 @@ const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
 const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
 const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("vargs");
+const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {

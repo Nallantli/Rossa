@@ -112,6 +112,10 @@ struct Test class {
 		return {};
 	}
 
+	len() => {
+		return 1;
+	}
+
 	~() => {
 		putln("DELETER CALLED");
 	}
