@@ -1128,16 +1128,16 @@ std::stringstream ParenNode::printTree(std::string indent, bool last) const
 
 std::shared_ptr<Node> ParenNode::fold() const
 {
-	if (isConst()) {
+	/*if (isConst()) {
 		auto i = genParser();
 		auto newScope = std::make_shared<Scope>();
 		trace_t stack_trace;
 		auto r = i->evaluate(newScope, stack_trace);
 		newScope->clear();
 		return std::make_unique<ContainerNode>(r, token);
-	}
+	}*/
 
-	return std::make_unique<ParenNode>(a->fold(), token);
+	return a->fold();
 }
 
 //------------------------------------------------------------------------------------------------------
