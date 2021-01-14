@@ -1,6 +1,6 @@
 f(ref x : Number, ref id : Number) => {
 	for i in 0 .. x do {
-		putln("Thread " + id -> String + " says " + i -> String);
+		putln("Thread {0} says {1}" & [id, i]);
 	}
 }
 

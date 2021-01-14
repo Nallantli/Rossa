@@ -6,9 +6,9 @@ alloc(11)
 	.map((x) => input.token() -> Number)
 	.map((x, i) => {
 		if (y := f(x)) > 400 then {
-			return "{1} TOO LARGE" & [i];
+			return "{0} TOO LARGE" & [i];
 		} else {
-			return "{1} {2}" & [i, y];
+			return "{0} {1}" & [i, y];
 		}})
 	.reverse()
 	.map(putln);

@@ -1,13 +1,13 @@
 SOE(ref MAX : Number) => {
 	start := clock.milliseconds();
 	a := alloc(MAX);
-	putln("Alloc Time: " + (clock.milliseconds() - start) -> String + "ms");
+	putln("Alloc Time: ", clock.milliseconds() - start, "ms");
 
 	start = clock.milliseconds();
 	for e in a do {
 		e = true;
 	}
-	putln("Predef Time: " + (clock.milliseconds() - start) -> String + "ms");
+	putln("Predef Time: ", clock.milliseconds() - start, "ms");
 
 	start = clock.milliseconds();
     c := MAX - 2;
@@ -23,7 +23,7 @@ SOE(ref MAX : Number) => {
 			}
 		}
 	}
-	putln("Algo Time: " + (clock.milliseconds() - start) -> String + "ms");
+	putln("Algo Time: ", clock.milliseconds() - start, "ms");
 
 	start = clock.milliseconds();
 	b := alloc(c);
@@ -34,7 +34,7 @@ SOE(ref MAX : Number) => {
 			j += 1;
 		}
 	}
-	putln("Final Time: " + (clock.milliseconds() - start) -> String + "ms");
+	putln("Final Time: ", clock.milliseconds() - start, "ms");
 
 	return b;
 }
@@ -44,8 +44,8 @@ test(ref MAX : Number) => {
 	result := SOE(MAX);
 	time := clock.milliseconds() - start;
 
-	putln(result.len() -> String + " Primes found for numbers below " + MAX -> String);
-	putln("Total Time: " + time -> String + "ms");
+	putln(result.len(), " primes found for numbers below ", MAX);
+	putln("Total Time: ", time, "ms");
 }
 
 if _args.len() == 1 then {

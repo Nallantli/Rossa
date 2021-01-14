@@ -144,9 +144,9 @@ static void compile(std::shared_ptr<rossa::Node> entry, const std::string &outpu
 
 	std::cout << "[4/6]\tWriting executable...\n";
 #ifndef _WIN32
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o {1} {2} {3} {4}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
+	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o {0} {1} {2} {3}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
 #else
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o \"{1}\" \"{2}\" {3} {4}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
+	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o \"{0}\" \"{1}\" {2} {3}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
 #endif
 	std::cout << exec_str << "\n";
 	system(exec_str.c_str());

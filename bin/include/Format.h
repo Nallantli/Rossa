@@ -30,7 +30,7 @@ namespace format
 			out += m_arg.prefix();
 			auto text = m_arg[0].str();
 			if (std::regex_search(text, m_idx, re_idx)) {
-				idx = std::stoi(m_idx[0].str()) - 1;
+				idx = std::stoi(m_idx[0].str());
 			}
 			if (idx < args.size()) {
 				out += std::regex_replace(text, re_arg, args[idx]);

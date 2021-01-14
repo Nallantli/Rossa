@@ -6,4 +6,4 @@ fib(ref size : Number) => {
 	return array;
 }
 
-fib(20).map((e, i) => putln("{1}:\t{2}" & [i, e]));
+fib(20).map((e, i) => putln("{0}:\t{1}" & [i, e]));

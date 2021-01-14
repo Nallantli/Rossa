@@ -7,8 +7,6 @@
 
 <div align="center">
 
-[<img src="misc/code.png" width="400">](test/tpk.ra)
-
 ![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
 
 </div>
@@ -45,6 +43,20 @@ fact(x) => {
 }
 
 putln(fact(5)); # 120
+```
+
+Fibonacci Sequence:
+
+```ra
+fib(ref size : Number) => {
+	array := [0, 1] + alloc(size - 2);
+	for i in 2 .. size do {
+		array[i] = array[i - 1] + array[i - 2];
+	}
+	return array;
+}
+
+fib(20).map((e, i) => putln("{0}:\t{1}" & [i, e]));
 ```
 
 FizzBuzz:
@@ -85,7 +97,7 @@ Threading:
 ```ra
 f(ref x : Number, ref id : Number) => {
 	for i in 0 .. x do {
-		putln("Thread " + id -> String + " says " + i -> String);
+		putln("Thread {0} says {1}" & [id, i]);
 	}
 }
 

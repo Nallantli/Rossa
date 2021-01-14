@@ -68,7 +68,7 @@ static snake_game class {
 	}
 
 	setApple() => {
-		scoreText.setText("Score: " + ((snake_size - 1) -> String));
+		scoreText.setText("Score: {0}" & [snake_size - 1]);
 		var x, y;
 		while true do {
 			x = rand.nexti(0, width - 1);

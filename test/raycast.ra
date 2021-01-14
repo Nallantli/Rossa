@@ -223,7 +223,7 @@ while true do {
 
 		if lapse - fpsTimer > 1000 then {
 			fpsTimer = lapse;
-			fpsText.setText("FPS: " + (fpsCounter -> String));
+			fpsText.setText("FPS: {0}" & [fpsCounter]);
 			fpsCounter = 0;
 		}
 	}

@@ -14,5 +14,5 @@ while guess != correct do {
 	}
 }
 
-putln("You win! The number was " + (correct -> String));
+putln("You win! The number was ", correct);
 system("pause");

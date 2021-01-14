@@ -1,6 +1,6 @@
 for i in 0 .. 10 do {
 	clock.timeout(
-		()[i] => putln("Delayed Call: " + (i -> String)),
+		()[i] => putln("Delayed Call: {0}" & [i]),
 		2000);
 }
 

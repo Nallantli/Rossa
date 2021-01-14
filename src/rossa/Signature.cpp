@@ -166,7 +166,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto library = dlopen(dir::findFile(currentDir, libname, token).string().c_str(), RTLD_LAZY);
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format("External library does not exist: `{1}`", { libname }), *token, stack_trace);
+			throw RTError(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 		auto cm = dlsym(library, (rawlibname + "_rossaCompilerCommands").c_str());
@@ -176,14 +176,14 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format("External library does not exist: {1}", { libname }), *token, stack_trace);
+			throw RTError(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
 		auto cm = GetProcAddress(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #endif
 		if (f == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format("No export function found in library `{1}`", { libname }), *token, stack_trace);
+			throw RTError(format::format(_EXPORT_FUNCTION_NOT_FOUND_, { libname }), *token, stack_trace);
 		}
 		std::map<std::string, extf_t> fns;
 		auto ef = (export_fns_t)f;
@@ -199,11 +199,11 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 		trace_t stack_trace;
-		throw RTError(format::format("Library has not yet been loaded into memory: {1}", { rawlibname }), *token, stack_trace);
+		throw RTError(format::format(_LIBRARY_NOT_IN_MEMORY_, { rawlibname }), *token, stack_trace);
 	}
 	if (loaded[rawlibname].find(fname) == loaded[rawlibname].end()) {
 		trace_t stack_trace;
-		throw RTError(format::format("Library `{1}` has not exported named function: {2}", { rawlibname, fname }), *token, stack_trace);
+		throw RTError(format::format(_LIBRARY_FUNCTION_NOT_EXIST_, { rawlibname, fname }), *token, stack_trace);
 	}
 	return loaded[rawlibname][fname];
 }
