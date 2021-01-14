@@ -497,7 +497,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 {
 	nextToken();
 
-	bool isVargs;
+	bool isVargs = false;
 	auto sig = parseSigNode();
 	if (!sig.second.empty() && sig.second[0].first == 0)
 		return logErrorN(_EXPECTED_FUNCTION_SIG_, currentToken);
