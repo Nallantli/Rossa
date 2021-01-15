@@ -14,6 +14,8 @@ const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t 
 			auto base = values[i].getBase();
 			if (base == vt)
 				v += 3;
+			else if (base > 0 && check[i].getValueType() == NIL)
+				v += 2;
 			else if (base == ANY)
 				v += 1;
 			else if (check[i].getValueType() == OBJECT) {

@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.11.4-alpha"
+#define _ROSSA_VERSION_ "v1.11.5-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -401,8 +401,8 @@ namespace rossa
 		const ObjectType type;
 		const std::shared_ptr<Instruction> body;
 		hash_ull hashed_key;
-		std::vector<type_sll> name_trace;
 		std::vector<type_sll> extensions;
+		std::vector<type_sll> name_trace;
 		std::map<hash_ull, Symbol> values;
 		void traceName(const hash_ull &);
 
@@ -410,7 +410,7 @@ namespace rossa
 		Scope();
 		Scope(const std::shared_ptr<Scope> &, const hash_ull &);
 		Scope(const std::shared_ptr<Scope> &, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::shared_ptr<Scope> &, const std::vector<type_sll> &);
-		Scope(const std::shared_ptr<Scope> &, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::vector<type_sll> &);
+		Scope(const std::shared_ptr<Scope> &, const ObjectType &, const std::shared_ptr<Instruction> &, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &name_trace);
 		const std::shared_ptr<Scope> &getParent() const;
 		const Symbol instantiate(const sym_vec_t &, const Token *, trace_t &) const;
 		void clear();

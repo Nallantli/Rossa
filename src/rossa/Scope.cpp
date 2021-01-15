@@ -30,12 +30,13 @@ Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const
 	traceName(key);
 }
 
-Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions)
+Scope::Scope(const std::shared_ptr<Scope> &parent, const ObjectType &type, const std::shared_ptr<Instruction> &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions, const std::vector<type_sll> &name_trace)
 	: parent{ parent }
 	, type{ type }
 	, body{ body }
 	, hashed_key{ hashed_key }
 	, extensions{ extensions }
+	, name_trace{ name_trace }
 {}
 
 void Scope::traceName(const hash_ull &key)
@@ -62,7 +63,7 @@ const Symbol Scope::instantiate(const sym_vec_t &params, const Token *token, tra
 	if (type != STRUCT_O)
 		throw RTError(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
-	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions);
+	auto o = std::make_shared<Scope>(parent, INSTANCE_O, body, hashed_key, extensions, name_trace);
 	o->body->evaluate(o, stack_trace);
 	auto d = Symbol(o);
 	o->getVariable(Rossa::HASH_INIT, token, stack_trace).call(params, token, stack_trace);

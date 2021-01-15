@@ -1,0 +1,97 @@
+struct LinkedList class {
+	struct Node class {
+		var next, prev, value;
+
+		init(ref prev : @LinkedList.Node, ref next : @LinkedList.Node, ref value) => {
+			this.prev = prev;
+			this.next = next;
+			this.value = value;
+
+			if prev !== nil then {
+				prev.next = this;
+			}
+			if next !== nil then {
+				next.prev = this;
+			}
+		}
+
+		`->String`() => {
+			return value -> String;
+		}
+	}
+
+	var tail;
+	length := 0;
+
+	init() => {}
+
+	push(ref value) => {
+		tail = new Node(tail, nil, value);
+		length += 1;
+		refer tail.value;
+	}
+
+	`[]`(ref index : Number) => {
+		curr := tail;
+		for i in 1 .. (length - index) do {
+			curr = curr.prev;
+		}
+		refer curr.value;
+	}
+
+	`+`(ref a : Array) => {
+		for e in a do {
+			push(e);
+		}
+	}
+
+	`+`(ref l : @LinkedList) => {
+		for e in l -> Array do {
+			push(e);
+		}
+	}
+
+	remove(ref index : Number) => {
+		curr := tail;
+		for i in 1 .. (length - index) do {
+			curr = curr.prev;
+		}
+		if curr.next !== nil then {
+			curr.next.prev = curr.prev;
+		}
+		if curr.prev !== nil then {
+			curr.prev.next = curr.next;
+		}
+		if tail === curr then {
+			tail = curr.prev;
+		}
+		length -= 1;
+		refer curr.value;
+	}
+
+	pop() => {
+		r := tail;
+		tail = tail.prev;
+		tail.next = nil;
+		length -= 1;
+		refer r.value;
+	}
+
+	len() => {
+		return length;
+	}
+
+	`->Array`() => {
+		a := alloc(length);
+		curr := tail;
+		for i in [0 .. length].reverse() do {
+			a[i] = curr;
+			curr = curr.prev;
+		}
+		refer a;
+	}
+
+	`->String`() => {
+		return this -> Array -> String;
+	}
+}

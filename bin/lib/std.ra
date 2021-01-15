@@ -38,6 +38,9 @@ parse := ((ref x) => parse(x));
 
 `()`(ref a, ref b : Array) => _call_op 20 (a, b);
 
+`==`(ref a, ref b) => a === b;
+`!=`(ref a, ref b) => a !== b;
+
 # CASTING
 
 `->Number`(ref a) => a -> Number;
