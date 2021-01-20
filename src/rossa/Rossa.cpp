@@ -1,8 +1,6 @@
 #include "../../bin/include/Standard.h"
 #include <fstream>
 
-using namespace rossa;
-
 Hash Rossa::MAIN_HASH = Hash();
 
 const hash_ull Rossa::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);
@@ -47,9 +45,8 @@ Rossa::Rossa(const std::vector<std::string> &args)
 
 	sym_vec_t argv;
 	for (auto &s : args)
-		argv.push_back(Symbol(s));
-	auto v = Symbol(argv);
-	main->createVariable(ROSSA_HASH("_args"), v, NULL);
+		argv.push_back(sym_t::String(s));
+	main->createVariable(ROSSA_HASH("_args"), sym_t::Array(argv), NULL);
 }
 
 const std::map<std::string, signed int> Rossa::bOperators = {
@@ -104,7 +101,7 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"!", -1},
 	{"$", -1} };
 
-std::shared_ptr<Node> Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
+const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
 {
 	auto tokens = lexString(code, currentFile);
 	NodeParser testnp(tokens, currentFile);
@@ -112,7 +109,7 @@ std::shared_ptr<Node> Rossa::compileCode(const std::string &code, const std::fil
 	return n->fold();
 }
 
-const Symbol Rossa::runCode(const std::shared_ptr<Node> &entry, const bool &tree)
+const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
 {
 	if (tree)
 		std::cout << entry->printTree("", true).str();
@@ -210,7 +207,7 @@ const int Rossa::getToken(
 	size_t &LINE_INDEX,
 	size_t &TOKEN_DIST,
 	std::string &ID_STRING,
-	RNumber &NUM_VALUE)
+	number_t &NUM_VALUE)
 {
 	static int last;
 	while (isspace(last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)))
@@ -320,10 +317,10 @@ const int Rossa::getToken(
 		else if (ID_STRING == KEYWORD_ANY)
 			return TOK_ANY;
 		else if (ID_STRING == "inf") {
-			NUM_VALUE = RNumber::Double(INFINITY);
+			NUM_VALUE = number_t::Double(INFINITY);
 			return TOK_NUM;
 		} else if (ID_STRING == "nan") {
-			NUM_VALUE = RNumber::Double(NAN);
+			NUM_VALUE = number_t::Double(NAN);
 			return TOK_NUM;
 		} else if (Rossa::bOperators.find(ID_STRING) != Rossa::bOperators.end() || Rossa::uOperators.find(ID_STRING) != Rossa::uOperators.end())
 			return TOK_OPR;
@@ -340,10 +337,10 @@ const int Rossa::getToken(
 			switch (base) {
 				case 'b':
 				case 'B':
-					NUM_VALUE = RNumber::Long(std::stoll(numStr, nullptr, 2));
+					NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 2));
 					break;
 				default:
-					NUM_VALUE = RNumber::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
+					NUM_VALUE = number_t::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
 					break;
 			}
 			ID_STRING = "0" + std::string(1, base) + numStr;
@@ -363,9 +360,9 @@ const int Rossa::getToken(
 
 		ID_STRING = numStr;
 		if (flag)
-			NUM_VALUE = RNumber::Double(std::stold(numStr));
+			NUM_VALUE = number_t::Double(std::stold(numStr));
 		else
-			NUM_VALUE = RNumber::Long(std::stoll(numStr, nullptr, 10));
+			NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 10));
 		return TOK_NUM;
 	} else if (last == '#') {
 		std::string commentStr = "";
@@ -488,7 +485,7 @@ const int Rossa::getToken(
 				if (value.size() < 1)
 					value = std::string(1, 0);
 				ID_STRING = value;
-				NUM_VALUE = RNumber::Long(static_cast<unsigned char>(value[0]));
+				NUM_VALUE = number_t::Long(static_cast<unsigned char>(value[0]));
 				return TOK_NUM;
 			} else if (last == '\\') {
 				switch (last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)) {
@@ -550,7 +547,7 @@ const int Rossa::getToken(
 	return ret;
 }
 
-const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::filesystem::path &filename)
+const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std::filesystem::path &filename)
 {
 	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);
@@ -560,12 +557,12 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 		LINES.push_back(item);
 	}
 
-	std::vector<Token> tokens;
+	std::vector<token_t> tokens;
 	size_t INPUT_INDEX = 0;
 	size_t LINE_INDEX = 0;
 	size_t TOKEN_DIST = 0;
 	std::string ID_STRING;
-	RNumber NUM_VALUE;
+	number_t NUM_VALUE;
 
 	while (true) {
 		int token = getToken(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE);
@@ -573,10 +570,10 @@ const std::vector<Token> Rossa::lexString(const std::string &INPUT, const std::f
 			break;
 		if (token == '#')
 			continue;
-		Token t = { filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token };
+		token_t t = { filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token };
 
 		if (t.type == TOK_DEF) {
-			std::vector<Token> temp;
+			std::vector<token_t> temp;
 			while (tokens.back().type != '(') {
 				if (tokens.back().valueString == ">>") {
 					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });

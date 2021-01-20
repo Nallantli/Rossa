@@ -1,10 +1,8 @@
 #include "../../bin/include/Rossa.h"
 #include <fstream>
 
-using namespace rossa;
-
 NodeParser::NodeParser(
-	const std::vector<Token> &tokens,
+	const std::vector<token_t> &tokens,
 	const std::filesystem::path &currentFile) : tokens(tokens),
 	currentFile(currentFile)
 {}
@@ -14,31 +12,31 @@ void NodeParser::nextToken()
 	if (index < this->tokens.size())
 		currentToken = this->tokens.at(index++);
 	else
-		currentToken = Token();
+		currentToken = token_t();
 }
 
-std::shared_ptr<Node> NodeParser::parseNumNode()
+node_ptr_t NodeParser::parseNumNode()
 {
-	auto n = std::make_shared<ContainerNode>(Symbol(currentToken.valueNumber), currentToken);
+	const node_ptr_t n = std::make_shared<ContainerNode>(sym_t::Number(currentToken.valueNumber), currentToken);
 	nextToken();
 	return n;
 }
 
-std::shared_ptr<Node> NodeParser::parseBoolNode()
+node_ptr_t NodeParser::parseBoolNode()
 {
-	auto n = std::make_shared<ContainerNode>(Symbol(currentToken.valueString == KEYWORD_TRUE), currentToken);
+	auto n = std::make_shared<ContainerNode>(sym_t::Boolean(currentToken.valueString == KEYWORD_TRUE), currentToken);
 	nextToken();
 	return n;
 }
 
-std::shared_ptr<Node> NodeParser::parseIDNode()
+node_ptr_t NodeParser::parseIDNode()
 {
 	auto n = std::make_shared<IDNode>(ROSSA_HASH(currentToken.valueString), currentToken);
 	nextToken();
 	return n;
 }
 
-std::shared_ptr<Node> NodeParser::parseBIDNode()
+node_ptr_t NodeParser::parseBIDNode()
 {
 	if (currentToken.type == TOK_IDF) {
 		return parseIDNode();
@@ -48,7 +46,7 @@ std::shared_ptr<Node> NodeParser::parseBIDNode()
 	return n;
 }
 
-std::shared_ptr<Node> NodeParser::parseEntryNode()
+node_ptr_t NodeParser::parseEntryNode()
 {
 	node_vec_t v;
 	while (currentToken.type != NULL_TOK)
@@ -56,7 +54,7 @@ std::shared_ptr<Node> NodeParser::parseEntryNode()
 	return std::make_shared<VectorNode>(v, false, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseTrailingNode(const std::shared_ptr<Node> &ret, const bool &allowInner)
+node_ptr_t NodeParser::parseTrailingNode(const node_ptr_t &ret, const bool &allowInner)
 {
 	if (currentToken.type == NULL_TOK)
 		return ret;
@@ -76,7 +74,7 @@ std::shared_ptr<Node> NodeParser::parseTrailingNode(const std::shared_ptr<Node> 
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseCallBuiltNode()
+node_ptr_t NodeParser::parseCallBuiltNode()
 {
 	LexerTokenType t = static_cast<LexerTokenType>(currentToken.type);
 	std::string temp = currentToken.valueString;
@@ -93,7 +91,7 @@ std::shared_ptr<Node> NodeParser::parseCallBuiltNode()
 	return parseTrailingNode(ret, true);
 }
 
-std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
+node_ptr_t NodeParser::parseCallNode(const node_ptr_t &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
@@ -116,11 +114,11 @@ std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
 
 	nextToken();
 
-	std::shared_ptr<Node> ret;
-	if (a->getType() == INS_NODE) {
+	node_ptr_t ret;
+	if (a->getType() == Node::type_t::INS_NODE) {
 		auto a_a = reinterpret_cast<InsNode *>(a.get())->getCallee();
 		auto a_b = reinterpret_cast<InsNode *>(a.get())->getArg();
-		if (a_b->getType() == BID_NODE) {
+		if (a_b->getType() == Node::type_t::BID_NODE) {
 			auto nkey = reinterpret_cast<BIDNode *>(a_b.get());
 			std::string key = nkey->getKey();
 			/*if (!args.empty())
@@ -148,7 +146,7 @@ std::shared_ptr<Node> NodeParser::parseCallNode(const std::shared_ptr<Node> &a)
 	return parseTrailingNode(ret, true);
 }
 
-std::shared_ptr<Node> NodeParser::parseExternCallNode()
+node_ptr_t NodeParser::parseExternCallNode()
 {
 	nextToken();
 	std::string libname = currentToken.valueString;
@@ -187,7 +185,7 @@ std::shared_ptr<Node> NodeParser::parseExternCallNode()
 	return std::make_shared<ExternCallNode>(libname, fname, args, marker);
 }
 
-std::shared_ptr<Node> NodeParser::parseCallOpNode()
+node_ptr_t NodeParser::parseCallOpNode()
 {
 	nextToken();
 	size_t id = currentToken.valueNumber.getLong();
@@ -219,12 +217,12 @@ std::shared_ptr<Node> NodeParser::parseCallOpNode()
 }
 
 
-ParamType NodeParser::parseParamTypeNode(const type_sll &base)
+param_t NodeParser::parseParamTypeNode(const type_sll &base)
 {
-	if (base < 0 && base != FUNCTION)
-		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { sig::getTypeString(base) }), currentToken);
+	if (base < 0 && base != Value::type_t::FUNCTION)
+		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { getTypeString(base) }), currentToken);
 
-	ParamType pt(base);
+	param_t pt(base);
 	nextToken();
 
 	int i = 0;
@@ -234,45 +232,45 @@ ParamType NodeParser::parseParamTypeNode(const type_sll &base)
 				return logErrorPT(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
-		type_sll qbase = ANY;
+		type_sll qbase = Value::type_t::ANY;
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
-				qbase = BOOLEAN_D;
+				qbase = Value::type_t::BOOLEAN_D;
 				nextToken();
 				break;
 			case TOK_NUMBER:
-				qbase = NUMBER;
+				qbase = Value::type_t::NUMBER;
 				nextToken();
 				break;
 			case TOK_ARRAY:
-				qbase = ARRAY;
+				qbase = Value::type_t::ARRAY;
 				nextToken();
 				break;
 			case TOK_STRING:
-				qbase = STRING;
+				qbase = Value::type_t::STRING;
 				nextToken();
 				break;
 			case TOK_DICTIONARY:
-				qbase = DICTIONARY;
+				qbase = Value::type_t::DICTIONARY;
 				nextToken();
 				break;
 			case TOK_OBJECT:
-				qbase = OBJECT;
+				qbase = Value::type_t::OBJECT;
 				nextToken();
 				break;
 			case TOK_FUNCTION:
-				qbase = FUNCTION;
+				qbase = Value::type_t::FUNCTION;
 				nextToken();
 				break;
 			case TOK_POINTER:
-				qbase = POINTER;
+				qbase = Value::type_t::POINTER;
 				nextToken();
 				break;
 			case TOK_ANY:
 				nextToken();
 				break;
 			case TOK_TYPE_NAME:
-				qbase = TYPE_NAME;
+				qbase = Value::type_t::TYPE_NAME;
 				nextToken();
 				break;
 			case '@':
@@ -296,7 +294,7 @@ ParamType NodeParser::parseParamTypeNode(const type_sll &base)
 		if (currentToken.valueString == "<") {
 			pt.addQualifier(parseParamTypeNode(qbase));
 		} else {
-			pt.addQualifier(ParamType(qbase));
+			pt.addQualifier(param_t(qbase));
 		}
 	}
 	nextToken();
@@ -314,11 +312,11 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 		if (currentToken.type != ')')
 			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 		nextToken();
-		return { {}, {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
+		return { sig_t(), {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
 	}
 
 	std::vector<std::pair<LexerTokenType, hash_ull>> args;
-	sig_t types;
+	param_vec_t types;
 
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
@@ -343,48 +341,48 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		ParamType pt(ANY);
+		param_t pt(Value::type_t::ANY);
 		if (currentToken.type == ':') {
-			type_sll ftype = ANY;
+			type_sll ftype = Value::type_t::ANY;
 			nextToken();
 			switch (currentToken.type) {
 				case TOK_BOOLEAN:
-					ftype = BOOLEAN_D;
+					ftype = Value::type_t::BOOLEAN_D;
 					nextToken();
 					break;
 				case TOK_NUMBER:
-					ftype = NUMBER;
+					ftype = Value::type_t::NUMBER;
 					nextToken();
 					break;
 				case TOK_ARRAY:
-					ftype = ARRAY;
+					ftype = Value::type_t::ARRAY;
 					nextToken();
 					break;
 				case TOK_STRING:
-					ftype = STRING;
+					ftype = Value::type_t::STRING;
 					nextToken();
 					break;
 				case TOK_DICTIONARY:
-					ftype = DICTIONARY;
+					ftype = Value::type_t::DICTIONARY;
 					nextToken();
 					break;
 				case TOK_OBJECT:
-					ftype = OBJECT;
+					ftype = Value::type_t::OBJECT;
 					nextToken();
 					break;
 				case TOK_FUNCTION:
-					ftype = FUNCTION;
+					ftype = Value::type_t::FUNCTION;
 					nextToken();
 					break;
 				case TOK_POINTER:
-					ftype = POINTER;
+					ftype = Value::type_t::POINTER;
 					nextToken();
 					break;
 				case TOK_ANY:
 					nextToken();
 					break;
 				case TOK_TYPE_NAME:
-					ftype = TYPE_NAME;
+					ftype = Value::type_t::TYPE_NAME;
 					nextToken();
 					break;
 				case '@':
@@ -408,7 +406,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 			if (currentToken.valueString == "<") {
 				pt = parseParamTypeNode(ftype);
 			} else {
-				pt = ParamType(ftype);
+				pt = param_t(ftype);
 			}
 		}
 
@@ -423,7 +421,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 	return { types, args };
 }
 
-std::shared_ptr<Node> NodeParser::parseDefineNode()
+node_ptr_t NodeParser::parseDefineNode()
 {
 	nextToken();
 
@@ -480,12 +478,12 @@ std::shared_ptr<Node> NodeParser::parseDefineNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseNewNode()
+node_ptr_t NodeParser::parseNewNode()
 {
 	nextToken();
 
 	auto body = parseUnitNode();
-	if (body->getType() != CALL_NODE)
+	if (body->getType() != Node::type_t::CALL_NODE)
 		return logErrorN(_EXPECTED_OBJECT_NAME_, currentToken);
 	auto object = reinterpret_cast<CallNode *>(body.get())->getCallee();
 	auto params = std::make_shared<VectorNode>((reinterpret_cast<CallNode *>(body.get())->getArgs()), false, currentToken);
@@ -493,7 +491,7 @@ std::shared_ptr<Node> NodeParser::parseNewNode()
 	return std::make_shared<NewNode>(object, params, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseLambdaNode()
+node_ptr_t NodeParser::parseLambdaNode()
 {
 	nextToken();
 
@@ -563,7 +561,7 @@ std::shared_ptr<Node> NodeParser::parseLambdaNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseNPLambdaNode()
+node_ptr_t NodeParser::parseNPLambdaNode()
 {
 	nextToken();
 
@@ -600,7 +598,7 @@ std::shared_ptr<Node> NodeParser::parseNPLambdaNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseIndexNode(const std::shared_ptr<Node> &a)
+node_ptr_t NodeParser::parseIndexNode(const node_ptr_t &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
@@ -614,7 +612,7 @@ std::shared_ptr<Node> NodeParser::parseIndexNode(const std::shared_ptr<Node> &a)
 	return nullptr;
 }
 
-std::shared_ptr<Node> NodeParser::parseTypeNode()
+node_ptr_t NodeParser::parseTypeNode()
 {
 	nextToken();
 	std::string typestr = "";
@@ -626,10 +624,10 @@ std::shared_ptr<Node> NodeParser::parseTypeNode()
 		typestr += ".";
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(ROSSA_HASH(typestr))), currentToken);
+	return std::make_shared<ContainerNode>(sym_t::TypeName(ROSSA_HASH(typestr)), currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseUntilNode(const std::shared_ptr<Node> &a, const bool &inclusive)
+node_ptr_t NodeParser::parseUntilNode(const node_ptr_t &a, const bool &inclusive)
 {
 	nextToken();
 
@@ -649,9 +647,9 @@ std::shared_ptr<Node> NodeParser::parseUntilNode(const std::shared_ptr<Node> &a,
 	return std::make_shared<UntilNode>(a, b, nullptr, inclusive, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseBinOpNode(const std::shared_ptr<Node> &a)
+node_ptr_t NodeParser::parseBinOpNode(const node_ptr_t &a)
 {
-	std::shared_ptr<Node> current = a;
+	node_ptr_t current = a;
 	int pastPrec = 999;
 
 	while (currentToken.type != NULL_TOK && Rossa::bOperators.find(currentToken.valueString) != Rossa::bOperators.end()) {
@@ -671,9 +669,9 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(const std::shared_ptr<Node> &a)
 					marker);
 				pastPrec = prec;
 			} else {
-				std::shared_ptr<Node> parent = nullptr;
+				node_ptr_t parent = nullptr;
 				auto n = current;
-				while (n->getType() == BIN_OP_NODE) {
+				while (n->getType() == Node::type_t::BIN_OP_NODE) {
 					auto bon = reinterpret_cast<BinOpNode *>(n.get());
 					auto oldOp = bon->getOp();
 					auto bon_b = bon->getB();
@@ -687,7 +685,7 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(const std::shared_ptr<Node> &a)
 							));
 						break;
 					}
-					if (bon_b->getType() != BIN_OP_NODE) {
+					if (bon_b->getType() != Node::type_t::BIN_OP_NODE) {
 						bon->setB(std::make_shared<BinOpNode>(
 							opStr,
 							bon_b,
@@ -709,23 +707,23 @@ std::shared_ptr<Node> NodeParser::parseBinOpNode(const std::shared_ptr<Node> &a)
 	return current;
 }
 
-std::shared_ptr<Node> NodeParser::parseBaseNode()
+node_ptr_t NodeParser::parseBaseNode()
 {
 	if (currentToken.type == NULL_TOK)
 		logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
 
-	std::shared_ptr<Node> ret;
+	node_ptr_t ret;
 	switch (currentToken.type) {
 		case TOK_NUM:
 			return parseNumNode();
 		case TOK_IDF:
 			return parseIDNode();
 		case TOK_STR_LIT:
-			ret = std::make_shared<ContainerNode>(Symbol(currentToken.valueString), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::String(currentToken.valueString), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NIL:
-			ret = std::make_shared<ContainerNode>(Symbol(), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t(), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TRUE:
@@ -742,43 +740,43 @@ std::shared_ptr<Node> NodeParser::parseBaseNode()
 		case '{':
 			return parseMapNode();
 		case TOK_NIL_NAME:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(NIL)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::NIL), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NUMBER:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(NUMBER)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::NUMBER), currentToken);
 			nextToken();
 			return ret;
 		case TOK_STRING:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(STRING)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::STRING), currentToken);
 			nextToken();
 			return ret;
 		case TOK_BOOLEAN:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(BOOLEAN_D)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::BOOLEAN_D), currentToken);
 			nextToken();
 			return ret;
 		case TOK_ARRAY:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(ARRAY)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::ARRAY), currentToken);
 			nextToken();
 			return ret;
 		case TOK_DICTIONARY:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(DICTIONARY)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::DICTIONARY), currentToken);
 			nextToken();
 			return ret;
 		case TOK_OBJECT:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(OBJECT)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::OBJECT), currentToken);
 			nextToken();
 			return ret;
 		case TOK_FUNCTION:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(FUNCTION)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::FUNCTION), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TYPE_NAME:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(TYPE_NAME)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::TYPE_NAME), currentToken);
 			nextToken();
 			return ret;
 		case TOK_POINTER:
-			ret = std::make_shared<ContainerNode>(Symbol(static_cast<type_sll>(POINTER)), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::POINTER), currentToken);
 			nextToken();
 			return ret;
 		default:
@@ -786,7 +784,7 @@ std::shared_ptr<Node> NodeParser::parseBaseNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseUnOpNode()
+node_ptr_t NodeParser::parseUnOpNode()
 {
 	std::string opStr = currentToken.valueString;
 	auto marker = currentToken;
@@ -800,7 +798,7 @@ std::shared_ptr<Node> NodeParser::parseUnOpNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseVectorNode()
+node_ptr_t NodeParser::parseVectorNode()
 {
 	nextToken();
 	node_vec_t args;
@@ -840,10 +838,10 @@ std::shared_ptr<Node> NodeParser::parseVectorNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseMapNode()
+node_ptr_t NodeParser::parseMapNode()
 {
 	nextToken();
-	std::vector<std::pair<std::string, std::shared_ptr<Node>>> args;
+	std::vector<std::pair<std::string, node_ptr_t>> args;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (i > 0) {
@@ -860,7 +858,7 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 			return logErrorN(format::format(_EXPECTED_ERROR_, { ":" }), currentToken);
 		nextToken();
 		if (auto b = parseEquNode()) {
-			std::pair<std::string, std::shared_ptr<Node>> p = { key, b };
+			std::pair<std::string, node_ptr_t> p = { key, b };
 			args.push_back(p);
 		} else
 			return nullptr;
@@ -871,10 +869,10 @@ std::shared_ptr<Node> NodeParser::parseMapNode()
 	return std::make_shared<MapNode>(args, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseSwitchNode()
+node_ptr_t NodeParser::parseSwitchNode()
 {
 	nextToken();
-	std::map<std::shared_ptr<Node>, size_t> cases;
+	std::map<node_ptr_t, size_t> cases;
 	node_vec_t gotos;
 
 	auto switchs = parseEquNode();
@@ -978,12 +976,12 @@ std::shared_ptr<Node> NodeParser::parseSwitchNode()
 	return ret;
 }
 
-std::shared_ptr<Node> NodeParser::parseUnitNode()
+node_ptr_t NodeParser::parseUnitNode()
 {
 	if (currentToken.type == NULL_TOK)
 		return logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
 
-	std::shared_ptr<Node> ret = nullptr;
+	node_ptr_t ret = nullptr;
 	switch (currentToken.type) {
 		case ';':
 		case 0:
@@ -1040,7 +1038,7 @@ std::shared_ptr<Node> NodeParser::parseUnitNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseInsNode(const std::shared_ptr<Node> &ret)
+node_ptr_t NodeParser::parseInsNode(const node_ptr_t &ret)
 {
 	auto curr = ret;
 	while (currentToken.type == TOK_INNER) {
@@ -1051,7 +1049,7 @@ std::shared_ptr<Node> NodeParser::parseInsNode(const std::shared_ptr<Node> &ret)
 	return parseTrailingNode(curr, false);
 }
 
-std::shared_ptr<Node> NodeParser::parseThenNode(const std::shared_ptr<Node> &a)
+node_ptr_t NodeParser::parseThenNode(const node_ptr_t &a)
 {
 	nextToken();
 	auto b = parseEquNode();
@@ -1068,7 +1066,7 @@ std::shared_ptr<Node> NodeParser::parseThenNode(const std::shared_ptr<Node> &a)
 	return ret;
 }
 
-std::shared_ptr<Node> NodeParser::parseEquNode()
+node_ptr_t NodeParser::parseEquNode()
 {
 	if (currentToken.type == NULL_TOK)
 		return logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
@@ -1096,7 +1094,7 @@ std::shared_ptr<Node> NodeParser::parseEquNode()
 	return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseIfElseNode()
+node_ptr_t NodeParser::parseIfElseNode()
 {
 	nextToken();
 	auto ifs = parseEquNode();
@@ -1171,7 +1169,7 @@ std::shared_ptr<Node> NodeParser::parseIfElseNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parseTryCatchNode()
+node_ptr_t NodeParser::parseTryCatchNode()
 {
 	nextToken();
 	if (currentToken.type != '{')
@@ -1224,7 +1222,7 @@ std::shared_ptr<Node> NodeParser::parseTryCatchNode()
 	return std::make_shared<TryCatchNode>(std::make_shared<VectorNode>(tbody, true, currentToken), std::make_shared<VectorNode>(cbody, true, currentToken), key, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseWhileNode()
+node_ptr_t NodeParser::parseWhileNode()
 {
 
 	nextToken();
@@ -1257,7 +1255,7 @@ std::shared_ptr<Node> NodeParser::parseWhileNode()
 	return std::make_shared<WhileNode>(ifs, body, marker);
 }
 
-std::shared_ptr<Node> NodeParser::parseForNode()
+node_ptr_t NodeParser::parseForNode()
 {
 
 	nextToken();
@@ -1293,7 +1291,7 @@ std::shared_ptr<Node> NodeParser::parseForNode()
 	return std::make_shared<ForNode>(id, fors, body, marker);
 }
 
-std::shared_ptr<Node> NodeParser::parseExternNode()
+node_ptr_t NodeParser::parseExternNode()
 {
 
 	nextToken();
@@ -1309,7 +1307,7 @@ std::shared_ptr<Node> NodeParser::parseExternNode()
 	return nullptr;
 }
 
-std::shared_ptr<Node> NodeParser::parseClassNode()
+node_ptr_t NodeParser::parseClassNode()
 {
 
 	auto type = currentToken.type;
@@ -1319,7 +1317,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 	if (currentToken.type != TOK_CLASS)
 		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CLASS }), currentToken);
 	nextToken();
-	std::shared_ptr<Node> extends = nullptr;
+	node_ptr_t extends = nullptr;
 	if (currentToken.type == ':') {
 		nextToken();
 		extends = parseUnitNode();
@@ -1344,7 +1342,7 @@ std::shared_ptr<Node> NodeParser::parseClassNode()
 	return std::make_shared<ClassNode>(key, type, body, extends, currentToken);
 }
 
-std::shared_ptr<Node> NodeParser::parseLoadNode()
+node_ptr_t NodeParser::parseLoadNode()
 {
 	nextToken();
 	if (currentToken.type != TOK_STR_LIT)
@@ -1383,7 +1381,7 @@ std::shared_ptr<Node> NodeParser::parseLoadNode()
 	return n;
 }
 
-std::shared_ptr<Node> NodeParser::parseExprNode()
+node_ptr_t NodeParser::parseExprNode()
 {
 
 	if (currentToken.type == NULL_TOK)
@@ -1488,18 +1486,18 @@ std::shared_ptr<Node> NodeParser::parseExprNode()
 	}
 }
 
-std::shared_ptr<Node> NodeParser::parse()
+node_ptr_t NodeParser::parse()
 {
 	nextToken();
 	return parseEntryNode();
 }
 
-std::shared_ptr<Instruction> NodeParser::genParser(const std::shared_ptr<Node> &n)
+i_ptr_t NodeParser::genParser(const node_ptr_t &n)
 {
 	return n->genParser();
 }
 
-std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token &t)
+node_ptr_t NodeParser::logErrorN(const std::string &s, const token_t &t)
 {
 	trace_t stack_trace;
 	if (t.type == NULL_TOK)
@@ -1509,14 +1507,14 @@ std::shared_ptr<Node> NodeParser::logErrorN(const std::string &s, const Token &t
 	return nullptr;
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const Token &t)
+std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return { sig_t({}), {{NULL_TOK, -1}} };
+	return { sig_t(), {{NULL_TOK, -1}} };
 }
 
-ParamType NodeParser::logErrorPT(const std::string &s, const Token &t)
+param_t NodeParser::logErrorPT(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return ParamType(NIL);
+	return param_t(Value::type_t::NIL);
 }

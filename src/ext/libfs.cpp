@@ -11,11 +11,9 @@ COMPILER_COMMANDS(libsdl, "-lzip")
 #endif
 #endif
 
-using namespace rossa;
-
 namespace libfs
 {
-	inline void unzip(const std::filesystem::path &zipdir, const std::filesystem::path &unzipdir, const Token *token, trace_t &stack_trace)
+	inline void unzip(const std::filesystem::path &zipdir, const std::filesystem::path &unzipdir, const token_t *token, trace_t &stack_trace)
 	{
 		int error;
 		zip_t *z = zip_open(zipdir.string().c_str(), ZIP_RDONLY, &error);
@@ -78,7 +76,7 @@ ROSSA_EXT_SIG(_writer_init, args, token, hash, stack_trace)
 		fstr->open(filename, std::ios::binary);
 	else
 		fstr->open(filename, std::ios::binary);
-	return Symbol(static_cast<std::shared_ptr<void>>(fstr));
+	return sym_t::Pointer(fstr);
 }
 
 ROSSA_EXT_SIG(_writer_close, args, token, hash, stack_trace)
@@ -88,7 +86,7 @@ ROSSA_EXT_SIG(_writer_close, args, token, hash, stack_trace)
 		std::ofstream);
 
 	fstr->close();
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_writer_isOpen, args, token, hash, stack_trace)
@@ -97,7 +95,7 @@ ROSSA_EXT_SIG(_writer_isOpen, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		std::ofstream);
 
-	return Symbol(fstr->is_open());
+	return sym_t::Boolean(fstr->is_open());
 }
 
 ROSSA_EXT_SIG(_reader_init, args, token, hash, stack_trace)
@@ -108,7 +106,7 @@ ROSSA_EXT_SIG(_reader_init, args, token, hash, stack_trace)
 		fstr->open(filename, std::ios::binary);
 	else
 		fstr->open(filename, std::ios::binary);
-	return Symbol(static_cast<std::shared_ptr<void>>(fstr));
+	return sym_t::Pointer(fstr);
 }
 
 ROSSA_EXT_SIG(_reader_close, args, token, hash, stack_trace)
@@ -118,7 +116,7 @@ ROSSA_EXT_SIG(_reader_close, args, token, hash, stack_trace)
 		std::ifstream);
 
 	fstr->close();
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_reader_isOpen, args, token, hash, stack_trace)
@@ -127,7 +125,7 @@ ROSSA_EXT_SIG(_reader_isOpen, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		std::ifstream);
 
-	return Symbol(fstr->is_open());
+	return sym_t::Boolean(fstr->is_open());
 }
 
 ROSSA_EXT_SIG(_reader_readLine, args, token, hash, stack_trace)
@@ -138,8 +136,8 @@ ROSSA_EXT_SIG(_reader_readLine, args, token, hash, stack_trace)
 
 	std::string line;
 	if (std::getline(*fstr, line))
-		return Symbol(line);
-	return Symbol();
+		return sym_t::String(line);
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_reader_read, args, token, hash, stack_trace)
@@ -158,7 +156,7 @@ ROSSA_EXT_SIG(_reader_read, args, token, hash, stack_trace)
 		else
 			break;
 	}
-	return Symbol(line);
+	return sym_t::String(line);
 }
 
 ROSSA_EXT_SIG(_writer_write, args, token, hash, stack_trace)
@@ -168,7 +166,7 @@ ROSSA_EXT_SIG(_writer_write, args, token, hash, stack_trace)
 		std::ofstream);
 
 	*fstr << args[1].getString(token, stack_trace);
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_path_init, args, token, hash, stack_trace)
@@ -176,7 +174,7 @@ ROSSA_EXT_SIG(_path_init, args, token, hash, stack_trace)
 	auto pathstr = args[0].getString(token, stack_trace);
 	auto path = std::make_shared<std::filesystem::path>(pathstr);
 
-	return Symbol(static_cast<std::shared_ptr<void>>(path));
+	return sym_t::Pointer(path);
 }
 
 ROSSA_EXT_SIG(_path_filename, args, token, hash, stack_trace)
@@ -185,7 +183,7 @@ ROSSA_EXT_SIG(_path_filename, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		std::filesystem::path);
 
-	return Symbol(path->filename().string());
+	return sym_t::String(path->filename().string());
 }
 
 ROSSA_EXT_SIG(_path_string, args, token, hash, stack_trace)
@@ -194,7 +192,7 @@ ROSSA_EXT_SIG(_path_string, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		std::filesystem::path);
 
-	return Symbol(std::filesystem::weakly_canonical(*path).string());
+	return sym_t::String(std::filesystem::weakly_canonical(*path).string());
 }
 
 ROSSA_EXT_SIG(_path_mkdirs, args, token, hash, stack_trace)
@@ -204,7 +202,7 @@ ROSSA_EXT_SIG(_path_mkdirs, args, token, hash, stack_trace)
 		std::filesystem::path);
 
 	std::filesystem::create_directories(*path);
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_path_exists, args, token, hash, stack_trace)
@@ -213,7 +211,7 @@ ROSSA_EXT_SIG(_path_exists, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		std::filesystem::path);
 
-	return Symbol(std::filesystem::exists(path->string()));
+	return sym_t::Boolean(std::filesystem::exists(path->string()));
 }
 
 ROSSA_EXT_SIG(_path_append_path, args, token, hash, stack_trace)
@@ -226,7 +224,7 @@ ROSSA_EXT_SIG(_path_append_path, args, token, hash, stack_trace)
 		args[1].getPointer(token, stack_trace),
 		std::filesystem::path);
 
-	return Symbol((*path1 / *path2).string());
+	return sym_t::String((*path1 / *path2).string());
 }
 
 ROSSA_EXT_SIG(_path_append_string, args, token, hash, stack_trace)
@@ -237,7 +235,7 @@ ROSSA_EXT_SIG(_path_append_string, args, token, hash, stack_trace)
 
 	auto path2 = args[1].getString(token, stack_trace);
 
-	return Symbol((*path1 / path2).string());
+	return sym_t::String((*path1 / path2).string());
 }
 
 ROSSA_EXT_SIG(_path_unzip_a, args, token, hash, stack_trace)
@@ -250,7 +248,7 @@ ROSSA_EXT_SIG(_path_unzip_a, args, token, hash, stack_trace)
 		std::filesystem::path);
 
 	libfs::unzip(*path1, *path2, token, stack_trace);
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_path_unzip_b, args, token, hash, stack_trace)
@@ -261,7 +259,7 @@ ROSSA_EXT_SIG(_path_unzip_b, args, token, hash, stack_trace)
 	auto path2 = args[1].getString(token, stack_trace);
 
 	libfs::unzip(*path1, path2, token, stack_trace);
-	return Symbol();
+	return sym_t();
 }
 
 EXPORT_FUNCTIONS(libfs)

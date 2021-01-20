@@ -84,7 +84,7 @@ void moveback(std::string &code, int c)
 					std::cout << "\033[2D  \033[2D\033[1A> ";
 				} else {
 					std::cout << "\033[2D  \033[2D\033[1A";
-					PRINTC("└ ", rossa::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", BRIGHT_YELLOW_TEXT);
 				}
 				if (i > 0)
 					std::cout << "\033[" << i << "C";
@@ -95,7 +95,7 @@ void moveback(std::string &code, int c)
 	}
 }
 
-static void compile(std::shared_ptr<rossa::Node> entry, const std::string &output)
+static void compile(std::shared_ptr<Node> entry, const std::string &output)
 {
 #ifndef _WIN32
 	std::filesystem::path outputExe = output;
@@ -106,12 +106,12 @@ static void compile(std::shared_ptr<rossa::Node> entry, const std::string &outpu
 	std::cout << "Compiling to exe: " << output << "...\n";
 
 	std::cout << "[0/6]\tParsing operators...\n";
-	auto g = rossa::NodeParser::genParser(entry);
+	auto g = NodeParser::genParser(entry);
 
 	std::cout << "[1/6]\tExporting hashtable...\n";
 	std::string hashs = "{";
 	size_t i = 0;
-	for (auto &e : rossa::Rossa::MAIN_HASH.variable_hash) {
+	for (auto &e : Rossa::MAIN_HASH.getHashTable()) {
 		if (i++ > 0)
 			hashs += ", ";
 		hashs += "\"" + e + "\"";
@@ -121,37 +121,37 @@ static void compile(std::shared_ptr<rossa::Node> entry, const std::string &outpu
 	std::cout << "[2/6]\tAdding library links...\n";
 	std::string libs = "std::map<std::string, extf_t> fmap;\n";
 	std::string libincludes = "";
-	std::string libpaths = "\"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() + "\" ";
+	std::string libpaths = "\"" + (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() + "\" ";
 #ifdef __unix__
 	std::string cm = "-O3 -ldl -pthread";
 #else
 	std::string cm = "-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic";
 #endif
 
-	for (auto &l : rossa::lib::loaded) {
+	for (auto &l : lib::loaded) {
 		if (l.first == "STANDARD")
 			continue;
-		libincludes += "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / (l.first + ".h")).string() + "\"\n";
+		libincludes += "#include \"" + (dir::getRuntimePath().parent_path() / "include" / (l.first + ".h")).string() + "\"\n";
 		libs += "fmap.clear();\n" + l.first + "_rossaExportFunctions(fmap);\nlib::loaded[\"" + l.first + "\"] = fmap;\n";
-		libpaths += "\"" + (rossa::dir::getRuntimePath().parent_path() / "include" / (l.first + ".a")).string() + "\" ";
-		cm += " " + rossa::lib::compilerCommands[l.first];
+		libpaths += "\"" + (dir::getRuntimePath().parent_path() / "include" / (l.first + ".a")).string() + "\" ";
+		cm += " " + lib::compilerCommands[l.first];
 	}
 
 	std::cout << "[3/6]\tTranspiling code...\n";
-	std::ofstream file((rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
-	file << "#include \"" + (rossa::dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "using namespace rossa;\nint main(int argc, char const *argv[])\n{\nRossa r(rossa::dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "trace_t stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
+	std::ofstream file((dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
+	file << "#include \"" + (dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "int main(int argc, char const *argv[])\n{\nRossa r(dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "trace_t stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
 	file.close();
 
 	std::cout << "[4/6]\tWriting executable...\n";
 #ifndef _WIN32
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o {0} {1} {2} {3}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
+	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o {0} {1} {2} {3}", { outputExe.string(), (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
 #else
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o \"{0}\" \"{1}\" {2} {3}", { outputExe.string(), (rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
+	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o \"{0}\" \"{1}\" {2} {3}", { outputExe.string(), (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
 #endif
 	std::cout << exec_str << "\n";
 	system(exec_str.c_str());
 	std::cout << "[5/6]\tCleaning...\n";
-	std::filesystem::remove(rossa::dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
+	std::filesystem::remove(dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
 
 	std::cout << "[6/6]\tDone.\n";
 }
@@ -164,7 +164,7 @@ int main(int argc, char const *argv[])
 		std::cout << _ROSSA_VERSION_LONG_ << "\n";
 		return 0;
 	}
-	rossa::Rossa wrapper(parsed.second);
+	Rossa wrapper(parsed.second);
 
 	PRINTC("", 0);
 	bool tree = options["tree"] == "true";
@@ -176,7 +176,7 @@ int main(int argc, char const *argv[])
 			try {
 				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const rossa::RTError &e) {
+			} catch (const RTError &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
@@ -212,21 +212,21 @@ int main(int argc, char const *argv[])
 				}
 			}
 
-			std::shared_ptr<rossa::Node> comp;
+			std::shared_ptr<Node> comp;
 			if (!force) {
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
-				} catch (const rossa::RTError &e) {
+				} catch (const RTError &e) {
 					flag = false;
 					std::cout << "\n";
 
 					if (code.find('\n') != std::string::npos) {
 						std::cout << "\033[1A";
-						PRINTC("│ ", rossa::BRIGHT_YELLOW_TEXT);
+						PRINTC("│ ", BRIGHT_YELLOW_TEXT);
 						std::cout << "\033[2D\033[1B";
 					}
-					PRINTC("└ ", rossa::BRIGHT_YELLOW_TEXT);
+					PRINTC("└ ", BRIGHT_YELLOW_TEXT);
 
 					code += "\n";
 				}
@@ -235,11 +235,11 @@ int main(int argc, char const *argv[])
 				try {
 					flag = true;
 					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
-				} catch (const rossa::RTError &e) {
+				} catch (const RTError &e) {
 					flag = false;
 					code = "";
 					std::cout << "\n";
-					rossa::Rossa::printError(e);
+					Rossa::printError(e);
 					std::cout << "> ";
 				}
 			}
@@ -249,12 +249,12 @@ int main(int argc, char const *argv[])
 				code = "";
 				try {
 					auto value = wrapper.runCode(std::move(comp), tree);
-					std::vector<rossa::Function> stack_trace;
-					if (value.getValueType() == rossa::ARRAY) {
+					std::vector<Function> stack_trace;
+					if (value.getValueType() == Value::type_t::ARRAY) {
 						if (value.vectorSize() != 1) {
 							int i = 0;
 							for (auto &e : value.getVector(NULL, stack_trace)) {
-								PRINTC("\t(" + std::to_string(i) + ")\t", rossa::CYAN_TEXT);
+								PRINTC("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
 								std::cout << e.toString(NULL, stack_trace) << "\n";
 								i++;
 							}
@@ -262,8 +262,8 @@ int main(int argc, char const *argv[])
 							std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
 						}
 					}
-				} catch (const rossa::RTError &e) {
-					rossa::Rossa::printError(e);
+				} catch (const RTError &e) {
+					Rossa::printError(e);
 				}
 			}
 		}
@@ -288,8 +288,8 @@ int main(int argc, char const *argv[])
 				compile(entry, (options["output"] == "" ? "out" : options["output"]));
 			else
 				wrapper.runCode(entry, tree);
-		} catch (const rossa::RTError &e) {
-			rossa::Rossa::printError(e);
+		} catch (const RTError &e) {
+			Rossa::printError(e);
 			return 1;
 		}
 	}

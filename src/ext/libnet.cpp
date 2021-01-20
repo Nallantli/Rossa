@@ -13,12 +13,10 @@ COMPILER_COMMANDS(libsdl, "-lwsock32 -lws2_32 -lboost_system-mt")
 #endif
 #endif
 
-using namespace rossa;
-
 ROSSA_EXT_SIG(_service_init, args, token, hash, stack_trace)
 {
 	auto service = std::make_shared<boost::asio::io_service>();
-	return Symbol(static_cast<std::shared_ptr<void>>(service));
+	return sym_t::Pointer(service);
 }
 
 ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
@@ -36,7 +34,7 @@ ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
 		ec))
 		if (ec)
 			throw RTError(ec.message(), *token, stack_trace);
-	return Symbol(static_cast<std::shared_ptr<void>>(sock));
+	return sym_t::Pointer(sock);
 }
 
 ROSSA_EXT_SIG(_socket_send, args, token, hash, stack_trace)
@@ -47,7 +45,7 @@ ROSSA_EXT_SIG(_socket_send, args, token, hash, stack_trace)
 
 	std::string content = args[1].getString(token, stack_trace);
 	boost::asio::write(*sock, boost::asio::buffer(content));
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_socket_read, args, token, hash, stack_trace)
@@ -60,7 +58,7 @@ ROSSA_EXT_SIG(_socket_read, args, token, hash, stack_trace)
 	boost::system::error_code ec;
 	boost::asio::read(*sock, sb, ec);
 	std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
-	return Symbol(str);
+	return sym_t::String(str);
 }
 
 ROSSA_EXT_SIG(_socket_read_until, args, token, hash, stack_trace)
@@ -72,9 +70,9 @@ ROSSA_EXT_SIG(_socket_read_until, args, token, hash, stack_trace)
 	boost::asio::streambuf sb;
 	if (boost::asio::read_until(*sock, sb, args[1].getString(token, stack_trace))) {
 		std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
-		return Symbol(str);
+		return sym_t::String(str);
 	}
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_socket_close, args, token, hash, stack_trace)
@@ -86,8 +84,8 @@ ROSSA_EXT_SIG(_socket_close, args, token, hash, stack_trace)
 	boost::system::error_code ec;
 	sock->close(ec);
 	if (ec)
-		return Symbol(ec.message());
-	return Symbol();
+		return sym_t::String(ec.message());
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_server_init, args, token, hash, stack_trace)
@@ -97,7 +95,7 @@ ROSSA_EXT_SIG(_server_init, args, token, hash, stack_trace)
 		boost::asio::io_service);
 
 	auto acc = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_service_object, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), args[0].getNumber(token, stack_trace).getLong()));
-	return Symbol(static_cast<std::shared_ptr<void>>(acc));
+	return sym_t::Pointer(acc);
 }
 
 ROSSA_EXT_SIG(_server_accept, args, token, hash, stack_trace)
@@ -112,7 +110,7 @@ ROSSA_EXT_SIG(_server_accept, args, token, hash, stack_trace)
 
 	auto sock = std::make_shared<boost::asio::ip::tcp::socket>(*io_service_object);
 	acc->accept(*sock);
-	return Symbol(static_cast<std::shared_ptr<void>>(sock));
+	return sym_t::Pointer(sock);
 }
 
 ROSSA_EXT_SIG(_tcp_stream_init, args, token, hash, stack_trace)
@@ -131,7 +129,7 @@ ROSSA_EXT_SIG(_tcp_stream_init, args, token, hash, stack_trace)
 	boost::system::error_code ec;
 	tcpstream->connect(results);
 
-	return Symbol(static_cast<std::shared_ptr<void>>(tcpstream));
+	return sym_t::Pointer(tcpstream);
 }
 
 ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
@@ -158,12 +156,12 @@ ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
 	sym_map_t ret;
 
 	for (auto &r : res) {
-		ret[r.name_string().to_string()] = Symbol(r.value().to_string());
+		ret[r.name_string().to_string()] = sym_t::String(r.value().to_string());
 	}
 
-	ret["CONTENT"] = Symbol(res.body());
+	ret["CONTENT"] = sym_t::String(res.body());
 
-	return Symbol(ret);
+	return sym_t::Dictionary(ret);
 }
 
 ROSSA_EXT_SIG(_tcp_stream_close, args, token, hash, stack_trace)
@@ -174,19 +172,19 @@ ROSSA_EXT_SIG(_tcp_stream_close, args, token, hash, stack_trace)
 
 	tcpstream->close();
 
-	return Symbol();
+	return sym_t();
 }
 
 ROSSA_EXT_SIG(_encodeURI, args, token, hash, stack_trace)
 {
 	const std::string s = args[0].getString(token, stack_trace);
-	return Symbol(encodeURIComponent(s));
+	return sym_t::String(encodeURIComponent(s));
 }
 
 ROSSA_EXT_SIG(_decodeURI, args, token, hash, stack_trace)
 {
 	const std::string s = args[0].getString(token, stack_trace);
-	return Symbol(decodeURIComponent(s));
+	return sym_t::String(decodeURIComponent(s));
 }
 
 EXPORT_FUNCTIONS(libnet)

@@ -1,21 +1,19 @@
 #include "../../bin/include/Rossa.h"
 
-using namespace rossa;
-
-const Symbol ops::index(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::index(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case DICTIONARY:
-			if (evalB.getValueType() == NUMBER)
+		case Value::type_t::DICTIONARY:
+			if (evalB.getValueType() == Value::type_t::NUMBER)
 				return evalA.indexDict(evalB.toString(token, stack_trace));
 			return evalA.indexDict(evalB.getString(token, stack_trace));
-		case ARRAY:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::ARRAY:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return evalA.indexVector(evalB.getNumber(token, stack_trace).getLong(), token, stack_trace);
-		case OBJECT:
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_INDEX))
 				return o->getVariable(Rossa::HASH_INDEX, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -29,32 +27,32 @@ const Symbol ops::index(const std::shared_ptr<Scope> &scope, const Symbol &evalA
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
 }
 
-const Symbol ops::call(const std::shared_ptr<Scope> &scope, const std::shared_ptr<Instruction> &a, const sym_vec_t &args, const Token *token, trace_t &stack_trace)
+const sym_t ops::call(const scope_ptr_t &scope, const i_ptr_t &a, const sym_vec_t &args, const token_t *token, trace_t &stack_trace)
 {
 	switch (a->getType()) {
-		case INNER:
+		case Instruction::type_t::INNER:
 		{
-			auto evalA = reinterpret_cast<InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
+			const sym_t evalA = reinterpret_cast<const InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
 			switch (evalA.getValueType()) {
-				case OBJECT:
+				case Value::type_t::OBJECT:
 				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
+					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
 					return evalB.call(args, token, stack_trace);
 				}
-				case DICTIONARY:
+				case Value::type_t::DICTIONARY:
 				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
 					return evalB.call(args, token, stack_trace);
 				}
 				default:
 				{
-					auto evalB = reinterpret_cast<InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
 					sym_vec_t params;
 					params.push_back(evalA);
 					params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-					if (evalB.getValueType() == OBJECT) {
-						auto o = evalB.getObject(token, stack_trace);
+					if (evalB.getValueType() == Value::type_t::OBJECT) {
+						const scope_ptr_t o = evalB.getObject(token, stack_trace);
 						if (o->hasValue(Rossa::HASH_CALL))
 							return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 					}
@@ -65,10 +63,10 @@ const Symbol ops::call(const std::shared_ptr<Scope> &scope, const std::shared_pt
 		}
 		default:
 		{
-			auto evalA = a->evaluate(scope, stack_trace);
+			const sym_t evalA = a->evaluate(scope, stack_trace);
 
-			if (evalA.getValueType() == OBJECT) {
-				auto o = evalA.getObject(token, stack_trace);
+			if (evalA.getValueType() == Value::type_t::OBJECT) {
+				const scope_ptr_t o = evalA.getObject(token, stack_trace);
 				if (o->hasValue(Rossa::HASH_CALL))
 					return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 			}
@@ -78,29 +76,29 @@ const Symbol ops::call(const std::shared_ptr<Scope> &scope, const std::shared_pt
 	}
 }
 
-const Symbol ops::untilstep(const std::shared_ptr<Scope> &scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Symbol &step, const Token *token, trace_t &stack_trace)
+const sym_t ops::untilstep(const scope_ptr_t &scope, const bool &inclusive, const sym_t &evalA, const sym_t &evalB, const sym_t &step, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
+		case Value::type_t::NUMBER:
 		{
-			if (evalB.getValueType() != NUMBER)
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			auto numA = evalA.getNumber(token, stack_trace);
-			auto numB = evalB.getNumber(token, stack_trace);
-			auto numStep = step.getNumber(token, stack_trace);
+			number_t numA = evalA.getNumber(token, stack_trace);
+			const number_t numB = evalB.getNumber(token, stack_trace);
+			const number_t numStep = step.getNumber(token, stack_trace);
 			sym_vec_t nv;
 			if (inclusive) {
 				for (; numA <= numB; numA += numStep)
-					nv.push_back(Symbol(numA));
+					nv.push_back(sym_t::Number(numA));
 			} else {
 				for (; numA < numB; numA += numStep)
-					nv.push_back(Symbol(numA));
+					nv.push_back(sym_t::Number(numA));
 			}
-			return Symbol(nv);
+			return sym_t::Array(nv);
 		}
-		case OBJECT:
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_RANGE))
 				return o->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalB, step }, token, stack_trace);
 		}
@@ -114,29 +112,29 @@ const Symbol ops::untilstep(const std::shared_ptr<Scope> &scope, const bool &inc
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
-const Symbol ops::untilnostep(const std::shared_ptr<Scope> &scope, const bool &inclusive, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::untilnostep(const scope_ptr_t &scope, const bool &inclusive, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
+		case Value::type_t::NUMBER:
 		{
-			if (evalB.getValueType() != NUMBER)
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			auto numA = evalA.getNumber(token, stack_trace);
-			auto numB = evalB.getNumber(token, stack_trace);
-			auto numStep = RNumber::Long(1);
+			number_t numA = evalA.getNumber(token, stack_trace);
+			const number_t numB = evalB.getNumber(token, stack_trace);
+			const number_t numStep = number_t::Long(1);
 			sym_vec_t nv;
 			if (inclusive) {
 				for (; numA <= numB; numA += numStep)
-					nv.push_back(Symbol(numA));
+					nv.push_back(sym_t::Number(numA));
 			} else {
 				for (; numA < numB; numA += numStep)
-					nv.push_back(Symbol(numA));
+					nv.push_back(sym_t::Number(numA));
 			}
-			return Symbol(nv);
+			return sym_t::Array(nv);
 		}
-		case OBJECT:
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_RANGE))
 				return o->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -150,38 +148,38 @@ const Symbol ops::untilnostep(const std::shared_ptr<Scope> &scope, const bool &i
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
-const Symbol ops::add(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::add(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) + evalB.getNumber(token, stack_trace));
-		case ARRAY:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) + evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
 		{
-			if (evalB.getValueType() != ARRAY)
+			if (evalB.getValueType() != Value::type_t::ARRAY)
 				break;
-			auto valA = evalA.getVector(token, stack_trace);
-			auto valB = evalB.getVector(token, stack_trace);
+			sym_vec_t valA = evalA.getVector(token, stack_trace);
+			const sym_vec_t valB = evalB.getVector(token, stack_trace);
 			valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
-			return Symbol(valA);
+			return sym_t::Array(valA);
 		}
-		case DICTIONARY:
+		case Value::type_t::DICTIONARY:
 		{
-			if (evalB.getValueType() != DICTIONARY)
+			if (evalB.getValueType() != Value::type_t::DICTIONARY)
 				break;
-			auto valA = evalA.getDictionary(token, stack_trace);
-			auto valB = evalB.getDictionary(token, stack_trace);
+			sym_map_t valA = evalA.getDictionary(token, stack_trace);
+			sym_map_t valB = evalB.getDictionary(token, stack_trace);
 			valA.merge(valB);
-			return Symbol(valA);
+			return sym_t::Dictionary(valA);
 		}
-		case STRING:
-			if (evalB.getValueType() != STRING)
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
-			return Symbol(evalA.getString(token, stack_trace) + evalB.getString(token, stack_trace));
-		case OBJECT:
+			return sym_t::String(evalA.getString(token, stack_trace) + evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_ADD))
 				return o->getVariable(Rossa::HASH_ADD, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -195,23 +193,23 @@ const Symbol ops::add(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
 }
 
-const Symbol ops::sub(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::sub(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) - evalB.getNumber(token, stack_trace));
-		case ARRAY:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) - evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
 		{
-			if (evalB.getValueType() != ARRAY)
+			if (evalB.getValueType() != Value::type_t::ARRAY)
 				break;
-			auto vA = evalA.getVector(token, stack_trace);
-			auto vB = evalB.getVector(token, stack_trace);
+			const sym_vec_t vA = evalA.getVector(token, stack_trace);
+			const sym_vec_t vB = evalB.getVector(token, stack_trace);
 			sym_vec_t nv;
-			for (auto &e : vA) {
+			for (const sym_t &e : vA) {
 				bool flag = true;
-				for (auto &e2 : vB) {
+				for (const sym_t &e2 : vB) {
 					if (e.equals(&e2, token, stack_trace)) {
 						flag = false;
 						break;
@@ -220,11 +218,11 @@ const Symbol ops::sub(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 				if (flag)
 					nv.push_back(e);
 			}
-			return Symbol(nv);
+			return sym_t::Array(nv);
 		}
-		case OBJECT:
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_SUB)) {
 				return o->getVariable(Rossa::HASH_SUB, token, stack_trace).call({ evalB }, token, stack_trace);
 			}
@@ -239,16 +237,16 @@ const Symbol ops::sub(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
 }
 
-const Symbol ops::mul(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::mul(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) * evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) * evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MUL))
 				return o->getVariable(Rossa::HASH_MUL, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -262,16 +260,16 @@ const Symbol ops::mul(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "*" }), *token, stack_trace);
 }
 
-const Symbol ops::div(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::div(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) / evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) / evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_DIV))
 				return o->getVariable(Rossa::HASH_DIV, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -285,16 +283,16 @@ const Symbol ops::div(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "/" }), *token, stack_trace);
 }
 
-const Symbol ops::mod(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::mod(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) % evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) % evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MOD))
 				return o->getVariable(Rossa::HASH_MOD, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -308,16 +306,16 @@ const Symbol ops::mod(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "%" }), *token, stack_trace);
 }
 
-const Symbol ops::pow(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::pow(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace).pow(evalB.getNumber(token, stack_trace)));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace).pow(evalB.getNumber(token, stack_trace)));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_POW)) {
 				return o->getVariable(Rossa::HASH_POW, token, stack_trace).call({ evalB }, token, stack_trace);
 			}
@@ -332,20 +330,20 @@ const Symbol ops::pow(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "**" }), *token, stack_trace);
 }
 
-const Symbol ops::less(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::less(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return evalA.getNumber(token, stack_trace) < evalB.getNumber(token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
+			return sym_t::Boolean(evalA.getNumber(token, stack_trace) < evalB.getNumber(token, stack_trace));
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
-			return evalA.getString(token, stack_trace) < evalB.getString(token, stack_trace);
-		case OBJECT:
+			return sym_t::Boolean(evalA.getString(token, stack_trace) < evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_LESS))
 				return o->getVariable(Rossa::HASH_LESS, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -359,20 +357,20 @@ const Symbol ops::less(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<" }), *token, stack_trace);
 }
 
-const Symbol ops::more(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::more(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return evalA.getNumber(token, stack_trace) > evalB.getNumber(token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
+			return sym_t::Boolean(evalA.getNumber(token, stack_trace) > evalB.getNumber(token, stack_trace));
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
-			return evalA.getString(token, stack_trace) > evalB.getString(token, stack_trace);
-		case OBJECT:
+			return sym_t::Boolean(evalA.getString(token, stack_trace) > evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MORE))
 				return o->getVariable(Rossa::HASH_MORE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -386,22 +384,22 @@ const Symbol ops::more(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">" }), *token, stack_trace);
 }
 
-const Symbol ops::eless(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::eless(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return evalA.getNumber(token, stack_trace) <= evalB.getNumber(token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
+			return sym_t::Boolean(evalA.getNumber(token, stack_trace) <= evalB.getNumber(token, stack_trace));
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
-			return evalA.getString(token, stack_trace) <= evalB.getString(token, stack_trace);
-		case OBJECT:
+			return sym_t::Boolean(evalA.getString(token, stack_trace) <= evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_ELESS))
-				return o->getVariable(Rossa::HASH_ELESS, token, stack_trace).call({ evalB }, token, stack_trace).getBool(token, stack_trace);
+				return o->getVariable(Rossa::HASH_ELESS, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
 		default:
 			break;
@@ -413,22 +411,22 @@ const Symbol ops::eless(const std::shared_ptr<Scope> &scope, const Symbol &evalA
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<=" }), *token, stack_trace);
 }
 
-const Symbol ops::emore(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::emore(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return evalA.getNumber(token, stack_trace) >= evalB.getNumber(token, stack_trace);
-		case STRING:
-			if (evalB.getValueType() != STRING)
+			return sym_t::Boolean(evalA.getNumber(token, stack_trace) >= evalB.getNumber(token, stack_trace));
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
-			return evalA.getString(token, stack_trace) >= evalB.getString(token, stack_trace);
-		case OBJECT:
+			return sym_t::Boolean(evalA.getString(token, stack_trace) >= evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_EMORE))
-				return o->getVariable(Rossa::HASH_EMORE, token, stack_trace).call({ evalB }, token, stack_trace).getBool(token, stack_trace);
+				return o->getVariable(Rossa::HASH_EMORE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
 		default:
 			break;
@@ -440,16 +438,16 @@ const Symbol ops::emore(const std::shared_ptr<Scope> &scope, const Symbol &evalA
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { ">=" }), *token, stack_trace);
 }
 
-const Symbol ops::bor(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::bor(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) | evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) | evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_OR))
 				return o->getVariable(Rossa::HASH_B_OR, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -463,16 +461,16 @@ const Symbol ops::bor(const std::shared_ptr<Scope> &scope, const Symbol &evalA, 
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "|" }), *token, stack_trace);
 }
 
-const Symbol ops::bxor(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::bxor(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) ^ evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) ^ evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_XOR))
 				return o->getVariable(Rossa::HASH_B_XOR, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -486,25 +484,25 @@ const Symbol ops::bxor(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "^" }), *token, stack_trace);
 }
 
-const Symbol ops::band(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::band(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) & evalB.getNumber(token, stack_trace));
-		case STRING:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) & evalB.getNumber(token, stack_trace));
+		case Value::type_t::STRING:
 		{
-			if (evalB.getValueType() != ARRAY)
+			if (evalB.getValueType() != Value::type_t::ARRAY)
 				break;
 			std::vector<std::string> elems;
-			for (auto &e : evalB.getVector(token, stack_trace))
+			for (const sym_t &e : evalB.getVector(token, stack_trace))
 				elems.push_back(e.toString(token, stack_trace));
-			return Symbol(format::format(evalA.getString(token, stack_trace), elems));
+			return sym_t::String(format::format(evalA.getString(token, stack_trace), elems));
 		}
-		case OBJECT:
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_AND))
 				return o->getVariable(Rossa::HASH_B_AND, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -518,16 +516,16 @@ const Symbol ops::band(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "&" }), *token, stack_trace);
 }
 
-const Symbol ops::bshl(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::bshl(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) << evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) << evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_SH_L))
 				return o->getVariable(Rossa::HASH_B_SH_L, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -541,16 +539,16 @@ const Symbol ops::bshl(const std::shared_ptr<Scope> &scope, const Symbol &evalA,
 	throw RTError(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<<" }), *token, stack_trace);
 }
 
-const Symbol ops::bshr(const std::shared_ptr<Scope> &scope, const Symbol &evalA, const Symbol &evalB, const Token *token, trace_t &stack_trace)
+const sym_t ops::bshr(const scope_ptr_t &scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (evalA.getValueType()) {
-		case NUMBER:
-			if (evalB.getValueType() != NUMBER)
+		case Value::type_t::NUMBER:
+			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
-			return Symbol(evalA.getNumber(token, stack_trace) >> evalB.getNumber(token, stack_trace));
-		case OBJECT:
+			return sym_t::Number(evalA.getNumber(token, stack_trace) >> evalB.getNumber(token, stack_trace));
+		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const scope_ptr_t o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_SH_R))
 				return o->getVariable(Rossa::HASH_B_SH_R, token, stack_trace).call({ evalB }, token, stack_trace);
 		}

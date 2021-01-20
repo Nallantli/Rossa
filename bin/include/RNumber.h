@@ -8,7 +8,7 @@
 typedef double long_double_t;
 typedef long long int long_int_t;
 
-class RNumber
+struct number_t
 {
 private:
 	union
@@ -25,12 +25,12 @@ private:
 		}
 	}
 
-	RNumber(const long_double_t &valueDouble) noexcept : valueDouble(valueDouble), type(DOUBLE_NUM)
+	number_t(const long_double_t &valueDouble) noexcept : valueDouble(valueDouble), type(DOUBLE_NUM)
 	{
 		validate();
 	}
 
-	RNumber(const long_int_t &valueLong) noexcept : valueLong(valueLong), type(LONG_NUM)
+	number_t(const long_int_t &valueLong) noexcept : valueLong(valueLong), type(LONG_NUM)
 	{}
 
 public:
@@ -40,20 +40,20 @@ public:
 		LONG_NUM
 	} type;
 
-	RNumber() noexcept : valueLong(0), type(LONG_NUM)
+	number_t() noexcept : valueLong(0), type(LONG_NUM)
 	{}
 
-	static inline const RNumber Double(const long_double_t &valueDouble) noexcept
+	static inline const number_t Double(const long_double_t &valueDouble) noexcept
 	{
-		return RNumber(valueDouble);
+		return number_t(valueDouble);
 	}
 
-	static inline const RNumber Long(const long_int_t &valueLong) noexcept
+	static inline const number_t Long(const long_int_t &valueLong) noexcept
 	{
-		return RNumber(valueLong);
+		return number_t(valueLong);
 	}
 
-	inline void operator=(const RNumber &n) noexcept
+	inline void operator=(const number_t &n) noexcept
 	{
 		type = n.type;
 		switch (type) {
@@ -66,7 +66,7 @@ public:
 		}
 	}
 
-	inline void operator+=(const RNumber &n) noexcept
+	inline void operator+=(const number_t &n) noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
@@ -87,7 +87,7 @@ public:
 		}
 	}
 
-	inline void operator-=(const RNumber &n) noexcept
+	inline void operator-=(const number_t &n) noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
@@ -132,145 +132,145 @@ public:
 		}
 	}
 
-	inline const RNumber operator+(const RNumber &n) const noexcept
+	inline const number_t operator+(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(valueDouble + n.valueDouble);
+						return number_t::Double(valueDouble + n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Double(valueDouble + static_cast<long_double_t>(n.valueLong));
+						return number_t::Double(valueDouble + static_cast<long_double_t>(n.valueLong));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(static_cast<long_double_t>(valueLong) + n.valueDouble);
+						return number_t::Double(static_cast<long_double_t>(valueLong) + n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Long(valueLong + n.valueLong);
+						return number_t::Long(valueLong + n.valueLong);
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const RNumber operator-(const RNumber &n) const noexcept
+	inline const number_t operator-(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(valueDouble - n.valueDouble);
+						return number_t::Double(valueDouble - n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Double(valueDouble - static_cast<long_double_t>(n.valueLong));
+						return number_t::Double(valueDouble - static_cast<long_double_t>(n.valueLong));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(static_cast<long_double_t>(valueLong) - n.valueDouble);
+						return number_t::Double(static_cast<long_double_t>(valueLong) - n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Long(valueLong - n.valueLong);
+						return number_t::Long(valueLong - n.valueLong);
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const RNumber operator*(const RNumber &n) const noexcept
+	inline const number_t operator*(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(valueDouble * n.valueDouble);
+						return number_t::Double(valueDouble * n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Double(valueDouble * static_cast<long_double_t>(n.valueLong));
+						return number_t::Double(valueDouble * static_cast<long_double_t>(n.valueLong));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(static_cast<long_double_t>(valueLong) * n.valueDouble);
+						return number_t::Double(static_cast<long_double_t>(valueLong) * n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Long(valueLong * n.valueLong);
+						return number_t::Long(valueLong * n.valueLong);
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const RNumber operator/(const RNumber &n) const noexcept
+	inline const number_t operator/(const number_t &n) const noexcept
 	{
 		if (n.getDouble() == 0)
-			return RNumber::Double(INFINITY);
+			return number_t::Double(INFINITY);
 
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(valueDouble / n.valueDouble);
+						return number_t::Double(valueDouble / n.valueDouble);
 					case LONG_NUM:
-						return RNumber::Double(valueDouble / static_cast<long_double_t>(n.valueLong));
+						return number_t::Double(valueDouble / static_cast<long_double_t>(n.valueLong));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(static_cast<long_double_t>(valueLong) / n.valueDouble);
+						return number_t::Double(static_cast<long_double_t>(valueLong) / n.valueDouble);
 					case LONG_NUM:
 						if (valueLong % n.valueLong == 0)
-							return RNumber::Long(valueLong / n.valueLong);
+							return number_t::Long(valueLong / n.valueLong);
 						else
-							return RNumber::Double(static_cast<long_double_t>(valueLong) / static_cast<long_double_t>(n.valueLong));
+							return number_t::Double(static_cast<long_double_t>(valueLong) / static_cast<long_double_t>(n.valueLong));
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const RNumber pow(const RNumber &n) const noexcept
+	inline const number_t pow(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(std::pow(valueDouble, n.valueDouble));
+						return number_t::Double(std::pow(valueDouble, n.valueDouble));
 					case LONG_NUM:
-						return RNumber::Double(std::pow(valueDouble, static_cast<long_double_t>(n.valueLong)));
+						return number_t::Double(std::pow(valueDouble, static_cast<long_double_t>(n.valueLong)));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(std::pow(static_cast<long_double_t>(valueLong), n.valueDouble));
+						return number_t::Double(std::pow(static_cast<long_double_t>(valueLong), n.valueDouble));
 					case LONG_NUM:
-						return RNumber::Double(std::pow(valueLong, n.valueLong));
+						return number_t::Double(std::pow(valueLong, n.valueLong));
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const RNumber operator%(const RNumber &n) const noexcept
+	inline const number_t operator%(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(std::fmod(valueDouble, n.valueDouble));
+						return number_t::Double(std::fmod(valueDouble, n.valueDouble));
 					case LONG_NUM:
-						return RNumber::Double(std::fmod(valueDouble, static_cast<long_double_t>(n.valueLong)));
+						return number_t::Double(std::fmod(valueDouble, static_cast<long_double_t>(n.valueLong)));
 				}
 				break;
 			case LONG_NUM:
 				switch (n.type) {
 					case DOUBLE_NUM:
-						return RNumber::Double(std::fmod(static_cast<long_double_t>(valueLong), n.valueDouble));
+						return number_t::Double(std::fmod(static_cast<long_double_t>(valueLong), n.valueDouble));
 					case LONG_NUM:
-						return RNumber::Long(valueLong % n.valueLong);
+						return number_t::Long(valueLong % n.valueLong);
 				}
 		}
-		return RNumber();
+		return number_t();
 	}
 
-	inline const bool operator==(const RNumber &n) const noexcept
+	inline const bool operator==(const number_t &n) const noexcept
 	{
 		if (type != n.type)
 			return false;
@@ -283,12 +283,12 @@ public:
 		return false;
 	}
 
-	inline const bool operator!=(const RNumber &n) const noexcept
+	inline const bool operator!=(const number_t &n) const noexcept
 	{
 		return !(*this == n);
 	}
 
-	inline const bool operator<(const RNumber &n) const noexcept
+	inline const bool operator<(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
@@ -310,7 +310,7 @@ public:
 		return false;
 	}
 
-	inline const bool operator>(const RNumber &n) const noexcept
+	inline const bool operator>(const number_t &n) const noexcept
 	{
 		switch (type) {
 			case DOUBLE_NUM:
@@ -332,39 +332,39 @@ public:
 		return false;
 	}
 
-	inline const bool operator<=(const RNumber &n) const noexcept
+	inline const bool operator<=(const number_t &n) const noexcept
 	{
 		return !(*this > n);
 	}
 
-	inline const bool operator>=(const RNumber &n) const noexcept
+	inline const bool operator>=(const number_t &n) const noexcept
 	{
 		return !(*this < n);
 	}
 
-	inline const RNumber operator&(const RNumber &n) const noexcept
+	inline const number_t operator&(const number_t &n) const noexcept
 	{
-		return RNumber::Long(getLong() & n.getLong());
+		return number_t::Long(getLong() & n.getLong());
 	}
 
-	inline const RNumber operator|(const RNumber &n) const noexcept
+	inline const number_t operator|(const number_t &n) const noexcept
 	{
-		return RNumber::Long(getLong() | n.getLong());
+		return number_t::Long(getLong() | n.getLong());
 	}
 
-	inline const RNumber operator^(const RNumber &n) const noexcept
+	inline const number_t operator^(const number_t &n) const noexcept
 	{
-		return RNumber::Long(getLong() ^ n.getLong());
+		return number_t::Long(getLong() ^ n.getLong());
 	}
 
-	inline const RNumber operator<<(const RNumber &n) const noexcept
+	inline const number_t operator<<(const number_t &n) const noexcept
 	{
-		return RNumber::Long(getLong() << n.getLong());
+		return number_t::Long(getLong() << n.getLong());
 	}
 
-	inline const RNumber operator>>(const RNumber &n) const noexcept
+	inline const number_t operator>>(const number_t &n) const noexcept
 	{
-		return RNumber::Long(getLong() >> n.getLong());
+		return number_t::Long(getLong() >> n.getLong());
 	}
 
 	inline const std::string toString() const noexcept
@@ -393,9 +393,9 @@ public:
 	{
 		switch (type) {
 			case DOUBLE_NUM:
-				return "RNumber::Double(" + std::to_string(valueDouble) + ")";
+				return "number_t::Double(" + std::to_string(valueDouble) + ")";
 			case LONG_NUM:
-				return "RNumber::Long(" + std::to_string(valueLong) + ")";
+				return "number_t::Long(" + std::to_string(valueLong) + ")";
 			default:
 				return "<undefined>";
 		}

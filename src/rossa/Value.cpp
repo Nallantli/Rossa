@@ -1,7 +1,5 @@
 #include "../../bin/include/Rossa.h"
 
-using namespace rossa;
-
 Value::Value()
 	: type{ NIL }
 {}
@@ -21,22 +19,22 @@ Value::Value(const std::shared_ptr<void> &valuePointer)
 	, valuePointer{ valuePointer }
 {}
 
-Value::Value(const std::shared_ptr<Scope> &valueObject)
+Value::Value(const scope_ptr_t &valueObject)
 	: type{ OBJECT }
 	, valueObject{ valueObject }
 {}
 
-Value::Value(const sig_t &ftype, const std::shared_ptr<const Function> &function)
+Value::Value(const sig_t &ftype, const func_ptr_t &function)
 	: type{ FUNCTION }
 	, valueFunction{ {function->getArgSize(), {{ftype, function}}} }
 {}
 
-Value::Value(const std::shared_ptr<const Function> &function)
+Value::Value(const func_ptr_t &function)
 	: type{ FUNCTION }
 	, valueVARGFunction{ function }
 {}
 
-Value::Value(const RNumber &valueNumber)
+Value::Value(const number_t &valueNumber)
 	: type{ NUMBER }
 	, valueNumber{ valueNumber }
 {}

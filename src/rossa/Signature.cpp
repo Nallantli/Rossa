@@ -1,8 +1,13 @@
 #include "../../bin/include/Rossa.h"
 
-using namespace rossa;
+sig_t::sig_t()
+{}
 
-const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t &stack_trace)
+sig_t::sig_t(const param_vec_t &values)
+	: values{ values }
+{}
+
+const size_t sig_t::validity(const sym_vec_t &check, trace_t &stack_trace) const
 {
 	if (values.size() == 0)
 		return 1;
@@ -14,12 +19,12 @@ const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t 
 			auto base = values[i].getBase();
 			if (base == vt)
 				v += 3;
-			else if (base > 0 && check[i].getValueType() == NIL)
+			else if (base > 0 && check[i].getValueType() == Value::type_t::NIL)
 				v += 2;
-			else if (base == ANY)
+			else if (base == Value::type_t::ANY)
 				v += 1;
-			else if (check[i].getValueType() == OBJECT) {
-				if (base == OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
+			else if (check[i].getValueType() == Value::type_t::OBJECT) {
+				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
 					v += 2;
 				else
 					return 0;
@@ -37,7 +42,7 @@ const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t 
 				size_t flag = 0;
 				for (auto f : fo[ql.size()]) {
 					for (size_t i = 0; i < ql.size(); i++) {
-						auto val = ql[i] & f.first[i];
+						auto val = ql[i] & f.first.values[i];
 						if (val > flag) {
 							flag = val;
 							if (val == 3)
@@ -61,7 +66,7 @@ const size_t sig::validity(const sig_t &values, const sym_vec_t &check, trace_t 
 	return v;
 }
 
-const std::string sig::toCodeString(const sig_t &values)
+const std::string sig_t::toCodeString() const
 {
 	std::string s = "{";
 	size_t i = 0;
@@ -73,7 +78,7 @@ const std::string sig::toCodeString(const sig_t &values)
 	return s + "}";
 }
 
-const std::string sig::toString(const sig_t &values)
+const std::string sig_t::toString() const
 {
 	std::string s = "";
 	size_t i = 0;
@@ -85,39 +90,14 @@ const std::string sig::toString(const sig_t &values)
 	return s;
 }
 
-
-const std::string sig::getTypeString(const type_sll &i)
+const bool sig_t::operator<(const sig_t &s) const
 {
-	if (i >= 0)
-		return "@" + ROSSA_DEHASH(i);
-	else {
-		switch (i) {
-			case NIL:
-				return KEYWORD_NIL_NAME;
-			case ANY:
-				return KEYWORD_ANY;
-			case NUMBER:
-				return KEYWORD_NUMBER;
-			case STRING:
-				return KEYWORD_STRING;
-			case BOOLEAN_D:
-				return KEYWORD_BOOLEAN;
-			case ARRAY:
-				return KEYWORD_ARRAY;
-			case FUNCTION:
-				return KEYWORD_FUNCTION;
-			case DICTIONARY:
-				return KEYWORD_DICTIONARY;
-			case OBJECT:
-				return KEYWORD_OBJECT;
-			case POINTER:
-				return KEYWORD_POINTER;
-			case TYPE_NAME:
-				return KEYWORD_TYPE;
-			default:
-				return "<error-type>";
-		}
-	}
+	return values < s.values;
+}
+
+const bool sig_t::operator==(const sig_t &s) const
+{
+	return values == s.values;
 }
 
 std::vector<std::filesystem::path> dir::loaded = {};
@@ -137,7 +117,7 @@ const std::filesystem::path dir::getRuntimePath()
 #endif
 }
 
-const std::filesystem::path dir::findFile(const std::filesystem::path &currentDir, const std::string &filename, const Token *token)
+const std::filesystem::path dir::findFile(const std::filesystem::path &currentDir, const std::string &filename, const token_t *token)
 {
 	auto currentDirCheck = currentDir / filename;
 	if (std::filesystem::exists(currentDirCheck))
@@ -160,7 +140,7 @@ const std::vector<std::string> dir::compiledOptions(int argc, char const *argv[]
 	return passed;
 }
 
-void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string &rawlibname, const Token *token)
+void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string &rawlibname, const token_t *token)
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 #ifndef _WIN32
@@ -197,7 +177,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 	}
 }
 
-extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname, const Token *token)
+extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname, const token_t *token)
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 		trace_t stack_trace;
@@ -210,23 +190,23 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 	return loaded[rawlibname][fname];
 }
 
-ParamType::ParamType(const type_sll &base)
+param_t::param_t(const type_sll &base)
 	: base{ base }
 {}
 
-ParamType::ParamType(const type_sll &base, const std::vector<ParamType> &qualifiers)
+param_t::param_t(const type_sll &base, const param_vec_t &qualifiers)
 	: base{ base }
 	, qualifiers{ qualifiers }
 {}
 
-void ParamType::addQualifier(const ParamType &param)
+void param_t::addQualifier(const param_t &param)
 {
 	this->qualifiers.push_back(param);
 }
 
-const std::string ParamType::toString() const
+const std::string param_t::toString() const
 {
-	std::string s = sig::getTypeString(base);
+	std::string s = getTypeString(base);
 	if (!qualifiers.empty()) {
 		s += "<";
 		size_t i = 0;
@@ -240,9 +220,9 @@ const std::string ParamType::toString() const
 	return s;
 }
 
-const std::string ParamType::toCodeString() const
+const std::string param_t::toCodeString() const
 {
-	std::string s = "ParamType(static_cast<type_sll>(" + std::to_string(base) + "), ";
+	std::string s = "param_t(static_cast<type_sll>(" + std::to_string(base) + "), ";
 	s += "{";
 	size_t i = 0;
 	for (auto &v : qualifiers) {
@@ -254,17 +234,17 @@ const std::string ParamType::toCodeString() const
 	return s + ")";
 }
 
-const std::vector<ParamType> ParamType::getQualifiers() const
+const param_vec_t param_t::getQualifiers() const
 {
 	return this->qualifiers;
 }
 
-const type_sll ParamType::getBase() const
+const type_sll param_t::getBase() const
 {
 	return this->base;
 }
 
-const bool ParamType::operator<(const ParamType &pt) const
+const bool param_t::operator<(const param_t &pt) const
 {
 	if (base != pt.base)
 		return base < pt.base;
@@ -277,12 +257,9 @@ const bool ParamType::operator<(const ParamType &pt) const
 	return false;
 }
 
-// Function<Number, Function<Function, Nil>>
-// Function<Nil, Function<Function, Number>>
-// Function<Nil, Function<@extendsF<Number>, Function<String>>>
-const size_t ParamType::operator&(const ParamType &pt) const
+const size_t param_t::operator&(const param_t &pt) const
 {
-	if (base == ANY)
+	if (base == Value::type_t::ANY)
 		return 2;
 	if (base != pt.base && pt.base < 0)
 		return 0;
@@ -301,4 +278,10 @@ const size_t ParamType::operator&(const ParamType &pt) const
 			v = val;
 	}
 	return v;
+}
+
+
+const bool param_t::operator==(const param_t &p) const
+{
+	return base == p.base && qualifiers == p.qualifiers;
 }

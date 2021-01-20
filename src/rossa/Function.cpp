@@ -1,8 +1,6 @@
 #include "../../bin/include/Rossa.h"
 
-using namespace rossa;
-
-Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures)
+Function::Function(const hash_ull &key, const scope_ptr_t &parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const i_ptr_t &body, const std::map<hash_ull, const sym_t> &captures)
 	: key{ key }
 	, parent{ parent }
 	, params{ params }
@@ -11,7 +9,7 @@ Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, co
 	, isVargs{ false }
 {}
 
-Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, const std::shared_ptr<Instruction> &body, const std::map<hash_ull, Symbol> &captures)
+Function::Function(const hash_ull &key, const scope_ptr_t &parent, const i_ptr_t &body, const std::map<hash_ull, const sym_t> &captures)
 	: key{ key }
 	, parent{ parent }
 	, body{ body }
@@ -19,13 +17,13 @@ Function::Function(const hash_ull &key, const std::shared_ptr<Scope> &parent, co
 	, isVargs{ true }
 {}
 
-const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token, trace_t &stack_trace) const
+const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *token, trace_t &stack_trace) const
 {
 	if (isVargs)
 		return evaluateVARGS(paramValues, token, stack_trace);
 	stack_trace.push_back(*this);
 
-	auto newScope = std::make_shared<Scope>(parent, 0);
+	const scope_ptr_t newScope = std::make_shared<Scope>(parent, 0);
 
 	for (size_t i = 0; i < params.size(); i++) {
 		switch (params[i].first) {
@@ -34,26 +32,26 @@ const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token
 				break;
 			default:
 			{
-				auto &temp = newScope->createVariable(params[i].second, token);
+				const sym_t &temp = newScope->createVariable(params[i].second, token);
 				temp.set(&paramValues[i], token, false, stack_trace);
 				break;
 			}
 		}
 	}
 
-	for (auto e : captures) {
+	for (const std::pair<const hash_ull, const sym_t> &e : captures) {
 		newScope->createVariable(e.first, e.second, token);
 	}
 
-	auto temp = body->evaluate(newScope, stack_trace);
+	sym_t temp = body->evaluate(newScope, stack_trace);
 	newScope->clear();
 
-	if (temp.getSymbolType() == ID_REFER) {
-		temp.setSymbolType(ID_CASUAL);
+	if (temp.getSymbolType() == sym_t::type_t::ID_REFER) {
+		temp.setSymbolType(sym_t::type_t::ID_CASUAL);
 		return temp;
 	}
 
-	auto ret = Symbol();
+	const sym_t ret = sym_t();
 	ret.set(&temp, token, false, stack_trace);
 
 	stack_trace.pop_back();
@@ -61,27 +59,27 @@ const Symbol Function::evaluate(const sym_vec_t &paramValues, const Token *token
 	return ret;
 }
 
-const Symbol Function::evaluateVARGS(const sym_vec_t &paramValues, const Token *token, trace_t &stack_trace) const
+const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t *token, trace_t &stack_trace) const
 {
 	stack_trace.push_back(*this);
 
-	auto newScope = std::make_shared<Scope>(parent, 0);
+	scope_ptr_t newScope = std::make_shared<Scope>(parent, 0);
 
-	newScope->createVariable(Rossa::HASH_VAR_ARGS, Symbol(paramValues), token);
+	newScope->createVariable(Rossa::HASH_VAR_ARGS, sym_t::Array(paramValues), token);
 
-	for (auto e : captures) {
+	for (const std::pair<const hash_ull, const sym_t> &e : captures) {
 		newScope->createVariable(e.first, e.second, token);
 	}
 
-	auto temp = body->evaluate(newScope, stack_trace);
+	sym_t temp = body->evaluate(newScope, stack_trace);
 	newScope->clear();
 
-	if (temp.getSymbolType() == ID_REFER) {
-		temp.setSymbolType(ID_CASUAL);
+	if (temp.getSymbolType() == sym_t::type_t::ID_REFER) {
+		temp.setSymbolType(sym_t::type_t::ID_CASUAL);
 		return temp;
 	}
 
-	auto ret = Symbol();
+	const sym_t ret = sym_t();
 	ret.set(&temp, token, false, stack_trace);
 
 	stack_trace.pop_back();
@@ -99,7 +97,7 @@ const hash_ull Function::getKey() const
 	return key;
 }
 
-const std::shared_ptr<Scope> &Function::getParent() const
+const scope_ptr_t &Function::getParent() const
 {
 	return parent;
 }

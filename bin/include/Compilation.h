@@ -1,6 +1,6 @@
 #pragma once
 
-#define _MSP_(a) "std::shared_ptr<Instruction>(" + a + ")"
+#define _MSP_(a) "i_ptr_t(" + a + ")"
 
 #define C_NONE(name) _MSP_(std::string("new " name "(t)"))
 #define C_UNARY(name, a) _MSP_(format::format("new " name "({0}, t)", {a}))
