@@ -109,10 +109,9 @@ node_ptr_t VectorNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -300,7 +299,7 @@ node_ptr_t BIDNode::fold() const
 
 DefineNode::DefineNode(
 	const hash_ull &key,
-	const sig_t &ftype,
+	const fsig_t &ftype,
 	const std::vector<std::pair<LexerTokenType, hash_ull>> &params,
 	const node_ptr_t &body,
 	const std::vector<hash_ull> &captures,
@@ -344,10 +343,9 @@ node_ptr_t DefineNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -398,10 +396,9 @@ node_ptr_t VargDefineNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -488,7 +485,7 @@ i_ptr_t ClassNode::genParser() const
 			ot = Scope::type_t::VIRTUAL_O;
 			break;
 		default:
-			throw RTError(_INVALID_OBJECT_TYPE_, token, stack_trace);
+			throw rossa_error(_INVALID_OBJECT_TYPE_, token, stack_trace);
 	}
 
 	if (extends == nullptr)
@@ -719,7 +716,7 @@ i_ptr_t CallBuiltNode::genParser() const
 	}
 
 	trace_t stack_trace;
-	throw RTError(format::format(_UNKNOWN_BUILT_CALL_, { std::to_string(t) }), token, stack_trace);
+	throw rossa_error(format::format(_UNKNOWN_BUILT_CALL_, { std::to_string(t) }), token, stack_trace);
 	return nullptr;
 }
 
@@ -749,10 +746,9 @@ node_ptr_t CallBuiltNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -934,7 +930,7 @@ i_ptr_t BinOpNode::genParser() const
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
 	if (op == ":=") {
 		if (a->getType() != ID_NODE && a->getType() != BID_NODE)
-			throw RTError("Only variables may be declared with `:=`", token, stack_trace);
+			throw rossa_error("Only variables may be declared with `:=`", token, stack_trace);
 		hash_ull t;
 		if (a->getType() == ID_NODE)
 			t = ((IDNode *)a.get())->getKey();
@@ -948,7 +944,7 @@ i_ptr_t BinOpNode::genParser() const
 	if (op == "->")
 		return std::make_shared<CastToI>(a->genParser(), b->genParser(), token);
 
-	throw RTError(format::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
+	throw rossa_error(format::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
 }
 
 const std::string &BinOpNode::getOp() const
@@ -980,12 +976,11 @@ bool BinOpNode::isConst() const
 {
 	if (a->isConst() && b->isConst()) {
 		try {
-			auto newScope = std::make_shared<Scope>();
+			scope_t newScope(static_cast<hash_ull>(0));
 			trace_t stack_trace;
-			genParser()->evaluate(newScope, stack_trace);
-			newScope->clear();
+			genParser()->evaluate(&newScope, stack_trace);
 			return true;
-		} catch (const RTError &e) {
+		} catch (const rossa_error &e) {
 			return false;
 		}
 	}
@@ -1013,12 +1008,11 @@ std::stringstream BinOpNode::printTree(std::string indent, bool last) const
 node_ptr_t BinOpNode::fold() const
 {
 	if (isConst()) {
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto evalA = a->genParser()->evaluate(newScope, stack_trace);
-		auto evalB = b->genParser()->evaluate(newScope, stack_trace);
-		auto r = genParser()->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto evalA = a->genParser()->evaluate(&newScope, stack_trace);
+		auto evalB = b->genParser()->evaluate(&newScope, stack_trace);
+		auto r = genParser()->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1039,16 +1033,18 @@ UnOpNode::UnOpNode(
 i_ptr_t UnOpNode::genParser() const
 {
 	if (op == "+")
-		return a->genParser();
+		return std::make_shared<UnAddI>(a->genParser(), token);
 	if (op == "-")
-		return std::make_shared<SubI>(std::make_unique<ContainerNode>(sym_t::Number(number_t::Long(0)), token)->genParser(), a->genParser(), token);
+		return std::make_shared<NegI>(a->genParser(), token);
 	if (op == "!")
-		return std::make_shared<EqualsI>(std::make_unique<ContainerNode>(sym_t::Boolean(false), token)->genParser(), a->genParser(), token);
+		return std::make_shared<NotI>(a->genParser(), token);
 	if (op == "$")
 		return std::make_shared<TypeI>(a->genParser(), token);
+	if (op == "~")
+		return std::make_shared<BNotI>(a->genParser(), token);
 
 	trace_t stack_trace;
-	throw RTError(format::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);
+	throw rossa_error(format::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);
 	return nullptr;
 }
 
@@ -1078,10 +1074,9 @@ node_ptr_t UnOpNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1128,7 +1123,7 @@ node_ptr_t ParenNode::fold() const
 {
 	/*if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(newScope, stack_trace);
 		newScope->clear();
@@ -1190,10 +1185,9 @@ node_ptr_t InsNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1258,10 +1252,9 @@ node_ptr_t IfElseNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1324,10 +1317,9 @@ node_ptr_t WhileNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1392,10 +1384,9 @@ node_ptr_t ForNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1438,12 +1429,11 @@ bool UntilNode::isConst() const
 	if (flag) {
 		try {
 			auto i = genParser();
-			auto newScope = std::make_shared<Scope>();
+			scope_t newScope(static_cast<hash_ull>(0));
 			trace_t stack_trace;
-			i->evaluate(newScope, stack_trace);
-			newScope->clear();
+			i->evaluate(&newScope, stack_trace);
 			return true;
-		} catch (const RTError &e) {
+		} catch (const rossa_error &e) {
 			return false;
 		}
 	}
@@ -1474,10 +1464,9 @@ node_ptr_t UntilNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1535,10 +1524,9 @@ node_ptr_t MapNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1569,10 +1557,9 @@ i_ptr_t SwitchNode::genParser() const
 	trace_t stack_trace;
 	for (auto &e : this->cases) {
 		if (e.first->isConst()) {
-			auto newScope = std::make_shared<Scope>();
+			scope_t newScope(static_cast<hash_ull>(0));
 			trace_t stack_trace;
-			auto key = e.first->genParser()->evaluate(newScope, stack_trace);
-			newScope->clear();
+			auto key = e.first->genParser()->evaluate(&newScope, stack_trace);
 			cases_solved[key] = e.second;
 		} else {
 			cases_unsolved[e.first->genParser()] = e.second;
@@ -1628,10 +1615,9 @@ node_ptr_t SwitchNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
-		auto newScope = std::make_shared<Scope>();
+		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(newScope, stack_trace);
-		newScope->clear();
+		auto r = i->evaluate(&newScope, stack_trace);
 		return std::make_unique<ContainerNode>(r, token);
 	}
 
@@ -1782,4 +1768,44 @@ node_ptr_t CallOpNode::fold() const
 		nargs.push_back(c->fold());
 
 	return std::make_unique<CallOpNode>(id, nargs, token);
+}
+
+//------------------------------------------------------------------------------------------------------
+
+DeleteNode::DeleteNode(
+	const node_ptr_t &del,
+	const token_t &token) : Node(DELETE_NODE, token),
+	del(del)
+{}
+
+i_ptr_t DeleteNode::genParser() const
+{
+	return std::make_shared<DeleteI>(del->genParser(), token);
+}
+
+bool DeleteNode::isConst() const
+{
+	return false;
+}
+
+std::stringstream DeleteNode::printTree(std::string indent, bool last) const
+{
+	std::stringstream ss;
+	ss << indent;
+	if (last) {
+		ss << "└─";
+		indent += "  ";
+	} else {
+		ss << "├─";
+		indent += "│ ";
+	}
+	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
+	ss << "DELETE\n" << colorASCII(RESET_TEXT);
+	ss << del->printTree(indent, true).str();
+	return ss;
+}
+
+node_ptr_t DeleteNode::fold() const
+{
+	return std::make_unique<DeleteNode>(del->fold(), token);
 }

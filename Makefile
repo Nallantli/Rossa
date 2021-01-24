@@ -16,6 +16,7 @@ OFLAGS=$(CFLAGS)
 LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system-mt
 LIBFS_FLAGS=-lzip
 LIBSDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+LIBNCURSES_FLAGS=-lncurses
 
 DIR=build/win/$(locale)
 
@@ -43,6 +44,7 @@ OFLAGS=-fPIC $(CFLAGS)
 LIBNET_FLAGS=-lboost_system
 LIBFS_FLAGS=-lzip
 LIBSDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
+LIBNCURSES_FLAGS=-lncurses
 
 DIR=build/nix/$(locale)
 
@@ -63,13 +65,16 @@ endif
 
 dirs: $(DIR)
 
-libs: libfs libnet libsdl
+libs: libfs libnet libsdl libncurses
 
 libfs: bin/lib/libfs$(LIB_EXT) bin/include/libfs.a
 
 libnet: bin/lib/libnet$(LIB_EXT) bin/include/libnet.a
 
 libsdl: bin/lib/libsdl$(LIB_EXT) bin/include/libsdl.a
+
+libncurses: bin/lib/libncurses$(LIB_EXT) bin/include/libncurses.a
+
 
 bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp bin/include/librossa.a
 	$(CC) -o $@ src/ext/libfs.cpp bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
@@ -99,6 +104,16 @@ bin/include/libsdl.a: $(DIR)/libsdl_static.o
 
 $(DIR)/libsdl_static.o: src/ext/libsdl.cpp
 	$(CC) -D_STATIC_ -o $@ src/ext/libsdl.cpp -c $(OFLAGS) $(LIBSDL_FLAGS)
+
+
+bin/lib/libncurses$(LIB_EXT): src/ext/libncurses.cpp bin/include/librossa.a
+	$(CC) -o $@ src/ext/libncurses.cpp bin/include/librossa.a $(LFLAGS) $(LIBNCURSES_FLAGS)
+
+bin/include/libncurses.a: $(DIR)/libncurses_static.o
+	ar rcs $@ $(DIR)/libncurses_static.o && cp -f src/ext/libncurses.h bin/include/libncurses.h
+
+$(DIR)/libncurses_static.o: src/ext/libncurses.cpp
+	$(CC) -D_STATIC_ -o $@ src/ext/libncurses.cpp -c $(OFLAGS) $(LIBNCURSES_FLAGS)
 
 
 bin/rossa.exe: src/Main.cpp bin/include/librossa.a

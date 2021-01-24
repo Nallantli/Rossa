@@ -3,34 +3,6 @@
 
 #include "../bin/include/Rossa.h"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <conio.h>
-char getch_n()
-{
-	return getch();
-}
-#else
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <termios.h>
-
-int getch_n()
-{
-	struct termios oldattr, newattr;
-	int ch;
-	tcgetattr(0, &oldattr);
-	newattr = oldattr;
-	newattr.c_lflag &= ~(ICANON | ECHO);
-	tcsetattr(0, TCSANOW, &newattr);
-	ch = getchar();
-	tcsetattr(0, TCSANOW, &oldattr);
-	return (ch);
-}
-#endif
-
 inline const std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
 	std::map<std::string, std::string> options = {
@@ -68,31 +40,6 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 	}
 
 	return { options, passed };
-}
-
-void moveback(std::string &code, int c)
-{
-	for (int i = 0; i < c; i++) {
-		if (code.size() > 0) {
-			auto back = code.back();
-			code.pop_back();
-			if (back == '\n') {
-				size_t i = 0;
-				while (i < code.size() && code[code.size() - i - 1] != '\n')
-					i++;
-				if (code.size() == i) {
-					std::cout << "\033[2D  \033[2D\033[1A> ";
-				} else {
-					std::cout << "\033[2D  \033[2D\033[1A";
-					PRINTC("└ ", BRIGHT_YELLOW_TEXT);
-				}
-				if (i > 0)
-					std::cout << "\033[" << i << "C";
-			} else {
-				std::cout << "\033[1D \033[1D";
-			}
-		}
-	}
 }
 
 static void compile(std::shared_ptr<Node> entry, const std::string &output)
@@ -166,7 +113,7 @@ int main(int argc, char const *argv[])
 	}
 	Rossa wrapper(parsed.second);
 
-	PRINTC("", 0);
+	printc("", RESET_TEXT);
 	bool tree = options["tree"] == "true";
 
 	if (options["file"] == "") {
@@ -176,95 +123,35 @@ int main(int argc, char const *argv[])
 			try {
 				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const RTError &e) {
+			} catch (const rossa_error &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
 			std::cout << _OPTION_NO_STD_ << "\n";
 		}
 
-		bool flag = true;
-		bool force = false;
-		std::string code = "";
+		std::string code;
 		while (true) {
-			if (flag)
-				std::cout << "> ";
-			char c;
-			while ((c = getch_n()) != '\r') {
-				if (c == '\n')
-					break;
-				else if (c == 3)
-					exit(0);
-				else if (c == 18) {
-					force = true;
-					break;
-				} else if (c == '\t') {
-					code += "    ";
-					std::cout << "    ";
-				} else if (c == 27) {
-					while (!code.empty())
-						moveback(code, 1);
-				} else if (c == '\b' || c == 127)
-					moveback(code, 1);
-				else {
-					code += c;
-					std::cout << c;
-				}
-			}
-
-			std::shared_ptr<Node> comp;
-			if (!force) {
-				try {
-					flag = true;
-					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
-				} catch (const RTError &e) {
-					flag = false;
-					std::cout << "\n";
-
-					if (code.find('\n') != std::string::npos) {
-						std::cout << "\033[1A";
-						PRINTC("│ ", BRIGHT_YELLOW_TEXT);
-						std::cout << "\033[2D\033[1B";
-					}
-					PRINTC("└ ", BRIGHT_YELLOW_TEXT);
-
-					code += "\n";
-				}
-			} else {
-				force = false;
-				try {
-					flag = true;
-					comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
-				} catch (const RTError &e) {
-					flag = false;
-					code = "";
-					std::cout << "\n";
-					Rossa::printError(e);
-					std::cout << "> ";
-				}
-			}
-
-			if (flag) {
-				std::cout << "\n";
-				code = "";
-				try {
-					auto value = wrapper.runCode(std::move(comp), tree);
-					std::vector<Function> stack_trace;
-					if (value.getValueType() == Value::type_t::ARRAY) {
-						if (value.vectorSize() != 1) {
-							int i = 0;
-							for (auto &e : value.getVector(NULL, stack_trace)) {
-								PRINTC("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
-								std::cout << e.toString(NULL, stack_trace) << "\n";
-								i++;
-							}
-						} else {
-							std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
+			std::cout << "> ";
+			std::getline(std::cin, code);
+			try {
+				auto comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
+				auto value = wrapper.runCode(std::move(comp), tree);
+				std::vector<Function> stack_trace;
+				if (value.getValueType() == Value::type_t::ARRAY) {
+					if (value.vectorSize() != 1) {
+						int i = 0;
+						for (auto &e : value.getVector(NULL, stack_trace)) {
+							printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
+							std::cout << e.toString(NULL, stack_trace) << "\n";
+							i++;
 						}
+					} else {
+						std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
 					}
-				} catch (const RTError &e) {
-					Rossa::printError(e);
 				}
+			} catch (const rossa_error &e) {
+				Rossa::printError(e);
 			}
 		}
 	} else {
@@ -288,7 +175,7 @@ int main(int argc, char const *argv[])
 				compile(entry, (options["output"] == "" ? "out" : options["output"]));
 			else
 				wrapper.runCode(entry, tree);
-		} catch (const RTError &e) {
+		} catch (const rossa_error &e) {
 			Rossa::printError(e);
 			return 1;
 		}

@@ -301,7 +301,7 @@ param_t NodeParser::parseParamTypeNode(const type_sll &base)
 	return pt;
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode()
+std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode()
 {
 	if (currentToken.type != '(')
 		return logErrorSN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
@@ -312,7 +312,7 @@ std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::p
 		if (currentToken.type != ')')
 			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 		nextToken();
-		return { sig_t(), {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
+		return { fsig_t(), {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
 	}
 
 	std::vector<std::pair<LexerTokenType, hash_ull>> args;
@@ -427,7 +427,7 @@ node_ptr_t NodeParser::parseDefineNode()
 
 	std::vector<hash_ull> captures;
 
-	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != '~' && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
+	if (currentToken.type == NULL_TOK || (currentToken.type != TOK_IDF && currentToken.type != TOK_LENGTH && currentToken.type != TOK_ALLOC && currentToken.type != TOK_CHARN && currentToken.type != TOK_CHARS && currentToken.type != TOK_PARSE))
 		return logErrorN(_EXPECTED_FUNCTION_NAME_, currentToken);
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
@@ -565,7 +565,7 @@ node_ptr_t NodeParser::parseNPLambdaNode()
 {
 	nextToken();
 
-	sig_t sig;
+	fsig_t sig;
 	std::vector<std::pair<LexerTokenType, hash_ull>> p;
 	std::vector<hash_ull> c;
 
@@ -1475,6 +1475,15 @@ node_ptr_t NodeParser::parseExprNode()
 				return std::make_shared<ReferNode>(ret, currentToken);
 			}
 			return nullptr;
+		case TOK_DELETE:
+			nextToken();
+			if (auto ret = parseEquNode()) {
+				if (currentToken.type != ';')
+					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+				nextToken();
+				return std::make_shared<DeleteNode>(ret, currentToken);
+			}
+			return nullptr;
 		default:
 			if (auto ret = parseEquNode()) {
 				if (currentToken.type != ';')
@@ -1501,16 +1510,16 @@ node_ptr_t NodeParser::logErrorN(const std::string &s, const token_t &t)
 {
 	trace_t stack_trace;
 	if (t.type == NULL_TOK)
-		throw RTError(s, tokens.at(index - 1), stack_trace);
+		throw rossa_error(s, tokens.at(index - 1), stack_trace);
 	else
-		throw RTError(s, t, stack_trace);
+		throw rossa_error(s, t, stack_trace);
 	return nullptr;
 }
 
-std::pair<sig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const token_t &t)
+std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return { sig_t(), {{NULL_TOK, -1}} };
+	return { fsig_t(), {{NULL_TOK, -1}} };
 }
 
 param_t NodeParser::logErrorPT(const std::string &s, const token_t &t)

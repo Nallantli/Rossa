@@ -1,13 +1,13 @@
 #include "../../bin/include/Rossa.h"
 
-sig_t::sig_t()
+fsig_t::fsig_t()
 {}
 
-sig_t::sig_t(const param_vec_t &values)
+fsig_t::fsig_t(const param_vec_t &values)
 	: values{ values }
 {}
 
-const size_t sig_t::validity(const sym_vec_t &check, trace_t &stack_trace) const
+const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) const
 {
 	if (values.size() == 0)
 		return 1;
@@ -24,7 +24,7 @@ const size_t sig_t::validity(const sym_vec_t &check, trace_t &stack_trace) const
 			else if (base == Value::type_t::ANY)
 				v += 1;
 			else if (check[i].getValueType() == Value::type_t::OBJECT) {
-				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
+				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace).extendsObject(base))
 					v += 2;
 				else
 					return 0;
@@ -66,7 +66,7 @@ const size_t sig_t::validity(const sym_vec_t &check, trace_t &stack_trace) const
 	return v;
 }
 
-const std::string sig_t::toCodeString() const
+const std::string fsig_t::toCodeString() const
 {
 	std::string s = "{";
 	size_t i = 0;
@@ -78,7 +78,7 @@ const std::string sig_t::toCodeString() const
 	return s + "}";
 }
 
-const std::string sig_t::toString() const
+const std::string fsig_t::toString() const
 {
 	std::string s = "";
 	size_t i = 0;
@@ -90,12 +90,12 @@ const std::string sig_t::toString() const
 	return s;
 }
 
-const bool sig_t::operator<(const sig_t &s) const
+const bool fsig_t::operator<(const fsig_t &s) const
 {
 	return values < s.values;
 }
 
-const bool sig_t::operator==(const sig_t &s) const
+const bool fsig_t::operator==(const fsig_t &s) const
 {
 	return values == s.values;
 }
@@ -126,7 +126,7 @@ const std::filesystem::path dir::findFile(const std::filesystem::path &currentDi
 	if (std::filesystem::exists(libDirCheck))
 		return libDirCheck;
 	trace_t stack_trace;
-	throw RTError(format::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
+	throw rossa_error(format::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
 }
 
 const std::vector<std::string> dir::compiledOptions(int argc, char const *argv[])
@@ -148,7 +148,7 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto library = dlopen(dir::findFile(currentDir, libname, token).string().c_str(), RTLD_LAZY);
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
+			throw rossa_error(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 		auto cm = dlsym(library, (rawlibname + "_rossaCompilerCommands").c_str());
@@ -158,14 +158,14 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
+			throw rossa_error(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
 		auto cm = GetProcAddress(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #endif
 		if (f == NULL) {
 			trace_t stack_trace;
-			throw RTError(format::format(_EXPORT_FUNCTION_NOT_FOUND_, { libname }), *token, stack_trace);
+			throw rossa_error(format::format(_EXPORT_FUNCTION_NOT_FOUND_, { libname }), *token, stack_trace);
 		}
 		std::map<std::string, extf_t> fns;
 		auto ef = (export_fns_t)f;
@@ -181,11 +181,11 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 		trace_t stack_trace;
-		throw RTError(format::format(_LIBRARY_NOT_IN_MEMORY_, { rawlibname }), *token, stack_trace);
+		throw rossa_error(format::format(_LIBRARY_NOT_IN_MEMORY_, { rawlibname }), *token, stack_trace);
 	}
 	if (loaded[rawlibname].find(fname) == loaded[rawlibname].end()) {
 		trace_t stack_trace;
-		throw RTError(format::format(_LIBRARY_FUNCTION_NOT_EXIST_, { rawlibname, fname }), *token, stack_trace);
+		throw rossa_error(format::format(_LIBRARY_FUNCTION_NOT_EXIST_, { rawlibname, fname }), *token, stack_trace);
 	}
 	return loaded[rawlibname][fname];
 }

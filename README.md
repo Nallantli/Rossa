@@ -7,7 +7,7 @@
 
 <div align="center">
 
-![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
+![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) ![libncurses](https://github.com/Nallantli/Rossa/workflows/libncurses/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
 
 </div>
 
@@ -101,8 +101,8 @@ f(ref x : Number, ref id : Number) => {
 	}
 }
 
-t1 := new Thread(|> f(10, 1));
-t2 := new Thread(|> f(10, 2));
+t1 := new Thread(()[f] => f(10, 1));
+t2 := new Thread(()[f] => f(10, 2));
 
 t1.join();
 t2.join();

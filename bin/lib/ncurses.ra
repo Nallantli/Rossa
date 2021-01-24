@@ -1,0 +1,88 @@
+extern "libncurses";
+
+var stdscr;
+
+struct Window class {
+	var ptr;
+
+	init(ref height : Number, ref width : Number, ref x : Number, ref y : Number) => {
+		ptr = extern_call libncurses._newwin(height, width, x, y);
+	}
+
+	init(ref ptr : Pointer) => {
+		this.ptr = ptr;
+	}
+
+	refresh() => extern_call libncurses._wrefresh(ptr);
+
+	keypad(ref b : Boolean) => extern_call libncurses._keypad(ptr, b);
+
+	box(ref a : Number, ref b : Number) => extern_call libncurses._box(ptr, a, b);
+
+	border(
+		ref ls : Number,
+		ref rs : Number,
+		ref ts : Number,
+		ref bs : Number,
+		ref tl : Number,
+		ref tr : Number,
+		ref bl : Number,
+		ref br : Number
+	) => extern_call libncurses._wborder(ptr, ls, rs, ts, bs, tl, tr, bl, br);
+
+	printw(ref a) => extern_call libncurses._wprintw(ptr, a -> String);
+
+	mvprintw(ref y : Number, ref x : Number, ref a) => extern_call libncurses._mvwprintw(ptr, y, x, a -> String);
+
+	addch(ref a : Number) => extern_call libncurses._waddch(ptr, a);
+
+	mvaddch(ref y : Number, ref x : Number, ref a : Number) => extern_call libncurses._mvwaddch(ptr, y, x, a);
+
+	getch() => extern_call libncurses._getch(ptr);
+
+	delwin() => {
+		if ptr != nil then {
+			r := extern_call libncurses._delwin(ptr);
+			ptr = nil;
+			return r;
+		} else {
+			throw "Window already deleted";
+		}
+	}
+
+	rem() => {
+		delwin();
+	}
+}
+
+initscr() => {
+	stdscr = new Window(extern_call libncurses._initscr());
+	refer stdscr;
+}
+
+refresh() => extern_call libncurses._refresh();
+
+getch() => extern_call libncurses._getch();
+
+endwin() => extern_call libncurses._endwin();
+
+raw() => extern_call libncurses._raw();
+noraw() => extern_call libncurses._noraw();
+
+cbreak() => extern_call libncurses._cbreak();
+nocbreak() => extern_call libncurses._nocbreak();
+
+echo() => extern_call libncurses._echo();
+noecho() => extern_call libncurses._noecho();
+
+typeahead(ref n : Number) => extern_call libncurses._typeahead(n);
+
+halfdelay(ref n : Number) => extern_call libncurses._halfdelay(n);
+
+printw(ref a) => extern_call libncurses._printw(a -> String);
+
+mvprintw(ref y : Number, ref x : Number, ref a) => extern_call libncurses._mvprintw(y, x, a -> String);
+
+addch(ref a : Number) => extern_call libncurses._addch(a);
+
+mvaddch(ref y : Number, ref x : Number, ref a : Number) => extern_call libncurses._mvaddch(y, x, a);

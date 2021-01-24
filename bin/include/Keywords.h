@@ -50,3 +50,5 @@
 #define KEYWORD_VIRTUAL "virtual"
 #define KEYWORD_WHILE "while"
 #define KEYWORD_ANY "Any"
+#define KEYWORD_DELETE_FUNC "rem"
+#define KEYWORD_DELETE "delete"

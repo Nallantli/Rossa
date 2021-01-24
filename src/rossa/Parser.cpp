@@ -68,7 +68,7 @@ ContainerI::ContainerI(const sym_t &d, const token_t &token)
 	, d{ d }
 {}
 
-const sym_t ContainerI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ContainerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return d;
 }
@@ -82,7 +82,7 @@ const std::string ContainerI::compile() const
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const i_ptr_t &body, const std::vector<hash_ull> &captures, const token_t &token)
+DefineI::DefineI(const hash_ull &key, const fsig_t &ftype, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const i_ptr_t &body, const std::vector<hash_ull> &captures, const token_t &token)
 	: Instruction(DEFINE, token)
 	, key{ key }
 	, ftype{ ftype }
@@ -91,13 +91,13 @@ DefineI::DefineI(const hash_ull &key, const sig_t &ftype, const std::vector<std:
 	, captures{ captures }
 {}
 
-const sym_t DefineI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t DefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	std::map<hash_ull, const sym_t> capturedVars;
 	for (const hash_ull &e : captures) {
 		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
 	}
-	func_ptr_t f = std::make_shared<const Function>(key, scope, params, body, capturedVars);
+	func_ptr_t f = std::make_shared<Function>(key, scope->getPtr(), params, body, capturedVars);
 	if (key > 0) {
 		return scope->createVariable(key, sym_t::FunctionSIG(ftype, f), &token);
 	}
@@ -136,13 +136,13 @@ VargDefineI::VargDefineI(const hash_ull &key, const i_ptr_t &body, const std::ve
 	, captures{ captures }
 {}
 
-const sym_t VargDefineI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t VargDefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	std::map<hash_ull, const sym_t> capturedVars;
 	for (const hash_ull &e : captures) {
 		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
 	}
-	func_ptr_t f = std::make_shared<const Function>(key, scope, body, capturedVars);
+	func_ptr_t f = std::make_shared<Function>(key, scope->getPtr(), body, capturedVars);
 	if (key > 0) {
 		return scope->createVariable(key, sym_t::FunctionVARG(static_cast<func_ptr_t>(f)), &token);
 	}
@@ -171,7 +171,7 @@ SequenceI::SequenceI(const i_vec_t &children, const token_t &token)
 	, children{ children }
 {}
 
-const sym_t SequenceI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t SequenceI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	sym_vec_t evals;
 	for (const i_ptr_t &e : children) {
@@ -209,19 +209,14 @@ IfElseI::IfElseI(const i_ptr_t &ifs, const i_ptr_t &body, const i_ptr_t &elses, 
 	, elses{ elses }
 {}
 
-const sym_t IfElseI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t IfElseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
-	if (ifs->evaluate(newScope, stack_trace).getBool(&token, stack_trace)) {
-		const sym_t r = body->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
+	scope_t newScope(scope, 0);
+	if (ifs->evaluate(&newScope, stack_trace).getBool(&token, stack_trace)) {
+		return body->evaluate(&newScope, stack_trace);
 	} else if (elses) {
-		const sym_t r = elses->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
+		return elses->evaluate(&newScope, stack_trace);
 	}
-	newScope->clear();
 	return sym_t();
 }
 
@@ -242,20 +237,18 @@ WhileI::WhileI(const i_ptr_t &whiles, const i_vec_t &body, const token_t &token)
 	, body{ body }
 {}
 
-const sym_t WhileI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t WhileI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	while (whiles->evaluate(scope, stack_trace).getBool(&token, stack_trace)) {
-		scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
+		scope_t newScope(scope, 0);
 		for (const i_ptr_t &i : body) {
-			const sym_t temp = i->evaluate(newScope, stack_trace);
+			const sym_t temp = i->evaluate(&newScope, stack_trace);
 			bool cflag = false;
 			switch (temp.getSymbolType()) {
 				case sym_t::type_t::ID_REFER:
 				case sym_t::type_t::ID_RETURN:
-					newScope->clear();
 					return temp;
 				case sym_t::type_t::ID_BREAK:
-					newScope->clear();
 					return sym_t();
 				case sym_t::type_t::ID_CONTINUE:
 					cflag = true;
@@ -294,22 +287,20 @@ ForI::ForI(const hash_ull &id, const i_ptr_t &fors, const i_vec_t &body, const t
 	, body{ body }
 {}
 
-const sym_t ForI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ForI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_vec_t evalFor = fors->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 	for (const sym_t &e : evalFor) {
-		scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
-		newScope->createVariable(id, e, &token);
+		scope_t newScope(scope, 0);
+		newScope.createVariable(id, e, &token);
 		bool cflag = false;
 		for (const i_ptr_t &i : body) {
-			const sym_t temp = i->evaluate(newScope, stack_trace);
+			const sym_t temp = i->evaluate(&newScope, stack_trace);
 			switch (temp.getSymbolType()) {
 				case sym_t::type_t::ID_REFER:
 				case sym_t::type_t::ID_RETURN:
-					newScope->clear();
 					return temp;
 				case sym_t::type_t::ID_BREAK:
-					newScope->clear();
 					return sym_t();
 				case sym_t::type_t::ID_CONTINUE:
 					cflag = true;
@@ -320,7 +311,6 @@ const sym_t ForI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
 			if (cflag)
 				continue;
 		}
-		newScope->clear();
 	}
 	return sym_t();
 }
@@ -346,7 +336,7 @@ VariableI::VariableI(const hash_ull &key, const token_t &token)
 	: CastingI(VARIABLE, key, token)
 {}
 
-const sym_t VariableI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t VariableI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return scope->getVariable(key, &token, stack_trace);
 }
@@ -364,7 +354,7 @@ GetThisI::GetThisI(const token_t &token)
 	: CastingI(GET_THIS_I, key, token)
 {}
 
-const sym_t GetThisI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t GetThisI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return scope->getThis(&token, stack_trace);
 }
@@ -385,7 +375,7 @@ DeclareI::DeclareI(const hash_ull &key, const type_sll &vtype, const i_ptr_t &a,
 	, isConst{ isConst }
 {}
 
-const sym_t DeclareI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t DeclareI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t v = scope->createVariable(key, &token);
 	const sym_t evalA = a->evaluate(scope, stack_trace);
@@ -406,7 +396,7 @@ IndexI::IndexI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(INDEX, a, b, token)
 {}
 
-const sym_t IndexI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t IndexI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -427,23 +417,23 @@ InnerI::InnerI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(INNER, a, b, token)
 {}
 
-const sym_t InnerI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t InnerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
 		case Value::type_t::DICTIONARY:
 			if (b->getType() == VARIABLE)
 				return evalA.indexDict(ROSSA_DEHASH(reinterpret_cast<const VariableI *>(b.get())->getKey()));
-			throw RTError(_CANNOT_ENTER_DICTIONARY_, token, stack_trace);
+			throw rossa_error(_CANNOT_ENTER_DICTIONARY_, token, stack_trace);
 		case Value::type_t::OBJECT:
 		{
-			const scope_ptr_t o = evalA.getObject(&token, stack_trace);
-			if (o->getType() != Scope::type_t::STATIC_O && o->getType() != Scope::type_t::INSTANCE_O)
-				throw RTError(_CANNOT_INDEX_OBJECT_, token, stack_trace);
-			return b->evaluate(o, stack_trace);
+			const scope_t o = evalA.getObject(&token, stack_trace);
+			if (o.getType() != Scope::type_t::STATIC_O && o.getType() != Scope::type_t::INSTANCE_O)
+				throw rossa_error(_CANNOT_INDEX_OBJECT_, token, stack_trace);
+			return b->evaluate(&o, stack_trace);
 		}
 		default:
-			throw RTError(_CANNOT_INDEX_VALUE_, token, stack_trace);
+			throw rossa_error(_CANNOT_INDEX_VALUE_, token, stack_trace);
 	}
 }
 
@@ -460,7 +450,7 @@ CallI::CallI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(INDEX, a, b, token)
 {}
 
-const sym_t CallI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t CallI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return ops::call(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
@@ -478,7 +468,7 @@ AddI::AddI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(ADD, a, b, token)
 {}
 
-const sym_t AddI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t AddI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -499,7 +489,7 @@ SubI::SubI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(SUB, a, b, token)
 {}
 
-const sym_t SubI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t SubI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -520,7 +510,7 @@ MulI::MulI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(MUL, a, b, token)
 {}
 
-const sym_t MulI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t MulI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -541,7 +531,7 @@ DivI::DivI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(DIV, a, b, token)
 {}
 
-const sym_t DivI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t DivI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -562,7 +552,7 @@ ModI::ModI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(MOD, a, b, token)
 {}
 
-const sym_t ModI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ModI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -583,7 +573,7 @@ PowI::PowI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(POW_I, a, b, token)
 {}
 
-const sym_t PowI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t PowI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -604,7 +594,7 @@ LessI::LessI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(LESS, a, b, token)
 {}
 
-const sym_t LessI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t LessI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -625,7 +615,7 @@ MoreI::MoreI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(MORE, a, b, token)
 {}
 
-const sym_t MoreI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t MoreI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -646,7 +636,7 @@ ELessI::ELessI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(ELESS, a, b, token)
 {}
 
-const sym_t ELessI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ELessI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -667,7 +657,7 @@ EMoreI::EMoreI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(EMORE, a, b, token)
 {}
 
-const sym_t EMoreI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t EMoreI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -688,12 +678,12 @@ EqualsI::EqualsI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(EQUALS, a, b, token)
 {}
 
-const sym_t EqualsI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t EqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_EQUALS))
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_EQUALS))
 		return scope->getVariable(Rossa::HASH_EQUALS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 
 	return sym_t::Boolean(evalA.equals(&evalB, &token, stack_trace));
@@ -712,12 +702,12 @@ NEqualsI::NEqualsI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(NEQUALS, a, b, token)
 {}
 
-const sym_t NEqualsI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t NEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_NEQUALS))
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_NEQUALS))
 		return scope->getVariable(Rossa::HASH_NEQUALS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 
 	return sym_t::Boolean(evalA.nequals(&evalB, &token, stack_trace));
@@ -736,7 +726,7 @@ AndI::AndI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(AND, a, b, token)
 {}
 
-const sym_t AndI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t AndI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	if (!a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return sym_t::Boolean(false);
@@ -758,7 +748,7 @@ OrI::OrI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(OR, a, b, token)
 {}
 
-const sym_t OrI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t OrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	if (a->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 		return sym_t::Boolean(true);
@@ -780,7 +770,7 @@ BOrI::BOrI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(B_OR, a, b, token)
 {}
 
-const sym_t BOrI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t BOrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -801,7 +791,7 @@ BXOrI::BXOrI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(B_XOR, a, b, token)
 {}
 
-const sym_t BXOrI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t BXOrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -822,7 +812,7 @@ BAndI::BAndI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(B_AND, a, b, token)
 {}
 
-const sym_t BAndI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t BAndI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -843,7 +833,7 @@ BShiftLeftI::BShiftLeftI(const i_ptr_t &a, const i_ptr_t &b, const token_t &toke
 	: BinaryI(B_SH_L, a, b, token)
 {}
 
-const sym_t BShiftLeftI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t BShiftLeftI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -864,7 +854,7 @@ BShiftRightI::BShiftRightI(const i_ptr_t &a, const i_ptr_t &b, const token_t &to
 	: BinaryI(B_SH_R, a, b, token)
 {}
 
-const sym_t BShiftRightI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t BShiftRightI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -886,15 +876,15 @@ SetI::SetI(const i_ptr_t &a, const i_ptr_t &b, const bool &isConst, const token_
 	, isConst{ isConst }
 {}
 
-const sym_t SetI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t SetI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_SET)) {
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_SET)) {
 		try {
 			return scope->getVariable(Rossa::HASH_SET, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
-		} catch (const RTError &e) {
+		} catch (const rossa_error &e) {
 			evalA.set(&evalB, &token, isConst, stack_trace);
 		}
 	} else {
@@ -916,7 +906,7 @@ ReturnI::ReturnI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(RETURN, a, token)
 {}
 
-const sym_t ReturnI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ReturnI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	sym_t evalA = a->evaluate(scope, stack_trace);
 	evalA.setSymbolType(sym_t::type_t::ID_RETURN);
@@ -940,7 +930,7 @@ ExternI::ExternI(const std::string &libname, const std::string &fname, const i_p
 	this->f = lib::loadFunction(libname, fname, &token);
 }
 
-const sym_t ExternI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ExternI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Rossa::MAIN_HASH, stack_trace);
 }
@@ -958,7 +948,7 @@ LengthI::LengthI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(LENGTH, a, token)
 {}
 
-const sym_t LengthI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t LengthI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
@@ -987,12 +977,12 @@ const sym_t LengthI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) co
 			return sym_t::Number(number_t::Long(evalA.vectorSize()));
 		case Value::type_t::OBJECT:
 		{
-			const scope_ptr_t o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(Rossa::HASH_LENGTH))
-				return o->getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
+			const scope_t o = evalA.getObject(&token, stack_trace);
+			if (o.hasValue(Rossa::HASH_LENGTH))
+				return o.getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
 		}
 		default:
-			throw RTError(_FAILURE_LENGTH_, token, stack_trace);
+			throw rossa_error(_FAILURE_LENGTH_, token, stack_trace);
 	}
 }
 
@@ -1013,11 +1003,11 @@ ClassI::ClassI(const hash_ull &key, const Scope::type_t &type, const i_ptr_t &bo
 	, extends{ extends }
 {}
 
-const sym_t ClassI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	i_ptr_t nbody = body;
-	scope_ptr_t o;
-	scope_ptr_t ex = nullptr;
+	scope_t o;
+	scope_t ex;
 	std::vector<type_sll> extensions;
 	if (extends) {
 		const sym_t e = extends->evaluate(scope, stack_trace);
@@ -1025,18 +1015,18 @@ const sym_t ClassI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) con
 			extensions.push_back(e.getTypeName(&token, stack_trace));
 		else {
 			ex = e.getObject(&token, stack_trace);
-			if (ex->getType() == Scope::type_t::STATIC_O)
-				throw RTError(_FAILURE_EXTEND_, token, stack_trace);
-			const i_ptr_t eb = ex->getBody();
+			if (ex.getType() == Scope::type_t::STATIC_O)
+				throw rossa_error(_FAILURE_EXTEND_, token, stack_trace);
+			const i_ptr_t eb = ex.getBody();
 			i_vec_t temp;
 			temp.push_back(body);
 			temp.push_back(eb);
 			nbody = std::make_shared<ScopeI>(temp, token);
 		}
 	}
-	o = std::make_shared<Scope>(scope, type, nbody, key, ex, extensions);
+	o = scope_t(scope, type, nbody, key, ex, extensions);
 	if (type == Scope::type_t::STATIC_O)
-		body->evaluate(o, stack_trace);
+		nbody->evaluate(&o, stack_trace);
 	return scope->createVariable(key, sym_t::Object(o), &token);
 }
 
@@ -1055,13 +1045,13 @@ NewI::NewI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(NEW_I, a, b, token)
 {}
 
-const sym_t NewI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t NewI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t &evalA = a->evaluate(scope, stack_trace);
 	const sym_vec_t evalB = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 
-	const scope_ptr_t &base = evalA.getObject(&token, stack_trace);
-	return base->instantiate(evalB, &token, stack_trace);
+	const scope_t &base = evalA.getObject(&token, stack_trace);
+	return base.instantiate(evalB, &token, stack_trace);
 }
 
 const std::string NewI::compile() const
@@ -1077,7 +1067,7 @@ CastToI::CastToI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(CAST_TO_I, a, b, token)
 {}
 
-const sym_t CastToI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const type_sll convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
@@ -1111,7 +1101,7 @@ const sym_t CastToI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) co
 						}
 						return sym_t::Number(number_t::Double(std::stold(s)));
 					} catch (const std::invalid_argument &e) {
-						throw RTError(format::format(_FAILURE_STR_TO_NUM_, { evalA.getString(&token, stack_trace) }), token, stack_trace);
+						throw rossa_error(format::format(_FAILURE_STR_TO_NUM_, { evalA.getString(&token, stack_trace) }), token, stack_trace);
 					}
 				case Value::type_t::STRING:
 					return evalA;
@@ -1232,9 +1222,9 @@ const sym_t CastToI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) co
 			if (convert == evalA.getAugValueType())
 				return evalA;
 			const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
-			const scope_ptr_t o = evalA.getObject(&token, stack_trace);
-			if (o->hasValue(fname))
-				return o->getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
+			const scope_t o = evalA.getObject(&token, stack_trace);
+			if (o.hasValue(fname))
+				return o.getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
 			break;
 		}
 		case Value::type_t::TYPE_NAME:
@@ -1269,11 +1259,11 @@ AllocI::AllocI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(ALLOC_I, a, token)
 {}
 
-const sym_t AllocI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t AllocI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const long_int_t evalA = a->evaluate(scope, stack_trace).getNumber(&token, stack_trace).getLong();
 	if (evalA < 0)
-		throw RTError(_FAILURE_ALLOC_, token, stack_trace);
+		throw rossa_error(_FAILURE_ALLOC_, token, stack_trace);
 	return sym_t::allocate(evalA);
 }
 
@@ -1292,7 +1282,7 @@ UntilI::UntilI(const i_ptr_t &a, const i_ptr_t &b, const i_ptr_t &step, const bo
 	, inclusive{ inclusive }
 {}
 
-const sym_t UntilI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t UntilI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -1320,7 +1310,7 @@ ScopeI::ScopeI(const i_vec_t &children, const token_t &token)
 	, children{ children }
 {}
 
-const sym_t ScopeI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ScopeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	for (const i_ptr_t &e : children) {
 		const sym_t eval = e->evaluate(scope, stack_trace);
@@ -1352,7 +1342,7 @@ MapI::MapI(const std::map<std::string, i_ptr_t> &children, const token_t &token)
 	, children{ children }
 {}
 
-const sym_t MapI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t MapI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	sym_map_t evals;
 	for (const std::pair<std::string, i_ptr_t> &e : children) {
@@ -1385,7 +1375,7 @@ ReferI::ReferI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(REFER_I, a, token)
 {}
 
-const sym_t ReferI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ReferI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	sym_t evalA = a->evaluate(scope, stack_trace);
 	evalA.setSymbolType(sym_t::type_t::ID_REFER);
@@ -1410,16 +1400,16 @@ SwitchI::SwitchI(const i_ptr_t &switchs, const std::map<sym_t, size_t> &cases_so
 	, elses{ elses }
 {}
 
-const sym_t SwitchI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t SwitchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
-	const sym_t eval = switchs->evaluate(newScope, stack_trace);
+	scope_t newScope(scope, 0);
+	const sym_t eval = switchs->evaluate(&newScope, stack_trace);
 	size_t index = 0;
 	if (cases_solved.find(eval) != cases_solved.end()) {
 		index = cases_solved.at(eval);
 	} else if (!cases_unsolved.empty()) {
 		for (const std::pair<const i_ptr_t, const size_t> &e : cases_unsolved) {
-			const sym_t evalE = e.first->evaluate(newScope, stack_trace);
+			const sym_t evalE = e.first->evaluate(&newScope, stack_trace);
 			if (evalE.equals(&eval, &token, stack_trace)) {
 				index = e.second;
 			}
@@ -1427,16 +1417,11 @@ const sym_t SwitchI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) co
 	}
 
 	if (index > 0) {
-		const sym_t r = cases[index - 1]->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
+		return cases[index - 1]->evaluate(&newScope, stack_trace);
 	} else if (elses) {
-		const sym_t r = elses->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
+		return elses->evaluate(&newScope, stack_trace);
 	}
 
-	newScope->clear();
 	return sym_t();
 }
 
@@ -1483,19 +1468,15 @@ TryCatchI::TryCatchI(const i_ptr_t &a, const i_ptr_t &b, const hash_ull &key, co
 	, key{ key }
 {}
 
-const sym_t TryCatchI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t TryCatchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	try {
-		scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
-		const sym_t r = a->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
-	} catch (const RTError &e) {
-		scope_ptr_t newScope = std::make_shared<Scope>(scope, 0);
-		newScope->createVariable(key, sym_t::String(std::string(e.what())), &token);
-		const sym_t r = b->evaluate(newScope, stack_trace);
-		newScope->clear();
-		return r;
+		scope_t newScope(scope, 0);
+		return a->evaluate(&newScope, stack_trace);
+	} catch (const rossa_error &e) {
+		scope_t newScope(scope, 0);
+		newScope.createVariable(key, sym_t::String(std::string(e.what())), &token);
+		return b->evaluate(&newScope, stack_trace);
 	}
 }
 
@@ -1512,10 +1493,10 @@ ThrowI::ThrowI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(THROW_I, a, token)
 {}
 
-const sym_t ThrowI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ThrowI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	throw RTError(evalA.getString(&token, stack_trace), token, stack_trace);
+	throw rossa_error(evalA.getString(&token, stack_trace), token, stack_trace);
 	return sym_t();
 }
 
@@ -1532,7 +1513,7 @@ PureEqualsI::PureEqualsI(const i_ptr_t &a, const i_ptr_t &b, const token_t &toke
 	: BinaryI(PURE_EQUALS, a, b, token)
 {}
 
-const sym_t PureEqualsI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t PureEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -1552,7 +1533,7 @@ PureNEqualsI::PureNEqualsI(const i_ptr_t &a, const i_ptr_t &b, const token_t &to
 	: BinaryI(PURE_NEQUALS, a, b, token)
 {}
 
-const sym_t PureNEqualsI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t PureNEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
@@ -1572,7 +1553,7 @@ CharNI::CharNI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(CHARN_I, a, token)
 {}
 
-const sym_t CharNI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t CharNI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const std::string evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 	sym_vec_t nv;
@@ -1594,7 +1575,7 @@ CharSI::CharSI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(CHARS_I, a, token)
 {}
 
-const sym_t CharSI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t CharSI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
@@ -1609,7 +1590,7 @@ const sym_t CharSI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) con
 			return sym_t::String(ret);
 		}
 		default:
-			throw RTError(_FAILURE_TO_STR_, token, stack_trace);
+			throw rossa_error(_FAILURE_TO_STR_, token, stack_trace);
 	}
 }
 
@@ -1627,7 +1608,7 @@ DeclareVarsI::DeclareVarsI(const std::vector<hash_ull> &keys, const token_t &tok
 	, keys{ keys }
 {}
 
-const sym_t DeclareVarsI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t DeclareVarsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	sym_vec_t newvs;
 	for (const hash_ull &k : keys)
@@ -1656,7 +1637,7 @@ ParseI::ParseI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(ALLOC_I, a, token)
 {}
 
-const sym_t ParseI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t ParseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const std::string evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
@@ -1671,6 +1652,26 @@ const std::string ParseI::compile() const
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
+/*class BNotI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+BNotI::BNotI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(B_NOT_I, a, token)
+{}
+
+const sym_t BNotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+
+	return ops::bnot(scope, evalA, &token, stack_trace);
+}
+
+const std::string BNotI::compile() const
+{
+	return C_UNARY("BNotI", a->compile());
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
 /*class TypeI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
@@ -1678,7 +1679,7 @@ TypeI::TypeI(const i_ptr_t &a, const token_t &token)
 	: UnaryI(TYPE_I, a, token)
 {}
 
-const sym_t TypeI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t TypeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	return sym_t::TypeName(evalA.getAugValueType());
@@ -1699,7 +1700,7 @@ CallOpI::CallOpI(const size_t &id, const i_vec_t &children, const token_t &token
 	, children{ children }
 {}
 
-const sym_t CallOpI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) const
+const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	switch (id) {
 		case 0:
@@ -1813,6 +1814,22 @@ const sym_t CallOpI::evaluate(const scope_ptr_t &scope, trace_t &stack_trace) co
 				children[0],
 				children[1]->evaluate(scope, stack_trace).getVector(&token, stack_trace),
 				&token, stack_trace);
+		case 21:
+			return ops::bnot(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 22:
+			return ops::unadd(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 23:
+			return ops::neg(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				&token, stack_trace);
+		case 24:
+			return ops::unot(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				&token, stack_trace);
 		default:
 			return sym_t();
 	}
@@ -1829,4 +1846,84 @@ const std::string CallOpI::compile() const
 	}
 	ca += "}";
 	return C_BINARY("CallOpI", std::to_string(id), ca);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class DeleteI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+DeleteI::DeleteI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(DELETE_I, a, token)
+{}
+
+const sym_t DeleteI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+	evalA.nullify(&token, stack_trace);
+	return sym_t();
+}
+
+const std::string DeleteI::compile() const
+{
+	return C_UNARY("DeleteI", a->compile());
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class UnAddI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+UnAddI::UnAddI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(UN_ADD_I, a, token)
+{}
+
+const sym_t UnAddI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+
+	return ops::unadd(scope, evalA, &token, stack_trace);
+}
+
+const std::string UnAddI::compile() const
+{
+	return C_UNARY("UnAddI", a->compile());
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class NegI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+NegI::NegI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(NEG_I, a, token)
+{}
+
+const sym_t NegI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+
+	return ops::neg(scope, evalA, &token, stack_trace);
+}
+
+const std::string NegI::compile() const
+{
+	return C_UNARY("NegI", a->compile());
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class NotI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+NotI::NotI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(NOT_I, a, token)
+{}
+
+const sym_t NotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+
+	return ops::unot(scope, evalA, &token, stack_trace);
+}
+
+const std::string NotI::compile() const
+{
+	return C_UNARY("NotI", a->compile());
 }

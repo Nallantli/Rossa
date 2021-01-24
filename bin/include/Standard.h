@@ -19,7 +19,7 @@ inline void threadWrapper(const func_ptr_t &f)
 	trace_t stack_trace;
 	try {
 		f->evaluate({}, NULL, stack_trace);
-	} catch (const RTError &e) {
+	} catch (const rossa_error &e) {
 		Rossa::printError(e);
 	}
 }
@@ -279,7 +279,7 @@ ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	sym_map_t m;
 	for (auto &e : f) {
 		if (e.first == 0) {
-			m["0"] = sym_t::FunctionSIG({}, e.second.at(sig_t()));
+			m["0"] = sym_t::FunctionSIG({}, e.second.at(fsig_t()));
 		} else {
 			sym_map_t m2;
 			for (auto &e2 : e.second) {

@@ -33,7 +33,7 @@ ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
 			args[1].getNumber(token, stack_trace).getLong()),
 		ec))
 		if (ec)
-			throw RTError(ec.message(), *token, stack_trace);
+			throw rossa_error(ec.message(), *token, stack_trace);
 	return sym_t::Pointer(sock);
 }
 

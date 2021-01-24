@@ -132,6 +132,28 @@ public:
 		}
 	}
 
+	inline const number_t operator+() const noexcept
+	{
+		switch (type) {
+			case DOUBLE_NUM:
+				return number_t::Double(valueDouble);
+			case LONG_NUM:
+				return number_t::Long(valueLong);
+		}
+		return number_t();
+	}
+
+	inline const number_t operator-() const noexcept
+	{
+		switch (type) {
+			case DOUBLE_NUM:
+				return number_t::Double(-valueDouble);
+			case LONG_NUM:
+				return number_t::Long(-valueLong);
+		}
+		return number_t();
+	}
+
 	inline const number_t operator+(const number_t &n) const noexcept
 	{
 		switch (type) {
@@ -365,6 +387,11 @@ public:
 	inline const number_t operator>>(const number_t &n) const noexcept
 	{
 		return number_t::Long(getLong() >> n.getLong());
+	}
+
+	inline const number_t operator~() const noexcept
+	{
+		return number_t::Long(~getLong());
 	}
 
 	inline const std::string toString() const noexcept

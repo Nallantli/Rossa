@@ -6,7 +6,7 @@ Hash Rossa::MAIN_HASH = Hash();
 const hash_ull Rossa::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);
 const hash_ull Rossa::HASH_BLANK = ROSSA_HASH("");
 const hash_ull Rossa::HASH_THIS = ROSSA_HASH(KEYWORD_THIS);
-const hash_ull Rossa::HASH_DELETER = ROSSA_HASH("~");
+const hash_ull Rossa::HASH_DELETER = ROSSA_HASH(KEYWORD_DELETE_FUNC);
 
 const hash_ull Rossa::HASH_ADD = ROSSA_HASH("+");
 const hash_ull Rossa::HASH_SUB = ROSSA_HASH("-");
@@ -19,6 +19,7 @@ const hash_ull Rossa::HASH_B_OR = ROSSA_HASH("|");
 const hash_ull Rossa::HASH_B_XOR = ROSSA_HASH("^");
 const hash_ull Rossa::HASH_B_SH_L = ROSSA_HASH("<<");
 const hash_ull Rossa::HASH_B_SH_R = ROSSA_HASH(">>");
+const hash_ull Rossa::HASH_B_NOT = ROSSA_HASH("~");
 const hash_ull Rossa::HASH_LESS = ROSSA_HASH("<");
 const hash_ull Rossa::HASH_MORE = ROSSA_HASH(">");
 const hash_ull Rossa::HASH_ELESS = ROSSA_HASH("<=");
@@ -29,12 +30,13 @@ const hash_ull Rossa::HASH_NEQUALS = ROSSA_HASH("!=");
 const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
 const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
 const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
+const hash_ull Rossa::HASH_NOT = ROSSA_HASH("!");
 const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("vargs");
 const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
-	main = std::make_shared<Scope>();
+	main = scope_t(static_cast<hash_ull>(0));
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
@@ -46,7 +48,7 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	sym_vec_t argv;
 	for (auto &s : args)
 		argv.push_back(sym_t::String(s));
-	main->createVariable(ROSSA_HASH("_args"), sym_t::Array(argv), NULL);
+	main.createVariable(ROSSA_HASH("_args"), sym_t::Array(argv), NULL);
 }
 
 const std::map<std::string, signed int> Rossa::bOperators = {
@@ -99,6 +101,7 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1},
+	{"~", -1},
 	{"$", -1} };
 
 const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
@@ -117,19 +120,20 @@ const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
 	auto g = NodeParser::genParser(entry);
 
 	trace_t stack_trace;
-	return g->evaluate(main, stack_trace);
+	return g->evaluate(&main, stack_trace);
 }
 
-void Rossa::printError(const RTError &e)
+void Rossa::printError(const rossa_error &e)
 {
-	std::string ret = "\033[" + std::to_string(RED_TEXT) + "m" + e.what() + "\n";
+	printc(e.what(), RED_TEXT);
+	std::cout << "\n";
 
 	if (e.getToken().type != NULL_TOK) {
 		std::string lineInfoRaw = "<" + e.getToken().filename.string() + ">:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
-		ret += "\033[" + std::to_string(CYAN_TEXT) + "m<\033[4m" + e.getToken().filename.string() + "\033[0m\033[" + std::to_string(CYAN_TEXT) + "m>:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
-		ret += "\033[" + std::to_string(MAGENTA_TEXT) + "m" + e.getToken().line + "\n";
+		printc(lineInfoRaw, CYAN_TEXT);
+		printc(e.getToken().line + "\n", MAGENTA_TEXT);
 
-		ret += "\033[" + std::to_string(RED_TEXT) + "m";
+		std::string ret = "";
 		for (size_t i = 0; i < e.getToken().distance - e.getToken().valueString.size() + lineInfoRaw.size(); i++)
 			ret += " ";
 		ret += "^";
@@ -137,40 +141,39 @@ void Rossa::printError(const RTError &e)
 		if (e.getToken().valueString.size() > 0)
 			for (size_t i = 0; i < e.getToken().valueString.size() - 1; i++)
 				ret += "~";
-
-		ret += "\033[0m";
+		printc(ret + "\n", RED_TEXT);
 	}
 
-	std::cout << ret << "\n";
 	size_t j = 0;
 	auto trace = e.getTrace();
 	while (!trace.empty()) {
 		if (j++ > 10) {
-			PRINTC(format::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
+			printc(format::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
 			std::cout << "\n";
 			trace.clear();
 			break;
 		}
 		auto f = trace.back();
-		PRINTC(" ^ ", MAGENTA_TEXT);
-		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m";
-		if (ROSSA_DEHASH(f.getParent()->getHashedKey()) != "")
-			std::cout << ROSSA_DEHASH(f.getParent()->getHashedKey()) << ".";
-		std::cout << ROSSA_DEHASH(f.getKey()) << "(\033[0m";
+		printc(" ^ ", MAGENTA_TEXT);
+		std::string ret = "";
+		if (ROSSA_DEHASH(f.getParent().getHashedKey()) != "")
+			ret += ROSSA_DEHASH(f.getParent().getHashedKey()) + ".";
+		ret += ROSSA_DEHASH(f.getKey());
+		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;
 		for (auto &p : f.getParams()) {
 			if (i++ > 0)
-				std::cout << ", ";
+				printc(", ", RESET_TEXT);
 			switch (p.first) {
 				case TOK_REF:
-					std::cout << "\033[" << MAGENTA_TEXT << "mref\033[0m ";
+					printc("ref ", MAGENTA_TEXT);
 					break;
 				default:
 					break;
 			}
-			std::cout << ROSSA_DEHASH(p.second);
+			printc(ROSSA_DEHASH(p.second), RESET_TEXT);
 		}
-		std::cout << "\033[" << BRIGHT_BLACK_TEXT << "m)\033[0m\n";
+		printc(")\n", BRIGHT_BLACK_TEXT);
 		trace.pop_back();
 	}
 }
@@ -288,6 +291,8 @@ const int Rossa::getToken(
 			return TOK_BREAK;
 		else if (ID_STRING == KEYWORD_REFER)
 			return TOK_REFER;
+		else if (ID_STRING == KEYWORD_DELETE)
+			return TOK_DELETE;
 		else if (ID_STRING == KEYWORD_NIL_NAME)
 			return TOK_NIL_NAME;
 		else if (ID_STRING == KEYWORD_POINTER)
@@ -588,7 +593,7 @@ const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std:
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == '~' || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
+			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
 				temp.push_back(tokens.back());
 				tokens.pop_back();
 				tokens.push_back(t);
@@ -615,9 +620,7 @@ const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std:
 }
 
 Rossa::~Rossa()
-{
-	main->clear();
-}
+{}
 
 void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
 {

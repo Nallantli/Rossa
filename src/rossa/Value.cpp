@@ -19,12 +19,12 @@ Value::Value(const std::shared_ptr<void> &valuePointer)
 	, valuePointer{ valuePointer }
 {}
 
-Value::Value(const scope_ptr_t &valueObject)
+Value::Value(const scope_t &valueObject)
 	: type{ OBJECT }
 	, valueObject{ valueObject }
 {}
 
-Value::Value(const sig_t &ftype, const func_ptr_t &function)
+Value::Value(const fsig_t &ftype, const func_ptr_t &function)
 	: type{ FUNCTION }
 	, valueFunction{ {function->getArgSize(), {{ftype, function}}} }
 {}
@@ -71,7 +71,7 @@ void Value::clearData()
 			valuePointer = nullptr;
 			break;
 		case OBJECT:
-			valueObject = nullptr;
+			valueObject = scope_t();
 			break;
 		default:
 			return;

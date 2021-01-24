@@ -30,7 +30,7 @@ namespace libsdl
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RTError(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
@@ -38,7 +38,7 @@ namespace libsdl
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw RTError(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
 		}
 
 		SDL_Texture *getImage(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace)
@@ -46,7 +46,7 @@ namespace libsdl
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw RTError(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw rossa_error(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
 			}
@@ -70,7 +70,7 @@ namespace libsdl
 		{
 			font = TTF_OpenFont(path.c_str(), size);
 			if (font == NULL)
-				throw RTError(format::format("Failure to initialize font: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Failure to initialize font: {0}", { TTF_GetError() }), *token, stack_trace);
 		}
 
 		~Font()
@@ -201,9 +201,9 @@ namespace libsdl
 		{
 			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
-				throw RTError(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
@@ -220,9 +220,9 @@ namespace libsdl
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderDrawLine(renderer, x, y, x1, y1) < 0)
-				throw RTError(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
@@ -235,9 +235,9 @@ namespace libsdl
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw RTError(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
-				throw RTError(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
@@ -274,7 +274,7 @@ namespace libsdl
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
-				throw RTError(format::format("Failure to initialize renderer: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Failure to initialize renderer: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 
 		void addShape(const sym_t &shape, const int &x, const int &y)
@@ -325,7 +325,7 @@ namespace libsdl
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw RTError(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw rossa_error(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
 				SDL_QueryTexture(image, NULL, NULL, &width, &height);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
@@ -343,7 +343,7 @@ namespace libsdl
 			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), libsdl::Font))->font;
 			loaded = TTF_RenderText_Solid(fdata, s.c_str(), { r, g, b, a });
 			if (loaded == NULL)
-				throw RTError(format::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
 			text = s;
 		}
 
@@ -380,7 +380,7 @@ namespace libsdl
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
-				throw RTError(format::format("Failure to initialize window: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error(format::format("Failure to initialize window: {0}", { SDL_GetError() }), *token, stack_trace);
 
 			this->windowID = SDL_GetWindowID(window);
 		}
@@ -402,14 +402,14 @@ namespace libsdl
 ROSSA_EXT_SIG(_sdl_init, args, token, hash, stack_trace)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		throw RTError(format::format("Failure to initialize SDL: {0}", { SDL_GetError() }), *token, stack_trace);
+		throw rossa_error(format::format("Failure to initialize SDL: {0}", { SDL_GetError() }), *token, stack_trace);
 
 	int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 	if (!(IMG_Init(imgFlags) & imgFlags))
-		throw RTError(format::format("Failure to initialize SDL_image: {0}", { IMG_GetError() }), *token, stack_trace);
+		throw rossa_error(format::format("Failure to initialize SDL_image: {0}", { IMG_GetError() }), *token, stack_trace);
 
 	if (TTF_Init() < 0)
-		throw RTError(format::format("Failure to initialize SDL_ttf: {0}", { TTF_GetError() }), *token, stack_trace);
+		throw rossa_error(format::format("Failure to initialize SDL_ttf: {0}", { TTF_GetError() }), *token, stack_trace);
 
 	return sym_t();
 }

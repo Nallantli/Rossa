@@ -116,7 +116,7 @@ struct Test class {
 		return 1;
 	}
 
-	~() => {
+	rem() => {
 		putln("DELETER CALLED");
 	}
 }

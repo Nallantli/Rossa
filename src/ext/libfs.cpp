@@ -21,17 +21,17 @@ namespace libfs
 			switch (error) {
 				case ZIP_ER_INVAL:
 				case ZIP_ER_NOENT:
-					throw RTError("Path to ZIP archive is invalid", *token, stack_trace);
+					throw rossa_error("Path to ZIP archive is invalid", *token, stack_trace);
 				case ZIP_ER_NOZIP:
-					throw RTError("Path does not point to a ZIP archive", *token, stack_trace);
+					throw rossa_error("Path does not point to a ZIP archive", *token, stack_trace);
 				case ZIP_ER_OPEN:
-					throw RTError("ZIP archive cannot be opened", *token, stack_trace);
+					throw rossa_error("ZIP archive cannot be opened", *token, stack_trace);
 				case ZIP_ER_READ:
-					throw RTError("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
+					throw rossa_error("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
 				case ZIP_ER_MEMORY:
-					throw RTError("Enough memory could not be allocated", *token, stack_trace);
+					throw rossa_error("Enough memory could not be allocated", *token, stack_trace);
 				default:
-					throw RTError("An error occured while attempting to open archive", *token, stack_trace);
+					throw rossa_error("An error occured while attempting to open archive", *token, stack_trace);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace libfs
 					while (totalRead != statBuffer.size) {
 						int nlen = zip_fread(f, binBuffer, 100);
 						if (nlen < 0)
-							throw RTError("Error reading file within archive (possibly corrupt)", *token, stack_trace);
+							throw rossa_error("Error reading file within archive (possibly corrupt)", *token, stack_trace);
 						file.write(binBuffer, nlen);
 						totalRead += nlen;
 					}
@@ -58,12 +58,12 @@ namespace libfs
 					zip_fclose(f);
 				}
 			} else {
-				throw RTError("Error reading file within archive (possibly corrupt)", *token, stack_trace);
+				throw rossa_error("Error reading file within archive (possibly corrupt)", *token, stack_trace);
 			}
 		}
 
 		if (zip_close(z) == -1) {
-			throw RTError("Attempt to close ZIP archive failed", *token, stack_trace);
+			throw rossa_error("Attempt to close ZIP archive failed", *token, stack_trace);
 		}
 	}
 }
