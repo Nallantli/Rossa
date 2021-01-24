@@ -46,8 +46,7 @@ std::stringstream ContainerNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CONTAINER : " << s.toCodeString() << "\n" << colorASCII(RESET_TEXT);
+	ss << "CONTAINER : " << s.toCodeString() << "\n";
 	return ss;
 }
 
@@ -97,8 +96,7 @@ std::stringstream VectorNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "ARRAY : " << scoped << "\n" << colorASCII(RESET_TEXT);
+	ss << "ARRAY : " << scoped << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		if (args[i] != nullptr)
 			ss << args[i]->printTree(indent, i == args.size() - 1).str();
@@ -155,8 +153,7 @@ std::stringstream BreakNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "BREAK\n" << colorASCII(RESET_TEXT);
+	ss << "BREAK\n";
 	return ss;
 }
 
@@ -193,8 +190,7 @@ std::stringstream ContinueNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CONTINUE\n" << colorASCII(RESET_TEXT);
+	ss << "CONTINUE\n";
 	return ss;
 }
 
@@ -240,8 +236,7 @@ std::stringstream IDNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "ID : " << ROSSA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	ss << "ID : " << ROSSA_DEHASH(key) << "\n";
 	return ss;
 }
 
@@ -285,8 +280,7 @@ std::stringstream BIDNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "BID : " << key << "\n" << colorASCII(RESET_TEXT);
+	ss << "BID : " << key << "\n";
 	return ss;
 }
 
@@ -333,8 +327,7 @@ std::stringstream DefineNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n" << colorASCII(RESET_TEXT);
+	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n";
 	ss << body->printTree(indent, true).str();
 	return ss;
 }
@@ -386,8 +379,7 @@ std::stringstream VargDefineNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n" << colorASCII(RESET_TEXT);
+	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n";
 	ss << body->printTree(indent, true).str();
 	return ss;
 }
@@ -438,8 +430,7 @@ std::stringstream NewNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "NEW\n" << colorASCII(RESET_TEXT);
+	ss << "NEW\n";
 	ss << object->printTree(indent, false).str();
 	ss << params->printTree(indent, true).str();
 	return ss;
@@ -510,8 +501,7 @@ std::stringstream ClassNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n" << colorASCII(RESET_TEXT);
+	ss << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n";
 	if (extends != nullptr)
 		ss << extends->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
@@ -561,8 +551,7 @@ std::stringstream VarNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "VAR : " << keys.size() << "\n" << colorASCII(RESET_TEXT);
+	ss << "VAR : " << keys.size() << "\n";
 	return ss;
 }
 
@@ -617,8 +606,7 @@ std::stringstream CallNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CALL\n" << colorASCII(RESET_TEXT);
+	ss << "CALL\n";
 	ss << callee->printTree(indent, args.empty()).str();
 	for (size_t i = 0; i < args.size(); i++)
 		ss << args[i]->printTree(indent, i == args.size() - 1).str();
@@ -671,8 +659,7 @@ std::stringstream ExternCallNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "EXTERN_CALL : " << libname << "::" << fname << "\n" << colorASCII(RESET_TEXT);
+	ss << "EXTERN_CALL : " << libname << "::" << fname << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		ss << args[i]->printTree(indent, i == args.size() - 1).str();
 	return ss;
@@ -736,8 +723,7 @@ std::stringstream CallBuiltNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CALL_BUILT : " << std::to_string(t) << "\n" << colorASCII(RESET_TEXT);
+	ss << "CALL_BUILT : " << std::to_string(t) << "\n";
 	ss << arg->printTree(indent, true).str();
 	return ss;
 }
@@ -785,8 +771,7 @@ std::stringstream ReturnNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "RETURN\n" << colorASCII(RESET_TEXT);
+	ss << "RETURN\n";
 	ss << a->printTree(indent, true).str();
 	return ss;
 }
@@ -826,8 +811,7 @@ std::stringstream ReferNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "REFER\n" << colorASCII(RESET_TEXT);
+	ss << "REFER\n";
 	ss << a->printTree(indent, true).str();
 	return ss;
 }
@@ -998,8 +982,7 @@ std::stringstream BinOpNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "BINOP : " << op << "\n" << colorASCII(RESET_TEXT);
+	ss << "BINOP : " << op << "\n";
 	ss << a->printTree(indent, false).str();
 	ss << b->printTree(indent, true).str();
 	return ss;
@@ -1064,8 +1047,7 @@ std::stringstream UnOpNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "UNOP : " << op << "\n" << colorASCII(RESET_TEXT);
+	ss << "UNOP : " << op << "\n";
 	ss << a->printTree(indent, true).str();
 	return ss;
 }
@@ -1113,8 +1095,7 @@ std::stringstream ParenNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "PAREN\n" << colorASCII(RESET_TEXT);
+	ss << "PAREN\n";
 	ss << a->printTree(indent, true).str();
 	return ss;
 }
@@ -1174,8 +1155,7 @@ std::stringstream InsNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "INS\n" << colorASCII(RESET_TEXT);
+	ss << "INS\n";
 	ss << callee->printTree(indent, false).str();
 	ss << arg->printTree(indent, true).str();
 	return ss;
@@ -1239,8 +1219,7 @@ std::stringstream IfElseNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "IF_ELSE\n" << colorASCII(RESET_TEXT);
+	ss << "IF_ELSE\n";
 	ss << ifs->printTree(indent, false).str();
 	ss << body->printTree(indent, elses == nullptr).str();
 	if (elses != nullptr)
@@ -1305,8 +1284,7 @@ std::stringstream WhileNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "WHILE\n" << colorASCII(RESET_TEXT);
+	ss << "WHILE\n";
 	ss << whiles->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
 		ss << body[i]->printTree(indent, i == body.size() - 1).str();
@@ -1372,8 +1350,7 @@ std::stringstream ForNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "FOR : " << ROSSA_DEHASH(id) << "\n" << colorASCII(RESET_TEXT);
+	ss << "FOR : " << ROSSA_DEHASH(id) << "\n";
 	ss << fors->printTree(indent, false).str();
 	for (size_t i = 0; i < body.size(); i++)
 		ss << body[i]->printTree(indent, i == body.size() - 1).str();
@@ -1451,8 +1428,7 @@ std::stringstream UntilNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "UNTIL\n" << colorASCII(RESET_TEXT);
+	ss << "UNTIL\n";
 	ss << a->printTree(indent, false).str();
 	ss << b->printTree(indent, step == nullptr).str();
 	if (step != nullptr)
@@ -1513,8 +1489,7 @@ std::stringstream MapNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "MAP\n" << colorASCII(RESET_TEXT);
+	ss << "MAP\n";
 	for (size_t i = 0; i < args.size(); i++)
 		ss << args[i].second->printTree(indent, i == args.size() - 1).str();
 	return ss;
@@ -1594,8 +1569,7 @@ std::stringstream SwitchNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "SWITCH\n" << colorASCII(RESET_TEXT);
+	ss << "SWITCH\n";
 	ss << switchs->printTree(indent, gotos.empty() && cases.empty()).str();
 	size_t i = 0;
 	for (auto &e : cases) {
@@ -1667,8 +1641,7 @@ std::stringstream TryCatchNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n" << colorASCII(RESET_TEXT);
+	ss << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n";
 	ss << trys->printTree(indent, false).str();
 	ss << catchs->printTree(indent, true).str();
 	return ss;
@@ -1708,8 +1681,7 @@ std::stringstream ThrowNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "THROW\n" << colorASCII(RESET_TEXT);
+	ss << "THROW\n";
 	ss << throws->printTree(indent, true).str();
 	return ss;
 }
@@ -1754,8 +1726,7 @@ std::stringstream CallOpNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "CALL_OP : " << id << "\n" << colorASCII(RESET_TEXT);
+	ss << "CALL_OP : " << id << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		ss << args[i]->printTree(indent, i == args.size() - 1).str();
 	return ss;
@@ -1799,8 +1770,7 @@ std::stringstream DeleteNode::printTree(std::string indent, bool last) const
 		ss << "├─";
 		indent += "│ ";
 	}
-	ss << (isConst() ? colorASCII(CYAN_TEXT) : colorASCII(WHITE_TEXT));
-	ss << "DELETE\n" << colorASCII(RESET_TEXT);
+	ss << "DELETE\n";
 	ss << del->printTree(indent, true).str();
 	return ss;
 }

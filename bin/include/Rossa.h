@@ -1,12 +1,10 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.12.0-alpha"
+#define _ROSSA_VERSION_ "v1.12.1-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
 #define ROSSA_HASH(x) Rossa::MAIN_HASH.hashValue(x)
-
-#define colorASCII(c) "\033[" + std::to_string(c) + "m"
 
 #include "Locale.h"
 #include "RNumber.h"
@@ -30,6 +28,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <dlfcn.h>
+#define colorASCII(c) "\033[" + std::to_string(c) + "m"
 #define EXPORT_FUNCTIONS(name) extern "C" void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
 #define COMPILER_COMMANDS(name, commands) extern "C" std::string name##_rossaCompilerCommands() { return commands; }
 #else
@@ -378,7 +377,7 @@ public:
 		STATIC_O,
 		INSTANCE_O,
 		VIRTUAL_O
-	} type;
+	} const type;
 
 	Scope *getParent() const;
 
@@ -394,13 +393,12 @@ private:
 	void traceName(const hash_ull &);
 
 	Scope(const type_t &, Scope *, const i_ptr_t &, const hash_ull &);
-	Scope(const type_t &, Scope *, const i_ptr_t &, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &);
+	Scope(Scope *, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &);
 
 	const sym_t &getVariable(const hash_ull &, const token_t *, trace_t &) const;
 	const sym_t &createVariable(const hash_ull &, const token_t *);
 	const sym_t &createVariable(const hash_ull &, const sym_t &, const token_t *);
 	const sym_t getThis(const token_t *, trace_t &);
-	void clear();
 
 	~Scope();
 };
@@ -421,8 +419,8 @@ public:
 	scope_t(Scope *, const type_t &);
 	scope_t(const hash_ull &key);
 	scope_t(const scope_t *, const hash_ull &);
-	scope_t(const scope_t *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const scope_t &, const std::vector<type_sll> &);
-	scope_t(Scope *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &name_trace);
+	scope_t(const scope_t *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const scope_t *, const std::vector<type_sll> &);
+	scope_t(Scope *, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &name_trace);
 
 	scope_t(const scope_t &);
 	~scope_t();
@@ -737,7 +735,7 @@ public:
 	const std::string &getString(const token_t *, trace_t &) const;
 	const bool getBool(const token_t *, trace_t &) const;
 	const bool hasVarg(const token_t *, trace_t &) const;
-	const scope_t &getObject(const token_t *, trace_t &) const;
+	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
 	const type_sll getAugValueType() const;
 	const type_sll getTypeName(const token_t *, trace_t &) const;

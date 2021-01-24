@@ -24,7 +24,7 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 			else if (base == Value::type_t::ANY)
 				v += 1;
 			else if (check[i].getValueType() == Value::type_t::OBJECT) {
-				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace).extendsObject(base))
+				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
 					v += 2;
 				else
 					return 0;

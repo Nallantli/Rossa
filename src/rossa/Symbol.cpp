@@ -209,11 +209,11 @@ const bool sym_t::getBool(const token_t *token, trace_t &stack_trace) const
 	return d->valueBool;
 }
 
-const scope_t &sym_t::getObject(const token_t *token, trace_t &stack_trace) const
+scope_t * sym_t::getObject(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::OBJECT)
 		throw rossa_error(_NOT_OBJECT_, *token, stack_trace);
-	return d->valueObject;
+	return &d->valueObject;
 }
 
 const Value::type_t sym_t::getValueType() const

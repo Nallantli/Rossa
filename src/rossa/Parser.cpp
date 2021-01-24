@@ -427,10 +427,10 @@ const sym_t InnerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			throw rossa_error(_CANNOT_ENTER_DICTIONARY_, token, stack_trace);
 		case Value::type_t::OBJECT:
 		{
-			const scope_t o = evalA.getObject(&token, stack_trace);
-			if (o.getType() != Scope::type_t::STATIC_O && o.getType() != Scope::type_t::INSTANCE_O)
+			const scope_t * o = evalA.getObject(&token, stack_trace);
+			if (o->getType() != Scope::type_t::STATIC_O && o->getType() != Scope::type_t::INSTANCE_O)
 				throw rossa_error(_CANNOT_INDEX_OBJECT_, token, stack_trace);
-			return b->evaluate(&o, stack_trace);
+			return b->evaluate(o, stack_trace);
 		}
 		default:
 			throw rossa_error(_CANNOT_INDEX_VALUE_, token, stack_trace);
@@ -683,7 +683,7 @@ const sym_t EqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_EQUALS))
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_EQUALS))
 		return scope->getVariable(Rossa::HASH_EQUALS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 
 	return sym_t::Boolean(evalA.equals(&evalB, &token, stack_trace));
@@ -707,7 +707,7 @@ const sym_t NEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_NEQUALS))
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_NEQUALS))
 		return scope->getVariable(Rossa::HASH_NEQUALS, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 
 	return sym_t::Boolean(evalA.nequals(&evalB, &token, stack_trace));
@@ -881,7 +881,7 @@ const sym_t SetI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 
-	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace).hasValue(Rossa::HASH_SET)) {
+	if (evalA.getValueType() == Value::type_t::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(Rossa::HASH_SET)) {
 		try {
 			return scope->getVariable(Rossa::HASH_SET, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 		} catch (const rossa_error &e) {
@@ -977,9 +977,9 @@ const sym_t LengthI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			return sym_t::Number(number_t::Long(evalA.vectorSize()));
 		case Value::type_t::OBJECT:
 		{
-			const scope_t o = evalA.getObject(&token, stack_trace);
-			if (o.hasValue(Rossa::HASH_LENGTH))
-				return o.getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
+			const scope_t * o = evalA.getObject(&token, stack_trace);
+			if (o->hasValue(Rossa::HASH_LENGTH))
+				return o->getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
 		}
 		default:
 			throw rossa_error(_FAILURE_LENGTH_, token, stack_trace);
@@ -1007,7 +1007,7 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	i_ptr_t nbody = body;
 	scope_t o;
-	scope_t ex;
+	scope_t * ex = NULL;
 	std::vector<type_sll> extensions;
 	if (extends) {
 		const sym_t e = extends->evaluate(scope, stack_trace);
@@ -1015,9 +1015,9 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			extensions.push_back(e.getTypeName(&token, stack_trace));
 		else {
 			ex = e.getObject(&token, stack_trace);
-			if (ex.getType() == Scope::type_t::STATIC_O)
+			if (ex->getType() == Scope::type_t::STATIC_O)
 				throw rossa_error(_FAILURE_EXTEND_, token, stack_trace);
-			const i_ptr_t eb = ex.getBody();
+			const i_ptr_t eb = ex->getBody();
 			i_vec_t temp;
 			temp.push_back(body);
 			temp.push_back(eb);
@@ -1050,8 +1050,8 @@ const sym_t NewI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	const sym_t &evalA = a->evaluate(scope, stack_trace);
 	const sym_vec_t evalB = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 
-	const scope_t &base = evalA.getObject(&token, stack_trace);
-	return base.instantiate(evalB, &token, stack_trace);
+	scope_t * base = evalA.getObject(&token, stack_trace);
+	return base->instantiate(evalB, &token, stack_trace);
 }
 
 const std::string NewI::compile() const
@@ -1222,9 +1222,9 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			if (convert == evalA.getAugValueType())
 				return evalA;
 			const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
-			const scope_t o = evalA.getObject(&token, stack_trace);
-			if (o.hasValue(fname))
-				return o.getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
+			scope_t * o = evalA.getObject(&token, stack_trace);
+			if (o->hasValue(fname))
+				return o->getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
 			break;
 		}
 		case Value::type_t::TYPE_NAME:

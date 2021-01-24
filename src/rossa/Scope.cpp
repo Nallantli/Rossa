@@ -8,10 +8,9 @@ Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_
 	traceName(key);
 }
 
-Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_ull &key, const std::vector<type_sll> &name_trace, const std::vector<type_sll> &extensions)
-	: type{ type }
+Scope::Scope(Scope *parent, const hash_ull &key, const std::vector<type_sll> &name_trace, const std::vector<type_sll> &extensions)
+	: type{ INSTANCE_O }
 	, parent{ parent }
-	, body{ body }
 	, hashed_key{ key }
 	, name_trace{ name_trace }
 	, extensions{ extensions }
@@ -40,33 +39,39 @@ scope_t::scope_t(const scope_t *parent, const hash_ull &key)
 	, type{ STRONG }
 {}
 
-scope_t::scope_t(const scope_t *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t &ex, const std::vector<type_sll> &extensions)
+scope_t::scope_t(const scope_t *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t *ex, const std::vector<type_sll> &extensions)
 	: scope{ new Scope(type, parent->scope, body, key) }
 	, type{ STRONG }
 {
-	if (ex.scope != NULL) {
-		this->scope->extensions = ex.scope->extensions;
-		this->scope->extensions.push_back(ex.getHashedKey());
+	if (ex != NULL) {
+		this->scope->extensions = ex->scope->extensions;
+		this->scope->extensions.push_back(ex->getHashedKey());
 	} else {
 		this->scope->extensions = extensions;
 	}
 }
 
-scope_t::scope_t(Scope *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &hashed_key, const std::vector<type_sll> &extensions, const std::vector<type_sll> &name_trace)
-	: scope{ new Scope(type, parent, body, hashed_key, name_trace, extensions) }
+scope_t::scope_t(Scope *parent, const hash_ull &hashed_key, const std::vector<type_sll> &extensions, const std::vector<type_sll> &name_trace)
+	: scope{ new Scope(parent, hashed_key, name_trace, extensions) }
 	, type{ STRONG }
 {}
 
 scope_t::scope_t(const scope_t &s)
-	: type{ STRONG }
+	: scope{ s.scope }
+	, type{ STRONG }
 {
-	this->scope = s.scope;
+#ifdef DEBUG
+	std::cout << "&scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+#endif
 	if (this->scope != NULL)
 		this->scope->references++;
 }
 
 scope_t::~scope_t()
 {
+#ifdef DEBUG
+	std::cout << "~scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+#endif
 	if (scope != NULL && type == STRONG) {
 		scope->references--;
 		if (scope->references == 0)
@@ -76,6 +81,9 @@ scope_t::~scope_t()
 
 void scope_t::operator=(const scope_t &b)
 {
+#ifdef DEBUG
+	std::cout << "=scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+#endif
 	if (this->scope != NULL && type == STRONG) {
 		this->scope->references--;
 		if (this->scope->references == 0)
@@ -113,8 +121,8 @@ const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, 
 	if (scope->type != Scope::STRUCT_O)
 		throw rossa_error(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
-	scope_t o(scope->parent, Scope::INSTANCE_O, scope->body, scope->hashed_key, scope->extensions, scope->name_trace);
-	o.scope->body->evaluate(&o, stack_trace);
+	scope_t o(scope->parent, scope->hashed_key, scope->extensions, scope->name_trace);
+	scope->body->evaluate(&o, stack_trace);
 	o.scope->getVariable(Rossa::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
 	return sym_t::Object(o);
 }
@@ -165,11 +173,6 @@ const sym_t &scope_t::createVariable(const hash_ull &key, const sym_t &d, const 
 	return scope->createVariable(key, d, token);
 }
 
-void Scope::clear()
-{
-	values.clear();
-}
-
 const bool scope_t::extendsObject(const type_sll &ex) const
 {
 	return std::find(scope->extensions.begin(), scope->extensions.end(), ex) != scope->extensions.end();
@@ -212,7 +215,10 @@ const bool scope_t::operator==(const scope_t &b) const
 
 Scope::~Scope()
 {
-	if (values.find(Rossa::HASH_DELETER) != values.end()) {
+#ifdef DEBUG
+	std::cout << "~Scope\t" << std::to_string(type) << "\t" << ROSSA_DEHASH(hashed_key) << "\n";
+#endif
+	if (type == INSTANCE_O && values.find(Rossa::HASH_DELETER) != values.end()) {
 		trace_t stack_trace;
 		values[Rossa::HASH_DELETER].call({}, NULL, stack_trace);
 	}
