@@ -11,7 +11,10 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 		{"std", "true"},
 		{"file", ""},
 		{"output", ""},
-		{"compile", "false"} };
+#ifdef ROSSA_COMPILER
+		{"compile", "false"}
+		#endif
+	};
 	std::vector<std::string> passed;
 
 	bool flag = false;
@@ -24,8 +27,10 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 				options["std"] = "false";
 			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
 				options["version"] = "true";
+#ifdef ROSSA_COMPILER
 			else if (std::string(argv[i]) == "--compile" || std::string(argv[i]) == "-c")
 				options["compile"] = "true";
+#endif
 			else if (std::string(argv[i]) == "--output" || std::string(argv[i]) == "-o")
 				options["output"] = argv[++i];
 			else {
@@ -42,7 +47,8 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 	return { options, passed };
 }
 
-static void compile(std::shared_ptr<Node> entry, const std::string &output)
+#ifdef ROSSA_COMPILER
+static void compile(const node_ptr_t &entry, const std::string &output)
 {
 #ifndef _WIN32
 	std::filesystem::path outputExe = output;
@@ -102,6 +108,7 @@ static void compile(std::shared_ptr<Node> entry, const std::string &output)
 
 	std::cout << "[6/6]\tDone.\n";
 }
+#endif
 
 int main(int argc, char const *argv[])
 {
@@ -137,7 +144,7 @@ int main(int argc, char const *argv[])
 			try {
 				auto comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
 				auto value = wrapper.runCode(std::move(comp), tree);
-				std::vector<Function> stack_trace;
+				trace_t stack_trace;
 				if (value.getValueType() == Value::type_t::ARRAY) {
 					if (value.vectorSize() != 1) {
 						int i = 0;
@@ -171,9 +178,11 @@ int main(int argc, char const *argv[])
 			if (options["std"] == "true")
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
+#ifdef ROSSA_COMPILER
 			if (options["compile"] == "true")
 				compile(entry, (options["output"] == "" ? "out" : options["output"]));
 			else
+#endif
 				wrapper.runCode(entry, tree);
 		} catch (const rossa_error &e) {
 			Rossa::printError(e);

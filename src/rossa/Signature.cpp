@@ -14,17 +14,17 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 
 	size_t v = 0;
 	for (size_t i = 0; i < values.size(); i++) {
-		type_sll vt = check[i].getAugValueType();
+		auto vt = check[i].getAugValueType();
 		if (values[i].getQualifiers().empty()) {
 			auto base = values[i].getBase();
 			if (base == vt)
 				v += 3;
-			else if (base > 0 && check[i].getValueType() == Value::type_t::NIL)
+			else if (base[0] > 0 && vt[0] == Value::type_t::NIL)
 				v += 2;
-			else if (base == Value::type_t::ANY)
+			else if (base[0] == Value::type_t::ANY)
 				v += 1;
-			else if (check[i].getValueType() == Value::type_t::OBJECT) {
-				if (base == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
+			else if (check[0].getValueType() == Value::type_t::OBJECT) {
+				if (base[0] == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
 					v += 2;
 				else
 					return 0;
@@ -190,11 +190,11 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 	return loaded[rawlibname][fname];
 }
 
-param_t::param_t(const type_sll &base)
+param_t::param_t(const aug_type_t &base)
 	: base{ base }
 {}
 
-param_t::param_t(const type_sll &base, const param_vec_t &qualifiers)
+param_t::param_t(const aug_type_t &base, const param_vec_t &qualifiers)
 	: base{ base }
 	, qualifiers{ qualifiers }
 {}
@@ -222,7 +222,7 @@ const std::string param_t::toString() const
 
 const std::string param_t::toCodeString() const
 {
-	std::string s = "param_t(static_cast<type_sll>(" + std::to_string(base) + "), ";
+	std::string s = "param_t(static_cast<type_sll>(" + getTypeString(base) + "), ";
 	s += "{";
 	size_t i = 0;
 	for (auto &v : qualifiers) {
@@ -239,7 +239,7 @@ const param_vec_t param_t::getQualifiers() const
 	return this->qualifiers;
 }
 
-const type_sll param_t::getBase() const
+const aug_type_t param_t::getBase() const
 {
 	return this->base;
 }
@@ -259,9 +259,9 @@ const bool param_t::operator<(const param_t &pt) const
 
 const size_t param_t::operator&(const param_t &pt) const
 {
-	if (base == Value::type_t::ANY)
+	if (base[0] == Value::type_t::ANY)
 		return 2;
-	if (base != pt.base && pt.base < 0)
+	if (base != pt.base && pt.base[0] < 0)
 		return 0;
 	if (qualifiers.empty() && pt.qualifiers.empty())
 		return 3;

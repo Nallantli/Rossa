@@ -4,7 +4,7 @@ Value::Value()
 	: type{ NIL }
 {}
 
-Value::Value(const type_sll &valueType)
+Value::Value(const aug_type_t &valueType)
 	: type{ TYPE_NAME }
 	, valueType{ valueType }
 {}
@@ -72,6 +72,9 @@ void Value::clearData()
 			break;
 		case OBJECT:
 			valueObject = scope_t();
+			break;
+		case TYPE_NAME:
+			valueType.clear();
 			break;
 		default:
 			return;

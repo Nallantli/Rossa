@@ -217,9 +217,9 @@ node_ptr_t NodeParser::parseCallOpNode()
 }
 
 
-param_t NodeParser::parseParamTypeNode(const type_sll &base)
+param_t NodeParser::parseParamTypeNode(const aug_type_t &base)
 {
-	if (base < 0 && base != Value::type_t::FUNCTION)
+	if (base[0] < 0 && base[0] != Value::type_t::FUNCTION)
 		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { getTypeString(base) }), currentToken);
 
 	param_t pt(base);
@@ -232,60 +232,58 @@ param_t NodeParser::parseParamTypeNode(const type_sll &base)
 				return logErrorPT(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
-		type_sll qbase = Value::type_t::ANY;
+		aug_type_t qbase = { Value::type_t::ANY };
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
-				qbase = Value::type_t::BOOLEAN_D;
+				qbase = { Value::type_t::BOOLEAN_D };
 				nextToken();
 				break;
 			case TOK_NUMBER:
-				qbase = Value::type_t::NUMBER;
+				qbase = { Value::type_t::NUMBER };
 				nextToken();
 				break;
 			case TOK_ARRAY:
-				qbase = Value::type_t::ARRAY;
+				qbase = { Value::type_t::ARRAY };
 				nextToken();
 				break;
 			case TOK_STRING:
-				qbase = Value::type_t::STRING;
+				qbase = { Value::type_t::STRING };
 				nextToken();
 				break;
 			case TOK_DICTIONARY:
-				qbase = Value::type_t::DICTIONARY;
+				qbase = { Value::type_t::DICTIONARY };
 				nextToken();
 				break;
 			case TOK_OBJECT:
-				qbase = Value::type_t::OBJECT;
+				qbase = { Value::type_t::OBJECT };
 				nextToken();
 				break;
 			case TOK_FUNCTION:
-				qbase = Value::type_t::FUNCTION;
+				qbase = { Value::type_t::FUNCTION };
 				nextToken();
 				break;
 			case TOK_POINTER:
-				qbase = Value::type_t::POINTER;
+				qbase = { Value::type_t::POINTER };
 				nextToken();
 				break;
 			case TOK_ANY:
 				nextToken();
 				break;
 			case TOK_TYPE_NAME:
-				qbase = Value::type_t::TYPE_NAME;
+				qbase = { Value::type_t::TYPE_NAME };
 				nextToken();
 				break;
 			case '@':
 			{
 				nextToken();
-				std::string typestr = "";
+				qbase = {};
 				while (currentToken.type == TOK_IDF) {
-					typestr += currentToken.valueString;
+					qbase.push_back(ROSSA_HASH(currentToken.valueString));
 					nextToken();
 					if (currentToken.type != TOK_INNER)
 						break;
-					typestr += ".";
 					nextToken();
 				}
-				qbase = ROSSA_HASH(typestr);
 				break;
 			}
 			default:
@@ -341,63 +339,61 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		param_t pt(Value::type_t::ANY);
+		param_t pt({ Value::type_t::ANY });
 		if (currentToken.type == ':') {
-			type_sll ftype = Value::type_t::ANY;
+			aug_type_t ftype = { Value::type_t::ANY };
 			nextToken();
 			switch (currentToken.type) {
 				case TOK_BOOLEAN:
-					ftype = Value::type_t::BOOLEAN_D;
+					ftype = { Value::type_t::BOOLEAN_D };
 					nextToken();
 					break;
 				case TOK_NUMBER:
-					ftype = Value::type_t::NUMBER;
+					ftype = { Value::type_t::NUMBER };
 					nextToken();
 					break;
 				case TOK_ARRAY:
-					ftype = Value::type_t::ARRAY;
+					ftype = { Value::type_t::ARRAY };
 					nextToken();
 					break;
 				case TOK_STRING:
-					ftype = Value::type_t::STRING;
+					ftype = { Value::type_t::STRING };
 					nextToken();
 					break;
 				case TOK_DICTIONARY:
-					ftype = Value::type_t::DICTIONARY;
+					ftype = { Value::type_t::DICTIONARY };
 					nextToken();
 					break;
 				case TOK_OBJECT:
-					ftype = Value::type_t::OBJECT;
+					ftype = { Value::type_t::OBJECT };
 					nextToken();
 					break;
 				case TOK_FUNCTION:
-					ftype = Value::type_t::FUNCTION;
+					ftype = { Value::type_t::FUNCTION };
 					nextToken();
 					break;
 				case TOK_POINTER:
-					ftype = Value::type_t::POINTER;
+					ftype = { Value::type_t::POINTER };
 					nextToken();
 					break;
 				case TOK_ANY:
 					nextToken();
 					break;
 				case TOK_TYPE_NAME:
-					ftype = Value::type_t::TYPE_NAME;
+					ftype = { Value::type_t::TYPE_NAME };
 					nextToken();
 					break;
 				case '@':
 				{
 					nextToken();
-					std::string typestr = "";
+					ftype = {};
 					while (currentToken.type == TOK_IDF) {
-						typestr += currentToken.valueString;
+						ftype.push_back(ROSSA_HASH(currentToken.valueString));
 						nextToken();
 						if (currentToken.type != TOK_INNER)
 							break;
-						typestr += ".";
 						nextToken();
 					}
-					ftype = ROSSA_HASH(typestr);
 					break;
 				}
 				default:
@@ -615,16 +611,15 @@ node_ptr_t NodeParser::parseIndexNode(const node_ptr_t &a)
 node_ptr_t NodeParser::parseTypeNode()
 {
 	nextToken();
-	std::string typestr = "";
+	aug_type_t ftype = {};
 	while (currentToken.type == TOK_IDF) {
-		typestr += currentToken.valueString;
+		ftype.push_back(ROSSA_HASH(currentToken.valueString));
 		nextToken();
 		if (currentToken.type != TOK_INNER)
 			break;
-		typestr += ".";
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(sym_t::TypeName(ROSSA_HASH(typestr)), currentToken);
+	return std::make_shared<ContainerNode>(sym_t::TypeName(ftype), currentToken);
 }
 
 node_ptr_t NodeParser::parseUntilNode(const node_ptr_t &a, const bool &inclusive)
@@ -740,43 +735,43 @@ node_ptr_t NodeParser::parseBaseNode()
 		case '{':
 			return parseMapNode();
 		case TOK_NIL_NAME:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::NIL), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::NIL }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NUMBER:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::NUMBER), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::NUMBER }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_STRING:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::STRING), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::STRING }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_BOOLEAN:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::BOOLEAN_D), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::BOOLEAN_D }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_ARRAY:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::ARRAY), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::ARRAY }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_DICTIONARY:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::DICTIONARY), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::DICTIONARY }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_OBJECT:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::OBJECT), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::OBJECT }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_FUNCTION:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::FUNCTION), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::FUNCTION }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TYPE_NAME:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::TYPE_NAME), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::TYPE_NAME }), currentToken);
 			nextToken();
 			return ret;
 		case TOK_POINTER:
-			ret = std::make_shared<ContainerNode>(sym_t::TypeName(Value::type_t::POINTER), currentToken);
+			ret = std::make_shared<ContainerNode>(sym_t::TypeName({ Value::type_t::POINTER }), currentToken);
 			nextToken();
 			return ret;
 		default:
@@ -1525,5 +1520,5 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 param_t NodeParser::logErrorPT(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return param_t(Value::type_t::NIL);
+	return param_t({ Value::type_t::NIL });
 }

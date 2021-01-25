@@ -8,10 +8,10 @@ Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_
 	traceName(key);
 }
 
-Scope::Scope(Scope *parent, const hash_ull &key, const std::vector<type_sll> &name_trace, const std::vector<type_sll> &extensions)
+Scope::Scope(Scope *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
 	: type{ INSTANCE_O }
 	, parent{ parent }
-	, hashed_key{ key }
+//	, hashed_key{ key }
 	, name_trace{ name_trace }
 	, extensions{ extensions }
 {}
@@ -39,20 +39,20 @@ scope_t::scope_t(const scope_t *parent, const hash_ull &key)
 	, type{ STRONG }
 {}
 
-scope_t::scope_t(const scope_t *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t *ex, const std::vector<type_sll> &extensions)
+scope_t::scope_t(const scope_t *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t *ex, const std::vector<aug_type_t> &extensions)
 	: scope{ new Scope(type, parent->scope, body, key) }
 	, type{ STRONG }
 {
 	if (ex != NULL) {
 		this->scope->extensions = ex->scope->extensions;
-		this->scope->extensions.push_back(ex->getHashedKey());
+		this->scope->extensions.push_back(ex->scope->name_trace);
 	} else {
 		this->scope->extensions = extensions;
 	}
 }
 
-scope_t::scope_t(Scope *parent, const hash_ull &hashed_key, const std::vector<type_sll> &extensions, const std::vector<type_sll> &name_trace)
-	: scope{ new Scope(parent, hashed_key, name_trace, extensions) }
+scope_t::scope_t(Scope *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
+	: scope{ new Scope(parent, name_trace, extensions) }
 	, type{ STRONG }
 {}
 
@@ -101,19 +101,8 @@ void Scope::traceName(const hash_ull &key)
 {
 	if (parent != NULL)
 		name_trace = parent->name_trace;
-	if (key != 0) {
-		std::string path = "";
+	if (key != 0)
 		name_trace.push_back(key);
-		size_t i = 0;
-		for (auto &p : name_trace) {
-			if (i++ > 0)
-				path += ".";
-			path += ROSSA_DEHASH(p);
-		}
-		hashed_key = ROSSA_HASH(path);
-	} else {
-		hashed_key = Rossa::HASH_BLANK;
-	}
 }
 
 const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
@@ -121,15 +110,26 @@ const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, 
 	if (scope->type != Scope::STRUCT_O)
 		throw rossa_error(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
-	scope_t o(scope->parent, scope->hashed_key, scope->extensions, scope->name_trace);
+	scope_t o(scope->parent, scope->name_trace, scope->extensions);
 	scope->body->evaluate(&o, stack_trace);
 	o.scope->getVariable(Rossa::HASH_INIT, token, stack_trace).call(params, token, stack_trace);
 	return sym_t::Object(o);
 }
 
-const hash_ull scope_t::getHashedKey() const
+const aug_type_t scope_t::getTypeVec() const {
+	return scope->name_trace;
+}
+
+const std::string scope_t::getKey() const
 {
-	return scope->hashed_key;
+	size_t i = 0;
+	std::string path = "";
+	for (auto &p : scope->name_trace) {
+		if (i++ > 0)
+			path += ".";
+		path += ROSSA_DEHASH(p);
+	}
+	return path;
 }
 
 const sym_t &Scope::getVariable(const hash_ull &key, const token_t *token, trace_t &stack_trace) const
@@ -173,7 +173,7 @@ const sym_t &scope_t::createVariable(const hash_ull &key, const sym_t &d, const 
 	return scope->createVariable(key, d, token);
 }
 
-const bool scope_t::extendsObject(const type_sll &ex) const
+const bool scope_t::extendsObject(const aug_type_t &ex) const
 {
 	return std::find(scope->extensions.begin(), scope->extensions.end(), ex) != scope->extensions.end();
 }

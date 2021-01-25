@@ -1,5 +1,16 @@
 #include "../../bin/include/Rossa.h"
 
+#ifdef ROSSA_COMPILER
+#define _MSP_(a) "i_ptr_t(" + a + ")"
+
+#define C_NONE(name) _MSP_(std::string("new " name "(t)"))
+#define C_UNARY(name, a) _MSP_(format::format("new " name "({0}, t)", {a}))
+#define C_BINARY(name, a, b) _MSP_(format::format("new " name "({0}, {1}, t)", {a, b}))
+#define C_TRINARY(name, a, b, c) _MSP_(format::format("new " name "({0}, {1}, {2}, t)", {a, b, c}))
+#define C_QUATERNARY(name, a, b, c, d) _MSP_(format::format("new " name "({0}, {1}, {2}, {3}, t)", {a, b, c, d}))
+#define C_QUINARY(name, a, b, c, d, e) _MSP_(format::format("new " name "({0}, {1}, {2}, {3}, {4}, t)", {a, b, c, d, e}))
+#endif
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Instruction                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
@@ -9,7 +20,7 @@ Instruction::Instruction(const type_t &type, const token_t &token)
 	, type{ type }
 {}
 
-Instruction::type_t Instruction::getType() const
+const Instruction::type_t Instruction::getType() const
 {
 	return type;
 }
@@ -73,10 +84,12 @@ const sym_t ContainerI::evaluate(const scope_t *scope, trace_t &stack_trace) con
 	return d;
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ContainerI::compile() const
 {
 	return C_UNARY("ContainerI", d.toCodeString());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DefineI                                                                                      */
@@ -104,6 +117,7 @@ const sym_t DefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::FunctionSIG(ftype, f);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string DefineI::compile() const
 {
 	std::string ca = "{";
@@ -124,6 +138,7 @@ const std::string DefineI::compile() const
 	cc += "}";
 	return C_QUINARY("DefineI", std::to_string(key), ftype.toCodeString(), ca, body->compile(), cc);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class VargDefineI                                                                                      */
@@ -149,6 +164,7 @@ const sym_t VargDefineI::evaluate(const scope_t *scope, trace_t &stack_trace) co
 	return sym_t::FunctionVARG(static_cast<func_ptr_t>(f));
 }
 
+#ifdef ROSSA_COMPILER
 const std::string VargDefineI::compile() const
 {
 	std::string cc = "{";
@@ -161,6 +177,7 @@ const std::string VargDefineI::compile() const
 	cc += "}";
 	return C_TRINARY("VargDefineI", std::to_string(key), body->compile(), cc);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class SequenceI                                                                                      */
@@ -185,6 +202,7 @@ const sym_t SequenceI::evaluate(const scope_t *scope, trace_t &stack_trace) cons
 	return sym_t::Array(evals);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string SequenceI::compile() const
 {
 	std::string ca = "{";
@@ -197,6 +215,7 @@ const std::string SequenceI::compile() const
 	ca += "}";
 	return C_UNARY("SequenceI", ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class IFElseI                                                                                          */
@@ -211,7 +230,7 @@ IfElseI::IfElseI(const i_ptr_t &ifs, const i_ptr_t &body, const i_ptr_t &elses, 
 
 const sym_t IfElseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	scope_t newScope(scope, 0);
+	const scope_t newScope(scope, 0);
 	if (ifs->evaluate(&newScope, stack_trace).getBool(&token, stack_trace)) {
 		return body->evaluate(&newScope, stack_trace);
 	} else if (elses) {
@@ -220,12 +239,14 @@ const sym_t IfElseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string IfElseI::compile() const
 {
 	if (elses)
 		return C_TRINARY("IfElseI", ifs->compile(), body->compile(), elses->compile());
 	return C_TRINARY("IfElseI", ifs->compile(), body->compile(), "nullptr");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class WhileI                                                                                      */
@@ -240,7 +261,7 @@ WhileI::WhileI(const i_ptr_t &whiles, const i_vec_t &body, const token_t &token)
 const sym_t WhileI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	while (whiles->evaluate(scope, stack_trace).getBool(&token, stack_trace)) {
-		scope_t newScope(scope, 0);
+		const scope_t newScope(scope, 0);
 		for (const i_ptr_t &i : body) {
 			const sym_t temp = i->evaluate(&newScope, stack_trace);
 			bool cflag = false;
@@ -263,6 +284,7 @@ const sym_t WhileI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string WhileI::compile() const
 {
 	std::string ca = "{";
@@ -275,6 +297,7 @@ const std::string WhileI::compile() const
 	ca += "}";
 	return C_BINARY("WhileI", whiles->compile(), ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ForI                                                                                      */
@@ -291,7 +314,7 @@ const sym_t ForI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_vec_t evalFor = fors->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 	for (const sym_t &e : evalFor) {
-		scope_t newScope(scope, 0);
+		const scope_t newScope(scope, 0);
 		newScope.createVariable(id, e, &token);
 		bool cflag = false;
 		for (const i_ptr_t &i : body) {
@@ -315,6 +338,7 @@ const sym_t ForI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ForI::compile() const
 {
 	std::string ca = "{";
@@ -327,6 +351,7 @@ const std::string ForI::compile() const
 	ca += "}";
 	return C_TRINARY("ForI", std::to_string(id), fors->compile(), ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class VariableI                                                                                      */
@@ -341,10 +366,12 @@ const sym_t VariableI::evaluate(const scope_t *scope, trace_t &stack_trace) cons
 	return scope->getVariable(key, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string VariableI::compile() const
 {
 	return C_UNARY("VariableI", std::to_string(key));
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class GetThisI                                                                                      */
@@ -359,10 +386,12 @@ const sym_t GetThisI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return scope->getThis(&token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string GetThisI::compile() const
 {
 	return C_NONE("GetThisI");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DeclareI                                                                                      */
@@ -383,10 +412,12 @@ const sym_t DeclareI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return v;
 }
 
+#ifdef ROSSA_COMPILER
 const std::string DeclareI::compile() const
 {
 	return C_QUATERNARY("DeclareI", std::to_string(key), std::to_string(vtype), a->compile(), isConst ? "true" : "false");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class IndexI                                                                                      */
@@ -404,10 +435,12 @@ const sym_t IndexI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::index(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string IndexI::compile() const
 {
 	return C_BINARY("IndexI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class InnerI                                                                                      */
@@ -437,10 +470,12 @@ const sym_t InnerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	}
 }
 
+#ifdef ROSSA_COMPILER
 const std::string InnerI::compile() const
 {
 	return C_BINARY("InnerI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CallI                                                                                            */
@@ -455,10 +490,12 @@ const sym_t CallI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::call(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string CallI::compile() const
 {
 	return C_BINARY("CallI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class AddI                                                                                      */
@@ -476,10 +513,12 @@ const sym_t AddI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::add(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string AddI::compile() const
 {
 	return C_BINARY("AddI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class SubI                                                                                      */
@@ -497,10 +536,12 @@ const sym_t SubI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::sub(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string SubI::compile() const
 {
 	return C_BINARY("SubI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class MulI                                                                                      */
@@ -518,10 +559,12 @@ const sym_t MulI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::mul(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string MulI::compile() const
 {
 	return C_BINARY("MulI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DivI                                                                                      */
@@ -539,10 +582,12 @@ const sym_t DivI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::div(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string DivI::compile() const
 {
 	return C_BINARY("DivI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ModI                                                                                      */
@@ -560,10 +605,12 @@ const sym_t ModI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::mod(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ModI::compile() const
 {
 	return C_BINARY("ModI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class PowI                                                                                             */
@@ -581,10 +628,12 @@ const sym_t PowI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::pow(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string PowI::compile() const
 {
 	return C_BINARY("PowI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class LessI                                                                                      */
@@ -602,10 +651,12 @@ const sym_t LessI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::less(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string LessI::compile() const
 {
 	return C_BINARY("LessI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class MoreI                                                                                      */
@@ -623,10 +674,12 @@ const sym_t MoreI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::more(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string MoreI::compile() const
 {
 	return C_BINARY("MoreI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ELessI                                                                                      */
@@ -644,10 +697,12 @@ const sym_t ELessI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::eless(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ELessI::compile() const
 {
 	return C_BINARY("ELessI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class EMoreI                                                                                      */
@@ -665,10 +720,12 @@ const sym_t EMoreI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::emore(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string EMoreI::compile() const
 {
 	return C_BINARY("EMoreI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class EqualsI                                                                                      */
@@ -689,10 +746,12 @@ const sym_t EqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Boolean(evalA.equals(&evalB, &token, stack_trace));
 }
 
+#ifdef ROSSA_COMPILER
 const std::string EqualsI::compile() const
 {
 	return C_BINARY("EqualsI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NEqualsI                                                                                      */
@@ -713,10 +772,12 @@ const sym_t NEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Boolean(evalA.nequals(&evalB, &token, stack_trace));
 }
 
+#ifdef ROSSA_COMPILER
 const std::string NEqualsI::compile() const
 {
 	return C_BINARY("NEqualsI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class AndI                                                                                      */
@@ -735,10 +796,12 @@ const sym_t AndI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Boolean(false);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string AndI::compile() const
 {
 	return C_BINARY("AndI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class OrI                                                                                      */
@@ -757,10 +820,12 @@ const sym_t OrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Boolean(false);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string OrI::compile() const
 {
 	return C_BINARY("OrI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BOrI                                                                                      */
@@ -778,10 +843,12 @@ const sym_t BOrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::bor(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BOrI::compile() const
 {
 	return C_BINARY("BOrI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BXOrI                                                                                      */
@@ -799,10 +866,12 @@ const sym_t BXOrI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::bxor(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BXOrI::compile() const
 {
 	return C_BINARY("BXOrI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BAndI                                                                                      */
@@ -820,10 +889,12 @@ const sym_t BAndI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::band(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BAndI::compile() const
 {
 	return C_BINARY("BAndI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BShiftLeftI                                                                                      */
@@ -841,10 +912,12 @@ const sym_t BShiftLeftI::evaluate(const scope_t *scope, trace_t &stack_trace) co
 	return ops::bshl(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BShiftLeftI::compile() const
 {
 	return C_BINARY("BShiftLeftI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BShiftRightI                                                                                      */
@@ -862,10 +935,12 @@ const sym_t BShiftRightI::evaluate(const scope_t *scope, trace_t &stack_trace) c
 	return ops::bshr(scope, evalA, evalB, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BShiftRightI::compile() const
 {
 	return C_BINARY("BShiftRightI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class SetI                                                                                      */
@@ -893,10 +968,12 @@ const sym_t SetI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return evalA;
 }
 
+#ifdef ROSSA_COMPILER
 const std::string SetI::compile() const
 {
 	return C_TRINARY("SetI", a->compile(), b->compile(), isConst ? "true" : "false");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ReturnI                                                                                          */
@@ -913,10 +990,12 @@ const sym_t ReturnI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return evalA;
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ReturnI::compile() const
 {
 	return C_UNARY("ReturnI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ExternI                                                                                          */
@@ -935,10 +1014,12 @@ const sym_t ExternI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, Rossa::MAIN_HASH, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ExternI::compile() const
 {
 	return C_TRINARY("ExternI", ("\"" + libname + "\""), ("\"" + fname + "\""), a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class LengthI                                                                                          */
@@ -986,10 +1067,12 @@ const sym_t LengthI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	}
 }
 
+#ifdef ROSSA_COMPILER
 const std::string LengthI::compile() const
 {
 	return C_UNARY("LengthI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ClassI                                                                                           */
@@ -1006,9 +1089,8 @@ ClassI::ClassI(const hash_ull &key, const Scope::type_t &type, const i_ptr_t &bo
 const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	i_ptr_t nbody = body;
-	scope_t o;
 	scope_t * ex = NULL;
-	std::vector<type_sll> extensions;
+	std::vector<aug_type_t> extensions;
 	if (extends) {
 		const sym_t e = extends->evaluate(scope, stack_trace);
 		if (e.getValueType() == Value::type_t::TYPE_NAME)
@@ -1024,18 +1106,20 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			nbody = std::make_shared<ScopeI>(temp, token);
 		}
 	}
-	o = scope_t(scope, type, nbody, key, ex, extensions);
+	scope_t o(scope, type, nbody, key, ex, extensions);
 	if (type == Scope::type_t::STATIC_O)
 		nbody->evaluate(&o, stack_trace);
 	return scope->createVariable(key, sym_t::Object(o), &token);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ClassI::compile() const
 {
 	if (extends)
 		return C_QUATERNARY("ClassI", std::to_string(key), ("static_cast<ObjectType>(" + std::to_string(type) + ")"), body->compile(), extends->compile());
 	return C_QUATERNARY("ClassI", std::to_string(key), ("static_cast<ObjectType>(" + std::to_string(type) + ")"), body->compile(), "nullptr");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NewI                                                                                             */
@@ -1047,17 +1131,16 @@ NewI::NewI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 
 const sym_t NewI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t &evalA = a->evaluate(scope, stack_trace);
-	const sym_vec_t evalB = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-
-	scope_t * base = evalA.getObject(&token, stack_trace);
-	return base->instantiate(evalB, &token, stack_trace);
+	scope_t * base = a->evaluate(scope, stack_trace).getObject(&token, stack_trace);
+	return base->instantiate(b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string NewI::compile() const
 {
 	return C_BINARY("NewI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CastToI                                                                                          */
@@ -1070,11 +1153,11 @@ CastToI::CastToI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	const type_sll convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
+	const aug_type_t convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
 
 	switch (evalA.getValueType()) {
 		case Value::type_t::NUMBER:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::NUMBER:
 					return evalA;
 				case Value::type_t::STRING:
@@ -1086,7 +1169,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::STRING:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::NUMBER:
 					try {
 						const std::string s = evalA.getString(&token, stack_trace);
@@ -1142,33 +1225,34 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 				{
 					const std::string s = evalA.getString(&token, stack_trace);
 					if (s == KEYWORD_NUMBER)
-						return sym_t::TypeName(Value::type_t::NUMBER);
+						return sym_t::TypeName({Value::type_t::NUMBER});
 					if (s == KEYWORD_STRING)
-						return sym_t::TypeName(Value::type_t::STRING);
+						return sym_t::TypeName({Value::type_t::STRING});
 					if (s == KEYWORD_BOOLEAN)
-						return sym_t::TypeName(Value::type_t::BOOLEAN_D);
+						return sym_t::TypeName({Value::type_t::BOOLEAN_D});
 					if (s == KEYWORD_ARRAY)
-						return sym_t::TypeName(Value::type_t::ARRAY);
+						return sym_t::TypeName({Value::type_t::ARRAY});
 					if (s == KEYWORD_DICTIONARY)
-						return sym_t::TypeName(Value::type_t::DICTIONARY);
+						return sym_t::TypeName({Value::type_t::DICTIONARY});
 					if (s == KEYWORD_FUNCTION)
-						return sym_t::TypeName(Value::type_t::FUNCTION);
+						return sym_t::TypeName({Value::type_t::FUNCTION});
 					if (s == KEYWORD_OBJECT)
-						return sym_t::TypeName(Value::type_t::OBJECT);
+						return sym_t::TypeName({Value::type_t::OBJECT});
 					if (s == KEYWORD_TYPE)
-						return sym_t::TypeName(Value::type_t::TYPE_NAME);
+						return sym_t::TypeName({Value::type_t::TYPE_NAME});
 					if (s == KEYWORD_NIL_NAME)
-						return sym_t::TypeName(Value::type_t::NIL);
+						return sym_t::TypeName({Value::type_t::NIL});
 					if (s == KEYWORD_POINTER)
-						return sym_t::TypeName(Value::type_t::POINTER);
-					return sym_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
+						return sym_t::TypeName({Value::type_t::POINTER});
+					//TODO
+					//return sym_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
 				}
 				default:
 					break;
 			}
 			break;
 		case Value::type_t::BOOLEAN_D:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::NUMBER:
 					return sym_t::Number(number_t::Long(evalA.getBool(&token, stack_trace) ? 1 : 0));
 				case Value::type_t::STRING:
@@ -1180,7 +1264,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::ARRAY:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::STRING:
 					return sym_t::String(evalA.toString(&token, stack_trace));
 				case Value::type_t::ARRAY:
@@ -1198,7 +1282,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::DICTIONARY:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::STRING:
 					return sym_t::String(evalA.toString(&token, stack_trace));
 				case Value::type_t::ARRAY:
@@ -1228,11 +1312,19 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			break;
 		}
 		case Value::type_t::TYPE_NAME:
-			switch (convert) {
+			switch (convert[0]) {
 				case Value::type_t::STRING:
-					return sym_t::String(getTypeString(evalA.getAugValueType()));
+					return sym_t::String("Type::" + getTypeString(evalA.getTypeName(&token, stack_trace)));
 				case Value::type_t::TYPE_NAME:
 					return evalA;
+				default:
+					break;
+			}
+			break;
+		case Value::type_t::NIL:
+			switch (convert[0]) {
+				case Value::type_t::STRING:
+					return sym_t::String(KEYWORD_NIL);
 				default:
 					break;
 			}
@@ -1245,11 +1337,12 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return scope->getVariable(fname, &token, stack_trace).call({ evalA }, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string CastToI::compile() const
 {
 	return C_BINARY("CastToI", a->compile(), b->compile());
 }
-
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class AllocI                                                                                           */
@@ -1267,10 +1360,12 @@ const sym_t AllocI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::allocate(evalA);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string AllocI::compile() const
 {
 	return C_UNARY("AllocI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class UntilI                                                                                           */
@@ -1293,13 +1388,14 @@ const sym_t UntilI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 		return ops::untilstep(scope, inclusive, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string UntilI::compile() const
 {
 	if (step)
 		return C_QUATERNARY("UntilI", a->compile(), b->compile(), step->compile(), inclusive ? "true" : "false");
 	return C_QUATERNARY("UntilI", a->compile(), b->compile(), "nullptr", inclusive ? "true" : "false");
 }
-
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ScopeI                                                                                           */
@@ -1320,6 +1416,7 @@ const sym_t ScopeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ScopeI::compile() const
 {
 	std::string ca = "{";
@@ -1332,6 +1429,7 @@ const std::string ScopeI::compile() const
 	ca += "}";
 	return C_UNARY("ScopeI", ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class MapI                                                                                             */
@@ -1354,6 +1452,7 @@ const sym_t MapI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Dictionary(evals);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string MapI::compile() const
 {
 	std::string ca = "{";
@@ -1366,6 +1465,7 @@ const std::string MapI::compile() const
 	ca += "}";
 	return C_UNARY("MapI", ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ReferI                                                                                           */
@@ -1382,10 +1482,12 @@ const sym_t ReferI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return evalA;
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ReferI::compile() const
 {
 	return C_UNARY("ReferI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class SwitchI                                                                                          */
@@ -1402,7 +1504,7 @@ SwitchI::SwitchI(const i_ptr_t &switchs, const std::map<sym_t, size_t> &cases_so
 
 const sym_t SwitchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	scope_t newScope(scope, 0);
+	const scope_t newScope(scope, 0);
 	const sym_t eval = switchs->evaluate(&newScope, stack_trace);
 	size_t index = 0;
 	if (cases_solved.find(eval) != cases_solved.end()) {
@@ -1412,6 +1514,7 @@ const sym_t SwitchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			const sym_t evalE = e.first->evaluate(&newScope, stack_trace);
 			if (evalE.equals(&eval, &token, stack_trace)) {
 				index = e.second;
+				break;
 			}
 		}
 	}
@@ -1425,6 +1528,7 @@ const sym_t SwitchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string SwitchI::compile() const
 {
 	std::string cs = "{";
@@ -1458,6 +1562,7 @@ const std::string SwitchI::compile() const
 		return C_QUINARY("SwitchI", switchs->compile(), cs, cu, ca, elses->compile());
 	return C_QUINARY("SwitchI", switchs->compile(), cs, cu, ca, "nullptr");
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class TryCatchI                                                                                        */
@@ -1471,19 +1576,21 @@ TryCatchI::TryCatchI(const i_ptr_t &a, const i_ptr_t &b, const hash_ull &key, co
 const sym_t TryCatchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	try {
-		scope_t newScope(scope, 0);
+		const scope_t newScope(scope, 0);
 		return a->evaluate(&newScope, stack_trace);
 	} catch (const rossa_error &e) {
-		scope_t newScope(scope, 0);
+		const scope_t newScope(scope, 0);
 		newScope.createVariable(key, sym_t::String(std::string(e.what())), &token);
 		return b->evaluate(&newScope, stack_trace);
 	}
 }
 
+#ifdef ROSSA_COMPILER
 const std::string TryCatchI::compile() const
 {
 	return C_TRINARY("TryCatchI", a->compile(), b->compile(), std::to_string(key));
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ThrowI                                                                                           */
@@ -1500,10 +1607,12 @@ const sym_t ThrowI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ThrowI::compile() const
 {
 	return C_UNARY("ThrowI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class PureEqualsI                                                                                      */
@@ -1520,10 +1629,12 @@ const sym_t PureEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) co
 	return sym_t::Boolean(evalA.pureEquals(&evalB, &token, stack_trace));
 }
 
+#ifdef ROSSA_COMPILER
 const std::string PureEqualsI::compile() const
 {
 	return C_BINARY("PureEqualsI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class PureNEqualsI                                                                                      */
@@ -1540,10 +1651,12 @@ const sym_t PureNEqualsI::evaluate(const scope_t *scope, trace_t &stack_trace) c
 	return sym_t::Boolean(evalA.pureNEquals(&evalB, &token, stack_trace));
 }
 
+#ifdef ROSSA_COMPILER
 const std::string PureNEqualsI::compile() const
 {
 	return C_BINARY("PureNEqualsI", a->compile(), b->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CharNI                                                                                           */
@@ -1562,10 +1675,12 @@ const sym_t CharNI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t::Array(nv);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string CharNI::compile() const
 {
 	return C_UNARY("CharNI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CharSI                                                                                           */
@@ -1594,10 +1709,12 @@ const sym_t CharSI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	}
 }
 
+#ifdef ROSSA_COMPILER
 const std::string CharSI::compile() const
 {
 	return C_UNARY("CharSI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DeclareVarsI                                                                                      */
@@ -1616,6 +1733,7 @@ const sym_t DeclareVarsI::evaluate(const scope_t *scope, trace_t &stack_trace) c
 	return sym_t::Array(newvs);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string DeclareVarsI::compile() const
 {
 	std::string ca = "{";
@@ -1628,6 +1746,7 @@ const std::string DeclareVarsI::compile() const
 	ca += "}";
 	return C_UNARY("DeclareVarsI", ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class ParseI                                                                                           */
@@ -1646,10 +1765,12 @@ const sym_t ParseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string ParseI::compile() const
 {
 	return C_UNARY("ParseI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class BNotI                                                                                           */
@@ -1661,15 +1782,20 @@ BNotI::BNotI(const i_ptr_t &a, const token_t &token)
 
 const sym_t BNotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t evalA = a->evaluate(scope, stack_trace);
-
-	return ops::bnot(scope, evalA, &token, stack_trace);
+	return ops::bnot(
+		scope,
+		a->evaluate(scope, stack_trace),
+		&token,
+		stack_trace
+	);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string BNotI::compile() const
 {
 	return C_UNARY("BNotI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class TypeI                                                                                           */
@@ -1681,14 +1807,15 @@ TypeI::TypeI(const i_ptr_t &a, const token_t &token)
 
 const sym_t TypeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t evalA = a->evaluate(scope, stack_trace);
-	return sym_t::TypeName(evalA.getAugValueType());
+	return sym_t::TypeName(a->evaluate(scope, stack_trace).getAugValueType());
 }
 
+#ifdef ROSSA_COMPILER
 const std::string TypeI::compile() const
 {
 	return C_UNARY("TypeI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class CallOpI                                                                                           */
@@ -1835,6 +1962,7 @@ const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	}
 }
 
+#ifdef ROSSA_COMPILER
 const std::string CallOpI::compile() const
 {
 	std::string ca = "{";
@@ -1847,6 +1975,7 @@ const std::string CallOpI::compile() const
 	ca += "}";
 	return C_BINARY("CallOpI", std::to_string(id), ca);
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class DeleteI                                                                                           */
@@ -1863,10 +1992,12 @@ const sym_t DeleteI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return sym_t();
 }
 
+#ifdef ROSSA_COMPILER
 const std::string DeleteI::compile() const
 {
 	return C_UNARY("DeleteI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class UnAddI                                                                                           */
@@ -1883,10 +2014,12 @@ const sym_t UnAddI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::unadd(scope, evalA, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string UnAddI::compile() const
 {
 	return C_UNARY("UnAddI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NegI                                                                                           */
@@ -1903,10 +2036,12 @@ const sym_t NegI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::neg(scope, evalA, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string NegI::compile() const
 {
 	return C_UNARY("NegI", a->compile());
 }
+#endif
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class NotI                                                                                           */
@@ -1923,7 +2058,9 @@ const sym_t NotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	return ops::unot(scope, evalA, &token, stack_trace);
 }
 
+#ifdef ROSSA_COMPILER
 const std::string NotI::compile() const
 {
 	return C_UNARY("NotI", a->compile());
 }
+#endif

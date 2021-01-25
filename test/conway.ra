@@ -8,9 +8,9 @@ static conway class {
 		cache,
 		buffer,
 		w,
-		r,
-		paused;
+		r;
 
+	paused := true;
 	speed := 80;
 
 	getNeighborCount(ref x : Number, ref y : Number) => {

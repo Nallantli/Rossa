@@ -15,7 +15,7 @@ sym_t::sym_t(const std::shared_ptr<void> &valuePointer)
 	, type{ ID_CASUAL }
 {}
 
-sym_t::sym_t(const type_sll &valueType)
+sym_t::sym_t(const aug_type_t &valueType)
 	: d{ new Value(valueType) }
 	, type{ ID_CASUAL }
 {}
@@ -65,7 +65,7 @@ const sym_t sym_t::Pointer(const std::shared_ptr<void> &v)
 	return sym_t(v);
 }
 
-const sym_t sym_t::TypeName(const type_sll &v)
+const sym_t sym_t::TypeName(const aug_type_t &v)
 {
 	return sym_t(v);
 }
@@ -221,14 +221,14 @@ const Value::type_t sym_t::getValueType() const
 	return d->type;
 }
 
-const type_sll sym_t::getAugValueType() const
+const aug_type_t sym_t::getAugValueType() const
 {
 	if (d->type == Value::type_t::OBJECT)
-		return d->valueObject.getHashedKey();
-	return d->type;
+		return d->valueObject.getTypeVec();
+	return {d->type};
 }
 
-const type_sll sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
+const aug_type_t sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::TYPE_NAME)
 		throw rossa_error(_NOT_TYPE_, *token, stack_trace);
@@ -371,32 +371,7 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 			return ret + "}";
 		}
 		case Value::type_t::TYPE_NAME:
-		{
-			switch (d->valueType) {
-				case Value::type_t::NIL:
-					return "Type::Nil";
-				case Value::type_t::NUMBER:
-					return "Type::Number";
-				case Value::type_t::STRING:
-					return "Type::String";
-				case Value::type_t::FUNCTION:
-					return "Type::Function";
-				case Value::type_t::OBJECT:
-					return "Type::Object";
-				case Value::type_t::BOOLEAN_D:
-					return "Type::Boolean";
-				case Value::type_t::ARRAY:
-					return "Type::Array";
-				case Value::type_t::DICTIONARY:
-					return "Type::Dictionary";
-				case Value::type_t::TYPE_NAME:
-					return "Type::Type";
-				case Value::type_t::POINTER:
-					return "Type::Pointer";
-				default:
-					return "Type::@" + ROSSA_DEHASH(d->valueType);
-			}
-		}
+			return "Type::" + getTypeString(d->valueType);
 		default:
 			return "undefined";
 	}
@@ -458,7 +433,7 @@ const std::string sym_t::toCodeString() const
 			return ret + "}))";
 		}
 		case Value::type_t::TYPE_NAME:
-			return "sym_t(static_cast<type_sll>(" + std::to_string(d->valueType) + "))";
+			return "sym_t(static_cast<type_sll>(" + getTypeString(d->valueType) + "))";
 		default:
 			return "<error-type>";
 	}

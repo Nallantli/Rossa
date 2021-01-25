@@ -156,8 +156,8 @@ void Rossa::printError(const rossa_error &e)
 		auto f = trace.back();
 		printc(" ^ ", MAGENTA_TEXT);
 		std::string ret = "";
-		if (ROSSA_DEHASH(f.getParent().getHashedKey()) != "")
-			ret += ROSSA_DEHASH(f.getParent().getHashedKey()) + ".";
+		if (f.getParent().getKey() != "")
+			ret += f.getParent().getKey() + ".";
 		ret += ROSSA_DEHASH(f.getKey());
 		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;

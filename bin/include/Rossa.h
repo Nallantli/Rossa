@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.12.1-alpha"
+#define _ROSSA_VERSION_ "v1.12.2-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -9,7 +9,6 @@
 #include "Locale.h"
 #include "RNumber.h"
 #include "Keywords.h"
-#include "Compilation.h"
 #include "Format.h"
 
 #include <map>
@@ -59,7 +58,6 @@ typedef signed long long type_sll;
 
 typedef std::vector<Function> trace_t;
 
-//typedef std::shared_ptr<Scope> scope_t *;
 typedef std::shared_ptr<Node> node_ptr_t;
 typedef std::shared_ptr<const Instruction> i_ptr_t;
 typedef std::shared_ptr<Function> func_ptr_t;
@@ -68,6 +66,7 @@ typedef std::vector<sym_t> sym_vec_t;
 typedef std::vector<node_ptr_t> node_vec_t;
 typedef std::vector<i_ptr_t> i_vec_t;
 typedef std::vector<param_t> param_vec_t;
+typedef std::vector<type_sll> aug_type_t;
 
 typedef std::map<std::string, sym_t> sym_map_t;
 typedef std::map<size_t, std::map<fsig_t, func_ptr_t>> f_map_t;
@@ -252,14 +251,14 @@ public:
 struct param_t
 {
 private:
-	type_sll base;
+	aug_type_t base;
 	param_vec_t qualifiers;
 public:
-	param_t(const type_sll &);
-	param_t(const type_sll &, const param_vec_t &);
+	param_t(const aug_type_t &);
+	param_t(const aug_type_t &, const param_vec_t &);
 	void addQualifier(const param_t &);
 	const param_vec_t getQualifiers() const;
-	const type_sll getBase() const;
+	const aug_type_t getBase() const;
 	const std::string toString() const;
 	const std::string toCodeString() const;
 	const bool operator<(const param_t &) const;
@@ -356,12 +355,14 @@ public:
 	UN_ADD_I,
 	NEG_I,
 	NOT_I
-	} type;
+	} const type;
 
 	Instruction(const type_t &, const token_t &);
 	virtual const sym_t evaluate(const scope_t *, trace_t &) const = 0;
-	type_t getType() const;
+	const type_t getType() const;
+#ifdef ROSSA_COMPILER
 	virtual const std::string compile() const = 0;
+#endif
 	virtual ~Instruction();
 };
 
@@ -382,18 +383,18 @@ public:
 	Scope *getParent() const;
 
 private:
-	Scope *parent;
+	Scope *const parent;
 	refc_ull references = 1;
 	std::map<hash_ull, sym_t> values;
 	const i_ptr_t body;
-	hash_ull hashed_key;
-	std::vector<type_sll> name_trace;
-	std::vector<type_sll> extensions;
+	//hash_ull hashed_key;
+	aug_type_t name_trace;
+	std::vector<aug_type_t> extensions;
 
 	void traceName(const hash_ull &);
 
 	Scope(const type_t &, Scope *, const i_ptr_t &, const hash_ull &);
-	Scope(Scope *, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &);
+	Scope(Scope *, const aug_type_t &, const std::vector<aug_type_t> &);
 
 	const sym_t &getVariable(const hash_ull &, const token_t *, trace_t &) const;
 	const sym_t &createVariable(const hash_ull &, const token_t *);
@@ -419,8 +420,8 @@ public:
 	scope_t(Scope *, const type_t &);
 	scope_t(const hash_ull &key);
 	scope_t(const scope_t *, const hash_ull &);
-	scope_t(const scope_t *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const scope_t *, const std::vector<type_sll> &);
-	scope_t(Scope *, const hash_ull &, const std::vector<type_sll> &, const std::vector<type_sll> &name_trace);
+	scope_t(const scope_t *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const scope_t *, const std::vector<aug_type_t> &);
+	scope_t(Scope *, const aug_type_t &, const std::vector<aug_type_t> &);
 
 	scope_t(const scope_t &);
 	~scope_t();
@@ -428,10 +429,11 @@ public:
 	const bool operator==(const scope_t &) const;
 
 	const sym_t instantiate(const sym_vec_t &, const token_t *, trace_t &) const;
-	const bool extendsObject(const type_sll &) const;
+	const bool extendsObject(const aug_type_t &) const;
 	const Scope::type_t getType() const;
 	const i_ptr_t getBody() const;
-	const hash_ull getHashedKey() const;
+	const aug_type_t getTypeVec() const;
+	const std::string getKey() const;
 	const bool hasValue(const hash_ull &) const;
 	const sym_t getThis(const token_t *, trace_t &) const;
 
@@ -503,7 +505,7 @@ protected:
 		CALL_OP_NODE,
 		VARG_DEFINE_NODE,
 		DELETE_NODE
-	} type;
+	} const type;
 	const token_t token;
 
 public:
@@ -514,7 +516,7 @@ public:
 	virtual i_ptr_t genParser() const = 0;
 	virtual bool isConst() const = 0;
 	virtual std::stringstream printTree(std::string, bool) const = 0;
-	virtual node_ptr_t fold() const = 0;
+	virtual const node_ptr_t fold() const = 0;
 };
 
 class NodeParser
@@ -555,7 +557,7 @@ private:
 	node_ptr_t parseSwitchNode();
 	node_ptr_t parseTryCatchNode();
 	node_ptr_t parseTypeNode();
-	param_t parseParamTypeNode(const type_sll &);
+	param_t parseParamTypeNode(const aug_type_t &);
 	node_ptr_t parseTrailingNode(const node_ptr_t &, const bool &);
 	node_ptr_t parseInsNode(const node_ptr_t &);
 	node_ptr_t parseUntilNode(const node_ptr_t &, const bool &);
@@ -652,11 +654,11 @@ public:
 private:
 	union
 	{
-		type_sll valueType;
 		bool valueBool;
 		number_t valueNumber;
 	};
 
+	aug_type_t valueType;
 	std::string valueString;
 	std::shared_ptr<void> valuePointer;
 	sym_vec_t valueVector;
@@ -667,7 +669,7 @@ private:
 	refc_ull references = 1;
 
 	Value();
-	Value(const type_sll &);
+	Value(const aug_type_t &);
 	Value(const bool &);
 	Value(const std::shared_ptr<void> &);
 	Value(const scope_t &);
@@ -686,7 +688,7 @@ private:
 	Value *d;
 
 	sym_t(const std::shared_ptr<void> &);
-	sym_t(const type_sll &);
+	sym_t(const aug_type_t &);
 	sym_t(const number_t &);
 	sym_t(const bool &);
 	sym_t(const sym_vec_t &);
@@ -711,7 +713,7 @@ public:
 	sym_t();
 
 	static const sym_t Pointer(const std::shared_ptr<void> &);
-	static const sym_t TypeName(const type_sll &);
+	static const sym_t TypeName(const aug_type_t &);
 	static const sym_t Number(const number_t &);
 	static const sym_t Boolean(const bool &);
 	static const sym_t Array(const sym_vec_t &);
@@ -737,8 +739,8 @@ public:
 	const bool hasVarg(const token_t *, trace_t &) const;
 	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
-	const type_sll getAugValueType() const;
-	const type_sll getTypeName(const token_t *, trace_t &) const;
+	const aug_type_t getAugValueType() const;
+	const aug_type_t getTypeName(const token_t *, trace_t &) const;
 	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
 	const func_ptr_t getVARGFunction(const token_t *, trace_t &) const;
 	const sym_t &indexDict(const std::string &) const;
@@ -802,7 +804,9 @@ protected:
 public:
 	ContainerI(const sym_t &d, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class DefineI : public Instruction
@@ -817,7 +821,9 @@ protected:
 public:
 	DefineI(const hash_ull &, const fsig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const i_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class VargDefineI : public Instruction
@@ -830,7 +836,9 @@ protected:
 public:
 	VargDefineI(const hash_ull &, const i_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class SequenceI : public Instruction
@@ -841,7 +849,9 @@ protected:
 public:
 	SequenceI(const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class IfElseI : public Instruction
@@ -854,7 +864,9 @@ protected:
 public:
 	IfElseI(const i_ptr_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class WhileI : public Instruction
@@ -866,7 +878,9 @@ protected:
 public:
 	WhileI(const i_ptr_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ForI : public Instruction
@@ -879,7 +893,9 @@ protected:
 public:
 	ForI(const hash_ull &, const i_ptr_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class VariableI : public CastingI
@@ -887,7 +903,9 @@ class VariableI : public CastingI
 public:
 	VariableI(const hash_ull &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class GetThisI : public CastingI
@@ -895,7 +913,9 @@ class GetThisI : public CastingI
 public:
 	GetThisI(const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class DeclareI : public CastingI
@@ -908,7 +928,9 @@ protected:
 public:
 	DeclareI(const hash_ull &, const type_sll &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class IndexI : public BinaryI
@@ -916,7 +938,9 @@ class IndexI : public BinaryI
 public:
 	IndexI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class InnerI : public BinaryI
@@ -924,7 +948,9 @@ class InnerI : public BinaryI
 public:
 	InnerI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class CallI : public BinaryI
@@ -932,7 +958,9 @@ class CallI : public BinaryI
 public:
 	CallI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class AddI : public BinaryI
@@ -940,7 +968,9 @@ class AddI : public BinaryI
 public:
 	AddI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class SubI : public BinaryI
@@ -948,7 +978,9 @@ class SubI : public BinaryI
 public:
 	SubI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class MulI : public BinaryI
@@ -956,7 +988,9 @@ class MulI : public BinaryI
 public:
 	MulI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class DivI : public BinaryI
@@ -964,7 +998,9 @@ class DivI : public BinaryI
 public:
 	DivI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ModI : public BinaryI
@@ -972,7 +1008,9 @@ class ModI : public BinaryI
 public:
 	ModI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class PowI : public BinaryI
@@ -980,7 +1018,9 @@ class PowI : public BinaryI
 public:
 	PowI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class LessI : public BinaryI
@@ -988,7 +1028,9 @@ class LessI : public BinaryI
 public:
 	LessI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class MoreI : public BinaryI
@@ -996,7 +1038,9 @@ class MoreI : public BinaryI
 public:
 	MoreI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ELessI : public BinaryI
@@ -1004,7 +1048,9 @@ class ELessI : public BinaryI
 public:
 	ELessI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class EMoreI : public BinaryI
@@ -1012,7 +1058,9 @@ class EMoreI : public BinaryI
 public:
 	EMoreI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class EqualsI : public BinaryI
@@ -1020,7 +1068,9 @@ class EqualsI : public BinaryI
 public:
 	EqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class NEqualsI : public BinaryI
@@ -1028,7 +1078,9 @@ class NEqualsI : public BinaryI
 public:
 	NEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class AndI : public BinaryI
@@ -1036,7 +1088,9 @@ class AndI : public BinaryI
 public:
 	AndI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class OrI : public BinaryI
@@ -1044,7 +1098,9 @@ class OrI : public BinaryI
 public:
 	OrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BOrI : public BinaryI
@@ -1052,7 +1108,9 @@ class BOrI : public BinaryI
 public:
 	BOrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BAndI : public BinaryI
@@ -1060,7 +1118,9 @@ class BAndI : public BinaryI
 public:
 	BAndI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BXOrI : public BinaryI
@@ -1068,7 +1128,9 @@ class BXOrI : public BinaryI
 public:
 	BXOrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BShiftLeftI : public BinaryI
@@ -1076,7 +1138,9 @@ class BShiftLeftI : public BinaryI
 public:
 	BShiftLeftI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BShiftRightI : public BinaryI
@@ -1084,7 +1148,9 @@ class BShiftRightI : public BinaryI
 public:
 	BShiftRightI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class BNotI : public UnaryI
@@ -1092,7 +1158,9 @@ class BNotI : public UnaryI
 public:
 	BNotI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class SetI : public BinaryI
@@ -1103,7 +1171,9 @@ protected:
 public:
 	SetI(const i_ptr_t &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ReturnI : public UnaryI
@@ -1111,7 +1181,9 @@ class ReturnI : public UnaryI
 public:
 	ReturnI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ExternI : public UnaryI
@@ -1124,7 +1196,9 @@ protected:
 public:
 	ExternI(const std::string &, const std::string &, const i_ptr_t &a, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class LengthI : public UnaryI
@@ -1132,7 +1206,9 @@ class LengthI : public UnaryI
 public:
 	LengthI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ClassI : public Instruction
@@ -1146,7 +1222,9 @@ protected:
 public:
 	ClassI(const hash_ull &, const Scope::type_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class NewI : public BinaryI
@@ -1154,7 +1232,9 @@ class NewI : public BinaryI
 public:
 	NewI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class CastToI : public BinaryI
@@ -1162,7 +1242,9 @@ class CastToI : public BinaryI
 public:
 	CastToI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class AllocI : public UnaryI
@@ -1170,7 +1252,9 @@ class AllocI : public UnaryI
 public:
 	AllocI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class UntilI : public BinaryI
@@ -1182,7 +1266,9 @@ protected:
 public:
 	UntilI(const i_ptr_t &, const i_ptr_t &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ScopeI : public Instruction
@@ -1193,7 +1279,9 @@ protected:
 public:
 	ScopeI(const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class MapI : public Instruction
@@ -1204,7 +1292,9 @@ protected:
 public:
 	MapI(const std::map<std::string, i_ptr_t> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ReferI : public UnaryI
@@ -1212,7 +1302,9 @@ class ReferI : public UnaryI
 public:
 	ReferI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class SwitchI : public Instruction
@@ -1227,7 +1319,9 @@ protected:
 public:
 	SwitchI(const i_ptr_t &, const std::map<sym_t, size_t> &, const std::map<i_ptr_t, size_t> &, const i_vec_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class TryCatchI : public BinaryI
@@ -1238,7 +1332,9 @@ protected:
 public:
 	TryCatchI(const i_ptr_t &, const i_ptr_t &, const hash_ull &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ThrowI : public UnaryI
@@ -1246,7 +1342,9 @@ class ThrowI : public UnaryI
 public:
 	ThrowI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class PureEqualsI : public BinaryI
@@ -1254,7 +1352,9 @@ class PureEqualsI : public BinaryI
 public:
 	PureEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class PureNEqualsI : public BinaryI
@@ -1262,7 +1362,9 @@ class PureNEqualsI : public BinaryI
 public:
 	PureNEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class CharNI : public UnaryI
@@ -1270,7 +1372,9 @@ class CharNI : public UnaryI
 public:
 	CharNI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class CharSI : public UnaryI
@@ -1278,7 +1382,9 @@ class CharSI : public UnaryI
 public:
 	CharSI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class DeclareVarsI : public Instruction
@@ -1289,7 +1395,9 @@ protected:
 public:
 	DeclareVarsI(const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class ParseI : public UnaryI
@@ -1297,7 +1405,9 @@ class ParseI : public UnaryI
 public:
 	ParseI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class TypeI : public UnaryI
@@ -1305,7 +1415,9 @@ class TypeI : public UnaryI
 public:
 	TypeI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class CallOpI : public Instruction
@@ -1317,7 +1429,9 @@ protected:
 public:
 	CallOpI(const size_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class DeleteI : public UnaryI
@@ -1325,7 +1439,9 @@ class DeleteI : public UnaryI
 public:
 	DeleteI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class UnAddI : public UnaryI
@@ -1333,7 +1449,9 @@ class UnAddI : public UnaryI
 public:
 	UnAddI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class NegI : public UnaryI
@@ -1341,7 +1459,9 @@ class NegI : public UnaryI
 public:
 	NegI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 class NotI : public UnaryI
@@ -1349,7 +1469,9 @@ class NotI : public UnaryI
 public:
 	NotI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
+#ifdef ROSSA_COMPILER
 	const std::string compile() const override;
+#endif
 };
 
 // NODES -----------------------------------------------------------------------------
@@ -1364,7 +1486,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class VectorNode : public Node
@@ -1378,7 +1500,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 	const node_vec_t &getChildren();
 };
 
@@ -1389,7 +1511,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ContinueNode : public Node
@@ -1399,7 +1521,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class IDNode : public Node
@@ -1413,7 +1535,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class BIDNode : public Node
@@ -1427,7 +1549,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class DefineNode : public Node
@@ -1444,7 +1566,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class VargDefineNode : public Node
@@ -1459,7 +1581,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class NewNode : public Node
@@ -1473,7 +1595,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ClassNode : public Node
@@ -1489,7 +1611,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class VarNode : public Node
@@ -1502,7 +1624,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class CallNode : public Node
@@ -1514,11 +1636,11 @@ private:
 public:
 	CallNode(const node_ptr_t &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
-	node_ptr_t getCallee();
-	node_vec_t getArgs();
+	node_ptr_t getCallee() const;
+	node_vec_t getArgs() const;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ExternCallNode : public Node
@@ -1533,7 +1655,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class CallBuiltNode : public Node
@@ -1547,7 +1669,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ReturnNode : public Node
@@ -1560,7 +1682,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ReferNode : public Node
@@ -1573,7 +1695,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class BinOpNode : public Node
@@ -1587,13 +1709,13 @@ public:
 	BinOpNode(const std::string &, const node_ptr_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	const std::string &getOp() const;
-	node_ptr_t getA() const;
-	node_ptr_t getB() const;
+	const node_ptr_t getA() const;
+	const node_ptr_t getB() const;
 	void setA(const node_ptr_t &);
 	void setB(const node_ptr_t &);
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class UnOpNode : public Node
@@ -1607,7 +1729,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ParenNode : public Node
@@ -1620,7 +1742,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class InsNode : public Node
@@ -1632,11 +1754,11 @@ private:
 public:
 	InsNode(const node_ptr_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
-	node_ptr_t getCallee();
-	node_ptr_t getArg();
+	const node_ptr_t getCallee() const;
+	const node_ptr_t getArg() const;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class IfElseNode : public Node
@@ -1652,7 +1774,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class WhileNode : public Node
@@ -1666,7 +1788,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ForNode : public Node
@@ -1681,7 +1803,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class UntilNode : public Node
@@ -1697,7 +1819,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class MapNode : public Node
@@ -1710,7 +1832,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class SwitchNode : public Node
@@ -1727,7 +1849,7 @@ public:
 	void setElse(const node_ptr_t &);
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class TryCatchNode : public Node
@@ -1742,7 +1864,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class ThrowNode : public Node
@@ -1755,7 +1877,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class CallOpNode : public Node
@@ -1769,7 +1891,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 class DeleteNode : public Node
@@ -1782,7 +1904,7 @@ public:
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
 	std::stringstream printTree(std::string, bool) const override;
-	node_ptr_t fold() const override;
+	const node_ptr_t fold() const override;
 };
 
 namespace ops
@@ -1834,36 +1956,54 @@ namespace lib
 	extf_t loadFunction(const std::string &, const std::string &, const token_t *);
 }
 
-inline const std::string getTypeString(const type_sll &i)
+inline const std::string getTypeString(const aug_type_t &t)
 {
-	if (i >= 0)
-		return "@" + ROSSA_DEHASH(i);
-	else {
-		switch (i) {
-			case Value::type_t::NIL:
-				return KEYWORD_NIL_NAME;
-			case Value::type_t::ANY:
-				return KEYWORD_ANY;
-			case Value::type_t::NUMBER:
-				return KEYWORD_NUMBER;
-			case Value::type_t::STRING:
-				return KEYWORD_STRING;
-			case Value::type_t::BOOLEAN_D:
-				return KEYWORD_BOOLEAN;
-			case Value::type_t::ARRAY:
-				return KEYWORD_ARRAY;
-			case Value::type_t::FUNCTION:
-				return KEYWORD_FUNCTION;
-			case Value::type_t::DICTIONARY:
-				return KEYWORD_DICTIONARY;
-			case Value::type_t::OBJECT:
-				return KEYWORD_OBJECT;
-			case Value::type_t::POINTER:
-				return KEYWORD_POINTER;
-			case Value::type_t::TYPE_NAME:
-				return KEYWORD_TYPE;
-			default:
-				return "<error-type>";
+	std::string ret = "";
+	int j = 0;
+	for (auto &i : t) {
+		if (j++ > 0)
+			ret += ".";
+		if (i >= 0)
+			ret += ROSSA_DEHASH(i);
+		else {
+			switch (i) {
+				case Value::type_t::NIL:
+					ret += KEYWORD_NIL_NAME;
+					break;
+				case Value::type_t::ANY:
+					ret += KEYWORD_ANY;
+					break;
+				case Value::type_t::NUMBER:
+					ret += KEYWORD_NUMBER;
+					break;
+				case Value::type_t::STRING:
+					ret += KEYWORD_STRING;
+					break;
+				case Value::type_t::BOOLEAN_D:
+					ret += KEYWORD_BOOLEAN;
+					break;
+				case Value::type_t::ARRAY:
+					ret += KEYWORD_ARRAY;
+					break;
+				case Value::type_t::FUNCTION:
+					ret += KEYWORD_FUNCTION;
+					break;
+				case Value::type_t::DICTIONARY:
+					ret += KEYWORD_DICTIONARY;
+					break;
+				case Value::type_t::OBJECT:
+					ret += KEYWORD_OBJECT;
+					break;
+				case Value::type_t::POINTER:
+					ret += KEYWORD_POINTER;
+					break;
+				case Value::type_t::TYPE_NAME:
+					ret += KEYWORD_TYPE;
+					break;
+				default:
+					return "<error-type>";
+			}
 		}
 	}
+	return ret;
 }

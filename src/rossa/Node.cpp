@@ -50,7 +50,7 @@ std::stringstream ContainerNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ContainerNode::fold() const
+const node_ptr_t ContainerNode::fold() const
 {
 	return std::make_unique<ContainerNode>(s, token);
 }
@@ -103,7 +103,7 @@ std::stringstream VectorNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t VectorNode::fold() const
+const node_ptr_t VectorNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -157,7 +157,7 @@ std::stringstream BreakNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t BreakNode::fold() const
+const node_ptr_t BreakNode::fold() const
 {
 	return std::make_unique<ContainerNode>(sym_t(sym_t::type_t::ID_BREAK), token);
 }
@@ -194,7 +194,7 @@ std::stringstream ContinueNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ContinueNode::fold() const
+const node_ptr_t ContinueNode::fold() const
 {
 	return std::make_unique<ContainerNode>(sym_t(sym_t::type_t::ID_CONTINUE), token);
 }
@@ -240,7 +240,7 @@ std::stringstream IDNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t IDNode::fold() const
+const node_ptr_t IDNode::fold() const
 {
 	return std::make_unique<IDNode>(key, token);
 }
@@ -284,7 +284,7 @@ std::stringstream BIDNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t BIDNode::fold() const
+const node_ptr_t BIDNode::fold() const
 {
 	return std::make_unique<BIDNode>(key, token);
 }
@@ -332,7 +332,7 @@ std::stringstream DefineNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t DefineNode::fold() const
+const node_ptr_t DefineNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -384,7 +384,7 @@ std::stringstream VargDefineNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t VargDefineNode::fold() const
+const node_ptr_t VargDefineNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -436,7 +436,7 @@ std::stringstream NewNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t NewNode::fold() const
+const node_ptr_t NewNode::fold() const
 {
 	return std::make_unique<NewNode>(object->fold(), params->fold(), token);
 }
@@ -509,7 +509,7 @@ std::stringstream ClassNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ClassNode::fold() const
+const node_ptr_t ClassNode::fold() const
 {
 	node_vec_t nbody;
 	for (auto &c : body)
@@ -555,7 +555,7 @@ std::stringstream VarNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t VarNode::fold() const
+const node_ptr_t VarNode::fold() const
 {
 	return std::make_unique<VarNode>(keys, token);
 }
@@ -580,12 +580,12 @@ i_ptr_t CallNode::genParser() const
 	return std::make_shared<CallI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
 }
 
-node_ptr_t CallNode::getCallee()
+node_ptr_t CallNode::getCallee() const
 {
 	return (callee);
 }
 
-node_vec_t CallNode::getArgs()
+node_vec_t CallNode::getArgs() const
 {
 	return (args);
 }
@@ -613,7 +613,7 @@ std::stringstream CallNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t CallNode::fold() const
+const node_ptr_t CallNode::fold() const
 {
 	node_vec_t nargs;
 	for (auto &c : args)
@@ -665,7 +665,7 @@ std::stringstream ExternCallNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ExternCallNode::fold() const
+const node_ptr_t ExternCallNode::fold() const
 {
 	node_vec_t nargs;
 	for (auto &c : args)
@@ -728,7 +728,7 @@ std::stringstream CallBuiltNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t CallBuiltNode::fold() const
+const node_ptr_t CallBuiltNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -776,7 +776,7 @@ std::stringstream ReturnNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ReturnNode::fold() const
+const node_ptr_t ReturnNode::fold() const
 {
 	return std::make_unique<ReturnNode>(a->fold(), token);
 }
@@ -816,7 +816,7 @@ std::stringstream ReferNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ReferNode::fold() const
+const node_ptr_t ReferNode::fold() const
 {
 	return std::make_unique<ReferNode>(a->fold(), token);
 }
@@ -936,12 +936,12 @@ const std::string &BinOpNode::getOp() const
 	return op;
 }
 
-node_ptr_t BinOpNode::getA() const
+const node_ptr_t BinOpNode::getA() const
 {
 	return a;
 };
 
-node_ptr_t BinOpNode::getB() const
+const node_ptr_t BinOpNode::getB() const
 {
 	return b;
 };
@@ -988,7 +988,7 @@ std::stringstream BinOpNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t BinOpNode::fold() const
+const node_ptr_t BinOpNode::fold() const
 {
 	if (isConst()) {
 		scope_t newScope(static_cast<hash_ull>(0));
@@ -1052,7 +1052,7 @@ std::stringstream UnOpNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t UnOpNode::fold() const
+const node_ptr_t UnOpNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1100,7 +1100,7 @@ std::stringstream ParenNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ParenNode::fold() const
+const node_ptr_t ParenNode::fold() const
 {
 	/*if (isConst()) {
 		auto i = genParser();
@@ -1130,12 +1130,12 @@ i_ptr_t InsNode::genParser() const
 	return std::make_shared<InnerI>(callee->genParser(), arg->genParser(), token);
 }
 
-node_ptr_t InsNode::getCallee()
+const node_ptr_t InsNode::getCallee() const
 {
 	return (callee);
 }
 
-node_ptr_t InsNode::getArg()
+const node_ptr_t InsNode::getArg() const
 {
 	return (arg);
 }
@@ -1144,6 +1144,7 @@ bool InsNode::isConst() const
 {
 	return callee->isConst() && arg->isConst();
 }
+
 std::stringstream InsNode::printTree(std::string indent, bool last) const
 {
 	std::stringstream ss;
@@ -1161,7 +1162,7 @@ std::stringstream InsNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t InsNode::fold() const
+const node_ptr_t InsNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1227,7 +1228,7 @@ std::stringstream IfElseNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t IfElseNode::fold() const
+const node_ptr_t IfElseNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1291,7 +1292,7 @@ std::stringstream WhileNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t WhileNode::fold() const
+const node_ptr_t WhileNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1357,7 +1358,7 @@ std::stringstream ForNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ForNode::fold() const
+const node_ptr_t ForNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1436,7 +1437,7 @@ std::stringstream UntilNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t UntilNode::fold() const
+const node_ptr_t UntilNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1495,7 +1496,7 @@ std::stringstream MapNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t MapNode::fold() const
+const node_ptr_t MapNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1585,7 +1586,7 @@ std::stringstream SwitchNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t SwitchNode::fold() const
+const node_ptr_t SwitchNode::fold() const
 {
 	if (isConst()) {
 		auto i = genParser();
@@ -1647,7 +1648,7 @@ std::stringstream TryCatchNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t TryCatchNode::fold() const
+const node_ptr_t TryCatchNode::fold() const
 {
 	return std::make_unique<TryCatchNode>(trys->fold(), catchs->fold(), key, token);
 }
@@ -1686,7 +1687,7 @@ std::stringstream ThrowNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t ThrowNode::fold() const
+const node_ptr_t ThrowNode::fold() const
 {
 	return std::make_unique<ThrowNode>(throws->fold(), token);
 }
@@ -1732,7 +1733,7 @@ std::stringstream CallOpNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t CallOpNode::fold() const
+const node_ptr_t CallOpNode::fold() const
 {
 	node_vec_t nargs;
 	for (auto &c : args)
@@ -1775,7 +1776,7 @@ std::stringstream DeleteNode::printTree(std::string indent, bool last) const
 	return ss;
 }
 
-node_ptr_t DeleteNode::fold() const
+const node_ptr_t DeleteNode::fold() const
 {
 	return std::make_unique<DeleteNode>(del->fold(), token);
 }

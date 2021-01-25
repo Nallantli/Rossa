@@ -24,7 +24,7 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 	stack_trace.push_back(*this);
 
 	scope_t p(parent, scope_t::type_t::WEAK);
-	scope_t newScope(&p, 0);
+	const scope_t newScope(&p, 0);
 
 	for (size_t i = 0; i < params.size(); i++) {
 		switch (params[i].first) {
@@ -64,7 +64,7 @@ const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t 
 	stack_trace.push_back(*this);
 
 	scope_t p(parent, scope_t::type_t::WEAK);
-	scope_t newScope(&p, 0);
+	const scope_t newScope(&p, 0);
 
 	newScope.createVariable(Rossa::HASH_VAR_ARGS, sym_t::Array(paramValues), token);
 
