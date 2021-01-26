@@ -153,20 +153,20 @@ void Rossa::printError(const rossa_error &e)
 			trace.clear();
 			break;
 		}
-		auto f = trace.back();
-		printc(" ^ ", MAGENTA_TEXT);
+		auto e = trace.back();
+		printc(" ^ ", BLUE_TEXT);
 		std::string ret = "";
-		if (f.getParent().getKey() != "")
-			ret += f.getParent().getKey() + ".";
-		ret += ROSSA_DEHASH(f.getKey());
+		if (e.second.getParent().getKey() != "")
+			ret += e.second.getParent().getKey() + ".";
+		ret += ROSSA_DEHASH(e.second.getKey());
 		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;
-		for (auto &p : f.getParams()) {
+		for (auto &p : e.second.getParams()) {
 			if (i++ > 0)
 				printc(", ", RESET_TEXT);
 			switch (p.first) {
 				case TOK_REF:
-					printc("ref ", MAGENTA_TEXT);
+					printc("ref ", BLUE_TEXT);
 					break;
 				default:
 					break;
@@ -174,6 +174,8 @@ void Rossa::printError(const rossa_error &e)
 			printc(ROSSA_DEHASH(p.second), RESET_TEXT);
 		}
 		printc(")\n", BRIGHT_BLACK_TEXT);
+		printc("\t<" + e.first.filename.string() + ">:" + std::to_string(e.first.lineNumber) + " | ", CYAN_TEXT);
+		printc(e.first.line + "\n", MAGENTA_TEXT);
 		trace.pop_back();
 	}
 }

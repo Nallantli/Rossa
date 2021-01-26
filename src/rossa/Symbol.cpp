@@ -209,7 +209,7 @@ const bool sym_t::getBool(const token_t *token, trace_t &stack_trace) const
 	return d->valueBool;
 }
 
-scope_t * sym_t::getObject(const token_t *token, trace_t &stack_trace) const
+scope_t *sym_t::getObject(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::OBJECT)
 		throw rossa_error(_NOT_OBJECT_, *token, stack_trace);
@@ -225,10 +225,10 @@ const aug_type_t sym_t::getAugValueType() const
 {
 	if (d->type == Value::type_t::OBJECT)
 		return d->valueObject.getTypeVec();
-	return {d->type};
+	return { d->type };
 }
 
-const aug_type_t sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
+const aug_type_t &sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::TYPE_NAME)
 		throw rossa_error(_NOT_TYPE_, *token, stack_trace);
@@ -253,7 +253,7 @@ const bool sym_t::hasVarg(const token_t *token, trace_t &stack_trace) const
 	throw rossa_error(_NOT_FUNCTION_, *token, stack_trace);
 }
 
-const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
+const func_ptr_t &sym_t::getFunction(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::FUNCTION)
 		throw rossa_error(_NOT_FUNCTION_, *token, stack_trace);
@@ -264,11 +264,10 @@ const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *toke
 		throw rossa_error(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
 	}
 
-	std::map<fsig_t, func_ptr_t> foftype = d->valueFunction[params.size()];
 	bool flag = false;
 	const fsig_t *key;
 	size_t cur_v = 0;
-	for (auto &f2 : foftype) {
+	for (auto &f2 : d->valueFunction[params.size()]) {
 		size_t v = f2.first.validity(params, stack_trace);
 		if (v > cur_v) {
 			cur_v = v;
@@ -285,7 +284,7 @@ const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *toke
 		throw rossa_error(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
 	}
 
-	return foftype[*key];
+	return d->valueFunction[params.size()][*key];
 }
 
 const sym_t &sym_t::indexDict(const std::string &key) const
@@ -455,7 +454,7 @@ void sym_t::addFunctions(const sym_t *b, const token_t *token) const
 }
 
 
-const func_ptr_t sym_t::getVARGFunction(const token_t *token, trace_t &stack_trace) const
+const func_ptr_t &sym_t::getVARGFunction(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type == Value::type_t::FUNCTION)
 		return this->d->valueVARGFunction;
@@ -502,7 +501,7 @@ void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace
 			break;
 		case Value::type_t::ARRAY:
 		{
-			auto v = b->d->valueVector;
+			auto &v = b->d->valueVector;
 			if (isConst) {
 				d->valueVector = v;
 				break;
@@ -514,7 +513,7 @@ void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace
 		}
 		case Value::type_t::DICTIONARY:
 		{
-			auto v = b->d->valueDictionary;
+			auto &v = b->d->valueDictionary;
 			if (isConst) {
 				d->valueDictionary = v;
 				break;
@@ -584,7 +583,7 @@ const bool sym_t::nequals(const sym_t *b, const token_t *token, trace_t &stack_t
 	switch (d->type) {
 		case Value::type_t::OBJECT:
 		{
-			auto o = d->valueObject;
+			auto &o = d->valueObject;
 			if (o.hasValue(Rossa::HASH_NEQUALS))
 				return o.getVariable(Rossa::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->valueBool;
 		}
@@ -629,11 +628,9 @@ void sym_t::shift() const
 {
 	if (d->type != Value::type_t::FUNCTION)
 		return;
-	for (auto &e : d->valueFunction) {
-		for (auto &f : e.second) {
+	for (auto &e : d->valueFunction)
+		for (auto &f : e.second)
 			f.second->shift();
-		}
-	}
 	if (d->valueVARGFunction != nullptr)
 		d->valueVARGFunction->shift();
 }

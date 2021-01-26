@@ -77,6 +77,6 @@ void Value::clearData()
 			valueType.clear();
 			break;
 		default:
-			return;
+			break;
 	}
 }

@@ -36,5 +36,5 @@ drawSquare(
 
 renderer.flush();
 
-while SDL.Event.poll().type != SDL.Event.QUIT do {}
+while SDL.Event.poll()["type"] != SDL.Event.QUIT do {}
 SDL.QUIT();

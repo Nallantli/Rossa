@@ -454,13 +454,9 @@ const sym_t InnerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	switch (evalA.getValueType()) {
-		case Value::type_t::DICTIONARY:
-			if (b->getType() == VARIABLE)
-				return evalA.indexDict(ROSSA_DEHASH(reinterpret_cast<const VariableI *>(b.get())->getKey()));
-			throw rossa_error(_CANNOT_ENTER_DICTIONARY_, token, stack_trace);
 		case Value::type_t::OBJECT:
 		{
-			const scope_t * o = evalA.getObject(&token, stack_trace);
+			const auto &o = evalA.getObject(&token, stack_trace);
 			if (o->getType() != Scope::type_t::STATIC_O && o->getType() != Scope::type_t::INSTANCE_O)
 				throw rossa_error(_CANNOT_INDEX_OBJECT_, token, stack_trace);
 			return b->evaluate(o, stack_trace);
@@ -1058,7 +1054,7 @@ const sym_t LengthI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			return sym_t::Number(number_t::Long(evalA.vectorSize()));
 		case Value::type_t::OBJECT:
 		{
-			const scope_t * o = evalA.getObject(&token, stack_trace);
+			const auto &o = evalA.getObject(&token, stack_trace);
 			if (o->hasValue(Rossa::HASH_LENGTH))
 				return o->getVariable(Rossa::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
 		}
@@ -1089,7 +1085,7 @@ ClassI::ClassI(const hash_ull &key, const Scope::type_t &type, const i_ptr_t &bo
 const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	i_ptr_t nbody = body;
-	scope_t * ex = NULL;
+	scope_t *ex = NULL;
 	std::vector<aug_type_t> extensions;
 	if (extends) {
 		const sym_t e = extends->evaluate(scope, stack_trace);
@@ -1131,7 +1127,7 @@ NewI::NewI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 
 const sym_t NewI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	scope_t * base = a->evaluate(scope, stack_trace).getObject(&token, stack_trace);
+	const auto &base = a->evaluate(scope, stack_trace).getObject(&token, stack_trace);
 	return base->instantiate(b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
 
@@ -1225,25 +1221,25 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 				{
 					const std::string s = evalA.getString(&token, stack_trace);
 					if (s == KEYWORD_NUMBER)
-						return sym_t::TypeName({Value::type_t::NUMBER});
+						return sym_t::TypeName({ Value::type_t::NUMBER });
 					if (s == KEYWORD_STRING)
-						return sym_t::TypeName({Value::type_t::STRING});
+						return sym_t::TypeName({ Value::type_t::STRING });
 					if (s == KEYWORD_BOOLEAN)
-						return sym_t::TypeName({Value::type_t::BOOLEAN_D});
+						return sym_t::TypeName({ Value::type_t::BOOLEAN_D });
 					if (s == KEYWORD_ARRAY)
-						return sym_t::TypeName({Value::type_t::ARRAY});
+						return sym_t::TypeName({ Value::type_t::ARRAY });
 					if (s == KEYWORD_DICTIONARY)
-						return sym_t::TypeName({Value::type_t::DICTIONARY});
+						return sym_t::TypeName({ Value::type_t::DICTIONARY });
 					if (s == KEYWORD_FUNCTION)
-						return sym_t::TypeName({Value::type_t::FUNCTION});
+						return sym_t::TypeName({ Value::type_t::FUNCTION });
 					if (s == KEYWORD_OBJECT)
-						return sym_t::TypeName({Value::type_t::OBJECT});
+						return sym_t::TypeName({ Value::type_t::OBJECT });
 					if (s == KEYWORD_TYPE)
-						return sym_t::TypeName({Value::type_t::TYPE_NAME});
+						return sym_t::TypeName({ Value::type_t::TYPE_NAME });
 					if (s == KEYWORD_NIL_NAME)
-						return sym_t::TypeName({Value::type_t::NIL});
+						return sym_t::TypeName({ Value::type_t::NIL });
 					if (s == KEYWORD_POINTER)
-						return sym_t::TypeName({Value::type_t::POINTER});
+						return sym_t::TypeName({ Value::type_t::POINTER });
 					//TODO
 					//return sym_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
 				}
@@ -1306,7 +1302,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			if (convert == evalA.getAugValueType())
 				return evalA;
 			const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
-			scope_t * o = evalA.getObject(&token, stack_trace);
+			scope_t *o = evalA.getObject(&token, stack_trace);
 			if (o->hasValue(fname))
 				return o->getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
 			break;
@@ -2009,9 +2005,7 @@ UnAddI::UnAddI(const i_ptr_t &a, const token_t &token)
 
 const sym_t UnAddI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t evalA = a->evaluate(scope, stack_trace);
-
-	return ops::unadd(scope, evalA, &token, stack_trace);
+	return ops::unadd(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
 #ifdef ROSSA_COMPILER
@@ -2031,9 +2025,7 @@ NegI::NegI(const i_ptr_t &a, const token_t &token)
 
 const sym_t NegI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t evalA = a->evaluate(scope, stack_trace);
-
-	return ops::neg(scope, evalA, &token, stack_trace);
+	return ops::neg(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
 #ifdef ROSSA_COMPILER
@@ -2053,9 +2045,7 @@ NotI::NotI(const i_ptr_t &a, const token_t &token)
 
 const sym_t NotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	const sym_t evalA = a->evaluate(scope, stack_trace);
-
-	return ops::unot(scope, evalA, &token, stack_trace);
+	return ops::unot(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
 }
 
 #ifdef ROSSA_COMPILER

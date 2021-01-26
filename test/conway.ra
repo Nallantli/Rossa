@@ -60,11 +60,11 @@ static conway class {
 
 	evaluateInput() => {
 		e := SDL.Event.poll();
-		if e.type == SDL.Event.QUIT then {
+		if e["type"] == SDL.Event.QUIT then {
 			SDL.QUIT();
 			exit();
-		} elif e.type == SDL.Event.KEY_DOWN then {
-			switch e.keysym.sym of {
+		} elif e["type"] == SDL.Event.KEY_DOWN then {
+			switch e["keysym"]["sym"] of {
 				case '1' do speed = 160;
 				case '2' do speed = 120;
 				case '3' do speed = 80;

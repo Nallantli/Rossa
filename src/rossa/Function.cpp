@@ -19,9 +19,9 @@ Function::Function(const hash_ull &key, Scope *parent, const i_ptr_t &body, cons
 
 const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *token, trace_t &stack_trace) const
 {
+	stack_trace.push_back({*token, *this});
 	if (isVargs)
 		return evaluateVARGS(paramValues, token, stack_trace);
-	stack_trace.push_back(*this);
 
 	scope_t p(parent, scope_t::type_t::WEAK);
 	const scope_t newScope(&p, 0);
@@ -61,8 +61,6 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 
 const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t *token, trace_t &stack_trace) const
 {
-	stack_trace.push_back(*this);
-
 	scope_t p(parent, scope_t::type_t::WEAK);
 	const scope_t newScope(&p, 0);
 

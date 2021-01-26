@@ -845,7 +845,7 @@ node_ptr_t NodeParser::parseMapNode()
 			nextToken();
 		}
 		i++;
-		if (!(currentToken.type == TOK_STR_LIT || currentToken.type == TOK_IDF || currentToken.type == TOK_NUM || currentToken.type == TOK_TRUE || currentToken.type == TOK_FALSE))
+		if (currentToken.type != TOK_STR_LIT)
 			return logErrorN(_VALUE_KEY_PAIR_ERROR_, currentToken);
 		auto key = currentToken.valueString;
 		nextToken();

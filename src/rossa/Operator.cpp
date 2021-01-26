@@ -4,8 +4,8 @@ const sym_t ops::index(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 {
 	switch (evalA.getValueType()) {
 		case Value::type_t::DICTIONARY:
-			if (evalB.getValueType() == Value::type_t::NUMBER)
-				return evalA.indexDict(evalB.toString(token, stack_trace));
+			if (evalB.getValueType() != Value::type_t::STRING)
+				break;
 			return evalA.indexDict(evalB.getString(token, stack_trace));
 		case Value::type_t::ARRAY:
 			if (evalB.getValueType() != Value::type_t::NUMBER)
@@ -13,7 +13,7 @@ const sym_t ops::index(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 			return evalA.indexVector(evalB.getNumber(token, stack_trace).getLong(), token, stack_trace);
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_INDEX))
 				return o->getVariable(Rossa::HASH_INDEX, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -33,32 +33,22 @@ const sym_t ops::call(const scope_t *scope, const i_ptr_t &a, const sym_vec_t &a
 		case Instruction::type_t::INNER:
 		{
 			const sym_t evalA = reinterpret_cast<const InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
-			switch (evalA.getValueType()) {
-				case Value::type_t::OBJECT:
-				{
-					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
-					return evalB.call(args, token, stack_trace);
-				}
-				case Value::type_t::DICTIONARY:
-				{
-					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
-					return evalB.call(args, token, stack_trace);
-				}
-				default:
-				{
-					const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
-					sym_vec_t params;
-					params.push_back(evalA);
-					params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
+			if (evalA.getValueType() == Value::type_t::OBJECT) {
+				const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
+				return evalB.call(args, token, stack_trace);
+			} else {
+				const sym_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+				sym_vec_t params;
+				params.push_back(evalA);
+				params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
 
-					if (evalB.getValueType() == Value::type_t::OBJECT) {
-						auto o = evalB.getObject(token, stack_trace);
-						if (o->hasValue(Rossa::HASH_CALL))
-							return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
-					}
-
-					return evalB.call(params, token, stack_trace);
+				if (evalB.getValueType() == Value::type_t::OBJECT) {
+					const auto &o = evalB.getObject(token, stack_trace);
+					if (o->hasValue(Rossa::HASH_CALL))
+						return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 				}
+
+				return evalB.call(params, token, stack_trace);
 			}
 		}
 		default:
@@ -66,7 +56,7 @@ const sym_t ops::call(const scope_t *scope, const i_ptr_t &a, const sym_vec_t &a
 			const sym_t evalA = a->evaluate(scope, stack_trace);
 
 			if (evalA.getValueType() == Value::type_t::OBJECT) {
-				auto o = evalA.getObject(token, stack_trace);
+				const auto &o = evalA.getObject(token, stack_trace);
 				if (o->hasValue(Rossa::HASH_CALL))
 					return o->getVariable(Rossa::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 			}
@@ -84,8 +74,8 @@ const sym_t ops::untilstep(const scope_t *scope, const bool &inclusive, const sy
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			number_t numA = evalA.getNumber(token, stack_trace);
-			const number_t numB = evalB.getNumber(token, stack_trace);
-			const number_t numStep = step.getNumber(token, stack_trace);
+			const number_t &numB = evalB.getNumber(token, stack_trace);
+			const number_t &numStep = step.getNumber(token, stack_trace);
 			sym_vec_t nv;
 			if (inclusive) {
 				for (; numA <= numB; numA += numStep)
@@ -98,7 +88,7 @@ const sym_t ops::untilstep(const scope_t *scope, const bool &inclusive, const sy
 		}
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_RANGE))
 				return o->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalB, step }, token, stack_trace);
 		}
@@ -120,8 +110,8 @@ const sym_t ops::untilnostep(const scope_t *scope, const bool &inclusive, const 
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			number_t numA = evalA.getNumber(token, stack_trace);
-			const number_t numB = evalB.getNumber(token, stack_trace);
-			const number_t numStep = number_t::Long(1);
+			const number_t &numB = evalB.getNumber(token, stack_trace);
+			const number_t &numStep = number_t::Long(1);
 			sym_vec_t nv;
 			if (inclusive) {
 				for (; numA <= numB; numA += numStep)
@@ -134,7 +124,7 @@ const sym_t ops::untilnostep(const scope_t *scope, const bool &inclusive, const 
 		}
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_RANGE))
 				return o->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -179,7 +169,7 @@ const sym_t ops::add(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::String(evalA.getString(token, stack_trace) + evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_ADD))
 				return o->getVariable(Rossa::HASH_ADD, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -204,8 +194,8 @@ const sym_t ops::sub(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 		{
 			if (evalB.getValueType() != Value::type_t::ARRAY)
 				break;
-			const sym_vec_t vA = evalA.getVector(token, stack_trace);
-			const sym_vec_t vB = evalB.getVector(token, stack_trace);
+			const sym_vec_t &vA = evalA.getVector(token, stack_trace);
+			const sym_vec_t &vB = evalB.getVector(token, stack_trace);
 			sym_vec_t nv;
 			for (const sym_t &e : vA) {
 				bool flag = true;
@@ -222,7 +212,7 @@ const sym_t ops::sub(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 		}
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_SUB)) {
 				return o->getVariable(Rossa::HASH_SUB, token, stack_trace).call({ evalB }, token, stack_trace);
 			}
@@ -246,7 +236,7 @@ const sym_t ops::mul(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::Number(evalA.getNumber(token, stack_trace) * evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MUL))
 				return o->getVariable(Rossa::HASH_MUL, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -269,7 +259,7 @@ const sym_t ops::div(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::Number(evalA.getNumber(token, stack_trace) / evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_DIV))
 				return o->getVariable(Rossa::HASH_DIV, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -292,7 +282,7 @@ const sym_t ops::mod(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::Number(evalA.getNumber(token, stack_trace) % evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MOD))
 				return o->getVariable(Rossa::HASH_MOD, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -315,7 +305,7 @@ const sym_t ops::pow(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::Number(evalA.getNumber(token, stack_trace).pow(evalB.getNumber(token, stack_trace)));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_POW)) {
 				return o->getVariable(Rossa::HASH_POW, token, stack_trace).call({ evalB }, token, stack_trace);
 			}
@@ -343,7 +333,7 @@ const sym_t ops::less(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			return sym_t::Boolean(evalA.getString(token, stack_trace) < evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_LESS))
 				return o->getVariable(Rossa::HASH_LESS, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -370,7 +360,7 @@ const sym_t ops::more(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			return sym_t::Boolean(evalA.getString(token, stack_trace) > evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_MORE))
 				return o->getVariable(Rossa::HASH_MORE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -397,7 +387,7 @@ const sym_t ops::eless(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 			return sym_t::Boolean(evalA.getString(token, stack_trace) <= evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_ELESS))
 				return o->getVariable(Rossa::HASH_ELESS, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -424,7 +414,7 @@ const sym_t ops::emore(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 			return sym_t::Boolean(evalA.getString(token, stack_trace) >= evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_EMORE))
 				return o->getVariable(Rossa::HASH_EMORE, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -447,7 +437,7 @@ const sym_t ops::bor(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			return sym_t::Number(evalA.getNumber(token, stack_trace) | evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_OR))
 				return o->getVariable(Rossa::HASH_B_OR, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -470,7 +460,7 @@ const sym_t ops::bxor(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			return sym_t::Number(evalA.getNumber(token, stack_trace) ^ evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_XOR))
 				return o->getVariable(Rossa::HASH_B_XOR, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -502,7 +492,7 @@ const sym_t ops::band(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 		}
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_AND))
 				return o->getVariable(Rossa::HASH_B_AND, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -525,7 +515,7 @@ const sym_t ops::bshl(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			return sym_t::Number(evalA.getNumber(token, stack_trace) << evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_SH_L))
 				return o->getVariable(Rossa::HASH_B_SH_L, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -548,7 +538,7 @@ const sym_t ops::bshr(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			return sym_t::Number(evalA.getNumber(token, stack_trace) >> evalB.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_SH_R))
 				return o->getVariable(Rossa::HASH_B_SH_R, token, stack_trace).call({ evalB }, token, stack_trace);
 		}
@@ -569,7 +559,7 @@ const sym_t ops::bnot(const scope_t *scope, const sym_t &evalA, const token_t *t
 			return sym_t::Number(~evalA.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_B_NOT))
 				return o->getVariable(Rossa::HASH_B_NOT, token, stack_trace).call({ }, token, stack_trace);
 		}
@@ -590,7 +580,7 @@ const sym_t ops::unadd(const scope_t *scope, const sym_t &evalA, const token_t *
 			return sym_t::Number(+evalA.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_ADD))
 				return o->getVariable(Rossa::HASH_ADD, token, stack_trace).call({ }, token, stack_trace);
 		}
@@ -611,7 +601,7 @@ const sym_t ops::neg(const scope_t *scope, const sym_t &evalA, const token_t *to
 			return sym_t::Number(-evalA.getNumber(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_SUB))
 				return o->getVariable(Rossa::HASH_SUB, token, stack_trace).call({ }, token, stack_trace);
 		}
@@ -632,7 +622,7 @@ const sym_t ops::unot(const scope_t *scope, const sym_t &evalA, const token_t *t
 			return sym_t::Boolean(!evalA.getBool(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
-			auto o = evalA.getObject(token, stack_trace);
+			const auto &o = evalA.getObject(token, stack_trace);
 			if (o->hasValue(Rossa::HASH_NOT))
 				return o->getVariable(Rossa::HASH_NOT, token, stack_trace).call({ }, token, stack_trace);
 		}

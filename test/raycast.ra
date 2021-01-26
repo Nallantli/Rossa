@@ -19,44 +19,45 @@ world := [
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 ];
 
-colors := {
-	1 : {
-		red : 0xff,
-		green : 0,
-		blue : 0,
-		alpha : 0xff
+colors := [
+	nil,
+	{
+		"red" : 0xff,
+		"green" : 0,
+		"blue" : 0,
+		"alpha" : 0xff
 	},
-	2 : {
-		red : 0,
-		green : 0xff,
-		blue : 0,
-		alpha : 0xff
+	{
+		"red" : 0,
+		"green" : 0xff,
+		"blue" : 0,
+		"alpha" : 0xff
 	},
-	3 : {
-		red : 0,
-		green : 0,
-		blue : 0xff,
-		alpha : 0xff
+	{
+		"red" : 0,
+		"green" : 0,
+		"blue" : 0xff,
+		"alpha" : 0xff
 	},
-	4 : {
-		red : 0xff,
-		green : 0xff,
-		blue : 0,
-		alpha : 0xff
+	{
+		"red" : 0xff,
+		"green" : 0xff,
+		"blue" : 0,
+		"alpha" : 0xff
 	},
-	5 : {
-		red : 0xff,
-		green : 0,
-		blue : 0xff,
-		alpha : 0xff
+	{
+		"red" : 0xff,
+		"green" : 0,
+		"blue" : 0xff,
+		"alpha" : 0xff
 	},
-	6 : {
-		red : 0,
-		green : 0xff,
-		blue : 0xff,
-		alpha : 0xff
+	{
+		"red" : 0,
+		"green" : 0xff,
+		"blue" : 0xff,
+		"alpha" : 0xff
 	}
-};
+];
 
 keys := {};
 
@@ -142,9 +143,9 @@ refresh() => {
 		color := colors[world[mapX][mapY]];
 
 		if side then {
-			color.red /= 2;
-			color.green /= 2;
-			color.blue /= 2;
+			color["red"] /= 2;
+			color["green"] /= 2;
+			color["blue"] /= 2;
 		}
 
 		cache[x].setColor(color);
@@ -157,16 +158,16 @@ refresh() => {
 
 evaluateMovement(ref lapse : Number) => {
 	rotSpeed := 0;
-	if keys['a'] == true then {
+	if keys["a"] == true then {
 		rotSpeed += -0.0025 * lapse;
 	}
-	if keys['d'] == true then {
+	if keys["d"] == true then {
 		rotSpeed += 0.0025 * lapse;
 	}
 
 	moveSpeed := 0.005 * lapse;
 
-	if keys['w'] == true then {
+	if keys["w"] == true then {
 		potX := posX + dirX * moveSpeed;
 		potY := posY + dirY * moveSpeed;
 		if world[potX][posY] == 0 then {
@@ -176,7 +177,7 @@ evaluateMovement(ref lapse : Number) => {
 			posY = potY;
 		}
 	}
-	if keys['s'] == true then {
+	if keys["s"] == true then {
 		potX := posX - dirX * moveSpeed;
 		potY := posY - dirY * moveSpeed;
 		if world[potX][posY] == 0 then {
@@ -199,13 +200,13 @@ evaluateMovement(ref lapse : Number) => {
 
 evaluateInput() => {
 	e := SDL.Event.poll();
-	if e.type == SDL.Event.QUIT then {
+	if e["type"] == SDL.Event.QUIT then {
 		SDL.QUIT();
 		exit();
-	} elif e.type == SDL.Event.KEY_DOWN then {
-		keys[e.keysym.sym] = true;
-	} elif e.type == SDL.Event.KEY_UP then {
-		keys[e.keysym.sym] = false;
+	} elif e["type"] == SDL.Event.KEY_DOWN then {
+		keys[e["keysym"]["sym"].chars()] = true;
+	} elif e["type"] == SDL.Event.KEY_UP then {
+		keys[e["keysym"]["sym"].chars()] = false;
 	}
 }
 

@@ -80,47 +80,47 @@ putln() => puts("\n");
 system(ref s : String) => extern_call STANDARD._system_call(s);
 
 static cons class {
-	decor := {
-		FG_BLACK : "30",
-		FG_RED : "31",
-		FG_GREEN : "32",
-		FG_YELLOW : "33",
-		FG_BLUE : "34",
-		FG_MAGENTA : "35",
-		FG_CYAN : "36",
-		FG_WHITE : "37",
-		FG_BRIGHT_BLACK : "30;1",
-		FG_BRIGHT_RED : "31;1",
-		FG_BRIGHT_GREEN : "32;1",
-		FG_BRIGHT_YELLOW : "33;1",
-		FG_BRIGHT_BLUE : "34;1",
-		FG_BRIGHT_MAGENTA : "35;1",
-		FG_BRIGHT_CYAN : "36;1",
-		FG_BRIGHT_WHITE : "37;1",
+	static decor class {
+		FG_BLACK := "30";
+		FG_RED := "31";
+		FG_GREEN := "32";
+		FG_YELLOW := "33";
+		FG_BLUE := "34";
+		FG_MAGENTA := "35";
+		FG_CYAN := "36";
+		FG_WHITE := "37";
+		FG_BRIGHT_BLACK := "30;1";
+		FG_BRIGHT_RED := "31;1";
+		FG_BRIGHT_GREEN := "32;1";
+		FG_BRIGHT_YELLOW := "33;1";
+		FG_BRIGHT_BLUE := "34;1";
+		FG_BRIGHT_MAGENTA := "35;1";
+		FG_BRIGHT_CYAN := "36;1";
+		FG_BRIGHT_WHITE := "37;1";
 
-		BG_BLACK : "40",
-		BG_RED : "41",
-		BG_GREEN : "42",
-		BG_YELLOW : "43",
-		BG_BLUE : "44",
-		BG_MAGENTA : "45",
-		BG_CYAN : "46",
-		BG_WHITE : "47",
-		BG_BRIGHT_BLACK : "40;1",
-		BG_BRIGHT_RED : "41;1",
-		BG_BRIGHT_GREEN : "42;1",
-		BG_BRIGHT_YELLOW : "43;1",
-		BG_BRIGHT_BLUE : "44;1",
-		BG_BRIGHT_MAGENTA : "45;1",
-		BG_BRIGHT_CYAN : "46;1",
-		BG_BRIGHT_WHITE : "47;1",
+		BG_BLACK := "40";
+		BG_RED := "41";
+		BG_GREEN := "42";
+		BG_YELLOW := "43";
+		BG_BLUE := "44";
+		BG_MAGENTA := "45";
+		BG_CYAN := "46";
+		BG_WHITE := "47";
+		BG_BRIGHT_BLACK := "40;1";
+		BG_BRIGHT_RED := "41;1";
+		BG_BRIGHT_GREEN := "42;1";
+		BG_BRIGHT_YELLOW := "43;1";
+		BG_BRIGHT_BLUE := "44;1";
+		BG_BRIGHT_MAGENTA := "45;1";
+		BG_BRIGHT_CYAN := "46;1";
+		BG_BRIGHT_WHITE := "47;1";
 
-		BOLD : "1",
-		UNDERLINE : "4",
-		REVERSED : "7",
+		BOLD := "1";
+		UNDERLINE := "4";
+		REVERSED := "7";
 
-		RESET : "0"
-	};
+		RESET := "0";
+	}
 
 	setDecor(ref s : String) => puts("\u001B[" + s + "m");
 

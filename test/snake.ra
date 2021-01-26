@@ -98,11 +98,11 @@ static snake_game class {
 
 	evaluateInput() => {
 		e := SDL.Event.poll();
-		if e.type == SDL.Event.QUIT then {
+		if e["type"] == SDL.Event.QUIT then {
 			SDL.QUIT();
 			exit();
-		} elif e.type == SDL.Event.KEY_DOWN then {
-			switch e.keysym.sym of {
+		} elif e["type"] == SDL.Event.KEY_DOWN then {
+			switch e["keysym"]["sym"] of {
 				case 'w', 'k' do {
 					if direction != 2 then {
 						newDir = 3;

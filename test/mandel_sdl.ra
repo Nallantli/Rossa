@@ -65,13 +65,13 @@ static mandel class {
 
 while true do {
 	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
-	while (e := SDL.Event.poll()).type != SDL.Event.KEY_DOWN do {
-		if (e.type == SDL.Event.QUIT) then {
+	while (e := SDL.Event.poll())["type"] != SDL.Event.KEY_DOWN do {
+		if (e["type"] == SDL.Event.QUIT) then {
 			SDL.QUIT();
 			exit();
 		}
 	}
-	switch e.keysym.sym of {
+	switch e["keysym"]["sym"] of {
 		case 'w' do y += 2 / height * scale;
 		case 's' do y -= 2 / height * scale;
 		case 'a' do x -= 6 / width * scale;

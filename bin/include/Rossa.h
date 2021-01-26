@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.12.2-alpha"
+#define _ROSSA_VERSION_ "v1.12.3-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -56,7 +56,7 @@ typedef unsigned long long hash_ull;
 typedef unsigned long long refc_ull;
 typedef signed long long type_sll;
 
-typedef std::vector<Function> trace_t;
+typedef std::vector<std::pair<token_t, Function>> trace_t;
 
 typedef std::shared_ptr<Node> node_ptr_t;
 typedef std::shared_ptr<const Instruction> i_ptr_t;
@@ -740,9 +740,9 @@ public:
 	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
 	const aug_type_t getAugValueType() const;
-	const aug_type_t getTypeName(const token_t *, trace_t &) const;
-	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
-	const func_ptr_t getVARGFunction(const token_t *, trace_t &) const;
+	const aug_type_t &getTypeName(const token_t *, trace_t &) const;
+	const func_ptr_t &getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
+	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
 	const sym_t &indexDict(const std::string &) const;
 	const bool hasDictionaryKey(const std::string &) const;
 	const size_t vectorSize() const;

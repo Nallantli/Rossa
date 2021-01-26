@@ -4,17 +4,17 @@ static isPrime class : Function {
 	`()`(ref n : Number) => {
 		if n < 2 then {
 			return false;
-		} elif data[n] != nil then {
-			return data[n];
+		} elif data[n -> String] != nil then {
+			return data[n -> String];
 		}
 
 		for i in 2 .+ n / 2 do {
 			if n % i == 0 then {
-				return data[n] = false;
+				return data[n -> String] = false;
 			}
 		}
 
-		return data[n] = true;
+		return data[n -> String] = true;
 	}
 }
 
