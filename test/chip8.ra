@@ -3,6 +3,8 @@
 load "fs";
 load "sdl";
 
+clockSpeed := 500; # -1 for max
+
 fontSet := [
     0xF0, 0x90, 0x90, 0x90, 0xF0, #0
     0x20, 0x60, 0x20, 0x20, 0x70, #1
@@ -383,6 +385,9 @@ SDL.INIT();
 w := new SDL.Window("Chip-8 Emulator", 64 * scale, 32 * scale);
 r := w.getRenderer();
 
+font := new SDL.Font("test/res/unifont.ttf", 16);
+fpsText := new SDL.Text(font, "", Color.WHITE);
+
 buffer := alloc(64).map((e) => alloc(32));
 
 for x in 0 .. 64 do {
@@ -392,16 +397,36 @@ for x in 0 .. 64 do {
 	}
 }
 
+r.put(fpsText, 0, 0);
+
+fpsStart := clock.milliseconds();
+fpsCounter := 0;
+fpsTimer := clock.milliseconds();
+cpuStart := clock.milliseconds();
 while true do {
 	evaluateInput();
-	chip.cycle();
-	if chip.drawFlag then {
-		for x in 0 .. 64 do {
-			for y in 0 .. 32 do {
-				buffer[x][y].setColor(chip.gfx[y * 64 + x] == 0 ? Color.BLACK : Color.WHITE);
+	if (lapse := clock.milliseconds()) - cpuStart > 1000/clockSpeed then {
+		cpuStart = lapse;
+		chip.cycle();
+	}
+	# 60 fps Graphics Update
+	if (lapse := clock.milliseconds()) - fpsStart > 1000/60 then {
+		fpsStart = lapse;
+		if chip.drawFlag then {
+			for x in 0 .. 64 do {
+				for y in 0 .. 32 do {
+					buffer[x][y].setColor(chip.gfx[y * 64 + x] == 0 ? Color.BLACK : Color.WHITE);
+				}
 			}
+			r.update();
+			chip.drawFlag = false;
 		}
-		r.update();
-		chip.drawFlag = false;
+		fpsCounter += 1;
+
+		if lapse - fpsTimer > 1000 then {
+			fpsTimer = lapse;
+			fpsText.setText("FPS: {0}" & [fpsCounter]);
+			fpsCounter = 0;
+		}
 	}
 }
