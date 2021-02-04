@@ -25,7 +25,7 @@ fontSet := [
 ];
 
 struct Chip class {
-	var opcode, memory, V, I, pc, sp, gfx, stack, drawFlag, delayTimer, soundTimer, key;
+	var opcode, memory, V, I, pc, sp, gfx, stack, drawFlag, delayTimer, soundTimer, key, timer;
 
 	init() => {
 		memory = alloc(4096).map((e) => 0);
@@ -40,6 +40,7 @@ struct Chip class {
 		drawFlag = true;
 		delayTimer = 0;
 		soundTimer = 0;
+		timer = clock.milliseconds();
 
 		for i in 0 .. 80 do {
 			memory[i] = fontSet[i];
@@ -52,6 +53,8 @@ struct Chip class {
 		switch opcode & 0xF000 of {
 			case 0x0000 do {
 				switch opcode & 0x000F of {
+					# 0x00E0 - CLS
+					# Clear screen
 					case 0x0000 do {
 						for i in 0 .. 2048 do {
 							gfx[i] = 0x0;
@@ -59,6 +62,8 @@ struct Chip class {
 						drawFlag = true;
 						pc += 2;
 					}
+					# 0x00EE - RET
+					# Return from subroutine
 					case 0x000E do {
 						sp -= 1;
 						pc = stack[sp];
@@ -68,12 +73,18 @@ struct Chip class {
 					throw "Unknown opcode [0x0000]: {0}" & [opcode];
 				}
 			}
+			# 1aaa - JP a
+			# Jump to address
 			case 0x1000 do pc = opcode & 0x0FFF;
+			# 0x2aaa - CALL a
+			# Enter subroutine at address
 			case 0x2000 do {
 				stack[sp] = pc;
 				sp += 1;
 				pc = opcode & 0x0FFF;
 			}
+			# 3xbb - SE Vx, b
+			# Skip if register equals byte
 			case 0x3000 do {
 				if V[(opcode & 0x0F00) >> 8] == (opcode & 0x00FF) then {
 					pc += 4;
@@ -81,6 +92,8 @@ struct Chip class {
 					pc += 2;
 				}
 			}
+			# 4xbb - SNE Vx, b
+			# Skip if register doesn't equal byte
 			case 0x4000 do {
 				if V[(opcode & 0x0F00) >> 8] != (opcode & 0x00FF) then {
 					pc += 4;
@@ -88,6 +101,8 @@ struct Chip class {
 					pc += 2;
 				}
 			}
+			# 5xy0 - SE Vx, Vy
+			# Skip if register x != register y
 			case 0x5000 do {
 				if V[(opcode & 0x0F00) >> 8] != V[(opcode & 0x00F0) >> 4] then {
 					pc += 4;
@@ -95,67 +110,87 @@ struct Chip class {
 					pc += 2;
 				}
 			}
+			# 6xbb - LD Vx, b
+			# Set register to value
 			case 0x6000 do {
 				V[(opcode & 0x0F00) >> 8] = opcode & 0x00FF;
 				pc += 2;
 			}
+			# 7xbb - ADD Vx, b
+			# Adds value to register
 			case 0x7000 do {
-				V[(opcode & 0x0F00) >> 8] += opcode & 0x00FF;
+				V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] + (opcode & 0x00FF)) % 256;
 				pc += 2;
 			}
 			case 0x8000 do {
 				switch opcode & 0x000F of {
+					# 8xy0 - LD Vx, Vy
+					# Set register x to register y
 					case 0x0000 do {
 						V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4];
 						pc += 2;
 					}
+					# 8xy1 - OR Vx, Vy
 					case 0x0001 do {
 						V[(opcode & 0x0F00) >> 8] |= V[(opcode & 0x00F0) >> 4];
 						pc += 2;
 					}
+					# 8xy2 - AND Vx, Vy
 					case 0x0002 do {
 						V[(opcode & 0x0F00) >> 8] &= V[(opcode & 0x00F0) >> 4];
 						pc += 2;
 					}
+					# 8xy3 - XOR Vx, Vy
 					case 0x0003 do {
 						V[(opcode & 0x0F00) >> 8] ^= V[(opcode & 0x00F0) >> 4];
 						pc += 2;
 					}
+					# 8xy4 - ADD Vx, Vy
+					# Adds values at registers x and y, setting VF if > 255
 					case 0x0004 do {
-						if V[(opcode & 0x00F0) >> 4] > (0xFF - V[(opcode & 0x0F00) >> 8]) then {
+						val := V[(opcode & 0x0F00) >> 8] + V[(opcode & 0x00F0) >> 4];
+						if val > 0xFF then {
 							V[0xF] = 1;
 						} else {
 							V[0xF] = 0;
 						}
-						V[(opcode & 0x0F00) >> 8] += V[(opcode & 0x00F0) >> 4];
+						V[(opcode & 0x0F00) >> 8] = val % 256;
 						pc += 2;
 					}
+					# 8xy5 - SUB Vx, Vy
+					# Subtracts values at registers x and y, setting VF if Vx > Vy
 					case 0x0005 do {
-						if V[(opcode & 0x00F0) >> 4] > V[(opcode & 0x0F00) >> 8] then {
-							V[0xF] = 0;
-						} else {
+						val := V[(opcode & 0x0F00) >> 8] - V[(opcode & 0x00F0) >> 4];
+						if val > 0 then {
 							V[0xF] = 1;
+						} else {
+							V[0xF] = 0;
 						}
-						V[(opcode & 0x0F00) >> 8] -= V[(opcode & 0x00F0) >> 4];
+						V[(opcode & 0x0F00) >> 8] = (val + 256) % 256;
 						pc += 2;
 					}
+					# 8xy6 - SHR Vx
 					case 0x0006 do {
 						V[0xF] = V[(opcode & 0x0F00) >> 8] & 0x1;
-						V[(opcode & 0x0F00) >> 8] >>= 1;
+						V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] >> 1) % 256;
 						pc += 2;
 					}
+					# 8xy7 - SUBN Vx, Vy
+					# Subtracts values at registers y and x, setting VF if Vy > Vx
 					case 0x0007 do {
-						if V[(opcode & 0x0F00) >> 8] > V[(opcode & 0x00F0) >> 4] then {
-							V[0xF] = 0;
-						} else {
+						val := V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
+						if val > 0 then {
 							V[0xF] = 1;
+						} else {
+							V[0xF] = 0;
 						}
-						V[(opcode & 0x0F00) >> 8] = V[(opcode & 0x00F0) >> 4] - V[(opcode & 0x0F00) >> 8];
+						V[(opcode & 0x0F00) >> 8] = (val + 256) % 256;
 						pc += 2;
 					}
+					# 8xyE - SHL Vx, Vy
 					case 0x000E do {
 						V[0xF] = V[(opcode & 0x0F00) >> 8] >> 7;
-						V[(opcode & 0x0F00) >> 8] <<= 1;
+						V[(opcode & 0x0F00) >> 8] = (V[(opcode & 0x0F00) >> 8] << 1) % 256;
 						pc == 2;
 					}
 				} else {
@@ -186,15 +221,13 @@ struct Chip class {
 				for yline in 0 .. height do {
 					pixel := memory[I + yline];
 					for xline in 0 .. 8 do {
-						posX := (x + xline);
-						posY := (y + yline);
-						if !(posX < 0 || posX >= 64 || posY < 0 || posY >= 32) then {
-							if (pixel & (0x80 >> xline)) != 0 then {
-								if gfx[posX + posY * 64] == 1 then {
-									V[0xF] = 1;
-								}
-								gfx[posX + posY * 64] ^= 1;
+						posX := (x + xline) % 64;
+						posY := (y + yline) % 32;
+						if (pixel & (0x80 >> xline)) != 0 then {
+							if gfx[posX + posY * 64] == 1 then {
+								V[0xF] = 1;
 							}
+							gfx[posX + posY * 64] ^= 1;
 						}
 					}
 				}
@@ -293,15 +326,18 @@ struct Chip class {
 			throw "Unknown opcode: {0}" & [opcode];
 		}
 
-		if delayTimer > 0 then {
-			delayTimer -= 1;
-		}
-
-		if soundTimer > 0 then {
-			if soundTimer == 1 then {
-				putln("BEEP!");
+		if (lapse := clock.milliseconds()) - timer > 1000/60 then {
+			timer = lapse;
+			if delayTimer > 0 then {
+				delayTimer -= 1;
 			}
-			soundTimer -= 1;
+
+			if soundTimer > 0 then {
+				if soundTimer == 1 then {
+					putln("BEEP!");
+				}
+				soundTimer -= 1;
+			}
 		}
 	}
 
@@ -386,7 +422,7 @@ w := new SDL.Window("Chip-8 Emulator", 64 * scale, 32 * scale);
 r := w.getRenderer();
 
 font := new SDL.Font("test/res/unifont.ttf", 16);
-fpsText := new SDL.Text(font, "", Color.WHITE);
+fpsText := new SDL.Text(font, "", Color.RED);
 
 buffer := alloc(64).map((e) => alloc(32));
 
