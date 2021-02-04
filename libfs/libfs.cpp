@@ -1,15 +1,7 @@
-#include "libfs.h"
+#include "../main/lang/Rossa.h"
 #include <zip.h>
 
 #include <fstream>
-
-#ifndef _STATIC_
-#ifdef __unix__
-COMPILER_COMMANDS(libfs, "-lzip")
-#else
-COMPILER_COMMANDS(libfs, "-lzip")
-#endif
-#endif
 
 namespace libfs
 {

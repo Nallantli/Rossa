@@ -3,7 +3,5 @@ bin/rossa
 bin/rossa.exe
 bin/lib/*.so
 bin/lib/*.dll
-bin/include/*.a
-bin/include/lib*.h
 .vscode
 test.ra

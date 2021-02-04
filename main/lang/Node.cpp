@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 Node::Node(
 	const type_t &type,

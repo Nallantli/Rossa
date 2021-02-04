@@ -65,95 +65,71 @@ endif
 
 dirs: $(DIR)
 
-libs: libfs libnet libsdl libncurses
+libs: libstd libfs libnet libsdl libncurses
 
-libfs: bin/lib/libfs$(LIB_EXT) bin/include/libfs.a
+libstd: bin/lib/libstd$(LIB_EXT)
 
-libnet: bin/lib/libnet$(LIB_EXT) bin/include/libnet.a
+libfs: bin/lib/libfs$(LIB_EXT)
 
-libsdl: bin/lib/libsdl$(LIB_EXT) bin/include/libsdl.a
+libnet: bin/lib/libnet$(LIB_EXT)
 
-libncurses: bin/lib/libncurses$(LIB_EXT) bin/include/libncurses.a
+libsdl: bin/lib/libsdl$(LIB_EXT)
 
+libncurses: bin/lib/libncurses$(LIB_EXT)
 
-bin/lib/libfs$(LIB_EXT): src/ext/libfs.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libfs.cpp bin/include/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
+bin/lib/libstd$(LIB_EXT): libstd/libstd.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libstd/libstd.cpp $(DIR)/librossa.a $(LFLAGS)
 
-bin/include/libfs.a: $(DIR)/libfs_static.o
-	ar rcs $@ $(DIR)/libfs_static.o && cp -f src/ext/libfs.h bin/include/libfs.h
+bin/lib/libfs$(LIB_EXT): libfs/libfs.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libfs/libfs.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
 
-$(DIR)/libfs_static.o: src/ext/libfs.cpp
-	$(CC) -D_STATIC_ -o $@ src/ext/libfs.cpp -c $(OFLAGS) $(LIBFS_FLAGS)
+bin/lib/libnet$(LIB_EXT): libnet/libnet.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libnet/libnet.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
 
+bin/lib/libsdl$(LIB_EXT): libsdl/libsdl.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libsdl/libsdl.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): src/ext/libnet.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libnet.cpp bin/include/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/lib/libncurses$(LIB_EXT): libncurses/libncurses.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libncurses/libncurses.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNCURSES_FLAGS)
 
-bin/include/libnet.a: $(DIR)/libnet_static.o
-	ar rcs $@ $(DIR)/libnet_static.o && cp -f src/ext/libnet.h bin/include/libnet.h
+bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
+	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/libnet_static.o: src/ext/libnet.cpp
-	$(CC) -D_STATIC_ -o $@ src/ext/libnet.cpp -c $(OFLAGS) $(LIBNET_FLAGS)
+bin/rossa: main/Main.cpp $(DIR)/librossa.a
+	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-
-bin/lib/libsdl$(LIB_EXT): src/ext/libsdl.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libsdl.cpp bin/include/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
-
-bin/include/libsdl.a: $(DIR)/libsdl_static.o
-	ar rcs $@ $(DIR)/libsdl_static.o && cp -f src/ext/libsdl.h bin/include/libsdl.h
-
-$(DIR)/libsdl_static.o: src/ext/libsdl.cpp
-	$(CC) -D_STATIC_ -o $@ src/ext/libsdl.cpp -c $(OFLAGS) $(LIBSDL_FLAGS)
-
-
-bin/lib/libncurses$(LIB_EXT): src/ext/libncurses.cpp bin/include/librossa.a
-	$(CC) -o $@ src/ext/libncurses.cpp bin/include/librossa.a $(LFLAGS) $(LIBNCURSES_FLAGS)
-
-bin/include/libncurses.a: $(DIR)/libncurses_static.o
-	ar rcs $@ $(DIR)/libncurses_static.o && cp -f src/ext/libncurses.h bin/include/libncurses.h
-
-$(DIR)/libncurses_static.o: src/ext/libncurses.cpp
-	$(CC) -D_STATIC_ -o $@ src/ext/libncurses.cpp -c $(OFLAGS) $(LIBNCURSES_FLAGS)
-
-
-bin/rossa.exe: src/Main.cpp bin/include/librossa.a
-	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)
-
-bin/rossa: src/Main.cpp bin/include/librossa.a
-	$(CC) -o $@ src/Main.cpp bin/include/librossa.a $(CFLAGS)
-
-bin/include/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
+$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
 	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o $(DIR)/Operator.o
 
-$(DIR)/Rossa.o: src/rossa/Rossa.cpp
-	$(CC) -o $@ src/rossa/Rossa.cpp -c $(OFLAGS)
+$(DIR)/Rossa.o: main/lang/Rossa.cpp
+	$(CC) -o $@ main/lang/Rossa.cpp -c $(OFLAGS)
 
-$(DIR)/Node.o: src/rossa/Node.cpp
-	$(CC) -o $@ src/rossa/Node.cpp -c $(OFLAGS)
+$(DIR)/Node.o: main/lang/Node.cpp
+	$(CC) -o $@ main/lang/Node.cpp -c $(OFLAGS)
 
-$(DIR)/NodeParser.o: src/rossa/NodeParser.cpp
-	$(CC) -o $@ src/rossa/NodeParser.cpp -c $(OFLAGS)
+$(DIR)/NodeParser.o: main/lang/NodeParser.cpp
+	$(CC) -o $@ main/lang/NodeParser.cpp -c $(OFLAGS)
 
-$(DIR)/Parser.o: src/rossa/Parser.cpp
-	$(CC) -o $@ src/rossa/Parser.cpp -c $(OFLAGS)
+$(DIR)/Parser.o: main/lang/Parser.cpp
+	$(CC) -o $@ main/lang/Parser.cpp -c $(OFLAGS)
 
-$(DIR)/Scope.o: src/rossa/Scope.cpp
-	$(CC) -o $@ src/rossa/Scope.cpp -c $(OFLAGS)
+$(DIR)/Scope.o: main/lang/Scope.cpp
+	$(CC) -o $@ main/lang/Scope.cpp -c $(OFLAGS)
 
-$(DIR)/Function.o: src/rossa/Function.cpp
-	$(CC) -o $@ src/rossa/Function.cpp -c $(OFLAGS)
+$(DIR)/Function.o: main/lang/Function.cpp
+	$(CC) -o $@ main/lang/Function.cpp -c $(OFLAGS)
 
-$(DIR)/Signature.o: src/rossa/Signature.cpp
-	$(CC) -o $@ src/rossa/Signature.cpp -c $(OFLAGS)
+$(DIR)/Signature.o: main/lang/Signature.cpp
+	$(CC) -o $@ main/lang/Signature.cpp -c $(OFLAGS)
 
-$(DIR)/Value.o: src/rossa/Value.cpp
-	$(CC) -o $@ src/rossa/Value.cpp -c $(OFLAGS)
+$(DIR)/Value.o: main/lang/Value.cpp
+	$(CC) -o $@ main/lang/Value.cpp -c $(OFLAGS)
 
-$(DIR)/Symbol.o: src/rossa/Symbol.cpp
-	$(CC) -o $@ src/rossa/Symbol.cpp -c $(OFLAGS)
+$(DIR)/Symbol.o: main/lang/Symbol.cpp
+	$(CC) -o $@ main/lang/Symbol.cpp -c $(OFLAGS)
 
-$(DIR)/RTError.o: src/rossa/RTError.cpp
-	$(CC) -o $@ src/rossa/RTError.cpp -c $(OFLAGS)
+$(DIR)/RTError.o: main/lang/RTError.cpp
+	$(CC) -o $@ main/lang/RTError.cpp -c $(OFLAGS)
 
-$(DIR)/Operator.o: src/rossa/Operator.cpp
-	$(CC) -o $@ src/rossa/Operator.cpp -c $(OFLAGS)
+$(DIR)/Operator.o: main/lang/Operator.cpp
+	$(CC) -o $@ main/lang/Operator.cpp -c $(OFLAGS)

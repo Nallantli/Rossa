@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.12.4-alpha"
+#define _ROSSA_VERSION_ "v1.12.5-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -29,12 +29,10 @@
 #include <dlfcn.h>
 #define colorASCII(c) "\033[" + std::to_string(c) + "m"
 #define EXPORT_FUNCTIONS(name) extern "C" void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
-#define COMPILER_COMMANDS(name, commands) extern "C" std::string name##_rossaCompilerCommands() { return commands; }
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #define EXPORT_FUNCTIONS(name) extern "C" __declspec(dllexport) void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
-#define COMPILER_COMMANDS(name, commands) extern "C" __declspec(dllexport) std::string name##_rossaCompilerCommands() { return commands; }
 #endif
 
 struct token_t;
@@ -360,9 +358,6 @@ public:
 	Instruction(const type_t &, const token_t &);
 	virtual const sym_t evaluate(const scope_t *, trace_t &) const = 0;
 	const type_t getType() const;
-#ifdef ROSSA_COMPILER
-	virtual const std::string compile() const = 0;
-#endif
 	virtual ~Instruction();
 };
 
@@ -804,9 +799,6 @@ protected:
 public:
 	ContainerI(const sym_t &d, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class DefineI : public Instruction
@@ -821,9 +813,6 @@ protected:
 public:
 	DefineI(const hash_ull &, const fsig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const i_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class VargDefineI : public Instruction
@@ -836,9 +825,6 @@ protected:
 public:
 	VargDefineI(const hash_ull &, const i_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class SequenceI : public Instruction
@@ -849,9 +835,6 @@ protected:
 public:
 	SequenceI(const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class IfElseI : public Instruction
@@ -864,9 +847,6 @@ protected:
 public:
 	IfElseI(const i_ptr_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class WhileI : public Instruction
@@ -878,9 +858,6 @@ protected:
 public:
 	WhileI(const i_ptr_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ForI : public Instruction
@@ -893,9 +870,6 @@ protected:
 public:
 	ForI(const hash_ull &, const i_ptr_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class VariableI : public CastingI
@@ -903,9 +877,6 @@ class VariableI : public CastingI
 public:
 	VariableI(const hash_ull &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class GetThisI : public CastingI
@@ -913,9 +884,6 @@ class GetThisI : public CastingI
 public:
 	GetThisI(const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class DeclareI : public CastingI
@@ -928,9 +896,6 @@ protected:
 public:
 	DeclareI(const hash_ull &, const type_sll &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class IndexI : public BinaryI
@@ -938,9 +903,6 @@ class IndexI : public BinaryI
 public:
 	IndexI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class InnerI : public BinaryI
@@ -948,9 +910,6 @@ class InnerI : public BinaryI
 public:
 	InnerI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class CallI : public BinaryI
@@ -958,9 +917,6 @@ class CallI : public BinaryI
 public:
 	CallI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class AddI : public BinaryI
@@ -968,9 +924,6 @@ class AddI : public BinaryI
 public:
 	AddI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class SubI : public BinaryI
@@ -978,9 +931,6 @@ class SubI : public BinaryI
 public:
 	SubI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class MulI : public BinaryI
@@ -988,9 +938,6 @@ class MulI : public BinaryI
 public:
 	MulI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class DivI : public BinaryI
@@ -998,9 +945,6 @@ class DivI : public BinaryI
 public:
 	DivI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ModI : public BinaryI
@@ -1008,9 +952,6 @@ class ModI : public BinaryI
 public:
 	ModI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class PowI : public BinaryI
@@ -1018,9 +959,6 @@ class PowI : public BinaryI
 public:
 	PowI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class LessI : public BinaryI
@@ -1028,9 +966,6 @@ class LessI : public BinaryI
 public:
 	LessI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class MoreI : public BinaryI
@@ -1038,9 +973,6 @@ class MoreI : public BinaryI
 public:
 	MoreI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ELessI : public BinaryI
@@ -1048,9 +980,6 @@ class ELessI : public BinaryI
 public:
 	ELessI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class EMoreI : public BinaryI
@@ -1058,9 +987,6 @@ class EMoreI : public BinaryI
 public:
 	EMoreI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class EqualsI : public BinaryI
@@ -1068,9 +994,6 @@ class EqualsI : public BinaryI
 public:
 	EqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class NEqualsI : public BinaryI
@@ -1078,9 +1001,6 @@ class NEqualsI : public BinaryI
 public:
 	NEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class AndI : public BinaryI
@@ -1088,9 +1008,6 @@ class AndI : public BinaryI
 public:
 	AndI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class OrI : public BinaryI
@@ -1098,9 +1015,6 @@ class OrI : public BinaryI
 public:
 	OrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BOrI : public BinaryI
@@ -1108,9 +1022,6 @@ class BOrI : public BinaryI
 public:
 	BOrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BAndI : public BinaryI
@@ -1118,9 +1029,6 @@ class BAndI : public BinaryI
 public:
 	BAndI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BXOrI : public BinaryI
@@ -1128,9 +1036,6 @@ class BXOrI : public BinaryI
 public:
 	BXOrI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BShiftLeftI : public BinaryI
@@ -1138,9 +1043,6 @@ class BShiftLeftI : public BinaryI
 public:
 	BShiftLeftI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BShiftRightI : public BinaryI
@@ -1148,9 +1050,6 @@ class BShiftRightI : public BinaryI
 public:
 	BShiftRightI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class BNotI : public UnaryI
@@ -1158,9 +1057,6 @@ class BNotI : public UnaryI
 public:
 	BNotI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class SetI : public BinaryI
@@ -1171,9 +1067,6 @@ protected:
 public:
 	SetI(const i_ptr_t &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ReturnI : public UnaryI
@@ -1181,9 +1074,6 @@ class ReturnI : public UnaryI
 public:
 	ReturnI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ExternI : public UnaryI
@@ -1196,9 +1086,6 @@ protected:
 public:
 	ExternI(const std::string &, const std::string &, const i_ptr_t &a, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class LengthI : public UnaryI
@@ -1206,9 +1093,6 @@ class LengthI : public UnaryI
 public:
 	LengthI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ClassI : public Instruction
@@ -1222,9 +1106,6 @@ protected:
 public:
 	ClassI(const hash_ull &, const Scope::type_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class NewI : public BinaryI
@@ -1232,9 +1113,6 @@ class NewI : public BinaryI
 public:
 	NewI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class CastToI : public BinaryI
@@ -1242,9 +1120,6 @@ class CastToI : public BinaryI
 public:
 	CastToI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class AllocI : public UnaryI
@@ -1252,9 +1127,6 @@ class AllocI : public UnaryI
 public:
 	AllocI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class UntilI : public BinaryI
@@ -1266,9 +1138,6 @@ protected:
 public:
 	UntilI(const i_ptr_t &, const i_ptr_t &, const i_ptr_t &, const bool &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ScopeI : public Instruction
@@ -1279,9 +1148,6 @@ protected:
 public:
 	ScopeI(const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class MapI : public Instruction
@@ -1292,9 +1158,6 @@ protected:
 public:
 	MapI(const std::map<std::string, i_ptr_t> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ReferI : public UnaryI
@@ -1302,9 +1165,6 @@ class ReferI : public UnaryI
 public:
 	ReferI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class SwitchI : public Instruction
@@ -1319,9 +1179,6 @@ protected:
 public:
 	SwitchI(const i_ptr_t &, const std::map<sym_t, size_t> &, const std::map<i_ptr_t, size_t> &, const i_vec_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class TryCatchI : public BinaryI
@@ -1332,9 +1189,6 @@ protected:
 public:
 	TryCatchI(const i_ptr_t &, const i_ptr_t &, const hash_ull &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ThrowI : public UnaryI
@@ -1342,9 +1196,6 @@ class ThrowI : public UnaryI
 public:
 	ThrowI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class PureEqualsI : public BinaryI
@@ -1352,9 +1203,6 @@ class PureEqualsI : public BinaryI
 public:
 	PureEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class PureNEqualsI : public BinaryI
@@ -1362,9 +1210,6 @@ class PureNEqualsI : public BinaryI
 public:
 	PureNEqualsI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class CharNI : public UnaryI
@@ -1372,9 +1217,6 @@ class CharNI : public UnaryI
 public:
 	CharNI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class CharSI : public UnaryI
@@ -1382,9 +1224,6 @@ class CharSI : public UnaryI
 public:
 	CharSI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class DeclareVarsI : public Instruction
@@ -1395,9 +1234,6 @@ protected:
 public:
 	DeclareVarsI(const std::vector<hash_ull> &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class ParseI : public UnaryI
@@ -1405,9 +1241,6 @@ class ParseI : public UnaryI
 public:
 	ParseI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class TypeI : public UnaryI
@@ -1415,9 +1248,6 @@ class TypeI : public UnaryI
 public:
 	TypeI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class CallOpI : public Instruction
@@ -1429,9 +1259,6 @@ protected:
 public:
 	CallOpI(const size_t &, const i_vec_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class DeleteI : public UnaryI
@@ -1439,9 +1266,6 @@ class DeleteI : public UnaryI
 public:
 	DeleteI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class UnAddI : public UnaryI
@@ -1449,9 +1273,6 @@ class UnAddI : public UnaryI
 public:
 	UnAddI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class NegI : public UnaryI
@@ -1459,9 +1280,6 @@ class NegI : public UnaryI
 public:
 	NegI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 class NotI : public UnaryI
@@ -1469,9 +1287,6 @@ class NotI : public UnaryI
 public:
 	NotI(const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
-#ifdef ROSSA_COMPILER
-	const std::string compile() const override;
-#endif
 };
 
 // NODES -----------------------------------------------------------------------------
@@ -1944,13 +1759,11 @@ namespace dir
 
 	const std::filesystem::path getRuntimePath();
 	const std::filesystem::path findFile(const std::filesystem::path &, const std::string &, const token_t *token);
-	const std::vector<std::string> compiledOptions(int, char const *[]);
 }
 
 namespace lib
 {
 	extern std::map<std::string, std::map<std::string, extf_t>> loaded;
-	extern std::map<std::string, std::string> compilerCommands;
 
 	void loadLibrary(const std::filesystem::path &, const std::string &, const token_t *token);
 	extf_t loadFunction(const std::string &, const std::string &, const token_t *);

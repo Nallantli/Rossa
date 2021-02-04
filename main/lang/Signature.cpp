@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 fsig_t::fsig_t()
 {}
@@ -102,7 +102,6 @@ const bool fsig_t::operator==(const fsig_t &s) const
 
 std::vector<std::filesystem::path> dir::loaded = {};
 std::map<std::string, std::map<std::string, extf_t>> lib::loaded = {};
-std::map<std::string, std::string> lib::compilerCommands = {};
 
 const std::filesystem::path dir::getRuntimePath()
 {
@@ -129,17 +128,6 @@ const std::filesystem::path dir::findFile(const std::filesystem::path &currentDi
 	throw rossa_error(format::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
 }
 
-const std::vector<std::string> dir::compiledOptions(int argc, char const *argv[])
-{
-	std::vector<std::string> passed;
-
-	for (int i = 1; i < argc; i++) {
-		passed.push_back(argv[i]);
-	}
-
-	return passed;
-}
-
 void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string &rawlibname, const token_t *token)
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
@@ -151,7 +139,6 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 			throw rossa_error(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
-		auto cm = dlsym(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #else
 		std::string libname = rawlibname + ".dll";
 		auto path = dir::findFile(currentDir, libname, token);
@@ -161,7 +148,6 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 			throw rossa_error(format::format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
-		auto cm = GetProcAddress(library, (rawlibname + "_rossaCompilerCommands").c_str());
 #endif
 		if (f == NULL) {
 			trace_t stack_trace;
@@ -171,9 +157,6 @@ void lib::loadLibrary(const std::filesystem::path &currentDir, const std::string
 		auto ef = (export_fns_t)f;
 		ef(fns);
 		loaded[rawlibname] = fns;
-
-		auto ecm = (cm_fns_t)cm;
-		compilerCommands[rawlibname] = ecm();
 	}
 }
 

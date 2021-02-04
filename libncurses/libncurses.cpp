@@ -1,16 +1,8 @@
-#include "libncurses.h"
+#include "../main/lang/Rossa.h"
 #ifdef __unix__
 #include <ncurses.h>
 #else
 #include <ncurses/ncurses.h>
-#endif
-
-#ifndef _STATIC_
-#ifdef __unix__
-COMPILER_COMMANDS(libncurses, "-lncurses")
-#else
-COMPILER_COMMANDS(libncurses, "-lncurses")
-#endif
 #endif
 
 ROSSA_EXT_SIG(_initscr, args, token, hash, stack_trace)

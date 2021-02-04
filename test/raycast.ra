@@ -83,7 +83,7 @@ for x in 0 .. width do {
 	cache[x] = new SDL.Rect(1, height, Color.WHITE);
 }
 
-font := new SDL.Font("misc/unifont.ttf", 16);
+font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.WHITE);
 
 refresh() => {

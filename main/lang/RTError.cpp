@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 rossa_error::rossa_error(const std::string &error, const token_t &token, const trace_t &stack_trace)
 	: std::runtime_error(error)

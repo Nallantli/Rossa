@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_ull &key)
 	: type{ type }

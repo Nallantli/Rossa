@@ -1,3 +1,5 @@
+extern "libstd";
+
 # BASIC
 
 alloc := ((ref x) => alloc(x));
@@ -58,26 +60,26 @@ parse := ((ref x) => parse(x));
 
 # CONSOLE
 
-puts(ref s) => extern_call STANDARD._puts(s -> String);
+puts(ref s) => extern_call libstd._puts(s -> String);
 
 puts(...) => {
 	for s in vargs do {
-		extern_call STANDARD._puts(s -> String);
+		extern_call libstd._puts(s -> String);
 	}
 }
 
-putln(ref s) => extern_call STANDARD._puts((s -> String) + "\n");
+putln(ref s) => extern_call libstd._puts((s -> String) + "\n");
 
 putln(...) => {
 	for s in vargs do {
-		extern_call STANDARD._puts(s -> String);
+		extern_call libstd._puts(s -> String);
 	}
-	extern_call STANDARD._puts("\n");
+	extern_call libstd._puts("\n");
 }
 
 putln() => puts("\n");
 
-system(ref s : String) => extern_call STANDARD._system_call(s);
+system(ref s : String) => extern_call libstd._system_call(s);
 
 static cons class {
 	static decor class {
@@ -160,11 +162,11 @@ static cons class {
 }
 
 static input class {
-	line() => extern_call STANDARD._input_line();
+	line() => extern_call libstd._input_line();
 
-	token() => extern_call STANDARD._input_token();
+	token() => extern_call libstd._input_token();
 
-	char() => extern_call STANDARD._input_char();
+	char() => extern_call libstd._input_char();
 }
 
 # RANDOM
@@ -173,42 +175,42 @@ struct Random class {
 	var ptr;
 
 	init() => {
-		ptr = (extern_call STANDARD._rand_init(clock.milliseconds()));
+		ptr = (extern_call libstd._rand_init(clock.milliseconds()));
 	}
 
 	init(ref seed : Number) => {
-		ptr = (extern_call STANDARD._rand_init(seed));
+		ptr = (extern_call libstd._rand_init(seed));
 	}
 
-	nextf() => extern_call STANDARD._rand_nextFloat(ptr, 0, 1);
+	nextf() => extern_call libstd._rand_nextFloat(ptr, 0, 1);
 
-	nextf(ref max : Number) => extern_call STANDARD._rand_nextFloat(ptr, 0, max);
+	nextf(ref max : Number) => extern_call libstd._rand_nextFloat(ptr, 0, max);
 
-	nextf(ref min : Number, ref max : Number) => extern_call STANDARD._rand_nextFloat(ptr, min, max);
+	nextf(ref min : Number, ref max : Number) => extern_call libstd._rand_nextFloat(ptr, min, max);
 
-	nexti() => extern_call STANDARD._rand_nextInt(ptr, 0, 1);
+	nexti() => extern_call libstd._rand_nextInt(ptr, 0, 1);
 
-	nexti(ref max : Number) => extern_call STANDARD._rand_nextInt(ptr, 0, max);
+	nexti(ref max : Number) => extern_call libstd._rand_nextInt(ptr, 0, max);
 
-	nexti(ref min : Number, ref max : Number) => extern_call STANDARD._rand_nextInt(ptr, min, max);
+	nexti(ref min : Number, ref max : Number) => extern_call libstd._rand_nextInt(ptr, min, max);
 
 	nextb() => (nexti() -> Boolean);
 }
 
 # SYSTEM
 
-exit() => extern_call STANDARD._exit(0);
+exit() => extern_call libstd._exit(0);
 
-exit(ref n : Number) => extern_call STANDARD._exit(n);
+exit(ref n : Number) => extern_call libstd._exit(n);
 
 # TIME
 
 static clock class {
-	milliseconds() => extern_call STANDARD._timeMS();
+	milliseconds() => extern_call libstd._timeMS();
 
-	sleep(ref ms : Number) => extern_call STANDARD._sleep(ms);
+	sleep(ref ms : Number) => extern_call libstd._sleep(ms);
 
-	format(ref s : String, ref time : Number) => extern_call STANDARD._clock_format(time, s);
+	format(ref s : String, ref time : Number) => extern_call libstd._clock_format(time, s);
 
 	timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { sleep(ms); f(); })).detach();
 }
@@ -402,7 +404,7 @@ parseDict(ref a : String) => {
 	return parse(a + ";")[0];
 }
 
-size(ref a : String) => extern_call STANDARD._string_size(a);
+size(ref a : String) => extern_call libstd._string_size(a);
 
 split(ref s : String, ref c : Number) => s.split(chars(c));
 
@@ -438,31 +440,31 @@ static math class {
 		return eps;
 	})();
 
-	rand() => extern_call STANDARD._math_rand();
+	rand() => extern_call libstd._math_rand();
 
-	srand(ref x : Number) => extern_call STANDARD._math_srand(x);
+	srand(ref x : Number) => extern_call libstd._math_srand(x);
 
-	log(ref x : Number) => extern_call STANDARD._log(x);
+	log(ref x : Number) => extern_call libstd._log(x);
 
 	abs(ref x : Number) => (x < 0 ? -x : x);
 
-	floor(ref x : Number) => extern_call STANDARD._floor(x);
+	floor(ref x : Number) => extern_call libstd._floor(x);
 
-	ceil(ref x : Number) => extern_call STANDARD._ceil(x);
+	ceil(ref x : Number) => extern_call libstd._ceil(x);
 
-	round(ref x : Number) => extern_call STANDARD._round(x);
+	round(ref x : Number) => extern_call libstd._round(x);
 
-	round(ref x : Number, ref place : Number) => (extern_call STANDARD._round(x * (10 ** place))) / (10 ** place);
+	round(ref x : Number, ref place : Number) => (extern_call libstd._round(x * (10 ** place))) / (10 ** place);
 
 	min(ref a : Number, ref b : Number) => (a < b ? a : b);
 
 	max(ref a : Number, ref b : Number) => (a > b ? a : b);
 
-	sin(ref x : Number) => extern_call STANDARD._sin(x);
+	sin(ref x : Number) => extern_call libstd._sin(x);
 
-	cos(ref x : Number) => extern_call STANDARD._cos(x);
+	cos(ref x : Number) => extern_call libstd._cos(x);
 
-	tan(ref x : Number) => extern_call STANDARD._tan(x);
+	tan(ref x : Number) => extern_call libstd._tan(x);
 
 	csc(ref x : Number) => 1 / sin(x);
 
@@ -470,17 +472,17 @@ static math class {
 
 	cot(ref x : Number) => 1 / tan(x);
 
-	asin(ref x : Number) => extern_call STANDARD._asin(x);
+	asin(ref x : Number) => extern_call libstd._asin(x);
 
-	acos(ref x : Number) => extern_call STANDARD._acos(x);
+	acos(ref x : Number) => extern_call libstd._acos(x);
 
-	atan(ref x : Number) => extern_call STANDARD._atan(x);
+	atan(ref x : Number) => extern_call libstd._atan(x);
 
-	sinh(ref x : Number) => extern_call STANDARD._sinh(x);
+	sinh(ref x : Number) => extern_call libstd._sinh(x);
 
-	cosh(ref x : Number) => extern_call STANDARD._cosh(x);
+	cosh(ref x : Number) => extern_call libstd._cosh(x);
 
-	tanh(ref x : Number) => extern_call STANDARD._tanh(x);
+	tanh(ref x : Number) => extern_call libstd._tanh(x);
 
 	csch(ref x : Number) => 1 / sinh(x);
 
@@ -488,38 +490,38 @@ static math class {
 
 	coth(ref x : Number) => 1 / tanh(x);
 
-	asinh(ref x : Number) => extern_call STANDARD._asinh(x);
+	asinh(ref x : Number) => extern_call libstd._asinh(x);
 
-	acosh(ref x : Number) => extern_call STANDARD._acosh(x);
+	acosh(ref x : Number) => extern_call libstd._acosh(x);
 
-	atanh(ref x : Number) => extern_call STANDARD._atanh(x);
+	atanh(ref x : Number) => extern_call libstd._atanh(x);
 
 	PI := 2 * asin(1);
 }
 
 static regex class {
-	match(ref s : String, ref r : String) => extern_call STANDARD._regex_match(r, s);
+	match(ref s : String, ref r : String) => extern_call libstd._regex_match(r, s);
 
-	replace(ref s : String, ref r : String, ref x : String) => extern_call STANDARD._regex_replace(r, x, s);
+	replace(ref s : String, ref r : String, ref x : String) => extern_call libstd._regex_replace(r, x, s);
 }
 
 struct Thread class {
 	var ptr;
 
 	init(ref f : Function) => {
-		ptr = (extern_call STANDARD._thread_init(f));
+		ptr = (extern_call libstd._thread_init(f));
 	}
 
-	join() => extern_call STANDARD._thread_join(ptr);
+	join() => extern_call libstd._thread_join(ptr);
 
-	detach() => extern_call STANDARD._thread_detach(ptr);
+	detach() => extern_call libstd._thread_detach(ptr);
 
 	rem() => {
 		detach();
 	}
 }
 
-split(ref f : Function) => extern_call STANDARD._function_split(f);
+split(ref f : Function) => extern_call libstd._function_split(f);
 
 `+`(ref f : Function, ref g : Function<Any>) => {
 	return (...)[f, g] => g(`()`(f, vargs));

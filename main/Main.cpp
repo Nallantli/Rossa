@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 
-#include "../bin/include/Rossa.h"
+#include "lang/Rossa.h"
 
 inline const std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
@@ -10,10 +10,7 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 		{"version", "false"},
 		{"std", "true"},
 		{"file", ""},
-		{"output", ""},
-#ifdef ROSSA_COMPILER
-		{"compile", "false"}
-		#endif
+		{"output", ""}
 	};
 	std::vector<std::string> passed;
 
@@ -27,10 +24,6 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 				options["std"] = "false";
 			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
 				options["version"] = "true";
-#ifdef ROSSA_COMPILER
-			else if (std::string(argv[i]) == "--compile" || std::string(argv[i]) == "-c")
-				options["compile"] = "true";
-#endif
 			else if (std::string(argv[i]) == "--output" || std::string(argv[i]) == "-o")
 				options["output"] = argv[++i];
 			else {
@@ -46,69 +39,6 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 
 	return { options, passed };
 }
-
-#ifdef ROSSA_COMPILER
-static void compile(const node_ptr_t &entry, const std::string &output)
-{
-#ifndef _WIN32
-	std::filesystem::path outputExe = output;
-#else
-	std::filesystem::path outputExe = output + ".exe";
-#endif
-
-	std::cout << "Compiling to exe: " << output << "...\n";
-
-	std::cout << "[0/6]\tParsing operators...\n";
-	auto g = NodeParser::genParser(entry);
-
-	std::cout << "[1/6]\tExporting hashtable...\n";
-	std::string hashs = "{";
-	size_t i = 0;
-	for (auto &e : Rossa::MAIN_HASH.getHashTable()) {
-		if (i++ > 0)
-			hashs += ", ";
-		hashs += "\"" + e + "\"";
-	}
-	hashs += "}";
-
-	std::cout << "[2/6]\tAdding library links...\n";
-	std::string libs = "std::map<std::string, extf_t> fmap;\n";
-	std::string libincludes = "";
-	std::string libpaths = "\"" + (dir::getRuntimePath().parent_path() / "include" / "librossa.a").string() + "\" ";
-#ifdef __unix__
-	std::string cm = "-O3 -ldl -pthread";
-#else
-	std::string cm = "-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic";
-#endif
-
-	for (auto &l : lib::loaded) {
-		if (l.first == "STANDARD")
-			continue;
-		libincludes += "#include \"" + (dir::getRuntimePath().parent_path() / "include" / (l.first + ".h")).string() + "\"\n";
-		libs += "fmap.clear();\n" + l.first + "_rossaExportFunctions(fmap);\nlib::loaded[\"" + l.first + "\"] = fmap;\n";
-		libpaths += "\"" + (dir::getRuntimePath().parent_path() / "include" / (l.first + ".a")).string() + "\" ";
-		cm += " " + lib::compilerCommands[l.first];
-	}
-
-	std::cout << "[3/6]\tTranspiling code...\n";
-	std::ofstream file((dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string());
-	file << "#include \"" + (dir::getRuntimePath().parent_path() / "include" / "Standard.h").string() + "\"\n" << libincludes << "int main(int argc, char const *argv[])\n{\nRossa r(dir::compiledOptions(argc, argv));\nRossa::MAIN_HASH.variable_hash = " << hashs << ";\nToken t;\n" << libs << "trace_t stack_trace;\nauto i = " << g->compile() << ";\ni->evaluate(r.main, stack_trace);\nreturn 0;\n}";
-	file.close();
-
-	std::cout << "[4/6]\tWriting executable...\n";
-#ifndef _WIN32
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o {0} {1} {2} {3}", { outputExe.string(), (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
-#else
-	std::string exec_str = format::format("g++ -D_STATIC_ --std=c++17 -o \"{0}\" \"{1}\" {2} {3}", { outputExe.string(), (dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp").string(), libpaths, cm });
-#endif
-	std::cout << exec_str << "\n";
-	system(exec_str.c_str());
-	std::cout << "[5/6]\tCleaning...\n";
-	std::filesystem::remove(dir::getRuntimePath().parent_path() / "include" / ".TEMP.cpp");
-
-	std::cout << "[6/6]\tDone.\n";
-}
-#endif
 
 int main(int argc, char const *argv[])
 {
@@ -186,11 +116,6 @@ int main(int argc, char const *argv[])
 			if (options["std"] == "true")
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
-#ifdef ROSSA_COMPILER
-			if (options["compile"] == "true")
-				compile(entry, (options["output"] == "" ? "out" : options["output"]));
-			else
-#endif
 				wrapper.runCode(entry, tree);
 		} catch (const rossa_error &e) {
 			Rossa::printError(e);

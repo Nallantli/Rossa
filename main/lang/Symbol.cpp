@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 sym_t::sym_t()
 	: d{ new Value() }

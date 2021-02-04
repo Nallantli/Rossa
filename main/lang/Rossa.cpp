@@ -1,4 +1,4 @@
-#include "../../bin/include/Standard.h"
+#include "Rossa.h"
 #include <fstream>
 
 Hash Rossa::MAIN_HASH = Hash();
@@ -41,10 +41,6 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
 #endif
-	std::map<std::string, extf_t> fmap;
-	loadStandardFunctions(fmap);
-	lib::loaded["STANDARD"] = fmap;
-
 	sym_vec_t argv;
 	for (auto &s : args)
 		argv.push_back(sym_t::String(s));
@@ -625,46 +621,3 @@ const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std:
 
 Rossa::~Rossa()
 {}
-
-void Rossa::loadStandardFunctions(std::map<std::string, extf_t> &fmap)
-{
-	ADD_EXT(_acos);
-	ADD_EXT(_asin);
-	ADD_EXT(_atan);
-	ADD_EXT(_acosh);
-	ADD_EXT(_asinh);
-	ADD_EXT(_atanh);
-	ADD_EXT(_ceil);
-	ADD_EXT(_clock_format);
-	ADD_EXT(_cos);
-	ADD_EXT(_cosh);
-	ADD_EXT(_exit);
-	ADD_EXT(_exit);
-	ADD_EXT(_floor);
-	ADD_EXT(_input_char);
-	ADD_EXT(_input_line);
-	ADD_EXT(_log);
-	ADD_EXT(_math_rand);
-	ADD_EXT(_math_srand);
-	ADD_EXT(_puts);
-	ADD_EXT(_rand_init);
-	ADD_EXT(_rand_nextFloat);
-	ADD_EXT(_rand_nextInt);
-	ADD_EXT(_regex_match);
-	ADD_EXT(_regex_replace);
-	ADD_EXT(_round);
-	ADD_EXT(_sin);
-	ADD_EXT(_sinh);
-	ADD_EXT(_sleep);
-	ADD_EXT(_system_call);
-	ADD_EXT(_system_call);
-	ADD_EXT(_tan);
-	ADD_EXT(_tanh);
-	ADD_EXT(_thread_detach);
-	ADD_EXT(_thread_init);
-	ADD_EXT(_thread_join);
-	ADD_EXT(_timeMS);
-	ADD_EXT(_string_size);
-	ADD_EXT(_function_split);
-	ADD_EXT(_input_token);
-}

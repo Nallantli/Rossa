@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 #include <fstream>
 
 NodeParser::NodeParser(

@@ -1,17 +1,9 @@
-#include "libnet.h"
+#include "../main/lang/Rossa.h"
 
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <iostream>
 #include "encode.h"
-
-#ifndef _STATIC_
-#ifdef __unix__
-COMPILER_COMMANDS(libsdl, "-lboost_system")
-#else
-COMPILER_COMMANDS(libsdl, "-lwsock32 -lws2_32 -lboost_system-mt")
-#endif
-#endif
 
 ROSSA_EXT_SIG(_service_init, args, token, hash, stack_trace)
 {

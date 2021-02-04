@@ -1,4 +1,4 @@
-#include "../../bin/include/Rossa.h"
+#include "Rossa.h"
 
 const sym_t ops::index(const scope_t *scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
 {

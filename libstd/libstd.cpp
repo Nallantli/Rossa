@@ -1,6 +1,5 @@
-#pragma once
+#include "../main/lang/Rossa.h"
 
-#include "Rossa.h"
 #include <random>
 #include <thread>
 
@@ -14,15 +13,18 @@
 #include <termios.h>
 #endif
 
-inline void threadWrapper(const func_ptr_t &f)
+namespace libstd
 {
-	trace_t stack_trace;
-	try {
-		f->evaluate({}, NULL, stack_trace);
-	} catch (const rossa_error &e) {
-		Rossa::printError(e);
+	inline void threadWrapper(const func_ptr_t &f)
+	{
+		trace_t stack_trace;
+		try {
+			f->evaluate({}, NULL, stack_trace);
+		} catch (const rossa_error &e) {
+			Rossa::printError(e);
+		}
 	}
-}
+};
 
 ROSSA_EXT_SIG(_puts, args, token, hash, stack_trace)
 {
@@ -239,7 +241,7 @@ ROSSA_EXT_SIG(_thread_init, args, token, hash, stack_trace)
 {
 	//auto params = args[1].getVector(token, stack_trace);
 	auto f = args[0].getFunction({}, token, stack_trace);
-	auto t = std::make_shared<std::thread>(threadWrapper, f);
+	auto t = std::make_shared<std::thread>(libstd::threadWrapper, f);
 	return sym_t::Pointer(t);
 }
 
@@ -291,4 +293,47 @@ ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	if (varg != nullptr)
 		m["..."] = sym_t::FunctionVARG(varg);
 	return sym_t::Dictionary(m);
+}
+
+EXPORT_FUNCTIONS(libstd)
+{
+	ADD_EXT(_acos);
+	ADD_EXT(_asin);
+	ADD_EXT(_atan);
+	ADD_EXT(_acosh);
+	ADD_EXT(_asinh);
+	ADD_EXT(_atanh);
+	ADD_EXT(_ceil);
+	ADD_EXT(_clock_format);
+	ADD_EXT(_cos);
+	ADD_EXT(_cosh);
+	ADD_EXT(_exit);
+	ADD_EXT(_exit);
+	ADD_EXT(_floor);
+	ADD_EXT(_input_char);
+	ADD_EXT(_input_line);
+	ADD_EXT(_log);
+	ADD_EXT(_math_rand);
+	ADD_EXT(_math_srand);
+	ADD_EXT(_puts);
+	ADD_EXT(_rand_init);
+	ADD_EXT(_rand_nextFloat);
+	ADD_EXT(_rand_nextInt);
+	ADD_EXT(_regex_match);
+	ADD_EXT(_regex_replace);
+	ADD_EXT(_round);
+	ADD_EXT(_sin);
+	ADD_EXT(_sinh);
+	ADD_EXT(_sleep);
+	ADD_EXT(_system_call);
+	ADD_EXT(_system_call);
+	ADD_EXT(_tan);
+	ADD_EXT(_tanh);
+	ADD_EXT(_thread_detach);
+	ADD_EXT(_thread_init);
+	ADD_EXT(_thread_join);
+	ADD_EXT(_timeMS);
+	ADD_EXT(_string_size);
+	ADD_EXT(_function_split);
+	ADD_EXT(_input_token);
 }

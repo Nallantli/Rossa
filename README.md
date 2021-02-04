@@ -7,7 +7,7 @@
 
 <div align="center">
 
-![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) ![libncurses](https://github.com/Nallantli/Rossa/workflows/libncurses/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
+![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libstd](https://github.com/Nallantli/Rossa/workflows/libstd/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) ![libncurses](https://github.com/Nallantli/Rossa/workflows/libncurses/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
 
 </div>
 
