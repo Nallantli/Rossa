@@ -195,7 +195,7 @@ const sym_vec_t &sym_t::getVector(const token_t *token, trace_t &stack_trace) co
 	return d->valueVector;
 }
 
-const std::string &sym_t::getString(const token_t *token, trace_t &stack_trace) const
+const std::string sym_t::getString(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::STRING)
 		throw rossa_error(_NOT_STRING_, *token, stack_trace);
@@ -228,7 +228,7 @@ const aug_type_t sym_t::getAugValueType() const
 	return { d->type };
 }
 
-const aug_type_t &sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
+const aug_type_t sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::TYPE_NAME)
 		throw rossa_error(_NOT_TYPE_, *token, stack_trace);
@@ -253,7 +253,7 @@ const bool sym_t::hasVarg(const token_t *token, trace_t &stack_trace) const
 	throw rossa_error(_NOT_FUNCTION_, *token, stack_trace);
 }
 
-const func_ptr_t &sym_t::getFunction(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
+const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::FUNCTION)
 		throw rossa_error(_NOT_FUNCTION_, *token, stack_trace);
@@ -264,27 +264,25 @@ const func_ptr_t &sym_t::getFunction(const sym_vec_t &params, const token_t *tok
 		throw rossa_error(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
 	}
 
-	bool flag = false;
-	const fsig_t *key;
+	func_ptr_t f = nullptr;
 	size_t cur_v = 0;
 	for (auto &f2 : d->valueFunction[params.size()]) {
 		size_t v = f2.first.validity(params, stack_trace);
 		if (v > cur_v) {
 			cur_v = v;
-			key = &f2.first;
-			flag = true;
+			f = f2.second;
 			if (v == params.size() * 3)
 				break;
 		}
 	}
 
-	if (!flag) {
+	if (f == nullptr) {
 		if (d->valueVARGFunction != nullptr)
 			return d->valueVARGFunction;
 		throw rossa_error(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
 	}
 
-	return d->valueFunction[params.size()][*key];
+	return f;
 }
 
 const sym_t &sym_t::indexDict(const std::string &key) const
@@ -335,12 +333,9 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 			return ret + "]";
 		}
 		case Value::type_t::OBJECT:
-		{
-			auto o = d->valueObject;
-			if (o.hasValue(ROSSA_HASH("->String")))
-				return o.getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
+			if (d->valueObject.hasValue(ROSSA_HASH("->String")))
+				auto v = d->valueObject.getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
 			return "<Object>";
-		}
 		case Value::type_t::POINTER:
 			return "<Pointer>";
 		case Value::type_t::BOOLEAN_D:
@@ -400,9 +395,9 @@ const std::string sym_t::toCodeString() const
 			return "sym_t(std::string(" + ret + "}))";
 		}
 		case Value::type_t::FUNCTION:
-			return "<Function::" + toString(NULL, stack_trace) + ">";
+			return "<Function>";
 		case Value::type_t::OBJECT:
-			return "<Object::" + toString(NULL, stack_trace) + ">";
+			return "<Object::" + d->valueObject.getKey() + ">";
 		case Value::type_t::POINTER:
 			return "<Pointer>";
 		case Value::type_t::BOOLEAN_D:

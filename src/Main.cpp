@@ -150,11 +150,19 @@ int main(int argc, char const *argv[])
 						int i = 0;
 						for (auto &e : value.getVector(NULL, stack_trace)) {
 							printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
+#ifdef DEBUG
+							std::cout << e.toCodeString() << "\n";
+#else
 							std::cout << e.toString(NULL, stack_trace) << "\n";
+#endif
 							i++;
 						}
 					} else {
+#ifdef DEBUG
+						std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toCodeString() << "\n";
+#else
 						std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toString(NULL, stack_trace) << "\n";
+#endif
 					}
 				}
 			} catch (const rossa_error &e) {

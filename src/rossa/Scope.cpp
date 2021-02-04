@@ -11,7 +11,7 @@ Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_
 Scope::Scope(Scope *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
 	: type{ INSTANCE_O }
 	, parent{ parent }
-//	, hashed_key{ key }
+	//	, hashed_key{ key }
 	, name_trace{ name_trace }
 	, extensions{ extensions }
 {}
@@ -61,7 +61,8 @@ scope_t::scope_t(const scope_t &s)
 	, type{ STRONG }
 {
 #ifdef DEBUG
-	std::cout << "&scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+	std::cout << "&scope_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
+	std::cout << (s.scope == NULL ? "NULL" : s.getKey()) << ")\n";
 #endif
 	if (this->scope != NULL)
 		this->scope->references++;
@@ -70,7 +71,7 @@ scope_t::scope_t(const scope_t &s)
 scope_t::~scope_t()
 {
 #ifdef DEBUG
-	std::cout << "~scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+	std::cout << "~scope_t\t" << (scope == NULL ? "NULL" : getKey()) << "\n";
 #endif
 	if (scope != NULL && type == STRONG) {
 		scope->references--;
@@ -82,7 +83,8 @@ scope_t::~scope_t()
 void scope_t::operator=(const scope_t &b)
 {
 #ifdef DEBUG
-	std::cout << "=scope_t\t" << (scope == NULL ? "NULL" : ROSSA_DEHASH(scope->hashed_key)) << "\n";
+	std::cout << "=scope_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
+	std::cout << (b.scope == NULL ? "NULL" : b.getKey()) << ")\n";
 #endif
 	if (this->scope != NULL && type == STRONG) {
 		this->scope->references--;
@@ -116,7 +118,8 @@ const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, 
 	return sym_t::Object(o);
 }
 
-const aug_type_t scope_t::getTypeVec() const {
+const aug_type_t scope_t::getTypeVec() const
+{
 	return scope->name_trace;
 }
 
@@ -216,11 +219,17 @@ const bool scope_t::operator==(const scope_t &b) const
 Scope::~Scope()
 {
 #ifdef DEBUG
-	std::cout << "~Scope\t" << std::to_string(type) << "\t" << ROSSA_DEHASH(hashed_key) << "\n";
+	std::cout << "~Scope\t" << std::to_string(type) << "\n";
 #endif
 	if (type == INSTANCE_O && values.find(Rossa::HASH_DELETER) != values.end()) {
+#ifdef DEBUG
+		std::cout << "Deleter Found\n";
+#endif
 		trace_t stack_trace;
 		values[Rossa::HASH_DELETER].call({}, NULL, stack_trace);
+#ifdef DEBUG
+		std::cout << "Deleter Executed\n";
+#endif
 	}
 	for (auto &e : values) {
 		e.second.shift();

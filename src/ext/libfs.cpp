@@ -5,9 +5,9 @@
 
 #ifndef _STATIC_
 #ifdef __unix__
-COMPILER_COMMANDS(libsdl, "-lzip")
+COMPILER_COMMANDS(libfs, "-lzip")
 #else
-COMPILER_COMMANDS(libsdl, "-lzip")
+COMPILER_COMMANDS(libfs, "-lzip")
 #endif
 #endif
 
@@ -159,6 +159,18 @@ ROSSA_EXT_SIG(_reader_read, args, token, hash, stack_trace)
 	return sym_t::String(line);
 }
 
+ROSSA_EXT_SIG(_reader_size, args, token, hash, stack_trace)
+{
+	auto fstr = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		std::ifstream);
+
+	fstr->seekg(0, std::ios::end);
+	auto size = fstr->tellg();
+	fstr->seekg(0, std::ios::beg);
+	return sym_t::Number(number_t::Long(size));
+}
+
 ROSSA_EXT_SIG(_writer_write, args, token, hash, stack_trace)
 {
 	auto fstr = COERCE_PTR(
@@ -274,6 +286,7 @@ EXPORT_FUNCTIONS(libfs)
 	ADD_EXT(_path_string);
 	ADD_EXT(_reader_close);
 	ADD_EXT(_reader_init);
+	ADD_EXT(_reader_size);
 	ADD_EXT(_reader_isOpen);
 	ADD_EXT(_reader_read);
 	ADD_EXT(_reader_readLine);

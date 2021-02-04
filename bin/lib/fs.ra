@@ -96,6 +96,8 @@ struct Reader class {
 
 	read() => read(1);
 
+	size() => extern_call libfs._reader_size(ptr);
+
 	readLine() => extern_call libfs._reader_readLine(ptr);
 
 	close() => {

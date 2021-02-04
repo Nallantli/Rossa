@@ -19,7 +19,7 @@ Function::Function(const hash_ull &key, Scope *parent, const i_ptr_t &body, cons
 
 const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *token, trace_t &stack_trace) const
 {
-	stack_trace.push_back({*token, *this});
+	stack_trace.push_back({ (token == NULL ? token_t() : *token), *this });
 	if (isVargs)
 		return evaluateVARGS(paramValues, token, stack_trace);
 
@@ -48,6 +48,8 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 
 	if (temp.getSymbolType() == sym_t::type_t::ID_REFER) {
 		temp.setSymbolType(sym_t::type_t::ID_CASUAL);
+
+		stack_trace.pop_back();
 		return temp;
 	}
 
@@ -55,7 +57,6 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 	ret.set(&temp, token, false, stack_trace);
 
 	stack_trace.pop_back();
-
 	return ret;
 }
 
@@ -74,6 +75,8 @@ const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t 
 
 	if (temp.getSymbolType() == sym_t::type_t::ID_REFER) {
 		temp.setSymbolType(sym_t::type_t::ID_CASUAL);
+
+		stack_trace.pop_back();
 		return temp;
 	}
 
@@ -81,7 +84,6 @@ const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t 
 	ret.set(&temp, token, false, stack_trace);
 
 	stack_trace.pop_back();
-
 	return ret;
 }
 

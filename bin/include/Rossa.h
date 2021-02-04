@@ -734,14 +734,14 @@ public:
 	const sym_map_t &getDictionary(const token_t *, trace_t &) const;
 	const sym_t &indexVector(const size_t &, const token_t *, trace_t &) const;
 	const sym_vec_t &getVector(const token_t *, trace_t &) const;
-	const std::string &getString(const token_t *, trace_t &) const;
+	const std::string getString(const token_t *, trace_t &) const;
 	const bool getBool(const token_t *, trace_t &) const;
 	const bool hasVarg(const token_t *, trace_t &) const;
 	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
 	const aug_type_t getAugValueType() const;
-	const aug_type_t &getTypeName(const token_t *, trace_t &) const;
-	const func_ptr_t &getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
+	const aug_type_t getTypeName(const token_t *, trace_t &) const;
+	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
 	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
 	const sym_t &indexDict(const std::string &) const;
 	const bool hasDictionaryKey(const std::string &) const;
