@@ -3,7 +3,7 @@
 load "fs";
 load "sdl";
 
-clockSpeed := 500; # -1 for max
+clockSpeed := 750; # -1 for max
 
 fontSet := [
     0xF0, 0x90, 0x90, 0x90, 0xF0, #0
@@ -382,6 +382,8 @@ evaluateInput() => {
 			case 'x' do chip.key[0x0] = 1;
 			case 'c' do chip.key[0xB] = 1;
 			case 'v' do chip.key[0xF] = 1;
+
+			case ' ' do paused = !paused;
 		}
 	} elif e["type"] == SDL.Event.KEY_UP then {
 		switch e["keysym"]["sym"] of {
@@ -405,6 +407,8 @@ evaluateInput() => {
 	}
 }
 
+paused := false;
+
 scale := 10;
 
 chip := new Chip();
@@ -425,6 +429,7 @@ font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.RED);
 
 buffer := alloc(64).map((e) => alloc(32));
+pixelBuffer := alloc(64).map((e) => alloc(32).map((e2) => 0));
 
 for x in 0 .. 64 do {
 	for y in 0 .. 32 do {
@@ -441,28 +446,33 @@ fpsTimer := clock.milliseconds();
 cpuStart := clock.milliseconds();
 while true do {
 	evaluateInput();
-	if (lapse := clock.milliseconds()) - cpuStart > 1000/clockSpeed then {
-		cpuStart = lapse;
-		chip.cycle();
-	}
-	# 60 fps Graphics Update
-	if (lapse := clock.milliseconds()) - fpsStart > 1000/60 then {
-		fpsStart = lapse;
-		if chip.drawFlag then {
-			for x in 0 .. 64 do {
-				for y in 0 .. 32 do {
-					buffer[x][y].setColor(chip.gfx[y * 64 + x] == 0 ? Color.BLACK : Color.WHITE);
-				}
-			}
-			r.update();
-			chip.drawFlag = false;
+	if !paused then {
+		if (lapse := clock.milliseconds()) - cpuStart > 1000/clockSpeed then {
+			cpuStart = lapse;
+			chip.cycle();
 		}
-		fpsCounter += 1;
+		# 60 fps Graphics Update
+		if (lapse := clock.milliseconds()) - fpsStart > 1000/60 then {
+			fpsStart = lapse;
+			if chip.drawFlag then {
+				for x in 0 .. 64 do {
+					for y in 0 .. 32 do {
+						if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
+							buffer[x][y].setColor(chip.gfx[y * 64 + x] == 0 ? Color.BLACK : Color.WHITE);
+						}
+						pixelBuffer[x][y] = chip.gfx[y * 64 + x];
+					}
+				}
+				r.update();
+				chip.drawFlag = false;
+			}
+			fpsCounter += 1;
 
-		if lapse - fpsTimer > 1000 then {
-			fpsTimer = lapse;
-			fpsText.setText("FPS: {0}" & [fpsCounter]);
-			fpsCounter = 0;
+			if lapse - fpsTimer > 1000 then {
+				fpsTimer = lapse;
+				fpsText.setText("FPS: {0}" & [fpsCounter]);
+				fpsCounter = 0;
+			}
 		}
 	}
 }
