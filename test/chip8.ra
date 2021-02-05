@@ -3,6 +3,8 @@
 load "fs";
 load "sdl";
 
+math.srand(clock.milliseconds());
+
 clockSpeed := 750; # -1 for max
 
 fontSet := [
@@ -25,12 +27,24 @@ fontSet := [
 ];
 
 struct Chip class {
-	var opcode, memory, V, I, pc, sp, gfx, stack, drawFlag, delayTimer, soundTimer, key, timer;
+	var	opcode,
+		memory,
+		V,
+		I,
+		pc,
+		sp,
+		gfx,
+		stack,
+		drawFlag,
+		delayTimer,
+		soundTimer,
+		key,
+		timer;
 
 	init() => {
 		memory = alloc(4096).map((e) => 0);
 		V = alloc(16).map((e) => 0);
-		gfx = alloc(2048).map((e) => 0);
+		gfx = alloc(2048).map((e) => false);
 		stack = alloc(16).map((e) => 0);
 		key = alloc(16).map((e) => 0);
 		pc = 0x200;
@@ -57,7 +71,7 @@ struct Chip class {
 					# Clear screen
 					case 0x0000 do {
 						for i in 0 .. 2048 do {
-							gfx[i] = 0x0;
+							gfx[i] = false;
 						}
 						drawFlag = true;
 						pc += 2;
@@ -224,10 +238,10 @@ struct Chip class {
 						posX := (x + xline) % 64;
 						posY := (y + yline) % 32;
 						if (pixel & (0x80 >> xline)) != 0 then {
-							if gfx[posX + posY * 64] == 1 then {
+							if gfx[posX + posY * 64] then {
 								V[0xF] = 1;
 							}
-							gfx[posX + posY * 64] ^= 1;
+							gfx[posX + posY * 64] ^= true;
 						}
 					}
 				}
@@ -429,7 +443,7 @@ font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.RED);
 
 buffer := alloc(64).map((e) => alloc(32));
-pixelBuffer := alloc(64).map((e) => alloc(32).map((e2) => 0));
+pixelBuffer := alloc(64).map((e) => alloc(32).map((e2) => false));
 
 for x in 0 .. 64 do {
 	for y in 0 .. 32 do {
@@ -458,9 +472,9 @@ while true do {
 				for x in 0 .. 64 do {
 					for y in 0 .. 32 do {
 						if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
-							buffer[x][y].setColor(chip.gfx[y * 64 + x] == 0 ? Color.BLACK : Color.WHITE);
+							pixelBuffer[x][y] = chip.gfx[y * 64 + x];
+							buffer[x][y].setColor(chip.gfx[y * 64 + x] ? Color.WHITE : Color.BLACK);
 						}
-						pixelBuffer[x][y] = chip.gfx[y * 64 + x];
 					}
 				}
 				r.update();
@@ -472,6 +486,7 @@ while true do {
 				fpsTimer = lapse;
 				fpsText.setText("FPS: {0}" & [fpsCounter]);
 				fpsCounter = 0;
+				r.update();
 			}
 		}
 	}

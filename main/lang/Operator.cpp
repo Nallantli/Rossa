@@ -435,6 +435,10 @@ const sym_t ops::bor(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) | evalB.getNumber(token, stack_trace));
+		case Value::type_t::BOOLEAN_D:
+			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
+				break;
+			return sym_t::Boolean(evalA.getBool(token, stack_trace) | evalB.getBool(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -458,6 +462,10 @@ const sym_t ops::bxor(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) ^ evalB.getNumber(token, stack_trace));
+		case Value::type_t::BOOLEAN_D:
+			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
+				break;
+			return sym_t::Boolean(evalA.getBool(token, stack_trace) ^ evalB.getBool(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -481,6 +489,10 @@ const sym_t ops::band(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) & evalB.getNumber(token, stack_trace));
+		case Value::type_t::BOOLEAN_D:
+			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
+				break;
+			return sym_t::Boolean(evalA.getBool(token, stack_trace) & evalB.getBool(token, stack_trace));
 		case Value::type_t::STRING:
 		{
 			if (evalB.getValueType() != Value::type_t::ARRAY)

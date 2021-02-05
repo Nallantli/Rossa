@@ -420,9 +420,9 @@ public:
 	{
 		switch (type) {
 			case DOUBLE_NUM:
-				return "number_t::Double(" + std::to_string(valueDouble) + ")";
+				return "Double@" + std::to_string(valueDouble);
 			case LONG_NUM:
-				return "number_t::Long(" + std::to_string(valueLong) + ")";
+				return "Long@" + std::to_string(valueLong);
 			default:
 				return "<undefined>";
 		}

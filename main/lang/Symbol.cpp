@@ -333,11 +333,19 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 			return ret + "]";
 		}
 		case Value::type_t::OBJECT:
+		{
 			if (d->valueObject.hasValue(ROSSA_HASH("->String")))
 				auto v = d->valueObject.getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
-			return "<Object>";
+			std::stringstream ss;
+			ss << "Object<" << d->valueObject.getKey() << ">";
+			return ss.str();
+		}
 		case Value::type_t::POINTER:
-			return "<Pointer>";
+		{
+			std::stringstream ss;
+			ss << "Pointer<" << std::addressof(d->valuePointer) << ">";
+			return ss.str();
+		}
 		case Value::type_t::BOOLEAN_D:
 			return d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE;
 		case Value::type_t::ARRAY:
@@ -365,7 +373,7 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 			return ret + "}";
 		}
 		case Value::type_t::TYPE_NAME:
-			return "Type::" + getTypeString(d->valueType);
+			return "Type<" + getTypeString(d->valueType) + ">";
 		default:
 			return "undefined";
 	}
@@ -379,32 +387,26 @@ const std::string sym_t::toCodeString() const
 	trace_t stack_trace;
 	switch (d->type) {
 		case Value::type_t::NIL:
-			return "sym_t()";
+			return "Nil@nil";
 		case Value::type_t::NUMBER:
-			return "sym_t(" + d->valueNumber.toCodeString() + ")";
+			return "Number@" + d->valueNumber.toCodeString();
 		case Value::type_t::STRING:
-		{
-			std::string ret = "{";
-			unsigned int i = 0;
-			for (auto &c : d->valueString) {
-				if (i > 0)
-					ret += ", ";
-				ret += std::to_string(c);
-				i++;
-			}
-			return "sym_t(std::string(" + ret + "}))";
-		}
+			return "String@\"" + d->valueString + "\"";
 		case Value::type_t::FUNCTION:
-			return "<Function>";
+			return "Function@" + getString(NULL, stack_trace);
 		case Value::type_t::OBJECT:
-			return "<Object::" + d->valueObject.getKey() + ">";
+			return "Object@" + d->valueObject.getKey();
 		case Value::type_t::POINTER:
-			return "<Pointer>";
+		{
+			std::stringstream ss;
+			ss << "Pointer@" << std::addressof(d->valuePointer);
+			return ss.str();
+		}
 		case Value::type_t::BOOLEAN_D:
-			return "sym_t(" + std::string(d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE) + ")";
+			return "Boolean@" + std::string(d->valueBool ? KEYWORD_TRUE : KEYWORD_FALSE);
 		case Value::type_t::ARRAY:
 		{
-			std::string ret = "sym_t(sym_vec_t({";
+			std::string ret = "Array@[";
 			unsigned int i = 0;
 			for (auto &d2 : d->valueVector) {
 				if (i > 0)
@@ -412,22 +414,22 @@ const std::string sym_t::toCodeString() const
 				ret += d2.toCodeString();
 				i++;
 			}
-			return ret + "}))";
+			return ret + "]";
 		}
 		case Value::type_t::DICTIONARY:
 		{
-			std::string ret = "sym_t(sym_map_t({";
+			std::string ret = "Dictionary@[";
 			unsigned int i = 0;
 			for (auto &e : getDictionary(NULL, stack_trace)) {
 				if (i > 0)
 					ret += ", ";
-				ret += "{\"" + e.first + "\", " + e.second.toCodeString() + "}";
+				ret += "\"" + e.first + "\" : " + e.second.toCodeString();
 				i++;
 			}
-			return ret + "}))";
+			return ret + "]";
 		}
 		case Value::type_t::TYPE_NAME:
-			return "sym_t(static_cast<type_sll>(" + getTypeString(d->valueType) + "))";
+			return "Type@" + getTypeString(d->valueType);
 		default:
 			return "<error-type>";
 	}
