@@ -8,7 +8,7 @@ static isPrime class : Function {
 			return data[n -> String];
 		}
 
-		for i in 2 .+ n / 2 do {
+		for i in 2 <> n / 2 do {
 			if n % i == 0 then {
 				return data[n -> String] = false;
 			}

@@ -62,7 +62,7 @@ fib(20).map((e, i) => putln("{0}:\t{1}" & [i, e]));
 FizzBuzz:
 
 ```ra
-for i in 1 .+ 100 do {
+for i in 1 <> 100 do {
 	if i % 3 == 0 && i % 5 == 0 then {
 		putln("FizzBuzz");
 	} elif i % 3 == 0 then {

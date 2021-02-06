@@ -99,7 +99,7 @@ const sym_t ops::untilstep(const scope_t *scope, const bool &inclusive, const sy
 	if (scope != NULL)
 		return scope->getVariable(Rossa::HASH_RANGE, token, stack_trace).call({ evalA, evalB, step }, token, stack_trace);
 
-	throw rossa_error(format::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
+	throw rossa_error(format::format(_UNDECLARED_OPERATOR_ERROR_, { "<>" }), *token, stack_trace);
 }
 
 const sym_t ops::untilnostep(const scope_t *scope, const bool &inclusive, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -145,6 +145,19 @@ const sym_t ops::add(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) + evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = add(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -172,21 +185,14 @@ const sym_t ops::sub(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 		{
 			if (evalB.getValueType() != Value::type_t::ARRAY)
 				break;
-			const sym_vec_t &vA = evalA.getVector(token, stack_trace);
-			const sym_vec_t &vB = evalB.getVector(token, stack_trace);
-			sym_vec_t nv;
-			for (const sym_t &e : vA) {
-				bool flag = true;
-				for (const sym_t &e2 : vB) {
-					if (e.equals(&e2, token, stack_trace)) {
-						flag = false;
-						break;
-					}
-				}
-				if (flag)
-					nv.push_back(e);
-			}
-			return sym_t::Array(nv);
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = sub(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
 		}
 		case Value::type_t::OBJECT:
 		{
@@ -212,6 +218,19 @@ const sym_t ops::mul(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) * evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = mul(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -235,6 +254,19 @@ const sym_t ops::div(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) / evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = div(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -258,6 +290,19 @@ const sym_t ops::mod(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) % evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = mod(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -281,6 +326,19 @@ const sym_t ops::pow(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace).pow(evalB.getNumber(token, stack_trace)));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = pow(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -309,6 +367,19 @@ const sym_t ops::less(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
 			return sym_t::Boolean(evalA.getString(token, stack_trace) < evalB.getString(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = less(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -336,6 +407,19 @@ const sym_t ops::more(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
 			return sym_t::Boolean(evalA.getString(token, stack_trace) > evalB.getString(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = more(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -363,6 +447,19 @@ const sym_t ops::eless(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
 			return sym_t::Boolean(evalA.getString(token, stack_trace) <= evalB.getString(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = eless(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -390,6 +487,19 @@ const sym_t ops::emore(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 			if (evalB.getValueType() != Value::type_t::STRING)
 				break;
 			return sym_t::Boolean(evalA.getString(token, stack_trace) >= evalB.getString(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = emore(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -417,6 +527,19 @@ const sym_t ops::bor(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
 				break;
 			return sym_t::Boolean(evalA.getBool(token, stack_trace) | evalB.getBool(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = bor(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -444,6 +567,19 @@ const sym_t ops::bxor(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
 				break;
 			return sym_t::Boolean(evalA.getBool(token, stack_trace) ^ evalB.getBool(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = bxor(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -471,6 +607,19 @@ const sym_t ops::band(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::BOOLEAN_D)
 				break;
 			return sym_t::Boolean(evalA.getBool(token, stack_trace) & evalB.getBool(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = band(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::STRING:
 		{
 			if (evalB.getValueType() != Value::type_t::ARRAY)
@@ -503,6 +652,19 @@ const sym_t ops::bshl(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) << evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = bshl(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -526,6 +688,19 @@ const sym_t ops::bshr(const scope_t *scope, const sym_t &evalA, const sym_t &eva
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) >> evalB.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			auto av = evalA.getVector(token, stack_trace);
+			auto bv = evalB.getVector(token, stack_trace);
+			if (av.size() != bv.size())
+				throw rossa_error(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = bshr(scope, av[i], bv[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -547,6 +722,14 @@ const sym_t ops::bnot(const scope_t *scope, const sym_t &evalA, const token_t *t
 	switch (evalA.getValueType()) {
 		case Value::type_t::NUMBER:
 			return sym_t::Number(~evalA.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			auto av = evalA.getVector(token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = bnot(scope, av[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -568,6 +751,14 @@ const sym_t ops::unadd(const scope_t *scope, const sym_t &evalA, const token_t *
 	switch (evalA.getValueType()) {
 		case Value::type_t::NUMBER:
 			return sym_t::Number(+evalA.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			auto av = evalA.getVector(token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = unadd(scope, av[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -589,6 +780,14 @@ const sym_t ops::neg(const scope_t *scope, const sym_t &evalA, const token_t *to
 	switch (evalA.getValueType()) {
 		case Value::type_t::NUMBER:
 			return sym_t::Number(-evalA.getNumber(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			auto av = evalA.getVector(token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = neg(scope, av[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -610,6 +809,14 @@ const sym_t ops::unot(const scope_t *scope, const sym_t &evalA, const token_t *t
 	switch (evalA.getValueType()) {
 		case Value::type_t::BOOLEAN_D:
 			return sym_t::Boolean(!evalA.getBool(token, stack_trace));
+		case Value::type_t::ARRAY:
+		{
+			auto av = evalA.getVector(token, stack_trace);
+			sym_vec_t v(av.size());
+			for (size_t i = 0; i < v.size(); i++)
+				v[i] = unot(scope, av[i], token, stack_trace);
+			return sym_t::Array(v);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);

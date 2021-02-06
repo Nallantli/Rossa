@@ -159,7 +159,6 @@ An `Array` need not be declared for any particular element type; `Array` values 
 Operator|Function|Return
 -|-|-
 `a ++ b`|Array Concatanation|`Array`
-`a - b`|Returns an `Array` of elements in `a` that do not exist in `b`|`Array`
 `a[b]`|Indexes `a` at (`Number`) `b`|Value at index `b`
 `len(a)`/`a.len()`|Equivalent to `size`|`Number`
 

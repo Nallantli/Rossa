@@ -15,8 +15,8 @@ static conway class {
 
 	getNeighborCount(ref x : Number, ref y : Number) => {
 		n := 0;
-		for i in -1 .+ 1 do {
-			for j in -1 .+ 1 do {
+		for i in -1 <> 1 do {
+			for j in -1 <> 1 do {
 				if i == 0 && j == 0 then {
 					continue;
 				}

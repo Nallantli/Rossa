@@ -61,7 +61,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"<<", 10},
 	{">>", 10},
 	{"..", 0}, //undef
-	{".+", 0}, //undef
+	{"<>", 0}, //undef
 	{">", 8},
 	{"<", 8},
 	{">=", 8},
@@ -397,7 +397,7 @@ const int Rossa::getToken(
 			return TOK_INNER;
 		if (ID_STRING == "..")
 			return TOK_UNTILF;
-		if (ID_STRING == ".+")
+		if (ID_STRING == "<>")
 			return TOK_UNTILT;
 		if (ID_STRING == "...")
 			return TOK_VAR_ARGS;
@@ -589,6 +589,9 @@ const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std:
 				} else if (tokens.back().valueString == "<<") {
 					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
 					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
+				} else if (tokens.back().valueString == "<>") {
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
+					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
 				} else {
 					temp.push_back(tokens.back());
 				}

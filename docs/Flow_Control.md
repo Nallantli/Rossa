@@ -166,12 +166,12 @@ a := [0 .. 10];
 
 However within a for-loop, the brackets are not required.
 
-Additional range operations include `.+` which produces an _inclusive_ set (`[0 .+ 10]` being `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`), and a ternary component to specify step with `:`.
+Additional range operations include `<>` which produces an _inclusive_ set (`[0 <> 10]` being `[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]`), and a ternary component to specify step with `:`.
 
 In this way, constructing a list of values from `0` to `100`, inclusive, where the values are all even:
 
 ```ra
-a := [0 .+ 100 : 2];
+a := [0 <> 100 : 2];
 ```
 
 In the for-loop, and `Array` value that is iterated upon is mutable, and the values of the `Array` need not be restricted to `Number` types:

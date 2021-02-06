@@ -17,8 +17,8 @@ parse := ((ref x) => parse(x));
 `[]`(ref a, ref b) => _call_op 0 (a, b);
 `..`(ref a, ref b) => _call_op 1 (a, b);
 `..`(ref a, ref b, ref c) => _call_op 2 (a, b, c);
-`.+`(ref a, ref b) => _call_op 3 (a, b);
-`.+`(ref a, ref b, ref c) => _call_op 4 (a, b, c);
+`<>`(ref a, ref b) => _call_op 3 (a, b);
+`<>`(ref a, ref b, ref c) => _call_op 4 (a, b, c);
 
 `+`(ref a, ref b) => _call_op 5 (a, b);
 `-`(ref a, ref b) => _call_op 6 (a, b);
