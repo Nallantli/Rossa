@@ -398,6 +398,7 @@ evaluateInput() => {
 			case 'v' do chip.key[0xF] = 1;
 
 			case ' ' do paused = !paused;
+			case 'b' do buffered = !buffered;
 		}
 	} elif e["type"] == SDL.Event.KEY_UP then {
 		switch e["keysym"]["sym"] of {
@@ -422,6 +423,7 @@ evaluateInput() => {
 }
 
 paused := false;
+buffered := false;
 
 scale := 10;
 
@@ -452,6 +454,30 @@ for x in 0 .. 64 do {
 	}
 }
 
+updateDisplayBuffered() => {
+	for x in 0 .. 64 do {
+		for y in 0 .. 32 do {
+			if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
+				pixelBuffer[x][y] = chip.gfx[y * 64 + x];
+				buffer[x][y].setColor(Color.WHITE);
+			} else {
+				buffer[x][y].setColor(pixelBuffer[x][y] ? Color.WHITE : Color.BLACK);
+			}
+		}
+	}
+}
+
+updateDisplay() => {
+	for x in 0 .. 64 do {
+		for y in 0 .. 32 do {
+			if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
+				pixelBuffer[x][y] = chip.gfx[y * 64 + x];
+				buffer[x][y].setColor(pixelBuffer[x][y] ? Color.WHITE : Color.BLACK);
+			}
+		}
+	}
+}
+
 r.put(fpsText, 0, 0);
 
 fpsStart := clock.milliseconds();
@@ -465,22 +491,10 @@ while true do {
 			cpuStart = lapse;
 			chip.cycle();
 		}
+
 		# 60 fps Graphics Update
 		if (lapse := clock.milliseconds()) - fpsStart > 1000/60 then {
 			fpsStart = lapse;
-			if chip.drawFlag then {
-				for x in 0 .. 64 do {
-					for y in 0 .. 32 do {
-						if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
-							pixelBuffer[x][y] = chip.gfx[y * 64 + x];
-							buffer[x][y].setColor(chip.gfx[y * 64 + x] ? Color.WHITE : Color.BLACK);
-						}
-					}
-				}
-				r.update();
-				chip.drawFlag = false;
-			}
-			fpsCounter += 1;
 
 			if lapse - fpsTimer > 1000 then {
 				fpsTimer = lapse;
@@ -488,6 +502,18 @@ while true do {
 				fpsCounter = 0;
 				r.update();
 			}
+
+			if chip.drawFlag then {
+				if buffered then {
+					updateDisplayBuffered();
+				} else {
+					updateDisplay();
+				}
+				r.update();
+				chip.drawFlag = false;
+			}
+
+			fpsCounter += 1;
 		}
 	}
 }

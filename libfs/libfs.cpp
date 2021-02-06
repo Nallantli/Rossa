@@ -68,6 +68,9 @@ ROSSA_EXT_SIG(_writer_init, args, token, hash, stack_trace)
 		fstr->open(filename, std::ios::binary);
 	else
 		fstr->open(filename, std::ios::binary);
+	if (!fstr->is_open())
+		throw rossa_error("Failure to initialize writer for filepath <" + filename + ">", *token, stack_trace);
+
 	return sym_t::Pointer(fstr);
 }
 
@@ -98,6 +101,9 @@ ROSSA_EXT_SIG(_reader_init, args, token, hash, stack_trace)
 		fstr->open(filename, std::ios::binary);
 	else
 		fstr->open(filename, std::ios::binary);
+	if (!fstr->is_open())
+		throw rossa_error("Failure to initialize reader for filepath <" + filename + ">", *token, stack_trace);
+
 	return sym_t::Pointer(fstr);
 }
 
