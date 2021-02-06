@@ -38,6 +38,8 @@ parse := ((ref x) => parse(x));
 `<<`(ref a, ref b) => _call_op 18 (a, b);
 `>>`(ref a, ref b) => _call_op 19 (a, b);
 
+`++`(ref a, ref b) => _call_op 25 (a, b);
+
 `()`(ref a, ref b : Array) => _call_op 20 (a, b);
 
 `~`(ref a) => _call_op 21 (a);
@@ -68,7 +70,7 @@ puts(...) => {
 	}
 }
 
-putln(ref s) => extern_call libstd._puts((s -> String) + "\n");
+putln(ref s) => extern_call libstd._puts((s -> String) ++ "\n");
 
 putln(...) => {
 	for s in vargs do {
@@ -124,41 +126,40 @@ static cons class {
 		RESET := "0";
 	}
 
-	setDecor(ref s : String) => puts("\u001B[" + s + "m");
+	setDecor(ref s : String) => puts("\u001B[" ++ s ++ "m");
 
 	setDecor(ref n : Number) => setDecor(n -> String);
 
 	setDecor(ref v : Array) => {
-		s := "";
 		for c in v do {
 			setDecor(c);
 		}
 	}
 
 	setForeColor(ref r : Number, ref g : Number, ref b : Number) => {
-		setDecor("38;5;" + ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
+		setDecor("38;5;" ++ ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
 	}
 
 	setBackColor(ref r : Number, ref g : Number, ref b : Number) => {
-		setDecor("48;5;" + ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
+		setDecor("48;5;" ++ ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
 	}
 
 	moveCursor(ref x : Number, ref y : Number) => {
 		s := "";
 		if x < 0 then {
-			s += "\u001B[" + (math.abs(x) -> String) + "D";
+			s ++= "\u001B[" ++ (math.abs(x) -> String) ++ "D";
 		} else {
-			s += "\u001B[" + (x -> String) + "C";
+			s ++= "\u001B[" ++ (x -> String) ++ "C";
 		}
 		if y < 0 then {
-			s += "\u001B[" + (math.abs(y) -> String) + "A";
+			s ++= "\u001B[" ++ (math.abs(y) -> String) ++ "A";
 		} else {
-			s += "\u001B[" + (x -> String) + "B";
+			s ++= "\u001B[" ++ (x -> String) ++ "B";
 		}
 		puts(s);
 	}
 
-	setCursor(ref x : Number, ref y : Number) => puts("\u001B[" + (y -> String) + ";" + (x -> String) + "H");
+	setCursor(ref x : Number, ref y : Number) => puts("\u001B[" ++ (y -> String) ++ ";" ++ (x -> String) ++ "H");
 }
 
 static input class {
@@ -220,17 +221,17 @@ static clock class {
 join(ref a : Array) => {
 	s := "";
 	for e in a do {
-		s += (e -> String);
+		s ++= (e -> String);
 	}
 	return s;
 }
 
 push(ref a : Array, ref value) => {
-	refer a += [value];
+	refer a ++= [value];
 }
 
 unshift(ref a : Array, ref value) => {
-	refer a = [value] + a;
+	refer a = [value] ++ a;
 }
 
 pop(ref a : Array, ref count : Number) => {
@@ -295,7 +296,7 @@ filter(ref a : Array, ref f : Function<Any>) => {
 	nv := [];
 	for e in a do {
 		if f(e) then {
-			nv += [e];
+			nv ++= [e];
 		}
 	}
 	return nv;
@@ -305,7 +306,7 @@ filter(ref a : Array, ref f : Function<Any, Number>) => {
 	nv := [];
 	for i in 0 .. a.len() do {
 		if f(a[i], i) then {
-			nv += [a[i]];
+			nv ++= [a[i]];
 		}
 	}
 	return nv;
@@ -343,7 +344,7 @@ sort(ref a : Array, ref comp : Function<Any, Any>) => {
 		}
 	}
 
-	return sort(left) + [ pivot ] + sort(right);
+	return sort(left) ++ [ pivot ] ++ sort(right);
 }
 
 sort(ref a : Array) => {
@@ -361,11 +362,11 @@ second(ref a : Array) => {
 # STRING
 
 push(ref s : String, ref value : Number) => {
-	refer s += chars(value);
+	refer s ++= chars(value);
 }
 
 unshift(ref s : String, ref value : Number) => {
-	refer s = chars(value) + s;
+	refer s = chars(value) ++ s;
 }
 
 pop(ref s : String, ref count : Number) => {
@@ -401,7 +402,7 @@ empty(ref s : String) => {
 }
 
 parseDict(ref a : String) => {
-	return parse(a + ";")[0];
+	return parse(a ++ ";")[0];
 }
 
 size(ref a : String) => extern_call libstd._string_size(a);
@@ -413,16 +414,16 @@ split(ref s : String, ref d : String) => {
 		throw "Cannot split a String where the delimiter's length is not 1";
 	}
 
-	a := (s -> Array) + [d];
+	a := (s -> Array) ++ [d];
 	c := "";
 	r := [];
 
 	for e in a do {
 		if e == d then {
-			r += [c];
+			r ++= [c];
 			c = "";
 		} else {
-			c += e;
+			c ++= e;
 		}
 	}
 

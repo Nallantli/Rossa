@@ -8,7 +8,7 @@ struct Matrix class {
 			last := a[0].len();
 			for e in a do {
 				if e.len() != last then {
-					throw "Matrix is not properly defined by array: " + (a -> String);
+					throw "Matrix is not properly defined by array: " ++ (a -> String);
 				}
 			}
 			this.a = a;

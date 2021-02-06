@@ -24,7 +24,7 @@ pfact(ref n : Number) => {
 	}
 	for i in [2, 3 .. n : 2].filter(isPrime) do {
 		if n % i == 0 then {
-			return [ i ] + pfact(n / i);
+			return [ i ] ++ pfact(n / i);
 		}
 	}
 	return [ n ];

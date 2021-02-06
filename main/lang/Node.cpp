@@ -860,6 +860,8 @@ i_ptr_t BinOpNode::genParser() const
 		return std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token);
 	if (op == ">>")
 		return std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token);
+	if (op == "++")
+		return std::make_shared<ConcatI>(a->genParser(), b->genParser(), token);
 
 	if (op == "+=")
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<AddI>(a->genParser(), b->genParser(), token), false, token);
@@ -883,6 +885,8 @@ i_ptr_t BinOpNode::genParser() const
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftLeftI>(a->genParser(), b->genParser(), token), false, token);
 	if (op == ">>=")
 		return std::make_shared<SetI>(a->genParser(), std::make_shared<BShiftRightI>(a->genParser(), b->genParser(), token), false, token);
+	if (op == "++=")
+		return std::make_shared<SetI>(a->genParser(), std::make_shared<ConcatI>(a->genParser(), b->genParser(), token), false, token);
 
 	if (op == "<")
 		return std::make_shared<LessI>(a->genParser(), b->genParser(), token);

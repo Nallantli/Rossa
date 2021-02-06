@@ -1450,6 +1450,11 @@ const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			return ops::unot(NULL,
 				children[0]->evaluate(scope, stack_trace),
 				&token, stack_trace);
+		case 25:
+			return ops::cct(scope,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
 		default:
 			return sym_t();
 	}
@@ -1507,4 +1512,20 @@ NotI::NotI(const i_ptr_t &a, const token_t &token)
 const sym_t NotI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	return ops::unot(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class ConcatI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+ConcatI::ConcatI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
+	: BinaryI(CONCAT_I, a, b, token)
+{}
+
+const sym_t ConcatI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+	const sym_t evalB = b->evaluate(scope, stack_trace);
+
+	return ops::cct(scope, evalA, evalB, &token, stack_trace);
 }

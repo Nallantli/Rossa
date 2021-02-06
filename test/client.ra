@@ -11,7 +11,7 @@ while true do {
 	if data == "exit" || data == "" then {
 		break;
 	}
-	puts("Recieved:\t" + client.readTo("\n"));
+	puts("Recieved:\t" ++ client.readTo("\n"));
 }
 
 putln("Client Socket Disconnected");

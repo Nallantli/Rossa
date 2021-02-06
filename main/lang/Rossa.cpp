@@ -33,6 +33,7 @@ const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
 const hash_ull Rossa::HASH_NOT = ROSSA_HASH("!");
 const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("vargs");
 const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
+const hash_ull Rossa::HASH_CCT = ROSSA_HASH("++");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
@@ -55,6 +56,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"/", 12},
 	{"%", 12},
 	{"+", 11},
+	{"++", 11},
 	{"-", 11},
 	{"<<", 10},
 	{">>", 10},
@@ -82,6 +84,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"/=", -1},
 	{"%=", -1},
 	{"+=", -1},
+	{"++=", -1},
 	{"-=", -1},
 	{"&=", -1},
 	{"|=", -1},

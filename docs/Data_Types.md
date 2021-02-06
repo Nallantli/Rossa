@@ -122,7 +122,7 @@ Strings are declared with double quotes:
 
 Operator|Function|Return
 -|-|-
-`a + b`|String Concatanation|`String`
+`a ++ b`|String Concatanation|`String`
 `a & [b...]`|Templative String Concatanation\*|`String`
 `a < b`|Lexical Less Comparison|`Boolean`
 `a > b`|Lexical More Comparison|`Boolean`
@@ -158,7 +158,7 @@ An `Array` need not be declared for any particular element type; `Array` values 
 
 Operator|Function|Return
 -|-|-
-`a + b`|Array Concatanation|`Array`
+`a ++ b`|Array Concatanation|`Array`
 `a - b`|Returns an `Array` of elements in `a` that do not exist in `b`|`Array`
 `a[b]`|Indexes `a` at (`Number`) `b`|Value at index `b`
 `len(a)`/`a.len()`|Equivalent to `size`|`Number`
@@ -188,7 +188,6 @@ Values, like with an `Array` value, may be of any type, including further `Dicti
 Operator|Function|Return
 -|-|-
 `a[b]`|Indexes `a` at `b`|Value at index `b`
-`a.b`|Syntactic sugar for `[]`, where `b` can be expressed as an identifier value|Value at index `b`
 `len(a)`/`a.len()`|Equivalent to `size`|`Number`
 
 ## Function

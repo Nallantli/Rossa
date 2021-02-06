@@ -185,7 +185,7 @@ a := [
 ];
 
 for e in a do {
-	e += ", world!";
+	e ++= ", world!";
 	putln(e);
 }
 ```

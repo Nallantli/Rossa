@@ -49,7 +49,7 @@ Fibonacci Sequence:
 
 ```ra
 fib(ref size : Number) => {
-	array := [0, 1] + alloc(size - 2);
+	array := [0, 1] ++ alloc(size - 2);
 	for i in 2 .. size do {
 		array[i] = array[i - 1] + array[i - 2];
 	}

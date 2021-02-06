@@ -44,7 +44,7 @@ while SDL.Event.poll()["type"] != SDL.Event.QUIT do {
 
 		if lapse - fpsTimer > 1000 then {
 			fpsTimer = lapse;
-			fpsText.setText("FPS: " + (fpsCounter -> String));
+			fpsText.setText("FPS: " ++ (fpsCounter -> String));
 			fpsCounter = 0;
 		}
 	}

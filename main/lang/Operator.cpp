@@ -145,28 +145,6 @@ const sym_t ops::add(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
 			return sym_t::Number(evalA.getNumber(token, stack_trace) + evalB.getNumber(token, stack_trace));
-		case Value::type_t::ARRAY:
-		{
-			if (evalB.getValueType() != Value::type_t::ARRAY)
-				break;
-			sym_vec_t valA = evalA.getVector(token, stack_trace);
-			const sym_vec_t valB = evalB.getVector(token, stack_trace);
-			valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
-			return sym_t::Array(valA);
-		}
-		case Value::type_t::DICTIONARY:
-		{
-			if (evalB.getValueType() != Value::type_t::DICTIONARY)
-				break;
-			sym_map_t valA = evalA.getDictionary(token, stack_trace);
-			sym_map_t valB = evalB.getDictionary(token, stack_trace);
-			valA.merge(valB);
-			return sym_t::Dictionary(valA);
-		}
-		case Value::type_t::STRING:
-			if (evalB.getValueType() != Value::type_t::STRING)
-				break;
-			return sym_t::String(evalA.getString(token, stack_trace) + evalB.getString(token, stack_trace));
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);
@@ -646,4 +624,45 @@ const sym_t ops::unot(const scope_t *scope, const sym_t &evalA, const token_t *t
 		return scope->getVariable(Rossa::HASH_NOT, token, stack_trace).call({ evalA }, token, stack_trace);
 
 	throw rossa_error(format::format(_UNDECLARED_OPERATOR_ERROR_, { "!" }), *token, stack_trace);
+}
+
+const sym_t ops::cct(const scope_t *scope, const sym_t &evalA, const sym_t &evalB, const token_t *token, trace_t &stack_trace)
+{
+	switch (evalA.getValueType()) {
+		case Value::type_t::ARRAY:
+		{
+			if (evalB.getValueType() != Value::type_t::ARRAY)
+				break;
+			sym_vec_t valA = evalA.getVector(token, stack_trace);
+			const sym_vec_t valB = evalB.getVector(token, stack_trace);
+			valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
+			return sym_t::Array(valA);
+		}
+		case Value::type_t::DICTIONARY:
+		{
+			if (evalB.getValueType() != Value::type_t::DICTIONARY)
+				break;
+			sym_map_t valA = evalA.getDictionary(token, stack_trace);
+			sym_map_t valB = evalB.getDictionary(token, stack_trace);
+			valA.merge(valB);
+			return sym_t::Dictionary(valA);
+		}
+		case Value::type_t::STRING:
+			if (evalB.getValueType() != Value::type_t::STRING)
+				break;
+			return sym_t::String(evalA.getString(token, stack_trace) + evalB.getString(token, stack_trace));
+		case Value::type_t::OBJECT:
+		{
+			const auto &o = evalA.getObject(token, stack_trace);
+			if (o->hasValue(Rossa::HASH_CCT))
+				return o->getVariable(Rossa::HASH_CCT, token, stack_trace).call({ evalB }, token, stack_trace);
+		}
+		default:
+			break;
+	}
+
+	if (scope != NULL)
+		return scope->getVariable(Rossa::HASH_CCT, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
+
+	throw rossa_error(format::format(_UNDECLARED_OPERATOR_ERROR_, { "++" }), *token, stack_trace);
 }

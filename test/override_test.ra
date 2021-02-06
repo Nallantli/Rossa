@@ -2,89 +2,89 @@ struct Test class {
 	init() => {}
 
 	`+`(ref a) => {
-		putln("ADD: " + (a -> String));
+		putln("ADD: " ++ (a -> String));
 	}
 
 	`-`(ref a) => {
-		putln("SUB: " + (a -> String));
+		putln("SUB: " ++ (a -> String));
 	}
 
 	`*`(ref a) => {
-		putln("MUL: " + (a -> String));
+		putln("MUL: " ++ (a -> String));
 	}
 
 	`/`(ref a) => {
-		putln("DIV: " + (a -> String));
+		putln("DIV: " ++ (a -> String));
 	}
 
 	`%`(ref a) => {
-		putln("MOD: " + (a -> String));
+		putln("MOD: " ++ (a -> String));
 	}
 
 	`**`(ref a) => {
-		putln("POW: " + (a -> String));
+		putln("POW: " ++ (a -> String));
 	}
 
 	`<`(ref a) => {
-		putln("LESS: " + (a -> String));
+		putln("LESS: " ++ (a -> String));
 		return false;
 	}
 
 	`>`(ref a) => {
-		putln("MORE: " + (a -> String));
+		putln("MORE: " ++ (a -> String));
 		return false;
 	}
 
 	`<=`(ref a) => {
-		putln("ELESS: " + (a -> String));
+		putln("ELESS: " ++ (a -> String));
 		return false;
 	}
 
 	`>=`(ref a) => {
-		putln("EMORE: " + (a -> String));
+		putln("EMORE: " ++ (a -> String));
 		return false;
 	}
 
 	`==`(ref a) => {
-		putln("EQUALS: " + (a -> String));
+		putln("EQUALS: " ++ (a -> String));
 		return false;
 	}
 
 	`!=`(ref a) => {
-		putln("NEQUALS: " + (a -> String));
+		putln("NEQUALS: " ++ (a -> String));
 		return false;
 	}
 
 	`[]`(ref a) => {
-		putln("INDEX: " + (a -> String));
+		putln("INDEX: " ++ (a -> String));
 	}
 
 	`()`(ref a, ref b) => {
-		putln("CALL: " + (a -> String) + ", " + (b -> String));
+		putln("CALL: " ++ (a -> String) ++ ", " ++ (b -> String));
 	}
 
 	`=`(ref a) => {
-		putln("SET: " + (a -> String));
+		putln("SET: " ++ (a -> String));
 	}
 
 	`&`(ref a) => {
-		putln("B_AND: " + (a -> String));
+		putln("B_AND: " ++ (a -> String));
 	}
 
 	`|`(ref a) => {
-		putln("B_OR: " + (a -> String));
+		putln("B_OR: " ++ (a -> String));
 	}
 
 	`^`(ref a) => {
-		putln("B_XOR: " + (a -> String));
+		putln("B_XOR: " ++ (a -> String));
 	}
 
 	`<<`(ref a) => {
-		putln("B_SH_L: " + (a -> String));
+		putln("B_SH_L: " ++ (a -> String));
 	}
 
 	`>>`(ref a) => {
-		putln("B_SH_R: " + (a -> String));
+		putln("B_SH_R: " ++ (a -> String));
 	}
 
 	`->String`() => {

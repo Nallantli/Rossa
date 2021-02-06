@@ -352,7 +352,8 @@ public:
 	DELETE_I,
 	UN_ADD_I,
 	NEG_I,
-	NOT_I
+	NOT_I,
+	CONCAT_I
 	} const type;
 
 	Instruction(const type_t &, const token_t &);
@@ -616,6 +617,7 @@ public:
 	static const hash_ull HASH_VAR_ARGS;
 	static const hash_ull HASH_LENGTH;
 	static const hash_ull HASH_NOT;
+	static const hash_ull HASH_CCT;
 
 	Rossa(const std::vector<std::string> &);
 	static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
@@ -1289,6 +1291,13 @@ public:
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 
+class ConcatI : public BinaryI
+{
+public:
+	ConcatI(const i_ptr_t &, const i_ptr_t &, const token_t &);
+	const sym_t evaluate(const scope_t *, trace_t &) const override;
+};
+
 // NODES -----------------------------------------------------------------------------
 
 class ContainerNode : public Node
@@ -1728,6 +1737,7 @@ namespace ops
 	const sym_t call(const scope_t *, const i_ptr_t &, const sym_vec_t &, const token_t *, trace_t &);
 	const sym_t untilstep(const scope_t *, const bool &, const sym_t &, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	const sym_t untilnostep(const scope_t *, const bool &, const sym_t &, const sym_t &, const token_t *, trace_t &);
+	const sym_t cct(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	// Arithmetic
 	const sym_t add(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	const sym_t sub(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);

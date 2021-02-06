@@ -22,7 +22,7 @@ static huffman class {
 				left.pushLeft();
 				right.pushLeft();
 			} else {
-				key = "0" + key;
+				key = "0" ++ key;
 			}
 		}
 
@@ -31,7 +31,7 @@ static huffman class {
 				left.pushRight();
 				right.pushRight();
 			} else {
-				key = "1" + key;
+				key = "1" ++ key;
 			}
 		}
 
@@ -58,9 +58,9 @@ static huffman class {
 
 		`->String`() => {
 			if key == nil then {
-				return "(" + (left -> String) + ", " + (right -> String) + ")";
+				return "(" ++ (left -> String) ++ ", " ++ (right -> String) ++ ")";
 			}
-			return value + "#" + (count -> String);
+			return value ++ "#" ++ (count -> String);
 		}
 	}
 
@@ -88,7 +88,7 @@ static huffman class {
 		enc := "";
 
 		for c in data -> Array do {
-			enc += d[c];
+			enc ++= d[c];
 		}
 
 		decoder := {};
@@ -104,10 +104,10 @@ static huffman class {
 		curr := "";
 		for c in data -> Array do {
 			if decoder[curr] != nil then {
-				dec += decoder[curr];
+				dec ++= decoder[curr];
 				curr = "";
 			}
-			curr += c;
+			curr ++= c;
 		}
 		return dec;
 	}

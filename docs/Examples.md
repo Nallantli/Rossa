@@ -108,10 +108,10 @@ This completes our while loop, which ends with a simple closing bracket:
 Now the program will end, but if you wish to offer a message of victory:
 
 ```ra
-putln("You win! The number was " + (correct -> String));
+putln("You win! The number was " ++ (correct -> String));
 ```
 
-Strings may be concatanated with `+`, but doing so requires that `correct` be coerced into a string itself, so again we find use in the `->` operator.
+Strings may be concatanated with `++`, but doing so requires that `correct` be coerced into a string itself, so again we find use in the `->` operator.
 
 Full code:
 
@@ -132,5 +132,5 @@ while guess != correct do {
 	}
 }
 
-putln("You win! The number was " + (correct -> String));
+putln("You win! The number was " ++ (correct -> String));
 ```

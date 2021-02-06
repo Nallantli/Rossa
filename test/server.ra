@@ -10,13 +10,13 @@ while data != "exit\n" do {
 	putln("Connected");
 
 	while true do {
-		puts("Recieved:\t" + (data = socket.readTo("\n")));
+		puts("Recieved:\t" ++ (data = socket.readTo("\n")));
 		if data == "exit\n" || data == "\n" then {
 			break;
 		}
 
 		data.pop();
-		putln("Sending:\t" + data.reverse());
+		putln("Sending:\t" ++ data.reverse());
 		socket << data.reverse() << "\n";
 	}
 

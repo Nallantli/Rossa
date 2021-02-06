@@ -20,17 +20,17 @@ static bitmap class {
 
 		padding := "";
 		for i in 0 .. paddingSize do {
-			padding += "\0";
+			padding ++= "\0";
 		}
 
 		out := "";
-		out += createHeader(height, stride);
-		out += createInfo(height, width);
+		out ++= createHeader(height, stride);
+		out ++= createInfo(height, width);
 		for i in 0 .. height do {
 			for j in 0 .. width do {
-				out += chars(image[i][j][2]) + chars(image[i][j][1]) + chars(image[i][j][0]);
+				out ++= chars(image[i][j][2]) ++ chars(image[i][j][1]) ++ chars(image[i][j][0]);
 			}
-			out += padding;
+			out ++= padding;
 		}
 
 		f.write(out);
