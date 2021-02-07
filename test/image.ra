@@ -29,24 +29,23 @@ start := clock.milliseconds();
 fpsCounter := 0;
 fpsTimer := clock.milliseconds();
 while SDL.Event.poll()["type"] != SDL.Event.QUIT do {
-	if (lapse := clock.milliseconds()) - start > 10 then {
-		start = lapse;
-		hue = (hue + 0.1) % 360;
-		r1 = (r1 + 1) % 360;
-		r2 = (r2 + 0.5) % 360;
-		r3 = (r3 + 0.25) % 360;
-		t4.setColor(Color.HSL(hue / 360, 1, 0.5));
-		t1.setAngle(r1);
-		t2.setAngle(r2);
-		t3.setAngle(r3);
-		r.update();
-		fpsCounter += 1;
+	diff := (clock.milliseconds() - start) / 10;
+	start = clock.milliseconds();
+	hue = (hue + 0.1 * diff) % 360;
+	r1 = (r1 + 1 * diff) % 360;
+	r2 = (r2 + 0.5 * diff) % 360;
+	r3 = (r3 + 0.25 * diff) % 360;
+	t4.setColor(Color.HSL(hue / 360, 1, 0.5));
+	t1.setAngle(r1);
+	t2.setAngle(r2);
+	t3.setAngle(r3);
+	r.update();
+	fpsCounter += 1;
 
-		if lapse - fpsTimer > 1000 then {
-			fpsTimer = lapse;
-			fpsText.setText("FPS: " ++ (fpsCounter -> String));
-			fpsCounter = 0;
-		}
+	if start - fpsTimer > 1000 then {
+		fpsTimer = start;
+		fpsText.setText("FPS: {0}" & [fpsCounter]);
+		fpsCounter = 0;
 	}
 }
 

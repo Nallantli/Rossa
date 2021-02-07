@@ -1,6 +1,6 @@
 #include "Rossa.h"
 
-Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_ull &key)
+Scope::Scope(const scope_t::scope_type_t &type, Scope *parent, const i_ptr_t &body, const hash_ull &key)
 	: type{ type }
 	, parent{ parent }
 	, body{ body }
@@ -9,7 +9,7 @@ Scope::Scope(const type_t &type, Scope *parent, const i_ptr_t &body, const hash_
 }
 
 Scope::Scope(Scope *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
-	: type{ INSTANCE_O }
+	: type{ scope_t::scope_type_t::INSTANCE_O }
 	, parent{ parent }
 	//	, hashed_key{ key }
 	, name_trace{ name_trace }
@@ -30,16 +30,16 @@ scope_t::scope_t()
 {}
 
 scope_t::scope_t(const hash_ull &key)
-	: scope{ new Scope(Scope::SCOPE_O, NULL, nullptr, key) }
+	: scope{ new Scope(scope_t::scope_type_t::SCOPE_O, NULL, nullptr, key) }
 	, type{ STRONG }
 {}
 
 scope_t::scope_t(const scope_t *parent, const hash_ull &key)
-	: scope{ new Scope(Scope::SCOPE_O, parent->scope, nullptr, key) }
+	: scope{ new Scope(scope_t::scope_type_t::SCOPE_O, parent->scope, nullptr, key) }
 	, type{ STRONG }
 {}
 
-scope_t::scope_t(const scope_t *parent, const Scope::type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t *ex, const std::vector<aug_type_t> &extensions)
+scope_t::scope_t(const scope_t *parent, const scope_t::scope_type_t &type, const i_ptr_t &body, const hash_ull &key, const scope_t *ex, const std::vector<aug_type_t> &extensions)
 	: scope{ new Scope(type, parent->scope, body, key) }
 	, type{ STRONG }
 {
@@ -109,7 +109,7 @@ void Scope::traceName(const hash_ull &key)
 
 const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
 {
-	if (scope->type != Scope::STRUCT_O)
+	if (scope->type != scope_t::scope_type_t::STRUCT_O)
 		throw rossa_error(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
 	scope_t o(scope->parent, scope->name_trace, scope->extensions);
@@ -137,8 +137,9 @@ const std::string scope_t::getKey() const
 
 const sym_t &Scope::getVariable(const hash_ull &key, const token_t *token, trace_t &stack_trace) const
 {
-	if (values.find(key) != values.end())
-		return values.at(key);
+	const auto it = values.find(key);
+	if (it != values.end())
+		return it->second;
 	if (parent != NULL)
 		return parent->getVariable(key, token, stack_trace);
 
@@ -147,18 +148,17 @@ const sym_t &Scope::getVariable(const hash_ull &key, const token_t *token, trace
 
 const sym_t &Scope::createVariable(const hash_ull &key, const token_t *token)
 {
-	values[key] = sym_t();
 	return values[key];
 }
 
 const sym_t &Scope::createVariable(const hash_ull &key, const sym_t &d, const token_t *token)
 {
-	if (values.find(key) != values.end() && values[key].getValueType() == Value::type_t::FUNCTION)
-		values[key].addFunctions(&d, token);
-	else
-		values[key] = d;
-
-	return values[key];
+	const auto it = values.find(key);
+	if (it != values.end() && it->second.getValueType() == Value::type_t::FUNCTION) {
+		it->second.addFunctions(&d, token);
+		return it->second;
+	}
+	return values.insert({ key, d }).first->second;
 }
 
 const sym_t &scope_t::getVariable(const hash_ull &key, const token_t *token, trace_t &stack_trace) const
@@ -181,7 +181,7 @@ const bool scope_t::extendsObject(const aug_type_t &ex) const
 	return std::find(scope->extensions.begin(), scope->extensions.end(), ex) != scope->extensions.end();
 }
 
-const Scope::type_t scope_t::getType() const
+const scope_t::scope_type_t scope_t::getType() const
 {
 	return scope->type;
 }
@@ -193,7 +193,7 @@ const i_ptr_t scope_t::getBody() const
 
 const sym_t Scope::getThis(const token_t *token, trace_t &stack_trace)
 {
-	if (type != SCOPE_O)
+	if (type != scope_t::scope_type_t::SCOPE_O)
 		return sym_t::Object(scope_t(this, scope_t::type_t::STRONG));
 	if (parent != NULL)
 		return parent->getThis(token, stack_trace);
@@ -221,15 +221,18 @@ Scope::~Scope()
 #ifdef DEBUG
 	std::cout << "~Scope\t" << std::to_string(type) << "\n";
 #endif
-	if (type == INSTANCE_O && values.find(Rossa::HASH_DELETER) != values.end()) {
+	if (type == scope_t::scope_type_t::INSTANCE_O) {
+		const auto it = values.find(Rossa::HASH_DELETER);
+		if (it != values.end()) {
 #ifdef DEBUG
-		std::cout << "Deleter Found\n";
+			std::cout << "Deleter Found\n";
 #endif
-		trace_t stack_trace;
-		values[Rossa::HASH_DELETER].call({}, NULL, stack_trace);
+			trace_t stack_trace;
+			it->second.call({}, NULL, stack_trace);
 #ifdef DEBUG
-		std::cout << "Deleter Executed\n";
+			std::cout << "Deleter Executed\n";
 #endif
+		}
 	}
 	for (auto &e : values) {
 		e.second.shift();

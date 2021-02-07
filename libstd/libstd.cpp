@@ -281,17 +281,17 @@ ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	sym_map_t m;
 	for (auto &e : f) {
 		if (e.first == 0) {
-			m["0"] = sym_t::FunctionSIG({}, e.second.at(fsig_t()));
+			m.insert({ "0", sym_t::FunctionSIG({}, e.second.at(fsig_t())) });
 		} else {
 			sym_map_t m2;
 			for (auto &e2 : e.second) {
-				m2["Function<" + e2.first.toString() + ">"] = sym_t::FunctionSIG(e2.first, e2.second);
+				m2.insert({ "Function<" + e2.first.toString() + ">", sym_t::FunctionSIG(e2.first, e2.second) });
 			}
-			m[std::to_string(e.first)] = sym_t::Dictionary(m2);
+			m.insert({ std::to_string(e.first), sym_t::Dictionary(m2) });
 		}
 	}
 	if (varg != nullptr)
-		m["..."] = sym_t::FunctionVARG(varg);
+		m.insert({ "...", sym_t::FunctionVARG(varg) });
 	return sym_t::Dictionary(m);
 }
 

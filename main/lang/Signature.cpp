@@ -14,9 +14,11 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 
 	size_t v = 0;
 	for (size_t i = 0; i < values.size(); i++) {
-		auto vt = check[i].getAugValueType();
-		if (values[i].getQualifiers().empty()) {
-			auto base = values[i].getBase();
+		auto check_i = check[i];
+		auto values_i = values[i];
+		auto vt = check_i.getAugValueType();
+		if (values_i.getQualifiers().empty()) {
+			auto base = values_i.getBase();
 			if (base == vt)
 				v += 3;
 			else if (base[0] > 0 && vt[0] == Value::type_t::NIL)
@@ -24,23 +26,24 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 			else if (base[0] == Value::type_t::ANY)
 				v += 1;
 			else if (check[0].getValueType() == Value::type_t::OBJECT) {
-				if (base[0] == Value::type_t::OBJECT || check[i].getObject(NULL, stack_trace)->extendsObject(base))
+				if (base[0] == Value::type_t::OBJECT || check_i.getObject(NULL, stack_trace)->extendsObject(base))
 					v += 2;
 				else
 					return 0;
 			} else
 				return 0;
 		} else {
-			auto ql = values[i].getQualifiers();
-			auto fo = check[i].getFunctionOverloads(NULL, stack_trace);
-			if (fo.find(ql.size()) == fo.end()) {
-				if (check[i].hasVarg(NULL, stack_trace))
+			auto ql = values_i.getQualifiers();
+			auto fo = check_i.getFunctionOverloads(NULL, stack_trace);
+			const auto it = fo.find(ql.size());
+			if (it == fo.end()) {
+				if (check_i.hasVarg(NULL, stack_trace))
 					v += 1;
 				else
 					return 0;
 			} else {
 				size_t flag = 0;
-				for (auto f : fo[ql.size()]) {
+				for (auto f : it->second) {
 					for (size_t i = 0; i < ql.size(); i++) {
 						auto val = ql[i] & f.first.values[i];
 						if (val > flag) {
@@ -55,7 +58,7 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 				if (flag > 0)
 					v += flag;
 				else {
-					if (check[i].hasVarg(NULL, stack_trace))
+					if (check_i.hasVarg(NULL, stack_trace))
 						v += 1;
 					else
 						return 0;

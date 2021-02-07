@@ -88,7 +88,7 @@ DefineI::DefineI(const hash_ull &key, const fsig_t &ftype, const std::vector<std
 
 const sym_t DefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	std::map<hash_ull, const sym_t> capturedVars;
+	hash_sym_map_t capturedVars;
 	for (const hash_ull &e : captures) {
 		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
 	}
@@ -112,7 +112,7 @@ VargDefineI::VargDefineI(const hash_ull &key, const i_ptr_t &body, const std::ve
 
 const sym_t VargDefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	std::map<hash_ull, const sym_t> capturedVars;
+	hash_sym_map_t capturedVars;
 	for (const hash_ull &e : captures) {
 		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
 	}
@@ -319,7 +319,7 @@ const sym_t InnerI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(&token, stack_trace);
-			if (o->getType() != Scope::type_t::STATIC_O && o->getType() != Scope::type_t::INSTANCE_O)
+			if (o->getType() != scope_t::scope_type_t::STATIC_O && o->getType() != scope_t::scope_type_t::INSTANCE_O)
 				throw rossa_error(_CANNOT_INDEX_OBJECT_, token, stack_trace);
 			return b->evaluate(o, stack_trace);
 		}
@@ -761,7 +761,7 @@ const sym_t LengthI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 /*class ClassI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-ClassI::ClassI(const hash_ull &key, const Scope::type_t &type, const i_ptr_t &body, const i_ptr_t &extends, const token_t &token)
+ClassI::ClassI(const hash_ull &key, const scope_t::scope_type_t &type, const i_ptr_t &body, const i_ptr_t &extends, const token_t &token)
 	: Instruction(CLASS_I, token)
 	, key{ key }
 	, type{ type }
@@ -780,7 +780,7 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			extensions.push_back(e.getTypeName(&token, stack_trace));
 		else {
 			ex = e.getObject(&token, stack_trace);
-			if (ex->getType() == Scope::type_t::STATIC_O)
+			if (ex->getType() == scope_t::scope_type_t::STATIC_O)
 				throw rossa_error(_FAILURE_EXTEND_, token, stack_trace);
 			const i_ptr_t eb = ex->getBody();
 			i_vec_t temp;
@@ -790,7 +790,7 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 		}
 	}
 	scope_t o(scope, type, nbody, key, ex, extensions);
-	if (type == Scope::type_t::STATIC_O)
+	if (type == scope_t::scope_type_t::STATIC_O)
 		nbody->evaluate(&o, stack_trace);
 	return scope->createVariable(key, sym_t::Object(o), &token);
 }
@@ -941,7 +941,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 					const sym_vec_t v = evalA.getVector(&token, stack_trace);
 					sym_map_t nd;
 					for (size_t i = 0; i < v.size(); i++)
-						nd[std::to_string(i)] = v[i];
+						nd.insert({ std::to_string(i), v[i] });
 					return sym_t::Dictionary(nd);
 				}
 				default:
@@ -1076,7 +1076,7 @@ const sym_t MapI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 		const sym_t eval = e.second->evaluate(scope, stack_trace);
 		if (eval.getValueType() == Value::type_t::NIL)
 			continue;
-		evals[e.first] = eval;
+		evals.insert({ e.first, eval });
 	}
 	return sym_t::Dictionary(evals);
 }
@@ -1114,8 +1114,9 @@ const sym_t SwitchI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	const scope_t newScope(scope, 0);
 	const sym_t eval = switchs->evaluate(&newScope, stack_trace);
 	size_t index = 0;
-	if (cases_solved.find(eval) != cases_solved.end()) {
-		index = cases_solved.at(eval);
+	const auto it = cases_solved.find(eval);
+	if (it != cases_solved.end()) {
+		index = it->second;
 	} else if (!cases_unsolved.empty()) {
 		for (const std::pair<const i_ptr_t, const size_t> &e : cases_unsolved) {
 			const sym_t evalE = e.first->evaluate(&newScope, stack_trace);

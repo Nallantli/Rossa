@@ -464,16 +464,16 @@ i_ptr_t ClassNode::genParser() const
 	auto bodyI = std::make_shared<ScopeI>(is, token);
 	trace_t stack_trace;
 
-	Scope::type_t ot;
+	scope_t::scope_type_t ot;
 	switch (type) {
 		case TOK_STRUCT:
-			ot = Scope::type_t::STRUCT_O;
+			ot = scope_t::scope_type_t::STRUCT_O;
 			break;
 		case TOK_STATIC:
-			ot = Scope::type_t::STATIC_O;
+			ot = scope_t::scope_type_t::STATIC_O;
 			break;
 		case TOK_VIRTUAL:
-			ot = Scope::type_t::VIRTUAL_O;
+			ot = scope_t::scope_type_t::VIRTUAL_O;
 			break;
 		default:
 			throw rossa_error(_INVALID_OBJECT_TYPE_, token, stack_trace);

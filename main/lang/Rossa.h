@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.13.1-alpha"
+#define _ROSSA_VERSION_ "v1.13.2-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -66,8 +66,9 @@ typedef std::vector<i_ptr_t> i_vec_t;
 typedef std::vector<param_t> param_vec_t;
 typedef std::vector<type_sll> aug_type_t;
 
-typedef std::map<std::string, sym_t> sym_map_t;
-typedef std::map<size_t, std::map<fsig_t, func_ptr_t>> f_map_t;
+typedef std::map<const std::string, const sym_t> sym_map_t;
+typedef std::map<const size_t, std::map<const fsig_t, func_ptr_t>> f_map_t;
+typedef std::map<const hash_ull, const sym_t> hash_sym_map_t;
 
 typedef const sym_t(*extf_t)(const sym_vec_t &, const token_t *, Hash &, trace_t &);
 typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
@@ -287,6 +288,187 @@ public:
 	const trace_t &getTrace() const;
 };
 
+struct scope_t
+{
+private:
+	Scope *scope;
+
+public:
+	enum type_t
+	{
+		WEAK,
+		STRONG
+	} type;
+
+	enum scope_type_t
+	{
+		SCOPE_O,
+		STRUCT_O,
+		STATIC_O,
+		INSTANCE_O,
+		VIRTUAL_O
+	};
+
+	scope_t();
+	scope_t(Scope *, const type_t &);
+	scope_t(const hash_ull &key);
+	scope_t(const scope_t *, const hash_ull &);
+	scope_t(const scope_t *, const scope_type_t &, const i_ptr_t &, const hash_ull &, const scope_t *, const std::vector<aug_type_t> &);
+	scope_t(Scope *, const aug_type_t &, const std::vector<aug_type_t> &);
+
+	scope_t(const scope_t &);
+	~scope_t();
+	void operator=(const scope_t &);
+	const bool operator==(const scope_t &) const;
+
+	const sym_t instantiate(const sym_vec_t &, const token_t *, trace_t &) const;
+	const bool extendsObject(const aug_type_t &) const;
+	const scope_type_t getType() const;
+	const i_ptr_t getBody() const;
+	const aug_type_t getTypeVec() const;
+	const std::string getKey() const;
+	const bool hasValue(const hash_ull &) const;
+	const sym_t getThis(const token_t *, trace_t &) const;
+
+	const sym_t &getVariable(const hash_ull &, const token_t *, trace_t &) const;
+	const sym_t &createVariable(const hash_ull &, const token_t *) const;
+	const sym_t &createVariable(const hash_ull &, const sym_t &, const token_t *) const;
+
+	Scope *getPtr() const;
+};
+
+class Value
+{
+	friend class sym_t;
+public:
+	enum type_t
+	{
+		NIL = -1,
+		NUMBER = -2,
+		BOOLEAN_D = -3,
+		STRING = -4,
+		ARRAY = -5,
+		FUNCTION = -6,
+		DICTIONARY = -7,
+		OBJECT = -8,
+		TYPE_NAME = -9,
+		POINTER = -10,
+		ANY = -11
+	} type;
+
+private:
+	union
+	{
+		bool valueBool;
+		number_t valueNumber;
+	};
+
+	aug_type_t valueType;
+	std::string valueString;
+	std::shared_ptr<void> valuePointer;
+	sym_vec_t valueVector;
+	f_map_t valueFunction;
+	func_ptr_t valueVARGFunction = nullptr;
+	sym_map_t valueDictionary;
+	scope_t valueObject;
+	refc_ull references = 1;
+
+	Value();
+	Value(const aug_type_t &);
+	Value(const bool &);
+	Value(const std::shared_ptr<void> &);
+	Value(const scope_t &);
+	Value(const fsig_t &, const func_ptr_t &);
+	Value(const func_ptr_t &);
+	Value(const number_t &);
+	Value(const sym_vec_t &);
+	Value(const sym_map_t &);
+	Value(const std::string &);
+	void clearData();
+};
+
+struct sym_t
+{
+private:
+	Value *d;
+
+	sym_t(const std::shared_ptr<void> &);
+	sym_t(const aug_type_t &);
+	sym_t(const number_t &);
+	sym_t(const bool &);
+	sym_t(const sym_vec_t &);
+	sym_t(const scope_t &);
+	sym_t(const fsig_t &, const func_ptr_t &);
+	sym_t(const func_ptr_t &);
+	sym_t(const std::string &);
+	sym_t(const sym_map_t &);
+
+public:
+	enum type_t
+	{
+		ID_RETURN,
+		ID_BREAK,
+		ID_CONTINUE,
+		ID_CASUAL,
+		ID_REFER
+	} type;
+
+	sym_t(const type_t &);
+	sym_t(const sym_t &);
+	sym_t();
+
+	static const sym_t Pointer(const std::shared_ptr<void> &);
+	static const sym_t TypeName(const aug_type_t &);
+	static const sym_t Number(const number_t &);
+	static const sym_t Boolean(const bool &);
+	static const sym_t Array(const sym_vec_t &);
+	static const sym_t Object(const scope_t &);
+	static const sym_t FunctionSIG(const fsig_t &, const func_ptr_t &);
+	static const sym_t FunctionVARG(const func_ptr_t &);
+	static const sym_t String(const std::string &);
+	static const sym_t Dictionary(const sym_map_t &);
+
+	~sym_t();
+
+	void operator=(const sym_t &);
+	static const sym_t allocate(const size_t &);
+	const type_t getSymbolType() const;
+	void setSymbolType(const type_t &);
+	const number_t &getNumber(const token_t *, trace_t &) const;
+	void *getPointer(const token_t *, trace_t &) const;
+	const sym_map_t &getDictionary(const token_t *, trace_t &) const;
+	const sym_t &indexVector(const size_t &, const token_t *, trace_t &) const;
+	const sym_vec_t &getVector(const token_t *, trace_t &) const;
+	const std::string getString(const token_t *, trace_t &) const;
+	const bool getBool(const token_t *, trace_t &) const;
+	const bool hasVarg(const token_t *, trace_t &) const;
+	scope_t *getObject(const token_t *, trace_t &) const;
+	const Value::type_t getValueType() const;
+	const aug_type_t getAugValueType() const;
+	const aug_type_t getTypeName(const token_t *, trace_t &) const;
+	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
+	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
+	const sym_t &indexDict(const std::string &) const;
+	const bool hasDictionaryKey(const std::string &) const;
+	const size_t vectorSize() const;
+	const size_t dictionarySize(const token_t *, trace_t &) const;
+	const std::string toString(const token_t *, trace_t &) const;
+	const std::string toCodeString() const;
+	const sym_t call(const sym_vec_t &, const token_t *, trace_t &) const;
+	void addFunctions(const sym_t *, const token_t *) const;
+	void nullify(const token_t *, trace_t &) const;
+	void set(const sym_t *, const token_t *, const bool &, trace_t &) const;
+	const bool equals(const sym_t *, const token_t *, trace_t &) const;
+	const bool nequals(const sym_t *, const token_t *, trace_t &) const;
+	const bool pureEquals(const sym_t *, const token_t *, trace_t &) const;
+	const bool pureNEquals(const sym_t *, const token_t *, trace_t &) const;
+	const bool operator==(const sym_t &) const;
+	const bool operator!=(const sym_t &) const;
+	const bool operator<(const sym_t &) const;
+	const f_map_t &getFunctionOverloads(const token_t *, trace_t &) const;
+	void shift() const;
+};
+
 class Instruction
 {
 protected:
@@ -367,21 +549,13 @@ class Scope
 	friend class scope_t;
 
 public:
-	enum type_t
-	{
-		SCOPE_O,
-		STRUCT_O,
-		STATIC_O,
-		INSTANCE_O,
-		VIRTUAL_O
-	} const type;
-
 	Scope *getParent() const;
 
 private:
+	const scope_t::scope_type_t type;
 	Scope *const parent;
 	refc_ull references = 1;
-	std::map<hash_ull, sym_t> values;
+	hash_sym_map_t values;
 	const i_ptr_t body;
 	//hash_ull hashed_key;
 	aug_type_t name_trace;
@@ -389,7 +563,7 @@ private:
 
 	void traceName(const hash_ull &);
 
-	Scope(const type_t &, Scope *, const i_ptr_t &, const hash_ull &);
+	Scope(const scope_t::scope_type_t &, Scope *, const i_ptr_t &, const hash_ull &);
 	Scope(Scope *, const aug_type_t &, const std::vector<aug_type_t> &);
 
 	const sym_t &getVariable(const hash_ull &, const token_t *, trace_t &) const;
@@ -400,46 +574,6 @@ private:
 	~Scope();
 };
 
-struct scope_t
-{
-private:
-	Scope *scope;
-
-public:
-	enum type_t
-	{
-		WEAK,
-		STRONG
-	} type;
-
-	scope_t();
-	scope_t(Scope *, const type_t &);
-	scope_t(const hash_ull &key);
-	scope_t(const scope_t *, const hash_ull &);
-	scope_t(const scope_t *, const Scope::type_t &, const i_ptr_t &, const hash_ull &, const scope_t *, const std::vector<aug_type_t> &);
-	scope_t(Scope *, const aug_type_t &, const std::vector<aug_type_t> &);
-
-	scope_t(const scope_t &);
-	~scope_t();
-	void operator=(const scope_t &);
-	const bool operator==(const scope_t &) const;
-
-	const sym_t instantiate(const sym_vec_t &, const token_t *, trace_t &) const;
-	const bool extendsObject(const aug_type_t &) const;
-	const Scope::type_t getType() const;
-	const i_ptr_t getBody() const;
-	const aug_type_t getTypeVec() const;
-	const std::string getKey() const;
-	const bool hasValue(const hash_ull &) const;
-	const sym_t getThis(const token_t *, trace_t &) const;
-
-	const sym_t &getVariable(const hash_ull &, const token_t *, trace_t &) const;
-	const sym_t &createVariable(const hash_ull &, const token_t *) const;
-	const sym_t &createVariable(const hash_ull &, const sym_t &, const token_t *) const;
-
-	Scope *getPtr() const;
-};
-
 class Function : public std::enable_shared_from_this<Function>
 {
 private:
@@ -447,13 +581,13 @@ private:
 	Scope *parent;
 	const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 	const i_ptr_t body;
-	const std::map<hash_ull, const sym_t> captures;
+	const hash_sym_map_t captures;
 	const bool isVargs;
 	const sym_t evaluateVARGS(const sym_vec_t &, const token_t *, trace_t &) const;
 
 public:
-	Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const i_ptr_t &, const std::map<hash_ull, const sym_t> &);
-	Function(const hash_ull &, Scope *, const i_ptr_t &, const std::map<hash_ull, const sym_t> &);
+	Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const i_ptr_t &, const hash_sym_map_t &);
+	Function(const hash_ull &, Scope *, const i_ptr_t &, const hash_sym_map_t &);
 	const sym_t evaluate(const sym_vec_t &, const token_t *, trace_t &) const;
 	const size_t getArgSize() const;
 	const hash_ull getKey() const;
@@ -627,138 +761,6 @@ public:
 	static const std::vector<token_t> lexString(const std::string &, const std::filesystem::path &);
 
 	~Rossa();
-};
-
-class Value
-{
-	friend class sym_t;
-public:
-	enum type_t
-	{
-		NIL = -1,
-		NUMBER = -2,
-		BOOLEAN_D = -3,
-		STRING = -4,
-		ARRAY = -5,
-		FUNCTION = -6,
-		DICTIONARY = -7,
-		OBJECT = -8,
-		TYPE_NAME = -9,
-		POINTER = -10,
-		ANY = -11
-	} type;
-
-private:
-	union
-	{
-		bool valueBool;
-		number_t valueNumber;
-	};
-
-	aug_type_t valueType;
-	std::string valueString;
-	std::shared_ptr<void> valuePointer;
-	sym_vec_t valueVector;
-	f_map_t valueFunction;
-	func_ptr_t valueVARGFunction = nullptr;
-	sym_map_t valueDictionary;
-	scope_t valueObject;
-	refc_ull references = 1;
-
-	Value();
-	Value(const aug_type_t &);
-	Value(const bool &);
-	Value(const std::shared_ptr<void> &);
-	Value(const scope_t &);
-	Value(const fsig_t &, const func_ptr_t &);
-	Value(const func_ptr_t &);
-	Value(const number_t &);
-	Value(const sym_vec_t &);
-	Value(const sym_map_t &);
-	Value(const std::string &);
-	void clearData();
-};
-
-struct sym_t
-{
-private:
-	Value *d;
-
-	sym_t(const std::shared_ptr<void> &);
-	sym_t(const aug_type_t &);
-	sym_t(const number_t &);
-	sym_t(const bool &);
-	sym_t(const sym_vec_t &);
-	sym_t(const scope_t &);
-	sym_t(const fsig_t &, const func_ptr_t &);
-	sym_t(const func_ptr_t &);
-	sym_t(const std::string &);
-	sym_t(const sym_map_t &);
-
-public:
-	enum type_t
-	{
-		ID_RETURN,
-		ID_BREAK,
-		ID_CONTINUE,
-		ID_CASUAL,
-		ID_REFER
-	} type;
-
-	sym_t(const type_t &);
-	sym_t(const sym_t &);
-	sym_t();
-
-	static const sym_t Pointer(const std::shared_ptr<void> &);
-	static const sym_t TypeName(const aug_type_t &);
-	static const sym_t Number(const number_t &);
-	static const sym_t Boolean(const bool &);
-	static const sym_t Array(const sym_vec_t &);
-	static const sym_t Object(const scope_t &);
-	static const sym_t FunctionSIG(const fsig_t &, const func_ptr_t &);
-	static const sym_t FunctionVARG(const func_ptr_t &);
-	static const sym_t String(const std::string &);
-	static const sym_t Dictionary(const sym_map_t &);
-
-	~sym_t();
-
-	void operator=(const sym_t &);
-	static const sym_t allocate(const size_t &);
-	const type_t getSymbolType() const;
-	void setSymbolType(const type_t &);
-	const number_t &getNumber(const token_t *, trace_t &) const;
-	void *getPointer(const token_t *, trace_t &) const;
-	const sym_map_t &getDictionary(const token_t *, trace_t &) const;
-	const sym_t &indexVector(const size_t &, const token_t *, trace_t &) const;
-	const sym_vec_t &getVector(const token_t *, trace_t &) const;
-	const std::string getString(const token_t *, trace_t &) const;
-	const bool getBool(const token_t *, trace_t &) const;
-	const bool hasVarg(const token_t *, trace_t &) const;
-	scope_t *getObject(const token_t *, trace_t &) const;
-	const Value::type_t getValueType() const;
-	const aug_type_t getAugValueType() const;
-	const aug_type_t getTypeName(const token_t *, trace_t &) const;
-	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
-	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
-	const sym_t &indexDict(const std::string &) const;
-	const bool hasDictionaryKey(const std::string &) const;
-	const size_t vectorSize() const;
-	const size_t dictionarySize(const token_t *, trace_t &) const;
-	const std::string toString(const token_t *, trace_t &) const;
-	const std::string toCodeString() const;
-	const sym_t call(const sym_vec_t &, const token_t *, trace_t &) const;
-	void addFunctions(const sym_t *, const token_t *) const;
-	void nullify(const token_t *, trace_t &) const;
-	void set(const sym_t *, const token_t *, const bool &, trace_t &) const;
-	const bool equals(const sym_t *, const token_t *, trace_t &) const;
-	const bool nequals(const sym_t *, const token_t *, trace_t &) const;
-	const bool pureEquals(const sym_t *, const token_t *, trace_t &) const;
-	const bool pureNEquals(const sym_t *, const token_t *, trace_t &) const;
-	const bool operator==(const sym_t &) const;
-	const bool operator!=(const sym_t &) const;
-	const bool operator<(const sym_t &) const;
-	const f_map_t &getFunctionOverloads(const token_t *, trace_t &) const;
-	void shift() const;
 };
 
 // INSTRUCTIONS -----------------------------------------------------------------------------
@@ -1101,12 +1103,12 @@ class ClassI : public Instruction
 {
 protected:
 	const hash_ull key;
-	const Scope::type_t type;
+	const scope_t::scope_type_t type;
 	const i_ptr_t body;
 	const i_ptr_t extends;
 
 public:
-	ClassI(const hash_ull &, const Scope::type_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
+	ClassI(const hash_ull &, const scope_t::scope_type_t &, const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 

@@ -148,10 +148,10 @@ ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
 	sym_map_t ret;
 
 	for (auto &r : res) {
-		ret[r.name_string().to_string()] = sym_t::String(r.value().to_string());
+		ret.insert({ r.name_string().to_string(), sym_t::String(r.value().to_string()) });
 	}
 
-	ret["CONTENT"] = sym_t::String(res.body());
+	ret.insert({ "CONTENT",sym_t::String(res.body()) });
 
 	return sym_t::Dictionary(ret);
 }

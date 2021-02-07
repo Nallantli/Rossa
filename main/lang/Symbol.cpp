@@ -258,7 +258,8 @@ const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *toke
 	if (d->type != Value::type_t::FUNCTION)
 		throw rossa_error(_NOT_FUNCTION_, *token, stack_trace);
 
-	if (d->valueFunction.find(params.size()) == d->valueFunction.end()) {
+	const auto it = d->valueFunction.find(params.size());
+	if (it == d->valueFunction.end()) {
 		if (d->valueVARGFunction != nullptr)
 			return d->valueVARGFunction;
 		throw rossa_error(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
@@ -266,7 +267,7 @@ const func_ptr_t sym_t::getFunction(const sym_vec_t &params, const token_t *toke
 
 	func_ptr_t f = nullptr;
 	size_t cur_v = 0;
-	for (auto &f2 : d->valueFunction[params.size()]) {
+	for (auto &f2 : it->second) {
 		size_t v = f2.first.validity(params, stack_trace);
 		if (v > cur_v) {
 			cur_v = v;
@@ -520,7 +521,7 @@ void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace
 					continue;
 				auto newd = sym_t();
 				newd.set(&e.second, token, isConst, stack_trace);
-				d->valueDictionary[e.first] = newd;
+				d->valueDictionary.insert({ e.first, newd });
 			}
 			break;
 		}

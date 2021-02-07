@@ -426,176 +426,176 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 	SDL_Event e;
 	sym_map_t data;
 	if (SDL_PollEvent(&e)) {
-		data["type"] = sym_t::Number(number_t::Long(e.type));
+		data.insert({ "type", sym_t::Number(number_t::Long(e.type)) });
 		switch (e.type) {
 			case SDL_WINDOWEVENT:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.window.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.window.windowID));
-				data["window"] = libsdl::registered[e.window.windowID];
-				data["event"] = sym_t::Number(number_t::Long(e.window.event));
-				data["data1"] = sym_t::Number(number_t::Long(e.window.data1));
-				data["data2"] = sym_t::Number(number_t::Long(e.window.data2));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.window.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.window.windowID)) });
+				data.insert({ "window", libsdl::registered[e.window.windowID] });
+				data.insert({ "event", sym_t::Number(number_t::Long(e.window.event)) });
+				data.insert({ "data1", sym_t::Number(number_t::Long(e.window.data1)) });
+				data.insert({ "data2", sym_t::Number(number_t::Long(e.window.data2)) });
 				return sym_t::Dictionary(data);
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 			{
-				data["timestamp"] = sym_t::Number(number_t::Long(e.key.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.key.windowID));
-				data["window"] = libsdl::registered[e.key.windowID];
-				data["state"] = sym_t::Number(number_t::Long(e.key.state));
-				data["repeat"] = sym_t::Number(number_t::Long(e.key.repeat));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.key.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.key.windowID)) });
+				data.insert({ "window", libsdl::registered[e.key.windowID] });
+				data.insert({ "state", sym_t::Number(number_t::Long(e.key.state)) });
+				data.insert({ "repeat", sym_t::Number(number_t::Long(e.key.repeat)) });
 				sym_map_t keysym;
-				keysym["scancode"] = sym_t::Number(number_t::Long(e.key.keysym.scancode));
-				keysym["sym"] = sym_t::Number(number_t::Long(e.key.keysym.sym));
-				keysym["mod"] = sym_t::Number(number_t::Long(e.key.keysym.mod));
-				data["keysym"] = sym_t::Dictionary(keysym);
+				keysym.insert({ "scancode", sym_t::Number(number_t::Long(e.key.keysym.scancode)) });
+				keysym.insert({ "sym", sym_t::Number(number_t::Long(e.key.keysym.sym)) });
+				keysym.insert({ "mod", sym_t::Number(number_t::Long(e.key.keysym.mod)) });
+				data.insert({ "keysym", sym_t::Dictionary(keysym) });
 				return sym_t::Dictionary(data);
 			}
 			case SDL_TEXTEDITING:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.edit.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.edit.windowID));
-				data["window"] = libsdl::registered[e.edit.windowID];
-				data["text"] = sym_t::String(std::string(e.edit.text));
-				data["start"] = sym_t::Number(number_t::Long(e.edit.start));
-				data["length"] = sym_t::Number(number_t::Long(e.edit.length));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.edit.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.edit.windowID)) });
+				data.insert({ "window", libsdl::registered[e.edit.windowID] });
+				data.insert({ "text", sym_t::String(std::string(e.edit.text)) });
+				data.insert({ "start", sym_t::Number(number_t::Long(e.edit.start)) });
+				data.insert({ "length", sym_t::Number(number_t::Long(e.edit.length)) });
 				return sym_t::Dictionary(data);
 			case SDL_TEXTINPUT:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.text.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.text.windowID));
-				data["window"] = libsdl::registered[e.text.windowID];
-				data["text"] = sym_t::String(std::string(e.text.text));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.text.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.text.windowID)) });
+				data.insert({ "window", libsdl::registered[e.text.windowID] });
+				data.insert({ "text", sym_t::String(std::string(e.text.text)) });
 				return sym_t::Dictionary(data);
 			case SDL_MOUSEMOTION:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.motion.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.motion.windowID));
-				data["window"] = libsdl::registered[e.motion.windowID];
-				data["which"] = sym_t::Number(number_t::Long(e.motion.which));
-				data["state"] = sym_t::Number(number_t::Long(e.motion.state));
-				data["x"] = sym_t::Number(number_t::Long(e.motion.x));
-				data["y"] = sym_t::Number(number_t::Long(e.motion.y));
-				data["xrel"] = sym_t::Number(number_t::Long(e.motion.xrel));
-				data["yrel"] = sym_t::Number(number_t::Long(e.motion.yrel));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.motion.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.motion.windowID)) });
+				data.insert({ "window", libsdl::registered[e.motion.windowID] });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.motion.which)) });
+				data.insert({ "state", sym_t::Number(number_t::Long(e.motion.state)) });
+				data.insert({ "x", sym_t::Number(number_t::Long(e.motion.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Long(e.motion.y)) });
+				data.insert({ "xrel", sym_t::Number(number_t::Long(e.motion.xrel)) });
+				data.insert({ "yrel", sym_t::Number(number_t::Long(e.motion.yrel)) });
 				return sym_t::Dictionary(data);
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.button.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.button.windowID));
-				data["window"] = libsdl::registered[e.button.windowID];
-				data["which"] = sym_t::Number(number_t::Long(e.button.which));
-				data["state"] = sym_t::Number(number_t::Long(e.button.state));
-				data["x"] = sym_t::Number(number_t::Long(e.button.x));
-				data["y"] = sym_t::Number(number_t::Long(e.button.y));
-				data["button"] = sym_t::Number(number_t::Long(e.button.button));
-				data["clicks"] = sym_t::Number(number_t::Long(e.button.clicks));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.button.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.button.windowID)) });
+				data.insert({ "window", libsdl::registered[e.button.windowID] });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.button.which)) });
+				data.insert({ "state", sym_t::Number(number_t::Long(e.button.state)) });
+				data.insert({ "x", sym_t::Number(number_t::Long(e.button.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Long(e.button.y)) });
+				data.insert({ "button", sym_t::Number(number_t::Long(e.button.button)) });
+				data.insert({ "clicks", sym_t::Number(number_t::Long(e.button.clicks)) });
 				return sym_t::Dictionary(data);
 			case SDL_MOUSEWHEEL:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.wheel.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.wheel.windowID));
-				data["window"] = libsdl::registered[e.wheel.windowID];
-				data["which"] = sym_t::Number(number_t::Long(e.wheel.which));
-				data["direction"] = sym_t::Number(number_t::Long(e.wheel.direction));
-				data["x"] = sym_t::Number(number_t::Long(e.wheel.x));
-				data["y"] = sym_t::Number(number_t::Long(e.wheel.y));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.wheel.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.wheel.windowID)) });
+				data.insert({ "window", libsdl::registered[e.wheel.windowID] });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.wheel.which)) });
+				data.insert({ "direction", sym_t::Number(number_t::Long(e.wheel.direction)) });
+				data.insert({ "x", sym_t::Number(number_t::Long(e.wheel.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Long(e.wheel.y)) });
 				return sym_t::Dictionary(data);
 			case SDL_JOYAXISMOTION:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.jaxis.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.jaxis.which));
-				data["axis"] = sym_t::Number(number_t::Long(e.jaxis.axis));
-				data["value"] = sym_t::Number(number_t::Long(e.jaxis.value));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jaxis.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.jaxis.which)) });
+				data.insert({ "axis", sym_t::Number(number_t::Long(e.jaxis.axis)) });
+				data.insert({ "value", sym_t::Number(number_t::Long(e.jaxis.value)) });
 				return sym_t::Dictionary(data);
 			case SDL_JOYBALLMOTION:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.jball.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.jball.which));
-				data["ball"] = sym_t::Number(number_t::Long(e.jball.ball));
-				data["xrel"] = sym_t::Number(number_t::Long(e.jball.xrel));
-				data["yrel"] = sym_t::Number(number_t::Long(e.jball.yrel));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jball.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.jball.which)) });
+				data.insert({ "ball", sym_t::Number(number_t::Long(e.jball.ball)) });
+				data.insert({ "xrel", sym_t::Number(number_t::Long(e.jball.xrel)) });
+				data.insert({ "yrel", sym_t::Number(number_t::Long(e.jball.yrel)) });
 				return sym_t::Dictionary(data);
 			case SDL_JOYHATMOTION:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.jhat.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.jhat.which));
-				data["hat"] = sym_t::Number(number_t::Long(e.jhat.hat));
-				data["value"] = sym_t::Number(number_t::Long(e.jhat.value));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jhat.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.jhat.which)) });
+				data.insert({ "hat", sym_t::Number(number_t::Long(e.jhat.hat)) });
+				data.insert({ "value", sym_t::Number(number_t::Long(e.jhat.value)) });
 				return sym_t::Dictionary(data);
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.jbutton.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.jbutton.which));
-				data["button"] = sym_t::Number(number_t::Long(e.jbutton.button));
-				data["state"] = sym_t::Number(number_t::Long(e.jbutton.state));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jbutton.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.jbutton.which)) });
+				data.insert({ "button", sym_t::Number(number_t::Long(e.jbutton.button)) });
+				data.insert({ "state", sym_t::Number(number_t::Long(e.jbutton.state)) });
 				return sym_t::Dictionary(data);
 			case SDL_JOYDEVICEADDED:
 			case SDL_JOYDEVICEREMOVED:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.jdevice.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.jdevice.which));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jdevice.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.jdevice.which)) });
 				return sym_t::Dictionary(data);
 			case SDL_CONTROLLERAXISMOTION:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.caxis.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.caxis.which));
-				data["axis"] = sym_t::Number(number_t::Long(e.caxis.axis));
-				data["value"] = sym_t::Number(number_t::Long(e.caxis.value));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.caxis.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.caxis.which)) });
+				data.insert({ "axis", sym_t::Number(number_t::Long(e.caxis.axis)) });
+				data.insert({ "value", sym_t::Number(number_t::Long(e.caxis.value)) });
 				return sym_t::Dictionary(data);
 			case SDL_CONTROLLERBUTTONDOWN:
 			case SDL_CONTROLLERBUTTONUP:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.cbutton.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.cbutton.which));
-				data["button"] = sym_t::Number(number_t::Long(e.cbutton.button));
-				data["state"] = sym_t::Number(number_t::Long(e.cbutton.state));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.cbutton.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.cbutton.which)) });
+				data.insert({ "button", sym_t::Number(number_t::Long(e.cbutton.button)) });
+				data.insert({ "state", sym_t::Number(number_t::Long(e.cbutton.state)) });
 				return sym_t::Dictionary(data);
 			case SDL_CONTROLLERDEVICEADDED:
 			case SDL_CONTROLLERDEVICEREMOVED:
 			case SDL_CONTROLLERDEVICEREMAPPED:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.cdevice.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.cdevice.which));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.cdevice.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.cdevice.which)) });
 				return sym_t::Dictionary(data);
 			case SDL_AUDIODEVICEADDED:
 			case SDL_AUDIODEVICEREMOVED:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.adevice.timestamp));
-				data["which"] = sym_t::Number(number_t::Long(e.adevice.which));
-				data["iscapture"] = sym_t::Number(number_t::Long(e.adevice.iscapture));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.adevice.timestamp)) });
+				data.insert({ "which", sym_t::Number(number_t::Long(e.adevice.which)) });
+				data.insert({ "iscapture", sym_t::Number(number_t::Long(e.adevice.iscapture)) });
 				return sym_t::Dictionary(data);
 			case SDL_QUIT:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.quit.timestamp));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.quit.timestamp)) });
 				return sym_t::Dictionary(data);
 			case SDL_FINGERMOTION:
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.tfinger.timestamp));
-				data["touchId"] = sym_t::Number(number_t::Long(e.tfinger.touchId));
-				data["fingerId"] = sym_t::Number(number_t::Long(e.tfinger.fingerId));
-				data["x"] = sym_t::Number(number_t::Double(e.tfinger.x));
-				data["y"] = sym_t::Number(number_t::Double(e.tfinger.y));
-				data["dx"] = sym_t::Number(number_t::Double(e.tfinger.dx));
-				data["dy"] = sym_t::Number(number_t::Double(e.tfinger.dy));
-				data["pressure"] = sym_t::Number(number_t::Double(e.tfinger.pressure));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.tfinger.timestamp)) });
+				data.insert({ "touchId", sym_t::Number(number_t::Long(e.tfinger.touchId)) });
+				data.insert({ "fingerId", sym_t::Number(number_t::Long(e.tfinger.fingerId)) });
+				data.insert({ "x", sym_t::Number(number_t::Double(e.tfinger.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Double(e.tfinger.y)) });
+				data.insert({ "dx", sym_t::Number(number_t::Double(e.tfinger.dx)) });
+				data.insert({ "dy", sym_t::Number(number_t::Double(e.tfinger.dy)) });
+				data.insert({ "pressure", sym_t::Number(number_t::Double(e.tfinger.pressure)) });
 				return sym_t::Dictionary(data);
 			case SDL_MULTIGESTURE:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.mgesture.timestamp));
-				data["touchId"] = sym_t::Number(number_t::Long(e.mgesture.touchId));
-				data["dTheta"] = sym_t::Number(number_t::Double(e.mgesture.dTheta));
-				data["dDist"] = sym_t::Number(number_t::Double(e.mgesture.dDist));
-				data["x"] = sym_t::Number(number_t::Double(e.mgesture.x));
-				data["y"] = sym_t::Number(number_t::Double(e.mgesture.y));
-				data["numFingers"] = sym_t::Number(number_t::Long(e.mgesture.numFingers));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.mgesture.timestamp)) });
+				data.insert({ "touchId", sym_t::Number(number_t::Long(e.mgesture.touchId)) });
+				data.insert({ "dTheta", sym_t::Number(number_t::Double(e.mgesture.dTheta)) });
+				data.insert({ "dDist", sym_t::Number(number_t::Double(e.mgesture.dDist)) });
+				data.insert({ "x", sym_t::Number(number_t::Double(e.mgesture.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Double(e.mgesture.y)) });
+				data.insert({ "numFingers", sym_t::Number(number_t::Long(e.mgesture.numFingers)) });
 				return sym_t::Dictionary(data);
 			case SDL_DOLLARGESTURE:
 			case SDL_DOLLARRECORD:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.dgesture.timestamp));
-				data["touchId"] = sym_t::Number(number_t::Long(e.dgesture.touchId));
-				data["gestureId"] = sym_t::Number(number_t::Long(e.dgesture.gestureId));
-				data["numFingers"] = sym_t::Number(number_t::Long(e.dgesture.numFingers));
-				data["error"] = sym_t::Number(number_t::Double(e.dgesture.error));
-				data["x"] = sym_t::Number(number_t::Double(e.dgesture.x));
-				data["y"] = sym_t::Number(number_t::Double(e.dgesture.y));
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.dgesture.timestamp)) });
+				data.insert({ "touchId", sym_t::Number(number_t::Long(e.dgesture.touchId)) });
+				data.insert({ "gestureId", sym_t::Number(number_t::Long(e.dgesture.gestureId)) });
+				data.insert({ "numFingers", sym_t::Number(number_t::Long(e.dgesture.numFingers)) });
+				data.insert({ "error", sym_t::Number(number_t::Double(e.dgesture.error)) });
+				data.insert({ "x", sym_t::Number(number_t::Double(e.dgesture.x)) });
+				data.insert({ "y", sym_t::Number(number_t::Double(e.dgesture.y)) });
 				return sym_t::Dictionary(data);
 			case SDL_DROPFILE:
 			case SDL_DROPBEGIN:
 			case SDL_DROPTEXT:
 			case SDL_DROPCOMPLETE:
-				data["timestamp"] = sym_t::Number(number_t::Long(e.drop.timestamp));
-				data["windowID"] = sym_t::Number(number_t::Long(e.drop.windowID));
-				data["window"] = libsdl::registered[e.drop.windowID];
+				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.drop.timestamp)) });
+				data.insert({ "windowID", sym_t::Number(number_t::Long(e.drop.windowID)) });
+				data.insert({ "window", libsdl::registered[e.drop.windowID] });
 				if (e.drop.file != NULL) {
-					data["file"] = sym_t::String(std::string(e.drop.file));
+					data.insert({ "file", sym_t::String(std::string(e.drop.file)) });
 					SDL_free(e.drop.file);
 				}
 				return sym_t::Dictionary(data);
@@ -604,7 +604,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 		}
 	}
 
-	data["type"] = sym_t::Number(number_t());
+	data.insert({ "type", sym_t::Number(number_t()) });
 	return sym_t::Dictionary(data);
 }
 

@@ -1,6 +1,6 @@
 #include "Rossa.h"
 
-Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const i_ptr_t &body, const std::map<hash_ull, const sym_t> &captures)
+Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pair<LexerTokenType, hash_ull>> &params, const i_ptr_t &body, const hash_sym_map_t &captures)
 	: key{ key }
 	, parent{ parent }
 	, params{ params }
@@ -9,7 +9,7 @@ Function::Function(const hash_ull &key, Scope *parent, const std::vector<std::pa
 	, isVargs{ false }
 {}
 
-Function::Function(const hash_ull &key, Scope *parent, const i_ptr_t &body, const std::map<hash_ull, const sym_t> &captures)
+Function::Function(const hash_ull &key, Scope *parent, const i_ptr_t &body, const hash_sym_map_t &captures)
 	: key{ key }
 	, parent{ parent }
 	, body{ body }
