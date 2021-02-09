@@ -1,0 +1,322 @@
+# Abstraction from the more basic form of SDL, but markedly limited
+
+extern "libgraphics";
+
+static Color class {
+	RED := { "red" : 0xff, "green" : 0x00, "blue" : 0x00, "alpha" : 0xff };
+	BLUE := { "red" : 0x00, "green" : 0x00, "blue" : 0xff, "alpha" : 0xff };
+	GREEN := { "red" : 0x00, "green" : 0xff, "blue" : 0x00, "alpha" : 0xff };
+	YELLOW := { "red" : 0xff, "green" : 0xff, "blue" : 0x00, "alpha" : 0xff };
+	MAGENTA := { "red" : 0xff, "green" : 0x00, "blue" : 0xff, "alpha" : 0xff };
+	CYAN := { "red" : 0x00, "green" : 0xff, "blue" : 0xff, "alpha" : 0xff };
+	BLACK := { "red" : 0x00, "green" : 0x00, "blue" : 0x00, "alpha" : 0xff };
+	WHITE := { "red" : 0xff, "green" : 0xff, "blue" : 0xff, "alpha" : 0xff };
+
+	`()`(ref r : Number, ref g : Number, ref b : Number) => {
+		return { "red" : r, "green" : g, "blue" : b, "alpha" : 0xff };
+	}
+
+	`()`(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+		return { "red" : r, "green" : g, "blue" : b, "alpha" : a };
+	}
+
+	HSL(ref h : Number, ref s : Number, ref l : Number) => HSL(h, s, l, 0xff);
+
+	HSL(ref h : Number, ref s : Number, ref l : Number, ref a : Number) => {
+		hueToRgb(ref p : Number, ref q : Number, t : Number) => {
+			if t < 0 then {
+				t += 1;
+			} elif t > 1 then {
+				t -= 1;
+			}
+			if t < 1/6 then {
+				return p + (q - p) * 6 * t;
+			}
+			if t < 1/2 then {
+				return q;
+			}
+			if t < 2/3 then {
+				return p + (q - p) * (2/3 - t) * 6;
+			}
+			return p;
+		}
+		var r, g, b;
+		if s == 0 then {
+			r = l;
+			g = l;
+			b = l;
+		} else {
+			q := (l < 0.5 ? (l * (1 + s)) : (l + s - l * s));
+			p := 2 * l - q;
+			r = hueToRgb(p, q, h + 1/3);
+			g = hueToRgb(p, q, h);
+			b = hueToRgb(p, q, h - 1/3);
+		}
+		r *= 256;
+		g *= 256;
+		b *= 256;
+		r = math.floor(r > 255 ? 255 : r);
+		g = math.floor(g > 255 ? 255 : g);
+		b = math.floor(b > 255 ? 255 : b);
+		return { "red" : r, "green" : g, "blue" : b, "alpha" : a };
+	}
+}
+
+static SDL class {
+	static Event class {
+		NULL := 0;
+		QUIT := 256;
+		WINDOW := 512;
+		KEY_DOWN := 768;
+		KEY_UP := 769;
+		TEXT_EDITING := 770;
+		TEXT_INPUT := 771;
+		KEYMAP_CHANGED := 772;
+		MOUSE_MOTION := 1024;
+		MOUSE_BUTTON_DOWN := 1025;
+		MOUSE_BUTTON_UP := 1026;
+		MOUSE_WHEEL := 1027;
+		JOY_AXIS_MOTION := 1536;
+		JOY_BALL_MOTION := 1537;
+		JOY_HAT_MOTION := 1538;
+		JOY_BUTTON_DOWN := 1539;
+		JOY_BUTTON_UP := 1540;
+		JOY_DEVICE_ADDED := 1541;
+		JOY_DEVICE_REMOVED := 1542;
+		CONTROLLER_AXIS_MOTION := 1616;
+		CONTROLLER_BUTTON_DOWN := 1617;
+		CONTROLLER_BUTTON_UP := 1618;
+		CONTROLLER_DEVICE_ADDED := 1619;
+		CONTROLLER_DEVICE_REMOVED := 1620;
+		CONTROLLER_DEVICE_REMAPPED := 1621;
+		FINGER_DOWN := 1792;
+		FINGER_UP := 1793;
+		FINGER_MOTION := 1794;
+		DOLLAR_GESTURE := 2048;
+		DOLLAR_RECORD := 2049;
+		MULTI_GESTURE := 2050;
+		CLIPBOARD_UPDATE := 2304;
+		DROP_FILE := 4096;
+		DROP_TEXT := 4097;
+		DROP_BEGIN := 4098;
+		DROP_COMPLETE := 4099;
+		AUDIO_DEVICE_ADDED := 4352;
+		AUDIO_DEVICE_REMOVED := 4353;
+		SENSOR_UPDATE := 4608;
+		RENDER_TARGETS_RESET := 8192;
+		RENDER_DEVICE_RESET := 8193;
+		USER_EVENT := 32768;
+		LAST_EVENT := 65535;
+
+		static Win class {
+			SHOWN := 1;
+			HIDDEN := 2;
+			EXPOSED := 3;
+			MOVED := 4;
+			RESIZED := 5;
+			SIZE_CHANGED := 6;
+			MINIMIZED := 7;
+			MAXIMIZED := 8;
+			RESTORED := 9;
+			ENTER := 10;
+			LEAVE := 11;
+			FOCUS_GAINED := 12;
+			FOCUS_LOST := 13;
+			CLOSE := 14;
+			TAKE_FOCUS := 15;
+			HIT_TEST := 16;
+		}
+
+		poll() => {
+			return (extern_call libgraphics._event_poll());
+		}
+	}
+
+	INIT() => {
+		extern_call libgraphics._sdl_init();
+	}
+
+	QUIT() => {
+		extern_call libgraphics._sdl_quit();
+	}
+
+	struct Font class {
+		var ptr;
+
+		init(ref path : String, ref sz : Number) => {
+			ptr = (extern_call libgraphics._font_init(path, sz));
+		}
+	}
+
+	struct Image class {
+		var ptr;
+
+		init(ref path : String) => {
+			ptr = (extern_call libgraphics._image_init_nokey(path));
+		}
+
+		init(ref path : String, ref r : Number, ref g : Number, ref b : Number) => {
+			ptr = (extern_call libgraphics._image_init_key(path, r, g, b));
+		}
+
+		init(ref path : String, ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._image_init_key(path, color["red"], color["green"], color["blue"]));
+		}
+	}
+
+	virtual Prototype class {
+		var ptr;
+
+		setColor(ref color : Dictionary) => {
+			extern_call libgraphics._shape_setColor(ptr, color["red"], color["green"], color["blue"], color["alpha"]);
+		}
+
+		setColor(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			extern_call libgraphics._shape_setColor(ptr, r, g, b, a);
+		}
+
+		setColor(ref r : Number, ref g : Number, ref b : Number) => {
+			extern_call libgraphics._shape_setColor(ptr, r, g, b, 0xff);
+		}
+	}
+
+	virtual Sizable class : Prototype {
+		setSize(ref width : Number, ref height : Number) => {
+			extern_call libgraphics._sizable_setSize(ptr, width, height);
+		}
+
+		setWidth(ref width : Number) => {
+			extern_call libgraphics._sizable_setWidth(ptr, width);
+		}
+
+		setHeight(ref height : Number) => {
+			extern_call libgraphics._sizable_setHeight(ptr, height);
+		}
+	}
+
+	virtual Rotatable class : Sizable {
+		setAngle(ref angle : Number) => {
+			extern_call libgraphics._rotatable_setAngle(ptr, angle);
+		}
+
+		pivot(ref x : Number, ref y : Number) => {
+			extern_call libgraphics._rotatable_setCenter(ptr, x, y);
+		}
+
+		unpivot() => {
+			extern_call libgraphics._rotatable_deCenter(ptr);
+		}
+
+		clip(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+			extern_call libgraphics._rotatable_setClip(ptr, x, y, width, height);
+		}
+
+		unclip() => {
+			extern_call libgraphics._rotatable_deClip(ptr);
+		}
+	}
+
+	struct Rect class : Sizable {
+		init(ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libgraphics._rect_init(width, height, r, g, b, a));
+		}
+
+		init(ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._rect_init(width, height, color["red"], color["green"], color["blue"], color["alpha"]));
+		}
+	}
+
+	struct Line class : Prototype {
+		init(ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libgraphics._line_init(x2, y2, r, g, b, a));
+		}
+
+		init(ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._line_init(x2, y2, color["red"], color["green"], color["blue"], color["alpha"]));
+		}
+	}
+
+	struct Point class : Prototype {
+		init(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libgraphics._point_init(r, g, b, a));
+		}
+
+		init(ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._point_init(color["red"], color["green"], color["blue"], color["alpha"]));
+		}
+	}
+
+	struct Text class : Prototype {
+		init(ref font : SDL.Font, ref s : String, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libgraphics._text_init(font.ptr, s, r, g, b, a));
+		}
+
+		init(ref font : SDL.Font, ref s : String, ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._text_init(font.ptr, s, color["red"], color["green"], color["blue"], color["alpha"]));
+		}
+
+		setText(ref s : String) => {
+			extern_call libgraphics._text_setText(ptr, s);
+		}
+	}
+
+	struct Texture class : Rotatable {
+		init(ref img : SDL.Image, ref width : Number, ref height : Number) => {
+			ptr = (extern_call libgraphics._texture_init(img.ptr, width, height, 0xff, 0xff, 0xff));
+		}
+
+		init(ref img : SDL.Image, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+			ptr = (extern_call libgraphics._texture_init(img.ptr, width, height, r, g, b, a));
+		}
+
+		init(ref img : SDL.Image, ref width : Number, ref height : Number, ref color : Dictionary) => {
+			ptr = (extern_call libgraphics._texture_init(img.ptr, width, height, color["red"], color["green"], color["blue"], color["alpha"]));
+		}
+
+		setImage(ref img : SDL.Image) => {
+			extern_call libgraphics._texture_setImage(ptr, img.ptr);
+		}
+	}
+
+	struct Window class {
+		struct Renderer class {
+			var ptr;
+
+			init(ref ptr : Pointer) => {
+				this.ptr = ptr;
+			}
+
+			put(ref shape : SDL.Prototype, ref x : Number, ref y : Number) => {
+				extern_call libgraphics._renderer_draw(ptr, shape.ptr, x, y);
+				refer shape;
+			}
+
+			clear() => extern_call libgraphics._renderer_clear(ptr);
+
+			update() => extern_call libgraphics._renderer_update(ptr);
+
+			flush() => extern_call libgraphics._renderer_flush(ptr);
+		}
+
+		var ptr, windowID, renderer;
+
+		init(ref title : String, ref width : Number, ref height : Number) => {
+			data := (extern_call libgraphics._window_init(title, width, height));
+			ptr = data[0];
+			windowID = data[1];
+			extern_call libgraphics._window_register(windowID, this);
+		}
+
+		getRenderer() => {
+			if renderer == nil then {
+				renderer = new Renderer(extern_call libgraphics._window_getRenderer(ptr));
+			}
+			return renderer;
+		}
+
+		close() => {
+			ptr = nil;
+			renderer = nil;
+		}
+	}
+}

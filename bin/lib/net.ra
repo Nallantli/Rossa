@@ -22,12 +22,12 @@ static net class {
 			this.service = __DEFAULT_NET_SERVICE__;
 		}
 
-		init(ref ip : String, ref port : Number, ref service : @net.Service) => {
+		init(ref ip : String, ref port : Number, ref service : net.Service) => {
 			ptr = (extern_call libnet._socket_init(ip, port -> Number, service.ptr));
 			this.service = service;
 		}
 
-		init(ref ptr : Pointer, ref service : @net.Service) => {
+		init(ref ptr : Pointer, ref service : net.Service) => {
 			this.ptr = ptr;
 			this.service = service;
 		}
@@ -69,7 +69,7 @@ static net class {
 			this.service = __DEFAULT_NET_SERVICE__;
 		}
 
-		init(ref port : Number, ref service : @net.Service) => {
+		init(ref port : Number, ref service : net.Service) => {
 			ptr = (extern_call libnet._server_init(port -> Number, service.ptr));
 			this.service = service;
 		}
@@ -86,7 +86,7 @@ static net class {
 			ptr = (extern_call libnet._tcp_stream_init(address, port, __DEFAULT_NET_SERVICE__.ptr));
 		}
 
-		init(ref address : String, ref port : Number, ref service : @net.Service) => {
+		init(ref address : String, ref port : Number, ref service : net.Service) => {
 			ptr = (extern_call libnet._tcp_stream_init(address, port, service.ptr));
 		}
 

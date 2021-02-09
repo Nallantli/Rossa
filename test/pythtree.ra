@@ -1,4 +1,4 @@
-load "sdl";
+load "graphics";
 
 SDL.INIT();
 
@@ -14,7 +14,7 @@ struct Point class {
 	}
 }
 
-drawSquare(ref pA : @Point, ref pB : @Point, ref i : Number) => {
+drawSquare(ref pA : Point, ref pB : Point, ref i : Number) => {
 	color := Color.HSL(i / 10, 1, 0.5);
 	pC := new Point(pB.x - (pA.y - pB.y), pB.y - (pB.x - pA.x));
 	pD := new Point(pA.x - (pA.y - pB.y), pA.y - (pB.x - pA.x));

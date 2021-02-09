@@ -116,7 +116,7 @@ const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesyst
 const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
 {
 	if (tree)
-		std::cout << entry->printTree("", true).str();
+		entry->printTree("", true);
 
 	auto g = NodeParser::genParser(entry);
 

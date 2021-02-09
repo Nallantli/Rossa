@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.13.2-alpha"
+#define _ROSSA_VERSION_ "v1.13.3-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -65,6 +65,8 @@ typedef std::vector<node_ptr_t> node_vec_t;
 typedef std::vector<i_ptr_t> i_vec_t;
 typedef std::vector<param_t> param_vec_t;
 typedef std::vector<type_sll> aug_type_t;
+
+typedef std::vector<hash_ull> hash_vec_t;
 
 typedef std::map<const std::string, const sym_t> sym_map_t;
 typedef std::map<const size_t, std::map<const fsig_t, func_ptr_t>> f_map_t;
@@ -467,6 +469,8 @@ public:
 	const bool operator<(const sym_t &) const;
 	const f_map_t &getFunctionOverloads(const token_t *, trace_t &) const;
 	void shift() const;
+
+	const sym_t clone() const;
 };
 
 class Instruction
@@ -601,6 +605,8 @@ class Node
 	friend class NodeParser;
 
 protected:
+	const hash_vec_t path;
+
 	enum type_t
 	{
 		ENTRY_NODE,
@@ -639,62 +645,64 @@ protected:
 	const token_t token;
 
 public:
-	Node(const type_t &, const token_t &);
+	Node(const hash_vec_t &, const type_t &, const token_t &);
 	const type_t getType() const;
 	const token_t getToken() const;
 
 	virtual i_ptr_t genParser() const = 0;
 	virtual bool isConst() const = 0;
-	virtual std::stringstream printTree(std::string, bool) const = 0;
+	virtual void printTree(std::string, bool) const = 0;
 	virtual const node_ptr_t fold() const = 0;
 };
 
 class NodeParser
 {
 private:
+	hash_ull scope_i = 0;
+
 	const std::vector<token_t> tokens;
 	const std::filesystem::path currentFile;
 
 	unsigned int index = 0;
 	token_t currentToken;
 	void nextToken();
-	node_ptr_t parseNumNode();
-	node_ptr_t parseBoolNode();
-	node_ptr_t parseIDNode();
-	node_ptr_t parseBIDNode();
-	node_ptr_t parseEntryNode();
-	node_ptr_t parseExprNode();
-	node_ptr_t parseEquNode();
-	node_ptr_t parseVectorNode();
-	node_ptr_t parseUnitNode();
-	node_ptr_t parseBaseNode();
-	node_ptr_t parseUnOpNode();
-	node_ptr_t parseMapNode();
-	node_ptr_t parseIfElseNode();
-	node_ptr_t parseWhileNode();
-	node_ptr_t parseForNode();
-	std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode();
-	node_ptr_t parseDefineNode();
-	node_ptr_t parseLambdaNode();
-	node_ptr_t parseNPLambdaNode();
-	node_ptr_t parseExternNode();
-	node_ptr_t parseExternCallNode();
-	node_ptr_t parseCallOpNode();
-	node_ptr_t parseCallBuiltNode();
-	node_ptr_t parseClassNode();
-	node_ptr_t parseNewNode();
-	node_ptr_t parseLoadNode();
-	node_ptr_t parseSwitchNode();
-	node_ptr_t parseTryCatchNode();
-	node_ptr_t parseTypeNode();
-	param_t parseParamTypeNode(const aug_type_t &);
-	node_ptr_t parseTrailingNode(const node_ptr_t &, const bool &);
-	node_ptr_t parseInsNode(const node_ptr_t &);
-	node_ptr_t parseUntilNode(const node_ptr_t &, const bool &);
-	node_ptr_t parseBinOpNode(const node_ptr_t &);
-	node_ptr_t parseCallNode(const node_ptr_t &);
-	node_ptr_t parseIndexNode(const node_ptr_t &);
-	node_ptr_t parseThenNode(const node_ptr_t &);
+	node_ptr_t parseNumNode(hash_vec_t);
+	node_ptr_t parseBoolNode(hash_vec_t);
+	node_ptr_t parseIDNode(hash_vec_t);
+	node_ptr_t parseBIDNode(hash_vec_t);
+	node_ptr_t parseEntryNode(hash_vec_t);
+	node_ptr_t parseExprNode(hash_vec_t);
+	node_ptr_t parseEquNode(hash_vec_t);
+	node_ptr_t parseVectorNode(hash_vec_t);
+	node_ptr_t parseUnitNode(hash_vec_t);
+	node_ptr_t parseBaseNode(hash_vec_t);
+	node_ptr_t parseUnOpNode(hash_vec_t);
+	node_ptr_t parseMapNode(hash_vec_t);
+	node_ptr_t parseIfElseNode(hash_vec_t);
+	node_ptr_t parseWhileNode(hash_vec_t);
+	node_ptr_t parseForNode(hash_vec_t);
+	std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(hash_vec_t);
+	node_ptr_t parseDefineNode(hash_vec_t);
+	node_ptr_t parseLambdaNode(hash_vec_t);
+	node_ptr_t parseNPLambdaNode(hash_vec_t);
+	node_ptr_t parseExternNode(hash_vec_t);
+	node_ptr_t parseExternCallNode(hash_vec_t);
+	node_ptr_t parseCallOpNode(hash_vec_t);
+	node_ptr_t parseCallBuiltNode(hash_vec_t);
+	node_ptr_t parseClassNode(hash_vec_t);
+	node_ptr_t parseNewNode(hash_vec_t);
+	node_ptr_t parseLoadNode(hash_vec_t);
+	node_ptr_t parseSwitchNode(hash_vec_t);
+	node_ptr_t parseTryCatchNode(hash_vec_t);
+	node_ptr_t parseTypeNode(hash_vec_t);
+	param_t parseParamTypeNode(hash_vec_t, const aug_type_t &);
+	node_ptr_t parseTrailingNode(hash_vec_t, const node_ptr_t &, const bool &);
+	node_ptr_t parseInsNode(hash_vec_t, const node_ptr_t &);
+	node_ptr_t parseUntilNode(hash_vec_t, const node_ptr_t &, const bool &);
+	node_ptr_t parseBinOpNode(hash_vec_t, const node_ptr_t &);
+	node_ptr_t parseCallNode(hash_vec_t, const node_ptr_t &);
+	node_ptr_t parseIndexNode(hash_vec_t, const node_ptr_t &);
+	node_ptr_t parseThenNode(hash_vec_t, const node_ptr_t &);
 
 	node_ptr_t logErrorN(const std::string &, const token_t &);
 	param_t logErrorPT(const std::string &, const token_t &);
@@ -1308,10 +1316,10 @@ private:
 	const sym_t s;
 
 public:
-	ContainerNode(const sym_t &, const token_t &);
+	ContainerNode(const hash_vec_t &, const sym_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1322,10 +1330,10 @@ private:
 	bool scoped;
 
 public:
-	VectorNode(const node_vec_t &, const bool &, const token_t &);
+	VectorNode(const hash_vec_t &, const node_vec_t &, const bool &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 	const node_vec_t &getChildren();
 };
@@ -1333,20 +1341,20 @@ public:
 class BreakNode : public Node
 {
 public:
-	BreakNode(const token_t &);
+	BreakNode(const hash_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
 class ContinueNode : public Node
 {
 public:
-	ContinueNode(const token_t &);
+	ContinueNode(const hash_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1356,11 +1364,11 @@ private:
 	const hash_ull key;
 
 public:
-	IDNode(const hash_ull &, const token_t &);
+	IDNode(const hash_vec_t &, const hash_ull &, const token_t &);
 	hash_ull getKey() const;
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1370,11 +1378,11 @@ private:
 	const std::string key;
 
 public:
-	BIDNode(const std::string &, const token_t &);
+	BIDNode(const hash_vec_t &, const std::string &, const token_t &);
 	const std::string getKey() const;
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1388,10 +1396,10 @@ private:
 	const std::vector<hash_ull> captures;
 
 public:
-	DefineNode(const hash_ull &, const fsig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const node_ptr_t &, const std::vector<hash_ull> &, const token_t &);
+	DefineNode(const hash_vec_t &, const hash_ull &, const fsig_t &, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const node_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1403,10 +1411,10 @@ private:
 	const std::vector<hash_ull> captures;
 
 public:
-	VargDefineNode(const hash_ull &, const node_ptr_t &, const std::vector<hash_ull> &, const token_t &);
+	VargDefineNode(const hash_vec_t &, const hash_ull &, const node_ptr_t &, const std::vector<hash_ull> &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1417,10 +1425,10 @@ private:
 	const node_ptr_t params;
 
 public:
-	NewNode(const node_ptr_t &, const node_ptr_t &, const token_t &);
+	NewNode(const hash_vec_t &, const node_ptr_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1433,10 +1441,10 @@ private:
 	const node_ptr_t extends;
 
 public:
-	ClassNode(const hash_ull &, const int &, const node_vec_t &, const node_ptr_t &, const token_t &);
+	ClassNode(const hash_vec_t &, const hash_ull &, const int &, const node_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1446,10 +1454,10 @@ private:
 	const std::vector<hash_ull> keys;
 
 public:
-	VarNode(const std::vector<hash_ull> &, const token_t &);
+	VarNode(const hash_vec_t &, const std::vector<hash_ull> &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1460,12 +1468,12 @@ private:
 	const node_vec_t args;
 
 public:
-	CallNode(const node_ptr_t &, const node_vec_t &, const token_t &);
+	CallNode(const hash_vec_t &, const node_ptr_t &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	node_ptr_t getCallee() const;
 	node_vec_t getArgs() const;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1477,10 +1485,10 @@ private:
 	const node_vec_t args;
 
 public:
-	ExternCallNode(const std::string &, const std::string &, const node_vec_t &, const token_t &);
+	ExternCallNode(const hash_vec_t &, const std::string &, const std::string &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1491,10 +1499,10 @@ private:
 	const node_ptr_t arg;
 
 public:
-	CallBuiltNode(const LexerTokenType &, const node_ptr_t &, const token_t &);
+	CallBuiltNode(const hash_vec_t &, const LexerTokenType &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1504,10 +1512,10 @@ private:
 	const node_ptr_t a;
 
 public:
-	ReturnNode(const node_ptr_t &, const token_t &);
+	ReturnNode(const hash_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1517,10 +1525,10 @@ private:
 	const node_ptr_t a;
 
 public:
-	ReferNode(const node_ptr_t &, const token_t &);
+	ReferNode(const hash_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1532,7 +1540,7 @@ private:
 	node_ptr_t b;
 
 public:
-	BinOpNode(const std::string &, const node_ptr_t &, const node_ptr_t &, const token_t &);
+	BinOpNode(const hash_vec_t &, const std::string &, const node_ptr_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	const std::string &getOp() const;
 	const node_ptr_t getA() const;
@@ -1540,7 +1548,7 @@ public:
 	void setA(const node_ptr_t &);
 	void setB(const node_ptr_t &);
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1551,10 +1559,10 @@ private:
 	const node_ptr_t a;
 
 public:
-	UnOpNode(const std::string &, const node_ptr_t &, const token_t &);
+	UnOpNode(const hash_vec_t &, const std::string &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1564,10 +1572,10 @@ private:
 	const node_ptr_t a;
 
 public:
-	ParenNode(const node_ptr_t &, const token_t &);
+	ParenNode(const hash_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1578,12 +1586,12 @@ private:
 	const node_ptr_t arg;
 
 public:
-	InsNode(const node_ptr_t &, const node_ptr_t &, const token_t &);
+	InsNode(const hash_vec_t &, const node_ptr_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	const node_ptr_t getCallee() const;
 	const node_ptr_t getArg() const;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1595,11 +1603,11 @@ private:
 	node_ptr_t elses = nullptr;
 
 public:
-	IfElseNode(const node_ptr_t &, const node_ptr_t &, const token_t &);
+	IfElseNode(const hash_vec_t &, const node_ptr_t &, const node_ptr_t &, const token_t &);
 	void setElse(const node_ptr_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1610,10 +1618,10 @@ private:
 	const node_vec_t body;
 
 public:
-	WhileNode(const node_ptr_t &, const node_vec_t &, const token_t &);
+	WhileNode(const hash_vec_t &, const node_ptr_t &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1625,10 +1633,10 @@ private:
 	node_vec_t body;
 
 public:
-	ForNode(const hash_ull &, const node_ptr_t &, const node_vec_t &, const token_t &);
+	ForNode(const hash_vec_t &, const hash_ull &, const node_ptr_t &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1641,10 +1649,10 @@ private:
 	const bool inclusive;
 
 public:
-	UntilNode(const node_ptr_t &, const node_ptr_t &, const node_ptr_t &, const bool &, const token_t &);
+	UntilNode(const hash_vec_t &, const node_ptr_t &, const node_ptr_t &, const node_ptr_t &, const bool &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1654,10 +1662,10 @@ private:
 	const std::vector<std::pair<std::string, node_ptr_t>> args;
 
 public:
-	MapNode(const std::vector<std::pair<std::string, node_ptr_t>> &, const token_t &);
+	MapNode(const hash_vec_t &, const std::vector<std::pair<std::string, node_ptr_t>> &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1670,11 +1678,11 @@ private:
 	node_ptr_t elses;
 
 public:
-	SwitchNode(const node_ptr_t &, const std::map<node_ptr_t, size_t> &, const node_vec_t &, const token_t &);
+	SwitchNode(const hash_vec_t &, const node_ptr_t &, const std::map<node_ptr_t, size_t> &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	void setElse(const node_ptr_t &);
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1686,10 +1694,10 @@ private:
 	const hash_ull key;
 
 public:
-	TryCatchNode(const node_ptr_t &, const node_ptr_t &, const hash_ull &, const token_t &);
+	TryCatchNode(const hash_vec_t &, const node_ptr_t &, const node_ptr_t &, const hash_ull &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1699,10 +1707,10 @@ private:
 	const node_ptr_t throws;
 
 public:
-	ThrowNode(const node_ptr_t &, const token_t &);
+	ThrowNode(const hash_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1713,10 +1721,10 @@ private:
 	const node_vec_t args;
 
 public:
-	CallOpNode(const size_t &, const node_vec_t &, const token_t &);
+	CallOpNode(const hash_vec_t &, const size_t &, const node_vec_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1726,10 +1734,10 @@ private:
 	const node_ptr_t del;
 
 public:
-	DeleteNode(const node_ptr_t &, const token_t &);
+	DeleteNode(const hash_vec_t &, const node_ptr_t &, const token_t &);
 	i_ptr_t genParser() const override;
 	bool isConst() const override;
-	std::stringstream printTree(std::string, bool) const override;
+	void printTree(std::string, bool) const override;
 	const node_ptr_t fold() const override;
 };
 
@@ -1829,6 +1837,19 @@ inline const std::string getTypeString(const aug_type_t &t)
 					return "<error-type>";
 			}
 		}
+	}
+	return ret;
+}
+
+template <typename T>
+inline const std::string deHashVec(const std::vector<T> &t)
+{
+	std::string ret = "";
+	int j = 0;
+	for (auto &i : t) {
+		if (j++ > 0)
+			ret += ".";
+		ret += ROSSA_DEHASH(i);
 	}
 	return ret;
 }

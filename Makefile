@@ -65,13 +65,15 @@ endif
 
 dirs: $(DIR)
 
-libs: libstd libfs libnet libsdl libncurses
+libs: libstd libfs libnet libgraphics libsdl libncurses
 
 libstd: bin/lib/libstd$(LIB_EXT)
 
 libfs: bin/lib/libfs$(LIB_EXT)
 
 libnet: bin/lib/libnet$(LIB_EXT)
+
+libgraphics: bin/lib/libgraphics$(LIB_EXT)
 
 libsdl: bin/lib/libsdl$(LIB_EXT)
 
@@ -85,6 +87,9 @@ bin/lib/libfs$(LIB_EXT): libfs/libfs.cpp $(DIR)/librossa.a
 
 bin/lib/libnet$(LIB_EXT): libnet/libnet.cpp $(DIR)/librossa.a
 	$(CC) -o $@ libnet/libnet.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+
+bin/lib/libgraphics$(LIB_EXT): libgraphics/libgraphics.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libgraphics/libgraphics.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
 
 bin/lib/libsdl$(LIB_EXT): libsdl/libsdl.cpp $(DIR)/librossa.a
 	$(CC) -o $@ libsdl/libsdl.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)

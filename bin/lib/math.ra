@@ -15,7 +15,7 @@ struct Matrix class {
 		}
 	}
 
-	`=`(ref m : @Matrix) => {
+	`=`(ref m : Matrix) => {
 		this.a = m.a;
 	}
 
@@ -55,7 +55,7 @@ struct Matrix class {
 		return new Matrix(nm);
 	}
 
-	`+`(ref m : @Matrix) => {
+	`+`(ref m : Matrix) => {
 		if m.a.len() != a.len() || m.a[0].len() != a[0].len() then {
 			throw "Cannot conduct arithmatic on matrices of different sizes";
 		}
@@ -73,11 +73,11 @@ struct Matrix class {
 
 	`+`(ref m : Array) => `+`(new Matrix(m));
 
-	`-`(ref m : @Matrix) => `+`(m * -1);
+	`-`(ref m : Matrix) => `+`(m * -1);
 
 	`-`(ref m : Array) => `-`(new Matrix(m));
 
-	`*`(ref m : @Matrix) => {
+	`*`(ref m : Matrix) => {
 		if a.len() != m.a[0].len() then {
 			throw "Cannot multiply these Matrices";
 		}
@@ -147,8 +147,8 @@ struct Matrix class {
 	`->String`() => (a -> String);
 }
 
-`+`(ref n : Number, ref m : @Matrix) => m + n;
-`-`(ref n : Number, ref m : @Matrix) => m.rsub(n);
-`*`(ref n : Number, ref m : @Matrix) => m * n;
+`+`(ref n : Number, ref m : Matrix) => m + n;
+`-`(ref n : Number, ref m : Matrix) => m.rsub(n);
+`*`(ref n : Number, ref m : Matrix) => m * n;
 
-`->@Matrix`(ref a : Array) => new Matrix(a);
+`->Matrix`(ref a : Array) => new Matrix(a);

@@ -1,8 +1,10 @@
 #include "Rossa.h"
 
 Node::Node(
+	const hash_vec_t &path,
 	const type_t &type,
-	const token_t &token) : type(type),
+	const token_t &token) : path(path)
+	, type(type),
 	token(token)
 {}
 
@@ -19,8 +21,9 @@ const token_t Node::getToken() const
 //------------------------------------------------------------------------------------------------------
 
 ContainerNode::ContainerNode(
+	const hash_vec_t &path,
 	const sym_t &s,
-	const token_t &token) : Node(CONTAINER_NODE,
+	const token_t &token) : Node(path, CONTAINER_NODE,
 		token),
 	s(s)
 {}
@@ -35,32 +38,32 @@ bool ContainerNode::isConst() const
 	return true;
 }
 
-std::stringstream ContainerNode::printTree(std::string indent, bool last) const
+void ContainerNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CONTAINER : " << s.toCodeString() << "\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CONTAINER : " << s.toCodeString() << "\n";
+	}
 
 const node_ptr_t ContainerNode::fold() const
 {
-	return std::make_unique<ContainerNode>(s, token);
+	return std::make_shared<ContainerNode>(path, s, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 VectorNode::VectorNode(
+	const hash_vec_t &path,
 	const node_vec_t &args,
 	const bool &scoped,
-	const token_t &token) : Node(VECTOR_NODE,
+	const token_t &token) : Node(path, VECTOR_NODE,
 		token),
 	args(args),
 	scoped(scoped)
@@ -85,23 +88,22 @@ bool VectorNode::isConst() const
 	return true;
 }
 
-std::stringstream VectorNode::printTree(std::string indent, bool last) const
+void VectorNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "ARRAY : " << scoped << "\n";
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "ARRAY : " << scoped << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		if (args[i] != nullptr)
-			ss << args[i]->printTree(indent, i == args.size() - 1).str();
-	return ss;
-}
+			args[i]->printTree(indent, i == args.size() - 1);
+	}
 
 const node_ptr_t VectorNode::fold() const
 {
@@ -110,14 +112,14 @@ const node_ptr_t VectorNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	node_vec_t nargs;
 	for (auto &c : args)
 		if (c != nullptr)
 			nargs.push_back(c->fold());
-	return std::make_unique<VectorNode>(nargs, scoped, token);
+	return std::make_shared<VectorNode>(path, nargs, scoped, token);
 }
 
 const node_vec_t &VectorNode::getChildren()
@@ -128,7 +130,8 @@ const node_vec_t &VectorNode::getChildren()
 //------------------------------------------------------------------------------------------------------
 
 BreakNode::BreakNode(
-	const token_t &token) : Node(BREAK_NODE,
+	const hash_vec_t &path,
+	const token_t &token) : Node(path, BREAK_NODE,
 		token)
 {}
 
@@ -142,30 +145,30 @@ bool BreakNode::isConst() const
 	return true;
 }
 
-std::stringstream BreakNode::printTree(std::string indent, bool last) const
+void BreakNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "BREAK\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "BREAK\n";
+	}
 
 const node_ptr_t BreakNode::fold() const
 {
-	return std::make_unique<ContainerNode>(sym_t(sym_t::type_t::ID_BREAK), token);
+	return std::make_shared<ContainerNode>(path, sym_t(sym_t::type_t::ID_BREAK), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ContinueNode::ContinueNode(
-	const token_t &token) : Node(CONTINUE_NODE,
+	const hash_vec_t &path,
+	const token_t &token) : Node(path, CONTINUE_NODE,
 		token)
 {}
 
@@ -179,31 +182,31 @@ bool ContinueNode::isConst() const
 	return true;
 }
 
-std::stringstream ContinueNode::printTree(std::string indent, bool last) const
+void ContinueNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CONTINUE\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CONTINUE\n";
+	}
 
 const node_ptr_t ContinueNode::fold() const
 {
-	return std::make_unique<ContainerNode>(sym_t(sym_t::type_t::ID_CONTINUE), token);
+	return std::make_shared<ContainerNode>(path, sym_t(sym_t::type_t::ID_CONTINUE), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 IDNode::IDNode(
+	const hash_vec_t &path,
 	const hash_ull &key,
-	const token_t &token) : Node(ID_NODE,
+	const token_t &token) : Node(path, ID_NODE,
 		token),
 	key(key)
 {}
@@ -225,31 +228,31 @@ bool IDNode::isConst() const
 	return false;
 }
 
-std::stringstream IDNode::printTree(std::string indent, bool last) const
+void IDNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "ID : " << ROSSA_DEHASH(key) << "\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "ID : " << ROSSA_DEHASH(key) << "\n";
+	}
 
 const node_ptr_t IDNode::fold() const
 {
-	return std::make_unique<IDNode>(key, token);
+	return std::make_shared<IDNode>(path, key, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 BIDNode::BIDNode(
+	const hash_vec_t &path,
 	const std::string &key,
-	const token_t &token) : Node(BID_NODE,
+	const token_t &token) : Node(path, BID_NODE,
 		token),
 	key(key)
 {}
@@ -269,35 +272,35 @@ bool BIDNode::isConst() const
 	return false;
 }
 
-std::stringstream BIDNode::printTree(std::string indent, bool last) const
+void BIDNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "BID : " << key << "\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "BID : " << key << "\n";
+	}
 
 const node_ptr_t BIDNode::fold() const
 {
-	return std::make_unique<BIDNode>(key, token);
+	return std::make_shared<BIDNode>(path, key, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 DefineNode::DefineNode(
+	const hash_vec_t &path,
 	const hash_ull &key,
 	const fsig_t &ftype,
 	const std::vector<std::pair<LexerTokenType, hash_ull>> &params,
 	const node_ptr_t &body,
 	const std::vector<hash_ull> &captures,
-	const token_t &token) : Node(DEFINE_NODE,
+	const token_t &token) : Node(path, DEFINE_NODE,
 		token),
 	key(key),
 	ftype(ftype),
@@ -316,21 +319,20 @@ bool DefineNode::isConst() const
 	return false;
 }
 
-std::stringstream DefineNode::printTree(std::string indent, bool last) const
+void DefineNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n";
-	ss << body->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n";
+	body->printTree(indent, true);
+	}
 
 const node_ptr_t DefineNode::fold() const
 {
@@ -339,19 +341,20 @@ const node_ptr_t DefineNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<DefineNode>(key, ftype, params, body->fold(), captures, token);
+	return std::make_shared<DefineNode>(path, key, ftype, params, body->fold(), captures, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 VargDefineNode::VargDefineNode(
+	const hash_vec_t &path,
 	const hash_ull &key,
 	const node_ptr_t &body,
 	const std::vector<hash_ull> &captures,
-	const token_t &token) : Node(VARG_DEFINE_NODE,
+	const token_t &token) : Node(path, VARG_DEFINE_NODE,
 		token),
 	key(key),
 	body(body),
@@ -368,21 +371,20 @@ bool VargDefineNode::isConst() const
 	return false;
 }
 
-std::stringstream VargDefineNode::printTree(std::string indent, bool last) const
+void VargDefineNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n";
-	ss << body->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n";
+	body->printTree(indent, true);
+	}
 
 const node_ptr_t VargDefineNode::fold() const
 {
@@ -391,18 +393,19 @@ const node_ptr_t VargDefineNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<VargDefineNode>(key, body->fold(), captures, token);
+	return std::make_shared<VargDefineNode>(path, key, body->fold(), captures, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 NewNode::NewNode(
+	const hash_vec_t &path,
 	const node_ptr_t &object,
 	const node_ptr_t &params,
-	const token_t &token) : Node(NEW_NODE,
+	const token_t &token) : Node(path, NEW_NODE,
 		token),
 	object(object),
 	params(params)
@@ -419,36 +422,36 @@ bool NewNode::isConst() const
 	return false;
 }
 
-std::stringstream NewNode::printTree(std::string indent, bool last) const
+void NewNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "NEW\n";
-	ss << object->printTree(indent, false).str();
-	ss << params->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "NEW\n";
+	object->printTree(indent, false);
+	params->printTree(indent, true);
+	}
 
 const node_ptr_t NewNode::fold() const
 {
-	return std::make_unique<NewNode>(object->fold(), params->fold(), token);
+	return std::make_shared<NewNode>(path, object->fold(), params->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ClassNode::ClassNode(
+	const hash_vec_t &path,
 	const hash_ull &key,
 	const int &type,
 	const node_vec_t &body,
 	const node_ptr_t &extends,
-	const token_t &token) : Node(CLASS_NODE,
+	const token_t &token) : Node(path, CLASS_NODE,
 		token),
 	key(key),
 	type(type),
@@ -490,24 +493,23 @@ bool ClassNode::isConst() const
 	return false;
 }
 
-std::stringstream ClassNode::printTree(std::string indent, bool last) const
+void ClassNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n";
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n";
 	if (extends != nullptr)
-		ss << extends->printTree(indent, false).str();
+		extends->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
-		ss << body[i]->printTree(indent, i == body.size() - 1).str();
-	return ss;
-}
+		body[i]->printTree(indent, i == body.size() - 1);
+	}
 
 const node_ptr_t ClassNode::fold() const
 {
@@ -516,16 +518,17 @@ const node_ptr_t ClassNode::fold() const
 		nbody.push_back(c->fold());
 
 	if (extends)
-		return std::make_unique<ClassNode>(key, type, nbody, extends->fold(), token);
+		return std::make_shared<ClassNode>(path, key, type, nbody, extends->fold(), token);
 	else
-		return std::make_unique<ClassNode>(key, type, nbody, nullptr, token);
+		return std::make_shared<ClassNode>(path, key, type, nbody, nullptr, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 VarNode::VarNode(
+	const hash_vec_t &path,
 	const std::vector<hash_ull> &keys,
-	const token_t &token) : Node(VAR_NODE,
+	const token_t &token) : Node(path, VAR_NODE,
 		token),
 	keys(keys)
 {}
@@ -540,32 +543,32 @@ bool VarNode::isConst() const
 	return false;
 }
 
-std::stringstream VarNode::printTree(std::string indent, bool last) const
+void VarNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "VAR : " << keys.size() << "\n";
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "VAR : " << keys.size() << "\n";
+	}
 
 const node_ptr_t VarNode::fold() const
 {
-	return std::make_unique<VarNode>(keys, token);
+	return std::make_shared<VarNode>(path, keys, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 CallNode::CallNode(
+	const hash_vec_t &path,
 	const node_ptr_t &callee,
 	const node_vec_t &args,
-	const token_t &token) : Node(CALL_NODE,
+	const token_t &token) : Node(path, CALL_NODE,
 		token),
 	callee(callee),
 	args(args)
@@ -595,23 +598,22 @@ bool CallNode::isConst() const
 	return false;
 }
 
-std::stringstream CallNode::printTree(std::string indent, bool last) const
+void CallNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CALL\n";
-	ss << callee->printTree(indent, args.empty()).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CALL\n";
+	callee->printTree(indent, args.empty());
 	for (size_t i = 0; i < args.size(); i++)
-		ss << args[i]->printTree(indent, i == args.size() - 1).str();
-	return ss;
-}
+		args[i]->printTree(indent, i == args.size() - 1);
+	}
 
 const node_ptr_t CallNode::fold() const
 {
@@ -619,16 +621,17 @@ const node_ptr_t CallNode::fold() const
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<CallNode>(callee->fold(), nargs, token);
+	return std::make_shared<CallNode>(path, callee->fold(), nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ExternCallNode::ExternCallNode(
+	const hash_vec_t &path,
 	const std::string &libname,
 	const std::string &fname,
 	const node_vec_t &args,
-	const token_t &token) : Node(EXTERN_CALL_NODE,
+	const token_t &token) : Node(path, EXTERN_CALL_NODE,
 		token),
 	libname(libname),
 	fname(fname),
@@ -648,22 +651,21 @@ bool ExternCallNode::isConst() const
 	return false;
 }
 
-std::stringstream ExternCallNode::printTree(std::string indent, bool last) const
+void ExternCallNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "EXTERN_CALL : " << libname << "::" << fname << "\n";
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "EXTERN_CALL : " << libname << "::" << fname << "\n";
 	for (size_t i = 0; i < args.size(); i++)
-		ss << args[i]->printTree(indent, i == args.size() - 1).str();
-	return ss;
-}
+		args[i]->printTree(indent, i == args.size() - 1);
+	}
 
 const node_ptr_t ExternCallNode::fold() const
 {
@@ -671,15 +673,16 @@ const node_ptr_t ExternCallNode::fold() const
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<ExternCallNode>(libname, fname, nargs, token);
+	return std::make_shared<ExternCallNode>(path, libname, fname, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 CallBuiltNode::CallBuiltNode(
+	const hash_vec_t &path,
 	const LexerTokenType &t,
 	const node_ptr_t &arg,
-	const token_t &token) : Node(CALL_BUILT_NODE,
+	const token_t &token) : Node(path, CALL_BUILT_NODE,
 		token),
 	t(t),
 	arg(arg)
@@ -712,21 +715,20 @@ bool CallBuiltNode::isConst() const
 	return arg->isConst();
 }
 
-std::stringstream CallBuiltNode::printTree(std::string indent, bool last) const
+void CallBuiltNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CALL_BUILT : " << std::to_string(t) << "\n";
-	ss << arg->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CALL_BUILT : " << std::to_string(t) << "\n";
+	arg->printTree(indent, true);
+	}
 
 const node_ptr_t CallBuiltNode::fold() const
 {
@@ -735,17 +737,18 @@ const node_ptr_t CallBuiltNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<CallBuiltNode>(t, arg->fold(), token);
+	return std::make_shared<CallBuiltNode>(path, t, arg->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ReturnNode::ReturnNode(
+	const hash_vec_t &path,
 	const node_ptr_t &a,
-	const token_t &token) : Node(REFER_NODE,
+	const token_t &token) : Node(path, REFER_NODE,
 		token),
 	a(a)
 {}
@@ -760,32 +763,32 @@ bool ReturnNode::isConst() const
 	return false;
 }
 
-std::stringstream ReturnNode::printTree(std::string indent, bool last) const
+void ReturnNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "RETURN\n";
-	ss << a->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "RETURN\n";
+	a->printTree(indent, true);
+	}
 
 const node_ptr_t ReturnNode::fold() const
 {
-	return std::make_unique<ReturnNode>(a->fold(), token);
+	return std::make_shared<ReturnNode>(path, a->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ReferNode::ReferNode(
+	const hash_vec_t &path,
 	const node_ptr_t &a,
-	const token_t &token) : Node(RETURN_NODE,
+	const token_t &token) : Node(path, RETURN_NODE,
 		token),
 	a(a)
 {}
@@ -800,34 +803,34 @@ bool ReferNode::isConst() const
 	return false;
 }
 
-std::stringstream ReferNode::printTree(std::string indent, bool last) const
+void ReferNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "REFER\n";
-	ss << a->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "REFER\n";
+	a->printTree(indent, true);
+	}
 
 const node_ptr_t ReferNode::fold() const
 {
-	return std::make_unique<ReferNode>(a->fold(), token);
+	return std::make_shared<ReferNode>(path, a->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 BinOpNode::BinOpNode(
+	const hash_vec_t &path,
 	const std::string &op,
 	const node_ptr_t &a,
 	const node_ptr_t &b,
-	const token_t &token) : Node(BIN_OP_NODE,
+	const token_t &token) : Node(path, BIN_OP_NODE,
 		token),
 	op(op),
 	a(a),
@@ -975,22 +978,21 @@ bool BinOpNode::isConst() const
 	return false;
 }
 
-std::stringstream BinOpNode::printTree(std::string indent, bool last) const
+void BinOpNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "BINOP : " << op << "\n";
-	ss << a->printTree(indent, false).str();
-	ss << b->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "BINOP : " << op << "\n";
+	a->printTree(indent, false);
+	b->printTree(indent, true);
+	}
 
 const node_ptr_t BinOpNode::fold() const
 {
@@ -1000,18 +1002,19 @@ const node_ptr_t BinOpNode::fold() const
 		auto evalA = a->genParser()->evaluate(&newScope, stack_trace);
 		auto evalB = b->genParser()->evaluate(&newScope, stack_trace);
 		auto r = genParser()->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<BinOpNode>(op, a->fold(), b->fold(), token);
+	return std::make_shared<BinOpNode>(path, op, a->fold(), b->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 UnOpNode::UnOpNode(
+	const hash_vec_t &path,
 	const std::string &op,
 	const node_ptr_t &a,
-	const token_t &token) : Node(UN_OP_NODE,
+	const token_t &token) : Node(path, UN_OP_NODE,
 		token),
 	op(op),
 	a(a)
@@ -1040,21 +1043,20 @@ bool UnOpNode::isConst() const
 	return a->isConst();
 }
 
-std::stringstream UnOpNode::printTree(std::string indent, bool last) const
+void UnOpNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "UNOP : " << op << "\n";
-	ss << a->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "UNOP : " << op << "\n";
+	a->printTree(indent, true);
+	}
 
 const node_ptr_t UnOpNode::fold() const
 {
@@ -1063,17 +1065,18 @@ const node_ptr_t UnOpNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<UnOpNode>(op, a->fold(), token);
+	return std::make_shared<UnOpNode>(path, op, a->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ParenNode::ParenNode(
+	const hash_vec_t &path,
 	const node_ptr_t &a,
-	const token_t &token) : Node(PAREN_NODE,
+	const token_t &token) : Node(path, PAREN_NODE,
 		token),
 	a(a)
 {}
@@ -1088,21 +1091,20 @@ bool ParenNode::isConst() const
 	return a->isConst();
 }
 
-std::stringstream ParenNode::printTree(std::string indent, bool last) const
+void ParenNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "PAREN\n";
-	ss << a->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "PAREN\n";
+	a->printTree(indent, true);
+	}
 
 const node_ptr_t ParenNode::fold() const
 {
@@ -1112,7 +1114,7 @@ const node_ptr_t ParenNode::fold() const
 		trace_t stack_trace;
 		auto r = i->evaluate(newScope, stack_trace);
 		newScope->clear();
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}*/
 
 	return a->fold();
@@ -1121,9 +1123,10 @@ const node_ptr_t ParenNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 InsNode::InsNode(
+	const hash_vec_t &path,
 	const node_ptr_t &callee,
 	const node_ptr_t &arg,
-	const token_t &token) : Node(INS_NODE,
+	const token_t &token) : Node(path, INS_NODE,
 		token),
 	callee(callee),
 	arg(arg)
@@ -1149,22 +1152,21 @@ bool InsNode::isConst() const
 	return callee->isConst() && arg->isConst();
 }
 
-std::stringstream InsNode::printTree(std::string indent, bool last) const
+void InsNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "INS\n";
-	ss << callee->printTree(indent, false).str();
-	ss << arg->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "INS\n";
+	callee->printTree(indent, false);
+	arg->printTree(indent, true);
+	}
 
 const node_ptr_t InsNode::fold() const
 {
@@ -1173,18 +1175,19 @@ const node_ptr_t InsNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_unique<InsNode>(callee->fold(), arg->fold(), token);
+	return std::make_shared<InsNode>(path, callee->fold(), arg->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 IfElseNode::IfElseNode(
+	const hash_vec_t &path,
 	const node_ptr_t &ifs,
 	const node_ptr_t &body,
-	const token_t &token) : Node(IF_ELSE_NODE,
+	const token_t &token) : Node(path, IF_ELSE_NODE,
 		token),
 	ifs(ifs),
 	body(body)
@@ -1213,24 +1216,23 @@ bool IfElseNode::isConst() const
 	return true;
 }
 
-std::stringstream IfElseNode::printTree(std::string indent, bool last) const
+void IfElseNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "IF_ELSE\n";
-	ss << ifs->printTree(indent, false).str();
-	ss << body->printTree(indent, elses == nullptr).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "IF_ELSE\n";
+	ifs->printTree(indent, false);
+	body->printTree(indent, elses == nullptr);
 	if (elses != nullptr)
-		ss << elses->printTree(indent, true).str();
-	return ss;
-}
+		elses->printTree(indent, true);
+	}
 
 const node_ptr_t IfElseNode::fold() const
 {
@@ -1239,10 +1241,10 @@ const node_ptr_t IfElseNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	auto ret = std::make_unique<IfElseNode>(ifs->fold(), body->fold(), token);
+	auto ret = std::make_shared<IfElseNode>(path, ifs->fold(), body->fold(), token);
 	if (elses)
 		ret->setElse(elses->fold());
 	return ret;
@@ -1251,9 +1253,10 @@ const node_ptr_t IfElseNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 WhileNode::WhileNode(
+	const hash_vec_t &path,
 	const node_ptr_t &whiles,
 	const node_vec_t &body,
-	const token_t &token) : Node(WHILE_NODE,
+	const token_t &token) : Node(path, WHILE_NODE,
 		token),
 	whiles(whiles),
 	body(body)
@@ -1278,23 +1281,22 @@ bool WhileNode::isConst() const
 	return true;
 }
 
-std::stringstream WhileNode::printTree(std::string indent, bool last) const
+void WhileNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "WHILE\n";
-	ss << whiles->printTree(indent, false).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "WHILE\n";
+	whiles->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
-		ss << body[i]->printTree(indent, i == body.size() - 1).str();
-	return ss;
-}
+		body[i]->printTree(indent, i == body.size() - 1);
+	}
 
 const node_ptr_t WhileNode::fold() const
 {
@@ -1303,22 +1305,23 @@ const node_ptr_t WhileNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	node_vec_t nbody;
 	for (auto &c : body)
 		nbody.push_back(c->fold());
-	return std::make_unique<WhileNode>(whiles->fold(), nbody, token);
+	return std::make_shared<WhileNode>(path, whiles->fold(), nbody, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ForNode::ForNode(
+	const hash_vec_t &path,
 	const hash_ull &id,
 	const node_ptr_t &fors,
 	const node_vec_t &body,
-	const token_t &token) : Node(FOR_NODE,
+	const token_t &token) : Node(path, FOR_NODE,
 		token),
 	id(id),
 	fors(fors),
@@ -1344,23 +1347,22 @@ bool ForNode::isConst() const
 	return true;
 }
 
-std::stringstream ForNode::printTree(std::string indent, bool last) const
+void ForNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "FOR : " << ROSSA_DEHASH(id) << "\n";
-	ss << fors->printTree(indent, false).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "FOR : " << ROSSA_DEHASH(id) << "\n";
+	fors->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
-		ss << body[i]->printTree(indent, i == body.size() - 1).str();
-	return ss;
-}
+		body[i]->printTree(indent, i == body.size() - 1);
+	}
 
 const node_ptr_t ForNode::fold() const
 {
@@ -1369,23 +1371,24 @@ const node_ptr_t ForNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	node_vec_t nbody;
 	for (auto &c : body)
 		nbody.push_back(c->fold());
-	return std::make_unique<ForNode>(id, fors->fold(), nbody, token);
+	return std::make_shared<ForNode>(path, id, fors->fold(), nbody, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 UntilNode::UntilNode(
+	const hash_vec_t &path,
 	const node_ptr_t &a,
 	const node_ptr_t &b,
 	const node_ptr_t &step,
 	const bool &inclusive,
-	const token_t &token) : Node(UNTIL_NODE,
+	const token_t &token) : Node(path, UNTIL_NODE,
 		token),
 	a(a),
 	b(b),
@@ -1422,24 +1425,23 @@ bool UntilNode::isConst() const
 	return false;
 }
 
-std::stringstream UntilNode::printTree(std::string indent, bool last) const
+void UntilNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "UNTIL\n";
-	ss << a->printTree(indent, false).str();
-	ss << b->printTree(indent, step == nullptr).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "UNTIL\n";
+	a->printTree(indent, false);
+	b->printTree(indent, step == nullptr);
 	if (step != nullptr)
-		ss << step->printTree(indent, true).str();
-	return ss;
-}
+		step->printTree(indent, true);
+	}
 
 const node_ptr_t UntilNode::fold() const
 {
@@ -1448,20 +1450,21 @@ const node_ptr_t UntilNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	if (step == nullptr)
-		return std::make_unique<UntilNode>(a->fold(), b->fold(), nullptr, inclusive, token);
+		return std::make_shared<UntilNode>(path, a->fold(), b->fold(), nullptr, inclusive, token);
 	else
-		return std::make_unique<UntilNode>(a->fold(), b->fold(), step->fold(), inclusive, token);
+		return std::make_shared<UntilNode>(path, a->fold(), b->fold(), step->fold(), inclusive, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 MapNode::MapNode(
+	const hash_vec_t &path,
 	const std::vector<std::pair<std::string, node_ptr_t>> &args,
-	const token_t &token) : Node(MAP_NODE,
+	const token_t &token) : Node(path, MAP_NODE,
 		token),
 	args(args)
 {}
@@ -1483,22 +1486,21 @@ bool MapNode::isConst() const
 	return true;
 }
 
-std::stringstream MapNode::printTree(std::string indent, bool last) const
+void MapNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "MAP\n";
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "MAP\n";
 	for (size_t i = 0; i < args.size(); i++)
-		ss << args[i].second->printTree(indent, i == args.size() - 1).str();
-	return ss;
-}
+		args[i].second->printTree(indent, i == args.size() - 1);
+	}
 
 const node_ptr_t MapNode::fold() const
 {
@@ -1507,22 +1509,23 @@ const node_ptr_t MapNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	std::vector<std::pair<std::string, node_ptr_t>> nargs;
 	for (auto &c : args)
 		nargs.push_back({ c.first, c.second->fold() });
-	return std::make_unique<MapNode>(nargs, token);
+	return std::make_shared<MapNode>(path, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 SwitchNode::SwitchNode(
+	const hash_vec_t &path,
 	const node_ptr_t &switchs,
 	const std::map<node_ptr_t, size_t> &cases,
 	const node_vec_t &gotos,
-	const token_t &token) : Node(SWITCH_NODE,
+	const token_t &token) : Node(path, SWITCH_NODE,
 		token),
 	switchs(switchs),
 	cases(cases),
@@ -1563,32 +1566,31 @@ bool SwitchNode::isConst() const
 	return false;
 }
 
-std::stringstream SwitchNode::printTree(std::string indent, bool last) const
+void SwitchNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "SWITCH\n";
-	ss << switchs->printTree(indent, gotos.empty() && cases.empty()).str();
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "SWITCH\n";
+	switchs->printTree(indent, gotos.empty() && cases.empty());
 	size_t i = 0;
 	for (auto &e : cases) {
-		ss << e.first->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses).str();
+		e.first->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses);
 		i++;
 	}
 	for (auto &e : gotos) {
-		ss << e->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses).str();
+		e->printTree(indent, i == (cases.size() + gotos.size()) - 1 && !elses);
 		i++;
 	}
 	if (elses)
-		ss << elses->printTree(indent, true).str();
-	return ss;
-}
+		elses->printTree(indent, true);
+	}
 
 const node_ptr_t SwitchNode::fold() const
 {
@@ -1597,7 +1599,7 @@ const node_ptr_t SwitchNode::fold() const
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
 		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_unique<ContainerNode>(r, token);
+		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
 	std::map<node_ptr_t, size_t> ncases;
@@ -1606,7 +1608,7 @@ const node_ptr_t SwitchNode::fold() const
 		ncases[c.first->fold()] = c.second;
 	for (auto &e : gotos)
 		ngotos.push_back(e->fold());
-	auto ret = std::make_unique<SwitchNode>(switchs->fold(), ncases, ngotos, token);
+	auto ret = std::make_shared<SwitchNode>(path, switchs->fold(), ncases, ngotos, token);
 	if (elses)
 		ret->setElse(elses->fold());
 	return ret;
@@ -1615,10 +1617,11 @@ const node_ptr_t SwitchNode::fold() const
 //------------------------------------------------------------------------------------------------------
 
 TryCatchNode::TryCatchNode(
+	const hash_vec_t &path,
 	const node_ptr_t &trys,
 	const node_ptr_t &catchs,
 	const hash_ull &key,
-	const token_t &token) : Node(TRY_CATCH_NODE,
+	const token_t &token) : Node(path, TRY_CATCH_NODE,
 		token),
 	trys(trys),
 	catchs(catchs),
@@ -1635,33 +1638,33 @@ bool TryCatchNode::isConst() const
 	return false;
 }
 
-std::stringstream TryCatchNode::printTree(std::string indent, bool last) const
+void TryCatchNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n";
-	ss << trys->printTree(indent, false).str();
-	ss << catchs->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n";
+	trys->printTree(indent, false);
+	catchs->printTree(indent, true);
+	}
 
 const node_ptr_t TryCatchNode::fold() const
 {
-	return std::make_unique<TryCatchNode>(trys->fold(), catchs->fold(), key, token);
+	return std::make_shared<TryCatchNode>(path, trys->fold(), catchs->fold(), key, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 ThrowNode::ThrowNode(
+	const hash_vec_t &path,
 	const node_ptr_t &throws,
-	const token_t &token) : Node(THROW_NODE, token),
+	const token_t &token) : Node(path, THROW_NODE, token),
 	throws(throws)
 {}
 
@@ -1675,33 +1678,33 @@ bool ThrowNode::isConst() const
 	return false;
 }
 
-std::stringstream ThrowNode::printTree(std::string indent, bool last) const
+void ThrowNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "THROW\n";
-	ss << throws->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "THROW\n";
+	throws->printTree(indent, true);
+	}
 
 const node_ptr_t ThrowNode::fold() const
 {
-	return std::make_unique<ThrowNode>(throws->fold(), token);
+	return std::make_shared<ThrowNode>(path, throws->fold(), token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 CallOpNode::CallOpNode(
+	const hash_vec_t &path,
 	const size_t &id,
 	const node_vec_t &args,
-	const token_t &token) : Node(CALL_OP_NODE,
+	const token_t &token) : Node(path, CALL_OP_NODE,
 		token),
 	id(id),
 	args(args)
@@ -1720,22 +1723,21 @@ bool CallOpNode::isConst() const
 	return false;
 }
 
-std::stringstream CallOpNode::printTree(std::string indent, bool last) const
+void CallOpNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "CALL_OP : " << id << "\n";
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "CALL_OP : " << id << "\n";
 	for (size_t i = 0; i < args.size(); i++)
-		ss << args[i]->printTree(indent, i == args.size() - 1).str();
-	return ss;
-}
+		args[i]->printTree(indent, i == args.size() - 1);
+	}
 
 const node_ptr_t CallOpNode::fold() const
 {
@@ -1743,14 +1745,15 @@ const node_ptr_t CallOpNode::fold() const
 	for (auto &c : args)
 		nargs.push_back(c->fold());
 
-	return std::make_unique<CallOpNode>(id, nargs, token);
+	return std::make_shared<CallOpNode>(path, id, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
 
 DeleteNode::DeleteNode(
+	const hash_vec_t &path,
 	const node_ptr_t &del,
-	const token_t &token) : Node(DELETE_NODE, token),
+	const token_t &token) : Node(path, DELETE_NODE, token),
 	del(del)
 {}
 
@@ -1764,23 +1767,22 @@ bool DeleteNode::isConst() const
 	return false;
 }
 
-std::stringstream DeleteNode::printTree(std::string indent, bool last) const
+void DeleteNode::printTree(std::string indent, bool last) const
 {
-	std::stringstream ss;
-	ss << indent;
+		std::cout << indent;
 	if (last) {
-		ss << "└─";
+		std::cout << "└─";
 		indent += "  ";
 	} else {
-		ss << "├─";
+		std::cout << "├─";
 		indent += "│ ";
 	}
-	ss << "DELETE\n";
-	ss << del->printTree(indent, true).str();
-	return ss;
-}
+	printc(deHashVec(path) + " ", RED_TEXT);
+	std::cout << "DELETE\n";
+	del->printTree(indent, true);
+	}
 
 const node_ptr_t DeleteNode::fold() const
 {
-	return std::make_unique<DeleteNode>(del->fold(), token);
+	return std::make_shared<DeleteNode>(path, del->fold(), token);
 }

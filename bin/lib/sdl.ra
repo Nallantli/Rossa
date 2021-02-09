@@ -1,320 +1,221 @@
 extern "libsdl";
 
-static Color class {
-	RED := { "red" : 0xff, "green" : 0x00, "blue" : 0x00, "alpha" : 0xff };
-	BLUE := { "red" : 0x00, "green" : 0x00, "blue" : 0xff, "alpha" : 0xff };
-	GREEN := { "red" : 0x00, "green" : 0xff, "blue" : 0x00, "alpha" : 0xff };
-	YELLOW := { "red" : 0xff, "green" : 0xff, "blue" : 0x00, "alpha" : 0xff };
-	MAGENTA := { "red" : 0xff, "green" : 0x00, "blue" : 0xff, "alpha" : 0xff };
-	CYAN := { "red" : 0x00, "green" : 0xff, "blue" : 0xff, "alpha" : 0xff };
-	BLACK := { "red" : 0x00, "green" : 0x00, "blue" : 0x00, "alpha" : 0xff };
-	WHITE := { "red" : 0xff, "green" : 0xff, "blue" : 0xff, "alpha" : 0xff };
+# ----------------------------------------------------------------------------------------------- #
+# ENUMS / DEFINES
+# ----------------------------------------------------------------------------------------------- #
 
-	`()`(ref r : Number, ref g : Number, ref b : Number) => {
-		return { "red" : r, "green" : g, "blue" : b, "alpha" : 0xff };
-	}
+# SDL.h
+SDL_INIT_TIMER := 1;
+SDL_INIT_AUDIO := 16;
+SDL_INIT_VIDEO := 32;
+SDL_INIT_JOYSTICK := 512;
+SDL_INIT_HAPTIC := 4096;
+SDL_INIT_GAMECONTROLLER := 8192;
+SDL_INIT_EVENTS := 16384;
+SDL_INIT_SENSOR := 32768;
+SDL_INIT_NOPARACHUTE := 1048576;
+SDL_INIT_EVERYTHING := SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_SENSOR;
 
-	`()`(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-		return { "red" : r, "green" : g, "blue" : b, "alpha" : a };
-	}
+# SDL_hints.h
+SDL_HINT_DEFAULT := 0;
+SDL_HINT_NORMAL := 1;
+SDL_HINT_OVERRIDE := 2;
 
-	HSL(ref h : Number, ref s : Number, ref l : Number) => HSL(h, s, l, 0xff);
+SDL_HINT_FRAMEBUFFER_ACCELERATION := "SDL_FRAMEBUFFER_ACCELERATION";
+SDL_HINT_RENDER_DRIVER := "SDL_RENDER_DRIVER";
+SDL_HINT_RENDER_OPENGL_SHADERS := "SDL_RENDER_OPENGL_SHADERS";
+SDL_HINT_RENDER_DIRECT3D_THREADSAFE := "SDL_RENDER_DIRECT3D_THREADSAFE";
+SDL_HINT_RENDER_DIRECT3D11_DEBUG := "SDL_RENDER_DIRECT3D11_DEBUG";
+SDL_HINT_RENDER_LOGICAL_SIZE_MODE := "SDL_RENDER_LOGICAL_SIZE_MODE";
+SDL_HINT_RENDER_SCALE_QUALITY := "SDL_RENDER_SCALE_QUALITY";
+SDL_HINT_RENDER_VSYNC := "SDL_RENDER_VSYNC";
+SDL_HINT_VIDEO_ALLOW_SCREENSAVER := "SDL_VIDEO_ALLOW_SCREENSAVER";
+SDL_HINT_VIDEO_EXTERNAL_CONTEXT := "SDL_VIDEO_EXTERNAL_CONTEXT";
+SDL_HINT_VIDEO_X11_XVIDMODE := "SDL_VIDEO_X11_XVIDMODE";
+SDL_HINT_VIDEO_X11_XINERAMA := "SDL_VIDEO_X11_XINERAMA";
+SDL_HINT_VIDEO_X11_XRANDR := "SDL_VIDEO_X11_XRANDR";
+SDL_HINT_VIDEO_X11_WINDOW_VISUALID := "SDL_VIDEO_X11_WINDOW_VISUALID";
+SDL_HINT_VIDEO_X11_NET_WM_PING := "SDL_VIDEO_X11_NET_WM_PING";
+SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR := "SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR";
+SDL_HINT_VIDEO_X11_FORCE_EGL := "SDL_VIDEO_X11_FORCE_EGL";
+SDL_HINT_WINDOW_FRAME_USABLE_WHILE_CURSOR_HIDDEN := "SDL_WINDOW_FRAME_USABLE_WHILE_CURSOR_HIDDEN";
+SDL_HINT_WINDOWS_INTRESOURCE_ICON := "SDL_WINDOWS_INTRESOURCE_ICON";
+SDL_HINT_WINDOWS_INTRESOURCE_ICON_SMALL := "SDL_WINDOWS_INTRESOURCE_ICON_SMALL";
+SDL_HINT_WINDOWS_ENABLE_MESSAGELOOP := "SDL_WINDOWS_ENABLE_MESSAGELOOP";
+SDL_HINT_GRAB_KEYBOARD := "SDL_GRAB_KEYBOARD";
+SDL_HINT_MOUSE_DOUBLE_CLICK_TIME := "SDL_MOUSE_DOUBLE_CLICK_TIME";
+SDL_HINT_MOUSE_DOUBLE_CLICK_RADIUS := "SDL_MOUSE_DOUBLE_CLICK_RADIUS";
+SDL_HINT_MOUSE_NORMAL_SPEED_SCALE := "SDL_MOUSE_NORMAL_SPEED_SCALE";
+SDL_HINT_MOUSE_RELATIVE_SPEED_SCALE := "SDL_MOUSE_RELATIVE_SPEED_SCALE";
+SDL_HINT_MOUSE_RELATIVE_MODE_WARP := "SDL_MOUSE_RELATIVE_MODE_WARP";
+SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH := "SDL_MOUSE_FOCUS_CLICKTHROUGH";
+SDL_HINT_TOUCH_MOUSE_EVENTS := "SDL_TOUCH_MOUSE_EVENTS";
+SDL_HINT_MOUSE_TOUCH_EVENTS := "SDL_MOUSE_TOUCH_EVENTS";
+SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS := "SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS";
+SDL_HINT_IDLE_TIMER_DISABLED := "SDL_IOS_IDLE_TIMER_DISABLED";
+SDL_HINT_ORIENTATIONS := "SDL_IOS_ORIENTATIONS";
+SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS := "SDL_APPLE_TV_CONTROLLER_UI_EVENTS";
+SDL_HINT_APPLE_TV_REMOTE_ALLOW_ROTATION := "SDL_APPLE_TV_REMOTE_ALLOW_ROTATION";
+SDL_HINT_IOS_HIDE_HOME_INDICATOR := "SDL_IOS_HIDE_HOME_INDICATOR";
+SDL_HINT_ACCELEROMETER_AS_JOYSTICK := "SDL_ACCELEROMETER_AS_JOYSTICK";
+SDL_HINT_TV_REMOTE_AS_JOYSTICK := "SDL_TV_REMOTE_AS_JOYSTICK";
+SDL_HINT_XINPUT_ENABLED := "SDL_XINPUT_ENABLED";
+SDL_HINT_XINPUT_USE_OLD_JOYSTICK_MAPPING := "SDL_XINPUT_USE_OLD_JOYSTICK_MAPPING";
+SDL_HINT_GAMECONTROLLERTYPE := "SDL_GAMECONTROLLERTYPE";
+SDL_HINT_GAMECONTROLLERCONFIG := "SDL_GAMECONTROLLERCONFIG";
+SDL_HINT_GAMECONTROLLERCONFIG_FILE := "SDL_GAMECONTROLLERCONFIG_FILE";
+SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES := "SDL_GAMECONTROLLER_IGNORE_DEVICES";
+SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT := "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT";
+SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS := "SDL_GAMECONTROLLER_USE_BUTTON_LABELS";
+SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS := "SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS";
+SDL_HINT_JOYSTICK_HIDAPI := "SDL_JOYSTICK_HIDAPI";
+SDL_HINT_JOYSTICK_HIDAPI_PS4 := "SDL_JOYSTICK_HIDAPI_PS4";
+SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE := "SDL_JOYSTICK_HIDAPI_PS4_RUMBLE";
+SDL_HINT_JOYSTICK_HIDAPI_STEAM := "SDL_JOYSTICK_HIDAPI_STEAM";
+SDL_HINT_JOYSTICK_HIDAPI_SWITCH := "SDL_JOYSTICK_HIDAPI_SWITCH";
+SDL_HINT_JOYSTICK_HIDAPI_XBOX := "SDL_JOYSTICK_HIDAPI_XBOX";
+SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE := "SDL_JOYSTICK_HIDAPI_GAMECUBE";
+SDL_HINT_ENABLE_STEAM_CONTROLLERS := "SDL_ENABLE_STEAM_CONTROLLERS";
+SDL_HINT_ALLOW_TOPMOST := "SDL_ALLOW_TOPMOST";
+SDL_HINT_TIMER_RESOLUTION := "SDL_TIMER_RESOLUTION";
+SDL_HINT_QTWAYLAND_CONTENT_ORIENTATION := "SDL_QTWAYLAND_CONTENT_ORIENTATION";
+SDL_HINT_QTWAYLAND_WINDOW_FLAGS := "SDL_QTWAYLAND_WINDOW_FLAGS";
+SDL_HINT_THREAD_STACK_SIZE := "SDL_THREAD_STACK_SIZE";
+SDL_HINT_VIDEO_HIGHDPI_DISABLED := "SDL_VIDEO_HIGHDPI_DISABLED";
+SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK := "SDL_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK";
+SDL_HINT_VIDEO_WIN_D3DCOMPILER := "SDL_VIDEO_WIN_D3DCOMPILER";
+SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT := "SDL_VIDEO_WINDOW_SHARE_PIXEL_FORMAT";
+SDL_HINT_WINRT_PRIVACY_POLICY_URL := "SDL_WINRT_PRIVACY_POLICY_URL";
+SDL_HINT_WINRT_PRIVACY_POLICY_LABEL := "SDL_WINRT_PRIVACY_POLICY_LABEL";
+SDL_HINT_WINRT_HANDLE_BACK_BUTTON := "SDL_WINRT_HANDLE_BACK_BUTTON";
+SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES := "SDL_VIDEO_MAC_FULLSCREEN_SPACES";
+SDL_HINT_MAC_BACKGROUND_APP := "SDL_MAC_BACKGROUND_APP";
+SDL_HINT_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION := "SDL_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION";
+SDL_HINT_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION := "SDL_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION";
+SDL_HINT_IME_INTERNAL_EDITING := "SDL_IME_INTERNAL_EDITING";
+SDL_HINT_ANDROID_TRAP_BACK_BUTTON := "SDL_ANDROID_TRAP_BACK_BUTTON";
+SDL_HINT_ANDROID_BLOCK_ON_PAUSE := "SDL_ANDROID_BLOCK_ON_PAUSE";
+SDL_HINT_RETURN_KEY_HIDES_IME := "SDL_RETURN_KEY_HIDES_IME";
+SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT := "SDL_EMSCRIPTEN_KEYBOARD_ELEMENT";
+SDL_HINT_NO_SIGNAL_HANDLERS := "SDL_NO_SIGNAL_HANDLERS";
+SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4 := "SDL_WINDOWS_NO_CLOSE_ON_ALT_F4";
+SDL_HINT_BMP_SAVE_LEGACY_FORMAT := "SDL_BMP_SAVE_LEGACY_FORMAT";
+SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING := "SDL_WINDOWS_DISABLE_THREAD_NAMING";
+SDL_HINT_RPI_VIDEO_LAYER := "SDL_RPI_VIDEO_LAYER";
+SDL_HINT_VIDEO_DOUBLE_BUFFER := "SDL_VIDEO_DOUBLE_BUFFER";
+SDL_HINT_OPENGL_ES_DRIVER := "SDL_OPENGL_ES_DRIVER";
+SDL_HINT_AUDIO_RESAMPLING_MODE := "SDL_AUDIO_RESAMPLING_MODE";
+SDL_HINT_AUDIO_CATEGORY := "SDL_AUDIO_CATEGORY";
+SDL_HINT_RENDER_BATCHING := "SDL_RENDER_BATCHING";
+SDL_HINT_EVENT_LOGGING := "SDL_EVENT_LOGGING";
+SDL_HINT_WAVE_RIFF_CHUNK_SIZE := "SDL_WAVE_RIFF_CHUNK_SIZE";
+SDL_HINT_WAVE_TRUNCATION := "SDL_WAVE_TRUNCATION";
+SDL_HINT_WAVE_FACT_CHUNK := "SDL_WAVE_FACT_CHUNK";
+SDL_HINT_DISPLAY_USABLE_BOUNDS := "SDL_DISPLAY_USABLE_BOUNDS";
 
-	HSL(ref h : Number, ref s : Number, ref l : Number, ref a : Number) => {
-		hueToRgb(ref p : Number, ref q : Number, t : Number) => {
-			if t < 0 then {
-				t += 1;
-			} elif t > 1 then {
-				t -= 1;
-			}
-			if t < 1/6 then {
-				return p + (q - p) * 6 * t;
-			}
-			if t < 1/2 then {
-				return q;
-			}
-			if t < 2/3 then {
-				return p + (q - p) * (2/3 - t) * 6;
-			}
-			return p;
-		}
-		var r, g, b;
-		if s == 0 then {
-			r = l;
-			g = l;
-			b = l;
-		} else {
-			q := (l < 0.5 ? (l * (1 + s)) : (l + s - l * s));
-			p := 2 * l - q;
-			r = hueToRgb(p, q, h + 1/3);
-			g = hueToRgb(p, q, h);
-			b = hueToRgb(p, q, h - 1/3);
-		}
-		r *= 256;
-		g *= 256;
-		b *= 256;
-		r = math.floor(r > 255 ? 255 : r);
-		g = math.floor(g > 255 ? 255 : g);
-		b = math.floor(b > 255 ? 255 : b);
-		return { "red" : r, "green" : g, "blue" : b, "alpha" : a };
-	}
-}
+# SDL_log.h
+SDL_LOG_CATEGORY_APPLICATION := 0;
+SDL_LOG_CATEGORY_ERROR := 1;
+SDL_LOG_CATEGORY_ASSERT := 2;
+SDL_LOG_CATEGORY_SYSTEM := 3;
+SDL_LOG_CATEGORY_AUDIO := 4;
+SDL_LOG_CATEGORY_VIDEO := 5;
+SDL_LOG_CATEGORY_RENDER := 6;
+SDL_LOG_CATEGORY_INPUT := 7;
+SDL_LOG_CATEGORY_TEST := 8;
+SDL_LOG_CATEGORY_RESERVED1 := 9;
+SDL_LOG_CATEGORY_RESERVED2 := 10;
+SDL_LOG_CATEGORY_RESERVED3 := 11;
+SDL_LOG_CATEGORY_RESERVED4 := 12;
+SDL_LOG_CATEGORY_RESERVED5 := 13;
+SDL_LOG_CATEGORY_RESERVED6 := 14;
+SDL_LOG_CATEGORY_RESERVED7 := 15;
+SDL_LOG_CATEGORY_RESERVED8 := 16;
+SDL_LOG_CATEGORY_RESERVED9 := 17;
+SDL_LOG_CATEGORY_RESERVED10 := 18;
+SDL_LOG_CATEGORY_CUSTOM := 19;
 
-static SDL class {
-	static Event class {
-		NULL := 0;
-		QUIT := 256;
-		WINDOW := 512;
-		KEY_DOWN := 768;
-		KEY_UP := 769;
-		TEXT_EDITING := 770;
-		TEXT_INPUT := 771;
-		KEYMAP_CHANGED := 772;
-		MOUSE_MOTION := 1024;
-		MOUSE_BUTTON_DOWN := 1025;
-		MOUSE_BUTTON_UP := 1026;
-		MOUSE_WHEEL := 1027;
-		JOY_AXIS_MOTION := 1536;
-		JOY_BALL_MOTION := 1537;
-		JOY_HAT_MOTION := 1538;
-		JOY_BUTTON_DOWN := 1539;
-		JOY_BUTTON_UP := 1540;
-		JOY_DEVICE_ADDED := 1541;
-		JOY_DEVICE_REMOVED := 1542;
-		CONTROLLER_AXIS_MOTION := 1616;
-		CONTROLLER_BUTTON_DOWN := 1617;
-		CONTROLLER_BUTTON_UP := 1618;
-		CONTROLLER_DEVICE_ADDED := 1619;
-		CONTROLLER_DEVICE_REMOVED := 1620;
-		CONTROLLER_DEVICE_REMAPPED := 1621;
-		FINGER_DOWN := 1792;
-		FINGER_UP := 1793;
-		FINGER_MOTION := 1794;
-		DOLLAR_GESTURE := 2048;
-		DOLLAR_RECORD := 2049;
-		MULTI_GESTURE := 2050;
-		CLIPBOARD_UPDATE := 2304;
-		DROP_FILE := 4096;
-		DROP_TEXT := 4097;
-		DROP_BEGIN := 4098;
-		DROP_COMPLETE := 4099;
-		AUDIO_DEVICE_ADDED := 4352;
-		AUDIO_DEVICE_REMOVED := 4353;
-		SENSOR_UPDATE := 4608;
-		RENDER_TARGETS_RESET := 8192;
-		RENDER_DEVICE_RESET := 8193;
-		USER_EVENT := 32768;
-		LAST_EVENT := 65535;
+SDL_LOG_PRIORITY_VERBOSE := 1;
+SDL_LOG_PRIORITY_DEBUG := 2;
+SDL_LOG_PRIORITY_INFO := 3;
+SDL_LOG_PRIORITY_WARN := 4;
+SDL_LOG_PRIORITY_ERROR := 5;
+SDL_LOG_PRIORITY_CRITICAL := 6;
+SDL_NUM_LOG_PRIORITIES := 7;
 
-		static Win class {
-			SHOWN := 1;
-			HIDDEN := 2;
-			EXPOSED := 3;
-			MOVED := 4;
-			RESIZED := 5;
-			SIZE_CHANGED := 6;
-			MINIMIZED := 7;
-			MAXIMIZED := 8;
-			RESTORED := 9;
-			ENTER := 10;
-			LEAVE := 11;
-			FOCUS_GAINED := 12;
-			FOCUS_LOST := 13;
-			CLOSE := 14;
-			TAKE_FOCUS := 15;
-			HIT_TEST := 16;
-		}
+# ----------------------------------------------------------------------------------------------- #
+# FUNCTIONS
+# ----------------------------------------------------------------------------------------------- #
 
-		poll() => {
-			return (extern_call libsdl._event_poll());
-		}
-	}
+# SDL.h
+# 86% (6/7)
+# SDL_WinRTRunApp deemed unnecessary
+SDL_Init(ref flags : Number) => extern_call libsdl._lib_Init(flags);
+SDL_InitSubSystem(ref flags : Number) => extern_call libsdl._lib_InitSubSystem(flags);
+SDL_Quit() => libsdl._lib_Quit();
+SDL_QuitSubSystem(ref flags : Number) => extern_call libsdl._lib_QuitSubSystem(flags);
+SDL_SetMainReady() => extern_call libsdl._lib_SetMainReady();
+SDL_WasInit(ref flags : Number) => extern_call libsdl._lib_WasInit(flags);
 
-	INIT() => {
-		extern_call libsdl._sdl_init();
-	}
+# SDL_hints.h
+# 100% (7/7)
+SDL_ClearHints() => extern_call libsdl._lib_ClearHints();
+SDL_GetHint(ref s : String) => extern_call libsdl._lib_GetHint(s);
+SDL_GetHintBoolean(ref a : String, ref b : Boolean) => extern_call libsdl._lib_GetHintBoolean(a, b);
+SDL_SetHint(ref a : String, ref b : String) => extern_call libsdl._lib_SetHint(a, b);
+SDL_SetHintWithPriority(ref a : String, ref b : String, ref n : Number) => extern_call libsdl._lib_SetHintWithPriority(a, b, n);
+SDL_AddHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call libsdl._lib_AddHintCallback(a, f, data);
+SDL_DelHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call libsdl._lib_DelHintCallback(a, f, data);
 
-	QUIT() => {
-		extern_call libsdl._sdl_quit();
-	}
+# SDL_error.h
+# 100% (3/3)
+SDL_ClearError() => extern_call libsdl._lib_ClearError();
+SDL_GetError() => extern_call libsdl._lib_GetError();
+SDL_SetError(ref a : String) => extern_call libsdl._lib_SetError(a);
 
-	struct Font class {
-		var ptr;
+# SDL_log.h
+# 80% (12/15)
+SDL_Log(ref a : String) => extern_call libsdl._lib_Log(a);
+SDL_LogCritical(ref n : Number, ref a : String) => extern_call libsdl._lib_LogCritical(n, a);
+SDL_LogDebug(ref n : Number, ref a : String) => extern_call libsdl._lib_LogDebug(n, a);
+SDL_LogError(ref n : Number, ref a : String) => extern_call libsdl._lib_LogError(n, a);
+SDL_LogGetPriority(ref n : Number) => extern_call libsdl._lib_LogGetPriority(n);
+SDL_LogInfo(ref n : Number, ref a : String) => extern_call libsdl._lib_LogInfo(n, a);
+SDL_LogMessage(ref n : Number, ref p : Number, ref a : String) => extern_call libsdl._lib_LogMessage(n, p, a);
+SDL_LogResetPriorities() => extern_call libsdl._lib_LogResetPriorities();
+SDL_LogSetAllPriority(ref p : Number) => extern_call libsdl._lib_LogSetAllPriority(p);
+SDL_LogSetPriority(ref n : Number, ref p : Number) => extern_call libsdl._lib_LogSetPriority(n, p);
+SDL_LogVerbose(ref n : Number, ref a : String) => extern_call libsdl._lib_LogVerbose(n, a);
+SDL_LogWarn(ref n : Number, ref a : String) => extern_call libsdl._lib_LogWarn(n, a);
 
-		init(ref path : String, ref sz : Number) => {
-			ptr = (extern_call libsdl._font_init(path, sz));
-		}
-	}
+# SDL_assert.h
+# 0% (0/9)
 
-	struct Image class {
-		var ptr;
+# SDL_version.h
+# 0% (0/8)
 
-		init(ref path : String) => {
-			ptr = (extern_call libsdl._image_init_nokey(path));
-		}
+# SDL_video.h
+# 0% (0/86)
 
-		init(ref path : String, ref r : Number, ref g : Number, ref b : Number) => {
-			ptr = (extern_call libsdl._image_init_key(path, r, g, b));
-		}
+# SDL_render.h
+# 0% (0/57)
 
-		init(ref path : String, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._image_init_key(path, color["red"], color["green"], color["blue"]));
-		}
-	}
+# SDL_pixels.h
+# 0% (0/14)
 
-	virtual Prototype class {
-		var ptr;
+# SDL_rect.h
+# 0% (0/8)
 
-		setColor(ref color : Dictionary) => {
-			extern_call libsdl._shape_setColor(ptr, color["red"], color["green"], color["blue"], color["alpha"]);
-		}
+# SDL_surface.h
+# 0% (0/33)
 
-		setColor(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			extern_call libsdl._shape_setColor(ptr, r, g, b, a);
-		}
+# SDL_syswm.h
+# 0% (0/1)
 
-		setColor(ref r : Number, ref g : Number, ref b : Number) => {
-			extern_call libsdl._shape_setColor(ptr, r, g, b, 0xff);
-		}
-	}
+# SDL_clipboard.h
+# 0% (0/3)
 
-	virtual Sizable class : Prototype {
-		setSize(ref width : Number, ref height : Number) => {
-			extern_call libsdl._sizable_setSize(ptr, width, height);
-		}
+# SDL_vulkan.h
+# 0% (0/6)
 
-		setWidth(ref width : Number) => {
-			extern_call libsdl._sizable_setWidth(ptr, width);
-		}
-
-		setHeight(ref height : Number) => {
-			extern_call libsdl._sizable_setHeight(ptr, height);
-		}
-	}
-
-	virtual Rotatable class : Sizable {
-		setAngle(ref angle : Number) => {
-			extern_call libsdl._rotatable_setAngle(ptr, angle);
-		}
-
-		pivot(ref x : Number, ref y : Number) => {
-			extern_call libsdl._rotatable_setCenter(ptr, x, y);
-		}
-
-		unpivot() => {
-			extern_call libsdl._rotatable_deCenter(ptr);
-		}
-
-		clip(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
-			extern_call libsdl._rotatable_setClip(ptr, x, y, width, height);
-		}
-
-		unclip() => {
-			extern_call libsdl._rotatable_deClip(ptr);
-		}
-	}
-
-	struct Rect class : Sizable {
-		init(ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._rect_init(width, height, r, g, b, a));
-		}
-
-		init(ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._rect_init(width, height, color["red"], color["green"], color["blue"], color["alpha"]));
-		}
-	}
-
-	struct Line class : Prototype {
-		init(ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._line_init(x2, y2, r, g, b, a));
-		}
-
-		init(ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._line_init(x2, y2, color["red"], color["green"], color["blue"], color["alpha"]));
-		}
-	}
-
-	struct Point class : Prototype {
-		init(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._point_init(r, g, b, a));
-		}
-
-		init(ref color : Dictionary) => {
-			ptr = (extern_call libsdl._point_init(color["red"], color["green"], color["blue"], color["alpha"]));
-		}
-	}
-
-	struct Text class : Prototype {
-		init(ref font : @SDL.Font, ref s : String, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._text_init(font.ptr, s, r, g, b, a));
-		}
-
-		init(ref font : @SDL.Font, ref s : String, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._text_init(font.ptr, s, color["red"], color["green"], color["blue"], color["alpha"]));
-		}
-
-		setText(ref s : String) => {
-			extern_call libsdl._text_setText(ptr, s);
-		}
-	}
-
-	struct Texture class : Rotatable {
-		init(ref img : @SDL.Image, ref width : Number, ref height : Number) => {
-			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, 0xff, 0xff, 0xff));
-		}
-
-		init(ref img : @SDL.Image, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
-			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, r, g, b, a));
-		}
-
-		init(ref img : @SDL.Image, ref width : Number, ref height : Number, ref color : Dictionary) => {
-			ptr = (extern_call libsdl._texture_init(img.ptr, width, height, color["red"], color["green"], color["blue"], color["alpha"]));
-		}
-
-		setImage(ref img : @SDL.Image) => {
-			extern_call libsdl._texture_setImage(ptr, img.ptr);
-		}
-	}
-
-	struct Window class {
-		struct Renderer class {
-			var ptr;
-
-			init(ref ptr : Pointer) => {
-				this.ptr = ptr;
-			}
-
-			put(ref shape : @SDL.Prototype, ref x : Number, ref y : Number) => {
-				extern_call libsdl._renderer_draw(ptr, shape.ptr, x, y);
-				refer shape;
-			}
-
-			clear() => extern_call libsdl._renderer_clear(ptr);
-
-			update() => extern_call libsdl._renderer_update(ptr);
-
-			flush() => extern_call libsdl._renderer_flush(ptr);
-		}
-
-		var ptr, windowID, renderer;
-
-		init(ref title : String, ref width : Number, ref height : Number) => {
-			data := (extern_call libsdl._window_init(title, width, height));
-			ptr = data[0];
-			windowID = data[1];
-			extern_call libsdl._window_register(windowID, this);
-		}
-
-		getRenderer() => {
-			if renderer == nil then {
-				renderer = new Renderer(extern_call libsdl._window_getRenderer(ptr));
-			}
-			return renderer;
-		}
-
-		close() => {
-			ptr = nil;
-			renderer = nil;
-		}
-	}
-}
+# ... and many more ...

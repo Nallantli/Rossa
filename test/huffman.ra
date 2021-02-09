@@ -8,7 +8,7 @@ static huffman class {
 			key = "";
 		}
 
-		init(ref left : @huffman.Node, ref right : @huffman.Node) => {
+		init(ref left : huffman.Node, ref right : huffman.Node) => {
 			this.left = left;
 			this.right = right;
 			this.count = left.count + right.count;
@@ -49,7 +49,7 @@ static huffman class {
 			return d;
 		}
 
-		`<`(ref n : @huffman.Node) => {
+		`<`(ref n : huffman.Node) => {
 			if count == n.count then {
 				return value < n.value;
 			}

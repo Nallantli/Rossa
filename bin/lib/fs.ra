@@ -19,7 +19,7 @@ struct Path class {
 
 	exists() => extern_call libfs._path_exists(ptr);
 
-	unzip(ref path : @Path) => {
+	unzip(ref path : Path) => {
 		extern_call libfs._path_unzip_a(ptr, path.ptr);
 		refer path;
 	}
@@ -29,7 +29,7 @@ struct Path class {
 		return new Path(path);
 	}
 
-	`=`(ref a : @Path) => {
+	`=`(ref a : Path) => {
 		this.ptr = a.ptr;
 	}
 
@@ -41,12 +41,12 @@ struct Path class {
 
 	`!=`(ref a) => this -> String != a -> String;
 
+	`/`(ref a : Path) => {
+		return new Path(extern_call libfs._path_append_path(ptr, a.ptr));
+	}
+
 	`/`(ref a) => {
-		if $a == @Path then {
-			return new Path(extern_call libfs._path_append_path(ptr, a.ptr));
-		} else {
-			return new Path(extern_call libfs._path_append_string(ptr, a -> String));
-		}
+		return new Path(extern_call libfs._path_append_string(ptr, a -> String));
 	}
 
 	`->String`() => extern_call libfs._path_string(ptr);

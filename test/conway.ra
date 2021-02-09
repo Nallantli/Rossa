@@ -1,4 +1,4 @@
-load "sdl";
+load "graphics";
 
 static conway class {
 	var	height,

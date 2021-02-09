@@ -2,7 +2,7 @@ struct LinkedList class {
 	struct Node class {
 		var next, prev, value;
 
-		init(ref prev : @LinkedList.Node, ref next : @LinkedList.Node, ref value) => {
+		init(ref prev : LinkedList.Node, ref next : LinkedList.Node, ref value) => {
 			this.prev = prev;
 			this.next = next;
 			this.value = value;
@@ -45,7 +45,7 @@ struct LinkedList class {
 		}
 	}
 
-	`+`(ref l : @LinkedList) => {
+	`+`(ref l : LinkedList) => {
 		for e in l -> Array do {
 			push(e);
 		}

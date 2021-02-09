@@ -1,7 +1,7 @@
 # Adapted from SRC at http://www.multigesture.net/articles/how-to-write-an-emulator-chip-8-interpreter/
 
 load "fs";
-load "sdl";
+load "graphics";
 
 math.srand(clock.milliseconds());
 
