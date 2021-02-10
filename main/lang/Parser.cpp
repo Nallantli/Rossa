@@ -1277,7 +1277,9 @@ const sym_t ParseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 
 	const std::vector<token_t> tokens = Rossa::lexString(evalA, std::filesystem::current_path() / KEYWORD_NIL);
 	NodeParser np(tokens, std::filesystem::current_path() / KEYWORD_NIL);
-	return np.parse()->fold()->genParser()->evaluate(scope, stack_trace);
+
+	std::vector<std::pair<std::vector<hash_ull>, sym_t>> consts;
+	return np.parse(&consts)->fold(consts)->genParser()->evaluate(scope, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

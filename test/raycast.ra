@@ -2,7 +2,10 @@ load "graphics";
 
 SDL.INIT();
 
-world := [
+const WIDTH = 800;
+const HEIGHT = 600;
+
+const WORLD = [
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
 	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1;
 	1, 0, 0, 0, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1;
@@ -19,7 +22,7 @@ world := [
 	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 ];
 
-colors := [
+const COLORS = [
 	nil,
 	{
 		"red" : 0xff,
@@ -66,31 +69,25 @@ posY := 1.5;
 dirX := -1;
 dirY := 0;
 
-width := 800;
-height := 600;
-
-size_x := world.len();
-size_y := world[0].len();
-
 planeX := 0;
-planeY := width / height / 2;
+planeY := WIDTH / HEIGHT / 2;
 
-w := new SDL.Window("Raycaster", width, height);
+w := new SDL.Window("Raycaster", WIDTH, HEIGHT);
 r := w.getRenderer();
 
-cache := alloc(width);
-for x in 0 .. width do {
-	cache[x] = new SDL.Rect(1, height, Color.WHITE);
+cache := alloc(WIDTH);
+for x in 0 .. WIDTH do {
+	cache[x] = new SDL.Rect(1, HEIGHT, Color.WHITE);
 }
 
 font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.WHITE);
 
 refresh() => {
-	for x in 0 .. width do {
+	for x in 0 .. WIDTH do {
 		var sideDistX, sideDistY, stepX, stepY, side, wDist;
 
-		camera_x := 2 * x / width - 1;
+		camera_x := 2 * x / WIDTH - 1;
 		rayDirX := dirX + planeX * camera_x;
 		rayDirY := dirY + planeY * camera_x;
 		mapX := math.floor(posX);
@@ -126,7 +123,7 @@ refresh() => {
 				mapY += stepY;
 				side = false;
 			}
-			if world[mapX][mapY] > 0 then {
+			if WORLD[mapX][mapY] > 0 then {
 				hit = true;
 			}
 		}
@@ -137,10 +134,10 @@ refresh() => {
 			wDist = (mapY - posY + (1 - stepY) / 2) / rayDirY;
 		}
 
-		lineHeight := height / wDist;
+		lineHeight := HEIGHT / wDist;
 
-		drawStart := math.floor(math.max(0, (-lineHeight / 2) + height / 2));
-		color := colors[world[mapX][mapY]];
+		drawStart := math.floor(math.max(0, (-lineHeight / 2) + HEIGHT / 2));
+		color := COLORS[WORLD[mapX][mapY]];
 
 		if side then {
 			color["red"] /= 2;
@@ -170,20 +167,20 @@ evaluateMovement(ref lapse : Number) => {
 	if keys["w"] == true then {
 		potX := posX + dirX * moveSpeed;
 		potY := posY + dirY * moveSpeed;
-		if world[potX][posY] == 0 then {
+		if WORLD[potX][posY] == 0 then {
 			posX = potX;
 		}
-		if world[posX][potY] == 0 then {
+		if WORLD[posX][potY] == 0 then {
 			posY = potY;
 		}
 	}
 	if keys["s"] == true then {
 		potX := posX - dirX * moveSpeed;
 		potY := posY - dirY * moveSpeed;
-		if world[potX][posY] == 0 then {
+		if WORLD[potX][posY] == 0 then {
 			posX = potX;
 		}
-		if world[posX][potY] == 0 then {
+		if WORLD[posX][potY] == 0 then {
 			posY = potY;
 		}
     }

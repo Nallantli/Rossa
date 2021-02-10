@@ -85,45 +85,45 @@ system(ref s : String) => extern_call libstd._system_call(s);
 
 static cons class {
 	static decor class {
-		FG_BLACK := "30";
-		FG_RED := "31";
-		FG_GREEN := "32";
-		FG_YELLOW := "33";
-		FG_BLUE := "34";
-		FG_MAGENTA := "35";
-		FG_CYAN := "36";
-		FG_WHITE := "37";
-		FG_BRIGHT_BLACK := "30;1";
-		FG_BRIGHT_RED := "31;1";
-		FG_BRIGHT_GREEN := "32;1";
-		FG_BRIGHT_YELLOW := "33;1";
-		FG_BRIGHT_BLUE := "34;1";
-		FG_BRIGHT_MAGENTA := "35;1";
-		FG_BRIGHT_CYAN := "36;1";
-		FG_BRIGHT_WHITE := "37;1";
+		const FG_BLACK = "30";
+		const FG_RED = "31";
+		const FG_GREEN = "32";
+		const FG_YELLOW = "33";
+		const FG_BLUE = "34";
+		const FG_MAGENTA = "35";
+		const FG_CYAN = "36";
+		const FG_WHITE = "37";
+		const FG_BRIGHT_BLACK = "30;1";
+		const FG_BRIGHT_RED = "31;1";
+		const FG_BRIGHT_GREEN = "32;1";
+		const FG_BRIGHT_YELLOW = "33;1";
+		const FG_BRIGHT_BLUE = "34;1";
+		const FG_BRIGHT_MAGENTA = "35;1";
+		const FG_BRIGHT_CYAN = "36;1";
+		const FG_BRIGHT_WHITE = "37;1";
 
-		BG_BLACK := "40";
-		BG_RED := "41";
-		BG_GREEN := "42";
-		BG_YELLOW := "43";
-		BG_BLUE := "44";
-		BG_MAGENTA := "45";
-		BG_CYAN := "46";
-		BG_WHITE := "47";
-		BG_BRIGHT_BLACK := "40;1";
-		BG_BRIGHT_RED := "41;1";
-		BG_BRIGHT_GREEN := "42;1";
-		BG_BRIGHT_YELLOW := "43;1";
-		BG_BRIGHT_BLUE := "44;1";
-		BG_BRIGHT_MAGENTA := "45;1";
-		BG_BRIGHT_CYAN := "46;1";
-		BG_BRIGHT_WHITE := "47;1";
+		const BG_BLACK = "40";
+		const BG_RED = "41";
+		const BG_GREEN = "42";
+		const BG_YELLOW = "43";
+		const BG_BLUE = "44";
+		const BG_MAGENTA = "45";
+		const BG_CYAN = "46";
+		const BG_WHITE = "47";
+		const BG_BRIGHT_BLACK = "40;1";
+		const BG_BRIGHT_RED = "41;1";
+		const BG_BRIGHT_GREEN = "42;1";
+		const BG_BRIGHT_YELLOW = "43;1";
+		const BG_BRIGHT_BLUE = "44;1";
+		const BG_BRIGHT_MAGENTA = "45;1";
+		const BG_BRIGHT_CYAN = "46;1";
+		const BG_BRIGHT_WHITE = "47;1";
 
-		BOLD := "1";
-		UNDERLINE := "4";
-		REVERSED := "7";
+		const BOLD = "1";
+		const UNDERLINE = "4";
+		const REVERSED = "7";
 
-		RESET := "0";
+		const RESET = "0";
 	}
 
 	setDecor(ref s : String) => puts("\u001B[" ++ s ++ "m");
@@ -433,7 +433,7 @@ split(ref s : String, ref d : String) => {
 # MATH
 
 static math class {
-	EPSILON := (|> {
+	const EPSILON = (|> {
 		eps := 1;
 		while (1 + eps / 2) != 1 do {
 			eps /= 2;

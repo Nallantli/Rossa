@@ -66,6 +66,7 @@
 #define _LIBRARY_NOT_IN_MEMORY_ "Library has not yet been loaded into memory: `{0}`"
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Library `{0}` has not exported function: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Size of " KEYWORD_ARRAY " values are not compatible"
+#define _CANNOT_MAKE_CONST_ "Expression cannot be parsed in a constant manner"
 #endif
 
 #ifdef _LOCALE_ITA_

@@ -5,9 +5,9 @@ load "graphics";
 
 math.srand(clock.milliseconds());
 
-clockSpeed := 750; # -1 for max
+const CLOCK_SPEED = 750; # -1 for max
 
-fontSet := [
+const FONT_SET = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, #0
     0x20, 0x60, 0x20, 0x20, 0x70, #1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, #2
@@ -27,8 +27,7 @@ fontSet := [
 ];
 
 struct Chip class {
-	var	opcode,
-		memory,
+	var	memory,
 		V,
 		I,
 		pc,
@@ -48,7 +47,6 @@ struct Chip class {
 		stack = alloc(16).map((e) => 0);
 		key = alloc(16).map((e) => 0);
 		pc = 0x200;
-		opcode = 0;
 		I = 0;
 		sp = 0;
 		drawFlag = true;
@@ -57,12 +55,12 @@ struct Chip class {
 		timer = clock.milliseconds();
 
 		for i in 0 .. 80 do {
-			memory[i] = fontSet[i];
+			memory[i] = FONT_SET[i];
 		}
 	}
 
 	cycle() => {
-		opcode = memory[pc] << 8 | memory[pc + 1];
+		opcode := memory[pc] << 8 | memory[pc + 1];
 
 		switch opcode & 0xF000 of {
 			case 0x0000 do {
@@ -487,7 +485,7 @@ cpuStart := clock.milliseconds();
 while true do {
 	evaluateInput();
 	if !paused then {
-		if (lapse := clock.milliseconds()) - cpuStart > 1000/clockSpeed then {
+		if (lapse := clock.milliseconds()) - cpuStart > 1000/CLOCK_SPEED then {
 			cpuStart = lapse;
 			chip.cycle();
 		}

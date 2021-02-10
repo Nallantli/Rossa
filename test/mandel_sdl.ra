@@ -2,36 +2,36 @@ load "graphics";
 
 SDL.INIT();
 
+const WIDTH = 64;
+const HEIGHT = 64;
+const WINDOW_SCALE = 10;
+
 x := -0.5;
 y := 0;
 scale := 1;
-width := 64;
-height := 64;
 
-windowScale := 10;
-
-window := new SDL.Window("Mandelbrot", width * windowScale, height * windowScale);
+window := new SDL.Window("Mandelbrot", WIDTH * WINDOW_SCALE, HEIGHT * WINDOW_SCALE);
 renderer := window.getRenderer();
 
-cache := alloc(width).map((e) => alloc(height));
-buffer := alloc(width).map((e) => alloc(height));
+cache := alloc(WIDTH).map((e) => alloc(HEIGHT));
+buffer := alloc(WIDTH).map((e) => alloc(HEIGHT));
 
-for x in 0 .. width do {
-	for y in 0 .. height do {
-		buffer[x][y] = new SDL.Rect(windowScale, windowScale, Color.BLACK);
+for x in 0 .. WIDTH do {
+	for y in 0 .. HEIGHT do {
+		buffer[x][y] = new SDL.Rect(WINDOW_SCALE, WINDOW_SCALE, Color.BLACK);
 		cache[x][y] = 0;
-		renderer.put(buffer[x][y], x * windowScale, y * windowScale);
+		renderer.put(buffer[x][y], x * WINDOW_SCALE, y * WINDOW_SCALE);
 	}
 }
 
 static mandel class {
-	precision := 64;
+	const PRECISION = 64;
 
 	mandelConverger(ref real : Number, ref imag : Number) => {
 		zReal := real;
 		zImag := imag;
 		var r2, i2;
-		for i in 0 .. precision do {
+		for i in 0 .. PRECISION do {
 			r2 = zReal * zReal;
 			i2 = zImag * zImag;
 
@@ -42,18 +42,18 @@ static mandel class {
 			zImag = 2.0 * zReal * zImag + imag;
 			zReal = r2 - i2 + real;
 		}
-		return precision;
+		return PRECISION;
 	}
 
-	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
-		dx := (end_x - start_x) / (width - 1);
-		dy := (end_y - start_y) / (height - 1);
-		for i in 0 .. width do {
-			for j in 0 .. height do {
+	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref WIDTH : Number, ref HEIGHT : Number) => {
+		dx := (end_x - start_x) / (WIDTH - 1);
+		dy := (end_y - start_y) / (HEIGHT - 1);
+		for i in 0 .. WIDTH do {
+			for j in 0 .. HEIGHT do {
 				v := mandelConverger(start_x + i * dx, end_y - j * dy);
 				if cache[i][j] != v then {
 					cache[i][j] = v;
-					value := v / precision;
+					value := v / PRECISION;
 					buffer[i][j].setColor(math.floor((value ** 0.5) * 255), math.floor(value * 255), math.floor((value ** 2) * 255), 255);
 				}
 			}
@@ -64,7 +64,7 @@ static mandel class {
 }
 
 while true do {
-	mandel.draw(x - scale, y - scale, x + scale, y + scale, width, height);
+	mandel.draw(x - scale, y - scale, x + scale, y + scale, WIDTH, HEIGHT);
 	while (e := SDL.Event.poll())["type"] != SDL.Event.KEY_DOWN do {
 		if (e["type"] == SDL.Event.QUIT) then {
 			SDL.QUIT();
@@ -72,10 +72,10 @@ while true do {
 		}
 	}
 	switch e["keysym"]["sym"] of {
-		case 'w' do y += 2 / height * scale;
-		case 's' do y -= 2 / height * scale;
-		case 'a' do x -= 6 / width * scale;
-		case 'd' do x += 6 / width * scale;
+		case 'w' do y += 2 / HEIGHT * scale;
+		case 's' do y -= 2 / HEIGHT * scale;
+		case 'a' do x -= 6 / WIDTH * scale;
+		case 'd' do x += 6 / WIDTH * scale;
 		case 'q' do scale = math.min(scale * 2, 4);
 		case 'e' do	scale /= 2;
 	}

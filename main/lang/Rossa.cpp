@@ -45,7 +45,7 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	sym_vec_t argv;
 	for (auto &s : args)
 		argv.push_back(sym_t::String(s));
-	main.createVariable(ROSSA_HASH("_args"), sym_t::Array(argv), NULL);
+	consts.push_back({ {ROSSA_HASH("_args")}, sym_t::Array(argv) });
 }
 
 const std::map<std::string, signed int> Rossa::bOperators = {
@@ -105,18 +105,31 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"~", -1},
 	{"$", -1} };
 
-const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile) const
+const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile)
 {
 	auto tokens = lexString(code, currentFile);
 	NodeParser testnp(tokens, currentFile);
-	auto n = testnp.parse();
-	return n->fold();
+	auto n = testnp.parse(&this->consts);
+	// fold twice (temporary) to refold constants
+	return n->fold(this->consts)->fold(this->consts);
 }
 
 const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
 {
-	if (tree)
+	if (tree) {
 		entry->printTree("", true);
+		for (auto &c : consts) {
+			int i = 0;
+			for (auto &p : c.first) {
+				if (i++ > 0)
+					printc(".", CYAN_TEXT);
+				printc(ROSSA_DEHASH(p), CYAN_TEXT);
+			}
+			std::cout << " = ";
+			printc(c.second.toCodeString(), CYAN_TEXT);
+			std::cout << "\n";
+		}
+	}
 
 	auto g = NodeParser::genParser(entry);
 
@@ -324,6 +337,8 @@ const int Rossa::getToken(
 			return TOK_CALL_OP;
 		else if (ID_STRING == KEYWORD_ANY)
 			return TOK_ANY;
+		else if (ID_STRING == KEYWORD_CONST)
+			return TOK_CONST;
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = number_t::Double(INFINITY);
 			return TOK_NUM;
