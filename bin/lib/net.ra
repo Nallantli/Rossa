@@ -1,10 +1,10 @@
 extern "libnet";
 
-static net class {
+static net {
 	encodeURI(ref s : String) => extern_call libnet._encodeURI(s);
 	decodeURI(ref s : String) => extern_call libnet._decodeURI(s);
 
-	struct Service class {
+	struct Service {
 		var ptr;
 
 		init() => {
@@ -14,7 +14,7 @@ static net class {
 
 	__DEFAULT_NET_SERVICE__ := new Service();
 
-	struct Socket class {
+	struct Socket {
 		var ptr, service;
 
 		init(ref ip : String, ref port : Number) => {
@@ -61,7 +61,7 @@ static net class {
 		}
 	}
 
-	struct Server class {
+	struct Server {
 		var ptr, service;
 
 		init(ref port : Number) => {
@@ -79,7 +79,7 @@ static net class {
 		}
 	}
 
-	struct Stream class {
+	struct Stream {
 		var ptr;
 
 		init(ref address : String, ref port : Number) => {

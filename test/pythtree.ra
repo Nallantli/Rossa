@@ -6,7 +6,7 @@ length := 128;
 window := new SDL.Window("Pythagoras Tree", length * 6, length * 4);
 renderer := window.getRenderer();
 
-struct Point class {
+struct Point {
 	var x, y;
 	init(ref x : Number, ref y : Number) => {
 		this.x = x;
@@ -36,5 +36,5 @@ drawSquare(
 
 renderer.flush();
 
-while SDL.Event.poll()["type"] != SDL.Event.QUIT do {}
+while SDL.poll()["type"] != SDL.Event.QUIT do {}
 SDL.QUIT();

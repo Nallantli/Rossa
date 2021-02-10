@@ -83,8 +83,8 @@ putln() => puts("\n");
 
 system(ref s : String) => extern_call libstd._system_call(s);
 
-static cons class {
-	static decor class {
+static cons {
+	static decor {
 		const FG_BLACK = "30";
 		const FG_RED = "31";
 		const FG_GREEN = "32";
@@ -162,7 +162,7 @@ static cons class {
 	setCursor(ref x : Number, ref y : Number) => puts("\u001B[" ++ (y -> String) ++ ";" ++ (x -> String) ++ "H");
 }
 
-static input class {
+static input {
 	line() => extern_call libstd._input_line();
 
 	token() => extern_call libstd._input_token();
@@ -172,7 +172,7 @@ static input class {
 
 # RANDOM
 
-struct Random class {
+struct Random {
 	var ptr;
 
 	init() => {
@@ -206,7 +206,7 @@ exit(ref n : Number) => extern_call libstd._exit(n);
 
 # TIME
 
-static clock class {
+static clock {
 	milliseconds() => extern_call libstd._timeMS();
 
 	sleep(ref ms : Number) => extern_call libstd._sleep(ms);
@@ -432,7 +432,7 @@ split(ref s : String, ref d : String) => {
 
 # MATH
 
-static math class {
+static math {
 	const EPSILON = (|> {
 		eps := 1;
 		while (1 + eps / 2) != 1 do {
@@ -440,6 +440,8 @@ static math class {
 		}
 		return eps;
 	})();
+
+	const PI = 3.14159265359;
 
 	rand() => extern_call libstd._math_rand();
 
@@ -496,17 +498,15 @@ static math class {
 	acosh(ref x : Number) => extern_call libstd._acosh(x);
 
 	atanh(ref x : Number) => extern_call libstd._atanh(x);
-
-	PI := 2 * asin(1);
 }
 
-static regex class {
+static regex {
 	match(ref s : String, ref r : String) => extern_call libstd._regex_match(r, s);
 
 	replace(ref s : String, ref r : String, ref x : String) => extern_call libstd._regex_replace(r, x, s);
 }
 
-struct Thread class {
+struct Thread {
 	var ptr;
 
 	init(ref f : Function) => {

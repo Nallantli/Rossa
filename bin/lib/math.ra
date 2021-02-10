@@ -1,4 +1,4 @@
-struct Matrix class {
+struct Matrix {
 	var a;
 
 	init(ref a : Array) => {

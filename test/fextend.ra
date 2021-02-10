@@ -1,4 +1,4 @@
-static isPrime class : Function {
+static isPrime : Function {
 	data := {};
 
 	`()`(ref n : Number) => {

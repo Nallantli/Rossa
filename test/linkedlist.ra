@@ -1,5 +1,5 @@
-struct LinkedList class {
-	struct Node class {
+struct LinkedList {
+	struct Node {
 		var next, prev, value;
 
 		init(ref prev : LinkedList.Node, ref next : LinkedList.Node, ref value) => {

@@ -196,13 +196,13 @@ evaluateMovement(ref lapse : Number) => {
 }
 
 evaluateInput() => {
-	e := SDL.Event.poll();
+	e := SDL.poll();
 	if e["type"] == SDL.Event.QUIT then {
 		SDL.QUIT();
 		exit();
-	} elif e["type"] == SDL.Event.KEY_DOWN then {
+	} elif e["type"] == SDL.Event.KEYDOWN then {
 		keys[e["keysym"]["sym"].chars()] = true;
-	} elif e["type"] == SDL.Event.KEY_UP then {
+	} elif e["type"] == SDL.Event.KEYUP then {
 		keys[e["keysym"]["sym"].chars()] = false;
 	}
 }

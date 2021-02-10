@@ -293,8 +293,8 @@ const int Rossa::getToken(
 			return TOK_STRUCT;
 		else if (ID_STRING == KEYWORD_STATIC)
 			return TOK_STATIC;
-		else if (ID_STRING == KEYWORD_CLASS)
-			return TOK_CLASS;
+		else if (ID_STRING == KEYWORD_ENUM)
+			return TOK_ENUM;
 		else if (ID_STRING == KEYWORD_NEW)
 			return TOK_NEW;
 		else if (ID_STRING == KEYWORD_LOAD)

@@ -1,5 +1,5 @@
-static huffman class {
-	struct Node class {
+static huffman {
+	struct Node {
 		var left, right, value, count, key;
 
 		init(ref value : String, ref count : Number) => {

@@ -1,6 +1,6 @@
 extern "libfs";
 
-struct Path class {
+struct Path {
 	var ptr;
 
 	init() => {
@@ -52,7 +52,7 @@ struct Path class {
 	`->String`() => extern_call libfs._path_string(ptr);
 }
 
-struct Writer class {
+struct Writer {
 	var ptr;
 
 	init(ref filename) => {
@@ -79,7 +79,7 @@ struct Writer class {
 	}
 }
 
-struct Reader class {
+struct Reader {
 	var ptr;
 
 	init(ref filename) => {

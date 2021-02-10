@@ -1,4 +1,4 @@
-struct Test class {
+struct Test {
 	init() => {}
 
 	`+`(ref a) => {

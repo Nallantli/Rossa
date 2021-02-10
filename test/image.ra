@@ -28,7 +28,7 @@ r.put(fpsText, 0, 0);
 start := clock.milliseconds();
 fpsCounter := 0;
 fpsTimer := clock.milliseconds();
-while SDL.Event.poll()["type"] != SDL.Event.QUIT do {
+while SDL.poll()["type"] != SDL.Event.QUIT do {
 	diff := (clock.milliseconds() - start) / 10;
 	start = clock.milliseconds();
 	hue = (hue + 0.1 * diff) % 360;

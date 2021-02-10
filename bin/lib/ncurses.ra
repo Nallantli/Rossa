@@ -4,7 +4,7 @@ var stdscr;
 
 ATTR := extern_call libncurses._fetch_constants();
 
-struct Window class {
+struct Window {
 	var ptr;
 
 	init(ref height : Number, ref width : Number, ref x : Number, ref y : Number) => {

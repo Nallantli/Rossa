@@ -26,7 +26,7 @@ const FONT_SET = [
     0xF0, 0x80, 0xF0, 0x80, 0x80  #F
 ];
 
-struct Chip class {
+struct Chip {
 	var	memory,
 		V,
 		I,
@@ -372,11 +372,11 @@ struct Chip class {
 }
 
 evaluateInput() => {
-	e := SDL.Event.poll();
+	e := SDL.poll();
 	if e["type"] == SDL.Event.QUIT then {
 		SDL.QUIT();
 		exit();
-	} elif e["type"] == SDL.Event.KEY_DOWN then {
+	} elif e["type"] == SDL.Event.KEYDOWN then {
 		switch e["keysym"]["sym"] of {
 			case '1' do chip.key[0x1] = 1;
 			case '2' do chip.key[0x2] = 1;
@@ -398,7 +398,7 @@ evaluateInput() => {
 			case ' ' do paused = !paused;
 			case 'b' do buffered = !buffered;
 		}
-	} elif e["type"] == SDL.Event.KEY_UP then {
+	} elif e["type"] == SDL.Event.KEYUP then {
 		switch e["keysym"]["sym"] of {
 			case '1' do chip.key[0x1] = 0;
 			case '2' do chip.key[0x2] = 0;

@@ -1336,9 +1336,6 @@ node_ptr_t NodeParser::parseClassNode(ns_vec_t &scopes)
 	nextToken();
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
-	if (currentToken.type != TOK_CLASS)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CLASS }), currentToken);
-	nextToken();
 	node_ptr_t extends = nullptr;
 	if (currentToken.type == ':') {
 		nextToken();
@@ -1434,6 +1431,59 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t &scopes)
 		case TOK_STATIC:
 		case TOK_VIRTUAL:
 			return parseClassNode(scopes);
+		case TOK_ENUM:
+		{
+			nextToken();
+
+			if (currentToken.type != TOK_IDF)
+				return logErrorN(_EXPECTED_IDF_, currentToken);
+			hash_ull id = ROSSA_HASH(currentToken.valueString);
+			scopes.push_back({ id });
+			nextToken();
+
+			number_t index = number_t::Long(0);
+
+			if (currentToken.valueString != "{")
+				return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+			nextToken();
+
+			while (currentToken.type != '}') {
+				if (currentToken.type != TOK_IDF)
+					return logErrorN(_EXPECTED_IDF_, currentToken);
+				hash_ull enid = ROSSA_HASH(currentToken.valueString);
+				nextToken();
+
+				std::vector<hash_ull> path;
+				for (auto &k : scopes)
+					path.push_back(k.id);
+				path.push_back(enid);
+
+				if (currentToken.type != ',' && currentToken.type != '}') {
+					if (currentToken.valueString == "=") {
+						nextToken();
+						auto marker = currentToken;
+						try {
+							scope_t newScope(static_cast<hash_ull>(0));
+							trace_t trace;
+							index = parseEquNode(scopes)->fold(*consts)->genParser()->evaluate(&newScope, trace).getNumber(NULL, trace);
+						} catch (const rossa_error &e) {
+							return logErrorN(_CANNOT_MAKE_CONST_, marker);
+						}
+						if (currentToken.type == ',') {
+							nextToken();
+						} else if (currentToken.type != '}')
+							return logErrorN(format::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
+					} else
+						return logErrorN(format::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
+				} else if (currentToken.type == ',') {
+					nextToken();
+				}
+				consts->push_back({ path, sym_t::Number(index) });
+				index += number_t::Long(1);
+			}
+			nextToken();
+			return std::make_shared<ContainerNode>(scopes, sym_t(), currentToken);
+		}
 		case TOK_CONST:
 		{
 			auto marker = currentToken;

@@ -1,6 +1,6 @@
 load "fs";
 
-static bitmap class {
+static bitmap {
 	allocate(ref height : Number, ref width : Number) => {
 		image := alloc(height);
 		for i in image do {

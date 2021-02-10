@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.0-alpha"
+#define _ROSSA_VERSION_ "v1.14.1-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -169,7 +169,7 @@ enum LexerTokenType
 
 	TOK_LENGTH = -26,
 	TOK_ANY = -27,
-	TOK_CLASS = -28,
+	TOK_ENUM = -28,
 	TOK_STRUCT = -29,
 	TOK_STATIC = -30,
 	TOK_NEW = -31,

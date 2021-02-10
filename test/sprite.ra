@@ -29,8 +29,8 @@ randomize() => {
 randomize();
 
 var e;
-while (e = SDL.Event.poll())["type"] != SDL.Event.QUIT do {
-	if e["type"] == SDL.Event.KEY_DOWN then {
+while (e = SDL.poll())["type"] != SDL.Event.QUIT do {
+	if e["type"] == SDL.Event.KEYDOWN then {
 		if e["keysym"]["sym"] == ' ' then {
 			randomize();
 		}

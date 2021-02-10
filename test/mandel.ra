@@ -1,6 +1,6 @@
 load "bitmap";
 
-static mandel class {
+static mandel {
 	ASCII := [
 		" ",
 		" ",

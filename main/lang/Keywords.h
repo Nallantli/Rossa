@@ -9,7 +9,7 @@
 #define KEYWORD_CATCH "catch"
 #define KEYWORD_CHAR_N "codes"
 #define KEYWORD_CHAR_S "chars"
-#define KEYWORD_CLASS "class"
+#define KEYWORD_ENUM "enum"
 #define KEYWORD_CONTINUE "continue"
 #define KEYWORD_DICTIONARY "Dictionary"
 #define KEYWORD_DO "do"

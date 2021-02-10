@@ -1,6 +1,6 @@
 load "graphics";
 
-static snake_game class {
+static snake_game {
 	var	height,
 		width,
 		scale,
@@ -97,11 +97,11 @@ static snake_game class {
 	}
 
 	evaluateInput() => {
-		e := SDL.Event.poll();
+		e := SDL.poll();
 		if e["type"] == SDL.Event.QUIT then {
 			SDL.QUIT();
 			exit();
-		} elif e["type"] == SDL.Event.KEY_DOWN then {
+		} elif e["type"] == SDL.Event.KEYDOWN then {
 			switch e["keysym"]["sym"] of {
 				case 'w', 'k' do {
 					if direction != 2 then {

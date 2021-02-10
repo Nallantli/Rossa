@@ -633,8 +633,6 @@ void sym_t::shift() const
 		d->valueVARGFunction->shift();
 }
 
-
-
 const sym_t sym_t::clone() const
 {
 	return sym_t(*this);
