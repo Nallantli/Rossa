@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.1-alpha"
+#define _ROSSA_VERSION_ "v1.14.2-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -674,43 +674,43 @@ private:
 	unsigned int index = 0;
 	token_t currentToken;
 	void nextToken();
-	node_ptr_t parseNumNode(ns_vec_t &);
-	node_ptr_t parseBoolNode(ns_vec_t &);
-	node_ptr_t parseIDNode(ns_vec_t &);
-	node_ptr_t parseBIDNode(ns_vec_t &);
-	node_ptr_t parseEntryNode(ns_vec_t &);
-	node_ptr_t parseExprNode(ns_vec_t &);
-	node_ptr_t parseEquNode(ns_vec_t &);
-	node_ptr_t parseVectorNode(ns_vec_t &);
-	node_ptr_t parseUnitNode(ns_vec_t &);
-	node_ptr_t parseBaseNode(ns_vec_t &);
-	node_ptr_t parseUnOpNode(ns_vec_t &);
-	node_ptr_t parseMapNode(ns_vec_t &);
-	node_ptr_t parseIfElseNode(ns_vec_t &);
-	node_ptr_t parseWhileNode(ns_vec_t &);
-	node_ptr_t parseForNode(ns_vec_t &);
-	std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(ns_vec_t &);
-	node_ptr_t parseDefineNode(ns_vec_t &);
-	node_ptr_t parseLambdaNode(ns_vec_t &);
-	node_ptr_t parseNPLambdaNode(ns_vec_t &);
-	node_ptr_t parseExternNode(ns_vec_t &);
-	node_ptr_t parseExternCallNode(ns_vec_t &);
-	node_ptr_t parseCallOpNode(ns_vec_t &);
-	node_ptr_t parseCallBuiltNode(ns_vec_t &);
-	node_ptr_t parseClassNode(ns_vec_t &);
-	node_ptr_t parseNewNode(ns_vec_t &);
-	node_ptr_t parseLoadNode(ns_vec_t &);
-	node_ptr_t parseSwitchNode(ns_vec_t &);
-	node_ptr_t parseTryCatchNode(ns_vec_t &);
-	node_ptr_t parseTypeNode(ns_vec_t &);
-	param_t parseParamTypeNode(ns_vec_t &, const aug_type_t &);
-	node_ptr_t parseTrailingNode(ns_vec_t &, const node_ptr_t &, const bool &);
-	node_ptr_t parseInsNode(ns_vec_t &, const node_ptr_t &);
-	node_ptr_t parseUntilNode(ns_vec_t &, const node_ptr_t &, const bool &);
-	node_ptr_t parseBinOpNode(ns_vec_t &, const node_ptr_t &);
-	node_ptr_t parseCallNode(ns_vec_t &, const node_ptr_t &);
-	node_ptr_t parseIndexNode(ns_vec_t &, const node_ptr_t &);
-	node_ptr_t parseThenNode(ns_vec_t &, const node_ptr_t &);
+	node_ptr_t parseNumNode(ns_vec_t *);
+	node_ptr_t parseBoolNode(ns_vec_t *);
+	node_ptr_t parseIDNode(ns_vec_t *);
+	node_ptr_t parseBIDNode(ns_vec_t *);
+	node_ptr_t parseEntryNode(ns_vec_t *);
+	node_ptr_t parseExprNode(ns_vec_t *);
+	node_ptr_t parseEquNode(ns_vec_t *);
+	node_ptr_t parseVectorNode(ns_vec_t *);
+	node_ptr_t parseUnitNode(ns_vec_t *);
+	node_ptr_t parseBaseNode(ns_vec_t *);
+	node_ptr_t parseUnOpNode(ns_vec_t *);
+	node_ptr_t parseMapNode(ns_vec_t *);
+	node_ptr_t parseIfElseNode(ns_vec_t *);
+	node_ptr_t parseWhileNode(ns_vec_t *);
+	node_ptr_t parseForNode(ns_vec_t *);
+	std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> parseSigNode(ns_vec_t *);
+	node_ptr_t parseDefineNode(ns_vec_t *);
+	node_ptr_t parseLambdaNode(ns_vec_t *);
+	node_ptr_t parseNPLambdaNode(ns_vec_t *);
+	node_ptr_t parseExternNode(ns_vec_t *);
+	node_ptr_t parseExternCallNode(ns_vec_t *);
+	node_ptr_t parseCallOpNode(ns_vec_t *);
+	node_ptr_t parseCallBuiltNode(ns_vec_t *);
+	node_ptr_t parseClassNode(ns_vec_t *);
+	node_ptr_t parseNewNode(ns_vec_t *);
+	node_ptr_t parseLoadNode(ns_vec_t *);
+	node_ptr_t parseSwitchNode(ns_vec_t *);
+	node_ptr_t parseTryCatchNode(ns_vec_t *);
+	node_ptr_t parseTypeNode(ns_vec_t *);
+	param_t parseParamTypeNode(ns_vec_t *, const aug_type_t &);
+	node_ptr_t parseTrailingNode(ns_vec_t *, const node_ptr_t &, const bool &);
+	node_ptr_t parseInsNode(ns_vec_t *, const node_ptr_t &);
+	node_ptr_t parseUntilNode(ns_vec_t *, const node_ptr_t &, const bool &);
+	node_ptr_t parseBinOpNode(ns_vec_t *, const node_ptr_t &);
+	node_ptr_t parseCallNode(ns_vec_t *, const node_ptr_t &);
+	node_ptr_t parseIndexNode(ns_vec_t *, const node_ptr_t &);
+	node_ptr_t parseThenNode(ns_vec_t *, const node_ptr_t &);
 
 	node_ptr_t logErrorN(const std::string &, const token_t &);
 	param_t logErrorPT(const std::string &, const token_t &);
@@ -718,7 +718,7 @@ private:
 
 public:
 	NodeParser(const std::vector<token_t> &, const std::filesystem::path &);
-	node_ptr_t parse(std::vector<std::pair<std::vector<hash_ull>, sym_t>> *);
+	node_ptr_t parse(ns_vec_t *, std::vector<std::pair<std::vector<hash_ull>, sym_t>> *);
 	static i_ptr_t genParser(const node_ptr_t &);
 };
 
@@ -726,6 +726,7 @@ class Rossa
 {
 private:
 	std::vector<std::pair<std::vector<hash_ull>, sym_t>> consts;
+	ns_vec_t scopes;
 	static const int getToken(const std::string &, size_t &, size_t &, size_t &, std::string &, number_t &);
 	static const char peekChar(const size_t &, const std::string &, const size_t &);
 	static const char nextChar(const std::string &, size_t &, size_t &, size_t &);

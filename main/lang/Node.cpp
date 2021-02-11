@@ -40,7 +40,7 @@ bool ContainerNode::isConst() const
 
 void ContainerNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -50,7 +50,7 @@ void ContainerNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CONTAINER : " << s.toCodeString() << "\n";
-	}
+}
 
 const node_ptr_t ContainerNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -90,7 +90,7 @@ bool VectorNode::isConst() const
 
 void VectorNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -103,7 +103,7 @@ void VectorNode::printTree(std::string indent, bool last) const
 	for (size_t i = 0; i < args.size(); i++)
 		if (args[i] != nullptr)
 			args[i]->printTree(indent, i == args.size() - 1);
-	}
+}
 
 const node_ptr_t VectorNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -147,7 +147,7 @@ bool BreakNode::isConst() const
 
 void BreakNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -157,7 +157,7 @@ void BreakNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "BREAK\n";
-	}
+}
 
 const node_ptr_t BreakNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -184,7 +184,7 @@ bool ContinueNode::isConst() const
 
 void ContinueNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -194,7 +194,7 @@ void ContinueNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CONTINUE\n";
-	}
+}
 
 const node_ptr_t ContinueNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -230,7 +230,7 @@ bool IDNode::isConst() const
 
 void IDNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -240,23 +240,33 @@ void IDNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "ID : " << ROSSA_DEHASH(key) << "\n";
-	}
+}
 
 const node_ptr_t IDNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
-	for (auto &c : consts) {
-		std::vector<hash_ull> tpath;
-		for (auto &p : path)
-			tpath.push_back(p.id);
-		while (true) {
-			auto temp = tpath;
-			temp.push_back({key});
+	bool flag = true;
+	for (auto &p : path) {
+		if (std::find(p.var_ids.begin(), p.var_ids.end(), key) != p.var_ids.end()) {
+			flag = false;
+			break;
+		}
+	}
 
-			if (c.first == temp)
-				return std::make_shared<ContainerNode>(path, c.second, token);
-			if (tpath.empty())
-				break;
-			tpath.pop_back();
+	if (flag) {
+		for (auto &c : consts) {
+			std::vector<hash_ull> tpath;
+			for (auto &p : path)
+				tpath.push_back(p.id);
+			while (true) {
+				auto temp = tpath;
+				temp.push_back({key});
+
+				if (c.first == temp)
+					return std::make_shared<ContainerNode>(path, c.second, token);
+				if (tpath.empty())
+					break;
+				tpath.pop_back();
+			}
 		}
 	}
 
@@ -290,7 +300,7 @@ bool BIDNode::isConst() const
 
 void BIDNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -300,7 +310,7 @@ void BIDNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "BID : " << key << "\n";
-	}
+}
 
 const node_ptr_t BIDNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -337,7 +347,7 @@ bool DefineNode::isConst() const
 
 void DefineNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -348,7 +358,7 @@ void DefineNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n";
 	body->printTree(indent, true);
-	}
+}
 
 const node_ptr_t DefineNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -389,7 +399,7 @@ bool VargDefineNode::isConst() const
 
 void VargDefineNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -400,7 +410,7 @@ void VargDefineNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n";
 	body->printTree(indent, true);
-	}
+}
 
 const node_ptr_t VargDefineNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -440,7 +450,7 @@ bool NewNode::isConst() const
 
 void NewNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -452,7 +462,7 @@ void NewNode::printTree(std::string indent, bool last) const
 	std::cout << "NEW\n";
 	object->printTree(indent, false);
 	params->printTree(indent, true);
-	}
+}
 
 const node_ptr_t NewNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -511,7 +521,7 @@ bool ClassNode::isConst() const
 
 void ClassNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -525,7 +535,7 @@ void ClassNode::printTree(std::string indent, bool last) const
 		extends->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
 		body[i]->printTree(indent, i == body.size() - 1);
-	}
+}
 
 const node_ptr_t ClassNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -561,7 +571,7 @@ bool VarNode::isConst() const
 
 void VarNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -571,7 +581,7 @@ void VarNode::printTree(std::string indent, bool last) const
 	}
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "VAR : " << keys.size() << "\n";
-	}
+}
 
 const node_ptr_t VarNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -616,7 +626,7 @@ bool CallNode::isConst() const
 
 void CallNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -629,7 +639,7 @@ void CallNode::printTree(std::string indent, bool last) const
 	callee->printTree(indent, args.empty());
 	for (size_t i = 0; i < args.size(); i++)
 		args[i]->printTree(indent, i == args.size() - 1);
-	}
+}
 
 const node_ptr_t CallNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -669,7 +679,7 @@ bool ExternCallNode::isConst() const
 
 void ExternCallNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -681,7 +691,7 @@ void ExternCallNode::printTree(std::string indent, bool last) const
 	std::cout << "EXTERN_CALL : " << libname << "::" << fname << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i]->printTree(indent, i == args.size() - 1);
-	}
+}
 
 const node_ptr_t ExternCallNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -733,7 +743,7 @@ bool CallBuiltNode::isConst() const
 
 void CallBuiltNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -744,7 +754,7 @@ void CallBuiltNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL_BUILT : " << std::to_string(t) << "\n";
 	arg->printTree(indent, true);
-	}
+}
 
 const node_ptr_t CallBuiltNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -781,7 +791,7 @@ bool ReturnNode::isConst() const
 
 void ReturnNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -792,7 +802,7 @@ void ReturnNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "RETURN\n";
 	a->printTree(indent, true);
-	}
+}
 
 const node_ptr_t ReturnNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -821,7 +831,7 @@ bool ReferNode::isConst() const
 
 void ReferNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -832,7 +842,7 @@ void ReferNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "REFER\n";
 	a->printTree(indent, true);
-	}
+}
 
 const node_ptr_t ReferNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -969,7 +979,7 @@ bool BinOpNode::isConst() const
 
 void BinOpNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -981,7 +991,7 @@ void BinOpNode::printTree(std::string indent, bool last) const
 	std::cout << "BINOP : " << op << "\n";
 	a->printTree(indent, false);
 	b->printTree(indent, true);
-	}
+}
 
 const node_ptr_t BinOpNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1078,7 +1088,7 @@ bool UnOpNode::isConst() const
 
 void UnOpNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1089,7 +1099,7 @@ void UnOpNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "UNOP : " << op << "\n";
 	a->printTree(indent, true);
-	}
+}
 
 const node_ptr_t UnOpNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1127,7 +1137,7 @@ bool ParenNode::isConst() const
 
 void ParenNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1138,7 +1148,7 @@ void ParenNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "PAREN\n";
 	a->printTree(indent, true);
-	}
+}
 
 const node_ptr_t ParenNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1179,7 +1189,7 @@ bool InsNode::isConst() const
 
 void InsNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1191,7 +1201,7 @@ void InsNode::printTree(std::string indent, bool last) const
 	std::cout << "INS\n";
 	callee->printTree(indent, false);
 	arg->printTree(indent, true);
-	}
+}
 
 const node_ptr_t InsNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1279,7 +1289,7 @@ bool IfElseNode::isConst() const
 
 void IfElseNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1293,7 +1303,7 @@ void IfElseNode::printTree(std::string indent, bool last) const
 	body->printTree(indent, elses == nullptr);
 	if (elses != nullptr)
 		elses->printTree(indent, true);
-	}
+}
 
 const node_ptr_t IfElseNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1345,7 +1355,7 @@ bool WhileNode::isConst() const
 
 void WhileNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1358,7 +1368,7 @@ void WhileNode::printTree(std::string indent, bool last) const
 	whiles->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
 		body[i]->printTree(indent, i == body.size() - 1);
-	}
+}
 
 const node_ptr_t WhileNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1398,7 +1408,7 @@ bool ForNode::isConst() const
 
 void ForNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1411,7 +1421,7 @@ void ForNode::printTree(std::string indent, bool last) const
 	fors->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
 		body[i]->printTree(indent, i == body.size() - 1);
-	}
+}
 
 const node_ptr_t ForNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1468,7 +1478,7 @@ bool UntilNode::isConst() const
 
 void UntilNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1482,7 +1492,7 @@ void UntilNode::printTree(std::string indent, bool last) const
 	b->printTree(indent, step == nullptr);
 	if (step != nullptr)
 		step->printTree(indent, true);
-	}
+}
 
 const node_ptr_t UntilNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1529,7 +1539,7 @@ bool MapNode::isConst() const
 
 void MapNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1541,7 +1551,7 @@ void MapNode::printTree(std::string indent, bool last) const
 	std::cout << "MAP\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i].second->printTree(indent, i == args.size() - 1);
-	}
+}
 
 const node_ptr_t MapNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1609,7 +1619,7 @@ bool SwitchNode::isConst() const
 
 void SwitchNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1631,7 +1641,7 @@ void SwitchNode::printTree(std::string indent, bool last) const
 	}
 	if (elses)
 		elses->printTree(indent, true);
-	}
+}
 
 const node_ptr_t SwitchNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1681,7 +1691,7 @@ bool TryCatchNode::isConst() const
 
 void TryCatchNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1693,7 +1703,7 @@ void TryCatchNode::printTree(std::string indent, bool last) const
 	std::cout << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n";
 	trys->printTree(indent, false);
 	catchs->printTree(indent, true);
-	}
+}
 
 const node_ptr_t TryCatchNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1721,7 +1731,7 @@ bool ThrowNode::isConst() const
 
 void ThrowNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1732,7 +1742,7 @@ void ThrowNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "THROW\n";
 	throws->printTree(indent, true);
-	}
+}
 
 const node_ptr_t ThrowNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1766,7 +1776,7 @@ bool CallOpNode::isConst() const
 
 void CallOpNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1778,7 +1788,7 @@ void CallOpNode::printTree(std::string indent, bool last) const
 	std::cout << "CALL_OP : " << id << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i]->printTree(indent, i == args.size() - 1);
-	}
+}
 
 const node_ptr_t CallOpNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
@@ -1810,7 +1820,7 @@ bool DeleteNode::isConst() const
 
 void DeleteNode::printTree(std::string indent, bool last) const
 {
-		std::cout << indent;
+	std::cout << indent;
 	if (last) {
 		std::cout << "└─";
 		indent += "  ";
@@ -1821,7 +1831,7 @@ void DeleteNode::printTree(std::string indent, bool last) const
 	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "DELETE\n";
 	del->printTree(indent, true);
-	}
+}
 
 const node_ptr_t DeleteNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {

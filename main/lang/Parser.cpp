@@ -1279,7 +1279,8 @@ const sym_t ParseI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	NodeParser np(tokens, std::filesystem::current_path() / KEYWORD_NIL);
 
 	std::vector<std::pair<std::vector<hash_ull>, sym_t>> consts;
-	return np.parse(&consts)->fold(consts)->genParser()->evaluate(scope, stack_trace);
+	ns_vec_t scopes;
+	return np.parse(&scopes, &consts)->fold(consts)->genParser()->evaluate(scope, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

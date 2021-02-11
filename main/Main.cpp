@@ -116,7 +116,7 @@ int main(int argc, char const *argv[])
 			if (options["std"] == "true")
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
-				wrapper.runCode(entry, tree);
+			wrapper.runCode(entry, tree);
 		} catch (const rossa_error &e) {
 			Rossa::printError(e);
 			return 1;

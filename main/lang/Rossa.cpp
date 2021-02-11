@@ -45,7 +45,8 @@ Rossa::Rossa(const std::vector<std::string> &args)
 	sym_vec_t argv;
 	for (auto &s : args)
 		argv.push_back(sym_t::String(s));
-	consts.push_back({ {ROSSA_HASH("_args")}, sym_t::Array(argv) });
+	scopes.push_back({ ROSSA_HASH("<*>") });
+	consts.push_back({ {ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, sym_t::Array(argv) });
 }
 
 const std::map<std::string, signed int> Rossa::bOperators = {
@@ -109,7 +110,7 @@ const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesyst
 {
 	auto tokens = lexString(code, currentFile);
 	NodeParser testnp(tokens, currentFile);
-	auto n = testnp.parse(&this->consts);
+	auto n = testnp.parse(&this->scopes, &this->consts);
 	// fold twice (temporary) to refold constants
 	return n->fold(this->consts)->fold(this->consts);
 }
