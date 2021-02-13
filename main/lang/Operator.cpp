@@ -8,9 +8,14 @@ const sym_t ops::index(const scope_t *scope, const sym_t &evalA, const sym_t &ev
 				break;
 			return evalA.indexDict(evalB.getString(token, stack_trace));
 		case Value::type_t::ARRAY:
+		{
 			if (evalB.getValueType() != Value::type_t::NUMBER)
 				break;
+			auto num = evalB.getNumber(token, stack_trace);
+			if (num.type != number_t::LONG_NUM)
+				throw rossa_error(format::format("Cannot index with non integral value: {0}", { num.toCodeString() }), *token, stack_trace);
 			return evalA.indexVector(evalB.getNumber(token, stack_trace).getLong(), token, stack_trace);
+		}
 		case Value::type_t::OBJECT:
 		{
 			const auto &o = evalA.getObject(token, stack_trace);

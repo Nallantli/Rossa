@@ -65,7 +65,7 @@ parse := ((ref x) => parse(x));
 puts(ref s) => extern_call libstd._puts(s -> String);
 
 puts(...) => {
-	for s in vargs do {
+	for s in _ do {
 		extern_call libstd._puts(s -> String);
 	}
 }
@@ -73,7 +73,7 @@ puts(...) => {
 putln(ref s) => extern_call libstd._puts((s -> String) ++ "\n");
 
 putln(...) => {
-	for s in vargs do {
+	for s in _ do {
 		extern_call libstd._puts(s -> String);
 	}
 	extern_call libstd._puts("\n");
@@ -525,5 +525,5 @@ struct Thread {
 split(ref f : Function) => extern_call libstd._function_split(f);
 
 `+`(ref f : Function, ref g : Function<Any>) => {
-	return (...)[f, g] => g(`()`(f, vargs));
+	return (...)[f, g] => g(`()`(f, _));
 }
