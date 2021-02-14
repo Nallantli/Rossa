@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.3-alpha"
+#define _ROSSA_VERSION_ "v1.14.4-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -12,13 +12,14 @@
 #include "Format.h"
 
 #include <map>
-#include <unordered_map>
 #include <vector>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
 #include <filesystem>
+#include <variant>
+#include <type_traits>
 
 #define ROSSA_EXT_SIG(name, args, token, hash, stack_trace) inline const sym_t name(const sym_vec_t &args, const token_t *token, Hash &hash, trace_t &stack_trace)
 #define ADD_EXT(name) fmap[#name] = name
@@ -67,6 +68,9 @@ typedef std::vector<i_ptr_t> i_vec_t;
 typedef std::vector<param_t> param_vec_t;
 typedef std::vector<type_sll> aug_type_t;
 typedef std::vector<node_scope_t> ns_vec_t;
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...)->overloaded<Ts...>;
 
 typedef std::map<const std::string, const sym_t> sym_map_t;
 typedef std::map<const size_t, std::map<const fsig_t, func_ptr_t>> f_map_t;
@@ -253,11 +257,12 @@ public:
 struct param_t
 {
 private:
+	std::vector<aug_type_t> ancestors;
 	aug_type_t base;
 	param_vec_t qualifiers;
 public:
-	param_t(const aug_type_t &);
-	param_t(const aug_type_t &, const param_vec_t &);
+	param_t(const std::vector<aug_type_t> &, const aug_type_t &);
+	param_t(const std::vector<aug_type_t> &, const aug_type_t &, const param_vec_t &);
 	void addQualifier(const param_t &);
 	const param_vec_t getQualifiers() const;
 	const aug_type_t getBase() const;
@@ -328,7 +333,7 @@ public:
 	const bool extendsObject(const aug_type_t &) const;
 	const scope_type_t getType() const;
 	const i_ptr_t getBody() const;
-	const aug_type_t getTypeVec() const;
+	const param_t getTypeVec() const;
 	const std::string getKey() const;
 	const bool hasValue(const hash_ull &) const;
 	const sym_t getThis(const token_t *, trace_t &) const;
@@ -344,6 +349,14 @@ struct node_scope_t
 {
 	hash_ull id;
 	std::vector<hash_ull> var_ids;
+};
+
+struct f_wrapper
+{
+	f_map_t map;
+	func_ptr_t varg = nullptr;
+
+	f_wrapper(const f_map_t &, const func_ptr_t &);
 };
 
 class Value
@@ -366,7 +379,17 @@ public:
 	} type;
 
 private:
-	union
+	std::variant<
+		bool,
+		number_t,
+		aug_type_t,
+		std::string,
+		std::shared_ptr<void>,
+		sym_vec_t,
+		f_wrapper,
+		sym_map_t,
+		scope_t> value;
+	/*union
 	{
 		bool valueBool;
 		number_t valueNumber;
@@ -379,7 +402,7 @@ private:
 	f_map_t valueFunction;
 	func_ptr_t valueVARGFunction = nullptr;
 	sym_map_t valueDictionary;
-	scope_t valueObject;
+	scope_t valueObject; */
 	refc_ull references = 1;
 
 	Value();
@@ -453,7 +476,7 @@ public:
 	const bool hasVarg(const token_t *, trace_t &) const;
 	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
-	const aug_type_t getAugValueType() const;
+	const param_t getAugValueType() const;
 	const aug_type_t getTypeName(const token_t *, trace_t &) const;
 	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
 	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
@@ -465,7 +488,7 @@ public:
 	const std::string toCodeString() const;
 	const sym_t call(const sym_vec_t &, const token_t *, trace_t &) const;
 	void addFunctions(const sym_t *, const token_t *) const;
-	void nullify(const token_t *, trace_t &) const;
+	void nullify() const;
 	void set(const sym_t *, const token_t *, const bool &, trace_t &) const;
 	const bool equals(const sym_t *, const token_t *, trace_t &) const;
 	const bool nequals(const sym_t *, const token_t *, trace_t &) const;

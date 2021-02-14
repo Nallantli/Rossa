@@ -167,20 +167,20 @@ evaluateMovement(ref lapse : Number) => {
 	if keys["w"] == true then {
 		potX := posX + dirX * moveSpeed;
 		potY := posY + dirY * moveSpeed;
-		if WORLD[potX][posY] == 0 then {
+		if WORLD[math.floor(potX)][math.floor(posY)] == 0 then {
 			posX = potX;
 		}
-		if WORLD[posX][potY] == 0 then {
+		if WORLD[math.floor(posX)][math.floor(potY)] == 0 then {
 			posY = potY;
 		}
 	}
 	if keys["s"] == true then {
 		potX := posX - dirX * moveSpeed;
 		potY := posY - dirY * moveSpeed;
-		if WORLD[potX][posY] == 0 then {
+		if WORLD[math.floor(potX)][math.floor(posY)] == 0 then {
 			posX = potX;
 		}
-		if WORLD[posX][potY] == 0 then {
+		if WORLD[math.floor(posX)][math.floor(potY)] == 0 then {
 			posY = potY;
 		}
     }

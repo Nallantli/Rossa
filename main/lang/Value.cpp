@@ -1,82 +1,65 @@
 #include "Rossa.h"
 
+f_wrapper::f_wrapper(const f_map_t &map, const func_ptr_t &varg)
+	: map{ map }
+	, varg{ varg }
+{}
+
 Value::Value()
 	: type{ NIL }
 {}
 
 Value::Value(const aug_type_t &valueType)
 	: type{ TYPE_NAME }
-	, valueType{ valueType }
+	, value{ valueType }
 {}
 
 Value::Value(const bool &valueBool)
 	: type{ BOOLEAN_D }
-	, valueBool{ valueBool }
+	, value{ valueBool }
 {}
 
 Value::Value(const std::shared_ptr<void> &valuePointer)
 	: type{ POINTER }
-	, valuePointer{ valuePointer }
+	, value{ valuePointer }
 {}
 
 Value::Value(const scope_t &valueObject)
 	: type{ OBJECT }
-	, valueObject{ valueObject }
+	, value{ valueObject }
 {}
 
 Value::Value(const fsig_t &ftype, const func_ptr_t &function)
 	: type{ FUNCTION }
-	, valueFunction{ {function->getArgSize(), {{ftype, function}}} }
+	, value{ f_wrapper({ {function->getArgSize(), {{ftype, function}}} }, nullptr) }
 {}
 
 Value::Value(const func_ptr_t &function)
 	: type{ FUNCTION }
-	, valueVARGFunction{ function }
+	, value{ f_wrapper({}, function) }
 {}
 
 Value::Value(const number_t &valueNumber)
 	: type{ NUMBER }
-	, valueNumber{ valueNumber }
+	, value{ valueNumber }
 {}
 
 Value::Value(const sym_vec_t &valueVector)
 	: type{ ARRAY }
-	, valueVector(valueVector)
+	, value{ valueVector }
 {}
 
 Value::Value(const sym_map_t &valueDictionary)
 	: type{ DICTIONARY }
-	, valueDictionary{ valueDictionary }
+	, value{ valueDictionary }
 {}
 
 Value::Value(const std::string &valueString)
 	: type{ STRING }
-	, valueString{ valueString }
+	, value{ valueString }
 {}
 
 void Value::clearData()
 {
-	switch (type) {
-		case FUNCTION:
-			valueFunction.clear();
-			valueVARGFunction = nullptr;
-			break;
-		case ARRAY:
-			valueVector.clear();
-			break;
-		case DICTIONARY:
-			valueDictionary.clear();
-			break;
-		case POINTER:
-			valuePointer = nullptr;
-			break;
-		case OBJECT:
-			valueObject = scope_t();
-			break;
-		case TYPE_NAME:
-			valueType.clear();
-			break;
-		default:
-			break;
-	}
+	value = false;
 }

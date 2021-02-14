@@ -222,7 +222,7 @@ param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
 	if (base[0] < 0 && base[0] != Value::type_t::FUNCTION)
 		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { getTypeString(base) }), currentToken);
 
-	param_t pt(base);
+	param_t pt({}, base);
 	nextToken();
 
 	int i = 0;
@@ -291,7 +291,7 @@ param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
 		if (currentToken.valueString == "<") {
 			pt.addQualifier(parseParamTypeNode(scopes, qbase));
 		} else {
-			pt.addQualifier(param_t(qbase));
+			pt.addQualifier(param_t({}, qbase));
 		}
 	}
 	nextToken();
@@ -338,7 +338,7 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		param_t pt({ Value::type_t::ANY });
+		param_t pt({}, { Value::type_t::ANY });
 		if (currentToken.type == ':') {
 			aug_type_t ftype = { Value::type_t::ANY };
 			nextToken();
@@ -400,7 +400,7 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 			if (currentToken.valueString == "<") {
 				pt = parseParamTypeNode(scopes, ftype);
 			} else {
-				pt = param_t(ftype);
+				pt = param_t({}, ftype);
 			}
 		}
 
@@ -1642,5 +1642,5 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 param_t NodeParser::logErrorPT(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return param_t({ Value::type_t::NIL });
+	return param_t({}, { Value::type_t::NIL });
 }

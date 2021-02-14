@@ -19,9 +19,9 @@ const size_t fsig_t::validity(const sym_vec_t &check, trace_t &stack_trace) cons
 		auto vt = check_i.getAugValueType();
 		if (values_i.getQualifiers().empty()) {
 			auto base = values_i.getBase();
-			if (base == vt)
+			if (base == vt.getBase())
 				v += 3;
-			else if (base[0] > 0 && vt[0] == Value::type_t::NIL)
+			else if (base[0] > 0 && vt.getBase()[0] == Value::type_t::NIL)
 				v += 2;
 			else if (base[0] == Value::type_t::ANY)
 				v += 1;
@@ -176,12 +176,14 @@ extf_t lib::loadFunction(const std::string &rawlibname, const std::string &fname
 	return loaded[rawlibname][fname];
 }
 
-param_t::param_t(const aug_type_t &base)
-	: base{ base }
+param_t::param_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base)
+	: ancestors(ancestors)
+	, base{ base }
 {}
 
-param_t::param_t(const aug_type_t &base, const param_vec_t &qualifiers)
-	: base{ base }
+param_t::param_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base, const param_vec_t &qualifiers)
+	: ancestors(ancestors)
+	, base{ base }
 	, qualifiers{ qualifiers }
 {}
 

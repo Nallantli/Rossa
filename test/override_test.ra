@@ -1,5 +1,7 @@
 struct Test {
-	init() => {}
+	init() => {
+		putln("CONSTRUCTOR CALLED");
+	}
 
 	`+`(ref a) => {
 		putln("ADD: " ++ (a -> String));

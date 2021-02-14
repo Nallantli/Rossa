@@ -970,7 +970,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			break;
 		case Value::type_t::OBJECT:
 		{
-			if (convert == evalA.getAugValueType())
+			if (convert == evalA.getAugValueType().getBase())
 				return evalA;
 			const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
 			scope_t *o = evalA.getObject(&token, stack_trace);
@@ -1311,7 +1311,7 @@ TypeI::TypeI(const i_ptr_t &a, const token_t &token)
 
 const sym_t TypeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	return sym_t::TypeName(a->evaluate(scope, stack_trace).getAugValueType());
+	return sym_t::TypeName(a->evaluate(scope, stack_trace).getAugValueType().getBase());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1475,7 +1475,7 @@ DeleteI::DeleteI(const i_ptr_t &a, const token_t &token)
 const sym_t DeleteI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	evalA.nullify(&token, stack_trace);
+	evalA.nullify();
 	return sym_t();
 }
 

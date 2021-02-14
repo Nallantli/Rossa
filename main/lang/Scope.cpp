@@ -118,9 +118,9 @@ const sym_t scope_t::instantiate(const sym_vec_t &params, const token_t *token, 
 	return sym_t::Object(o);
 }
 
-const aug_type_t scope_t::getTypeVec() const
+const param_t scope_t::getTypeVec() const
 {
-	return scope->name_trace;
+	return param_t(scope->extensions, scope->name_trace);
 }
 
 const std::string scope_t::getKey() const
@@ -148,6 +148,7 @@ const sym_t &Scope::getVariable(const hash_ull &key, const token_t *token, trace
 
 const sym_t &Scope::createVariable(const hash_ull &key, const token_t *token)
 {
+	values[key].nullify();
 	return values[key];
 }
 
