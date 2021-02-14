@@ -15,7 +15,7 @@ sym_t::sym_t(const std::shared_ptr<void> &valuePointer)
 	, type{ ID_CASUAL }
 {}
 
-sym_t::sym_t(const aug_type_t &valueType)
+sym_t::sym_t(const param_t &valueType)
 	: d{ new Value(valueType) }
 	, type{ ID_CASUAL }
 {}
@@ -65,7 +65,7 @@ const sym_t sym_t::Pointer(const std::shared_ptr<void> &v)
 	return sym_t(v);
 }
 
-const sym_t sym_t::TypeName(const aug_type_t &v)
+const sym_t sym_t::TypeName(const param_t &v)
 {
 	return sym_t(v);
 }
@@ -224,16 +224,21 @@ const Value::type_t sym_t::getValueType() const
 
 const param_t sym_t::getAugValueType() const
 {
-	if (d->type == Value::type_t::OBJECT)
-		return std::get<scope_t>(d->value).getTypeVec();
-	return param_t({}, { d->type });
+	return std::visit(overloaded{
+			[](const scope_t &v) {
+				return v.getTypeVec();
+			},
+			[&](auto arg) {
+				return param_t({},{ d->type });
+			}
+		}, d->value);
 }
 
-const aug_type_t sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
+const param_t sym_t::getTypeName(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::TYPE_NAME)
 		throw rossa_error(_NOT_TYPE_, *token, stack_trace);
-	return std::get<aug_type_t>(d->value);
+	return std::get<param_t>(d->value);
 }
 
 const f_map_t &sym_t::getFunctionOverloads(const token_t *token, trace_t &stack_trace) const
@@ -375,7 +380,7 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 			return ret + "}";
 		}
 		case Value::type_t::TYPE_NAME:
-			return "Type<" + getTypeString(std::get<aug_type_t>(d->value)) + ">";
+			return "Type<" + std::get<param_t>(d->value).toString() + ">";
 		default:
 			return "undefined";
 	}
@@ -431,7 +436,7 @@ const std::string sym_t::toCodeString() const
 			return ret + "]";
 		}
 		case Value::type_t::TYPE_NAME:
-			return "Type@" + getTypeString(std::get<aug_type_t>(d->value));
+			return "Type@" + std::get<param_t>(d->value).toString();
 		default:
 			return "<error-type>";
 	}
@@ -499,7 +504,7 @@ void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace
 			[&](const std::shared_ptr<void> &v) {
 				d->value = v;
 			},
-			[&](const aug_type_t &v) {
+			[&](const param_t &v) {
 				d->value = v;
 			},
 			[&](const sym_vec_t &v) {
@@ -573,7 +578,7 @@ const bool sym_t::equals(const sym_t *b, const token_t *token, trace_t &stack_tr
 		case Value::type_t::FUNCTION:
 			return std::get<f_wrapper>(d->value).map == std::get<f_wrapper>(b->d->value).map && std::get<f_wrapper>(d->value).varg == std::get<f_wrapper>(b->d->value).varg;
 		case Value::type_t::TYPE_NAME:
-			return std::get<aug_type_t>(d->value) == std::get<aug_type_t>(b->d->value);
+			return std::get<param_t>(d->value) == std::get<param_t>(b->d->value);
 		default:
 			return false;
 	}

@@ -242,14 +242,20 @@ const bool param_t::operator<(const param_t &pt) const
 		if (qualifiers[i] < pt.qualifiers[i])
 			return true;
 	}
+	if (ancestors.size() != pt.ancestors.size())
+		return ancestors.size() < pt.ancestors.size();
+	for (size_t i = 0; i < ancestors.size(); i++) {
+		if (ancestors[i] < pt.ancestors[i])
+			return true;
+	}
 	return false;
 }
 
 const size_t param_t::operator&(const param_t &pt) const
 {
 	if (base[0] == Value::type_t::ANY)
-		return 2;
-	if (base != pt.base && pt.base[0] < 0)
+		return 1;
+	if (base != pt.base && std::find(pt.ancestors.begin(), pt.ancestors.end(), base) == pt.ancestors.end())
 		return 0;
 	if (qualifiers.empty() && pt.qualifiers.empty())
 		return 3;

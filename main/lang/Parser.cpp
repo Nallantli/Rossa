@@ -777,7 +777,7 @@ const sym_t ClassI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 	if (extends) {
 		const sym_t e = extends->evaluate(scope, stack_trace);
 		if (e.getValueType() == Value::type_t::TYPE_NAME)
-			extensions.push_back(e.getTypeName(&token, stack_trace));
+			extensions.push_back(e.getTypeName(&token, stack_trace).getBase());
 		else {
 			ex = e.getObject(&token, stack_trace);
 			if (ex->getType() == scope_t::scope_type_t::STATIC_O)
@@ -820,11 +820,11 @@ CastToI::CastToI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	const aug_type_t convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
+	const param_t convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
 
 	switch (evalA.getValueType()) {
 		case Value::type_t::NUMBER:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::NUMBER:
 					return evalA;
 				case Value::type_t::STRING:
@@ -836,7 +836,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::STRING:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::NUMBER:
 					try {
 						const std::string s = evalA.getString(&token, stack_trace);
@@ -892,25 +892,25 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 				{
 					const std::string s = evalA.getString(&token, stack_trace);
 					if (s == KEYWORD_NUMBER)
-						return sym_t::TypeName({ Value::type_t::NUMBER });
+						return sym_t::TypeName(param_t({}, { Value::type_t::NUMBER }));
 					if (s == KEYWORD_STRING)
-						return sym_t::TypeName({ Value::type_t::STRING });
+						return sym_t::TypeName(param_t({}, { Value::type_t::STRING }));
 					if (s == KEYWORD_BOOLEAN)
-						return sym_t::TypeName({ Value::type_t::BOOLEAN_D });
+						return sym_t::TypeName(param_t({}, { Value::type_t::BOOLEAN_D }));
 					if (s == KEYWORD_ARRAY)
-						return sym_t::TypeName({ Value::type_t::ARRAY });
+						return sym_t::TypeName(param_t({}, { Value::type_t::ARRAY }));
 					if (s == KEYWORD_DICTIONARY)
-						return sym_t::TypeName({ Value::type_t::DICTIONARY });
+						return sym_t::TypeName(param_t({}, { Value::type_t::DICTIONARY }));
 					if (s == KEYWORD_FUNCTION)
-						return sym_t::TypeName({ Value::type_t::FUNCTION });
+						return sym_t::TypeName(param_t({}, { Value::type_t::FUNCTION }));
 					if (s == KEYWORD_OBJECT)
-						return sym_t::TypeName({ Value::type_t::OBJECT });
+						return sym_t::TypeName(param_t({}, { Value::type_t::OBJECT }));
 					if (s == KEYWORD_TYPE)
-						return sym_t::TypeName({ Value::type_t::TYPE_NAME });
+						return sym_t::TypeName(param_t({}, { Value::type_t::TYPE_NAME }));
 					if (s == KEYWORD_NIL_NAME)
-						return sym_t::TypeName({ Value::type_t::NIL });
+						return sym_t::TypeName(param_t({}, { Value::type_t::NIL }));
 					if (s == KEYWORD_POINTER)
-						return sym_t::TypeName({ Value::type_t::POINTER });
+						return sym_t::TypeName(param_t({}, { Value::type_t::POINTER }));
 					//TODO
 					//return sym_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
 				}
@@ -919,7 +919,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::BOOLEAN_D:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::NUMBER:
 					return sym_t::Number(number_t::Long(evalA.getBool(&token, stack_trace) ? 1 : 0));
 				case Value::type_t::STRING:
@@ -931,7 +931,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::ARRAY:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::STRING:
 					return sym_t::String(evalA.toString(&token, stack_trace));
 				case Value::type_t::ARRAY:
@@ -949,7 +949,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::DICTIONARY:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::STRING:
 					return sym_t::String(evalA.toString(&token, stack_trace));
 				case Value::type_t::ARRAY:
@@ -970,18 +970,18 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			break;
 		case Value::type_t::OBJECT:
 		{
-			if (convert == evalA.getAugValueType().getBase())
+			if (convert == evalA.getAugValueType())
 				return evalA;
-			const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
+			const hash_ull fname = ROSSA_HASH("->" + convert.toString());
 			scope_t *o = evalA.getObject(&token, stack_trace);
 			if (o->hasValue(fname))
 				return o->getVariable(fname, &token, stack_trace).call({ }, &token, stack_trace);
 			break;
 		}
 		case Value::type_t::TYPE_NAME:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::STRING:
-					return sym_t::String("Type::" + getTypeString(evalA.getTypeName(&token, stack_trace)));
+					return sym_t::String("Type::" + evalA.getTypeName(&token, stack_trace).toString());
 				case Value::type_t::TYPE_NAME:
 					return evalA;
 				default:
@@ -989,7 +989,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			}
 			break;
 		case Value::type_t::NIL:
-			switch (convert[0]) {
+			switch (convert.getBase().back()) {
 				case Value::type_t::STRING:
 					return sym_t::String(KEYWORD_NIL);
 				default:
@@ -1000,7 +1000,7 @@ const sym_t CastToI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 			break;
 	}
 
-	const hash_ull fname = ROSSA_HASH("->" + getTypeString(convert));
+	const hash_ull fname = ROSSA_HASH("->" + convert.toString());
 	return scope->getVariable(fname, &token, stack_trace).call({ evalA }, &token, stack_trace);
 }
 
@@ -1311,7 +1311,7 @@ TypeI::TypeI(const i_ptr_t &a, const token_t &token)
 
 const sym_t TypeI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
-	return sym_t::TypeName(a->evaluate(scope, stack_trace).getAugValueType().getBase());
+	return sym_t::TypeName(a->evaluate(scope, stack_trace).getAugValueType());
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

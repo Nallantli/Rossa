@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.4-alpha"
+#define _ROSSA_VERSION_ "v1.14.5-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -382,7 +382,7 @@ private:
 	std::variant<
 		bool,
 		number_t,
-		aug_type_t,
+		param_t,
 		std::string,
 		std::shared_ptr<void>,
 		sym_vec_t,
@@ -406,7 +406,7 @@ private:
 	refc_ull references = 1;
 
 	Value();
-	Value(const aug_type_t &);
+	Value(const param_t &);
 	Value(const bool &);
 	Value(const std::shared_ptr<void> &);
 	Value(const scope_t &);
@@ -425,7 +425,7 @@ private:
 	Value *d;
 
 	sym_t(const std::shared_ptr<void> &);
-	sym_t(const aug_type_t &);
+	sym_t(const param_t &);
 	sym_t(const number_t &);
 	sym_t(const bool &);
 	sym_t(const sym_vec_t &);
@@ -450,7 +450,7 @@ public:
 	sym_t();
 
 	static const sym_t Pointer(const std::shared_ptr<void> &);
-	static const sym_t TypeName(const aug_type_t &);
+	static const sym_t TypeName(const param_t &);
 	static const sym_t Number(const number_t &);
 	static const sym_t Boolean(const bool &);
 	static const sym_t Array(const sym_vec_t &);
@@ -477,7 +477,7 @@ public:
 	scope_t *getObject(const token_t *, trace_t &) const;
 	const Value::type_t getValueType() const;
 	const param_t getAugValueType() const;
-	const aug_type_t getTypeName(const token_t *, trace_t &) const;
+	const param_t getTypeName(const token_t *, trace_t &) const;
 	const func_ptr_t getFunction(const sym_vec_t &, const token_t *, trace_t &) const;
 	const func_ptr_t &getVARGFunction(const token_t *, trace_t &) const;
 	const sym_t &indexDict(const std::string &) const;

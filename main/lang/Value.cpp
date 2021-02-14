@@ -9,7 +9,7 @@ Value::Value()
 	: type{ NIL }
 {}
 
-Value::Value(const aug_type_t &valueType)
+Value::Value(const param_t &valueType)
 	: type{ TYPE_NAME }
 	, value{ valueType }
 {}

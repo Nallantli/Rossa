@@ -219,9 +219,6 @@ node_ptr_t NodeParser::parseCallOpNode(ns_vec_t *scopes)
 
 param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
 {
-	if (base[0] < 0 && base[0] != Value::type_t::FUNCTION)
-		return logErrorPT(format::format(_FUNCTION_PARAM_ERROR_, { getTypeString(base) }), currentToken);
-
 	param_t pt({}, base);
 	nextToken();
 
@@ -629,7 +626,7 @@ node_ptr_t NodeParser::parseTypeNode(ns_vec_t *scopes)
 			break;
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(ftype), currentToken);
+	return std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { ftype })), currentToken);
 }
 
 node_ptr_t NodeParser::parseUntilNode(ns_vec_t *scopes, const node_ptr_t &a, const bool &inclusive)
@@ -751,43 +748,43 @@ node_ptr_t NodeParser::parseBaseNode(ns_vec_t *scopes)
 		case '{':
 			return parseMapNode(scopes);
 		case TOK_NIL_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::NIL }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::NIL })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NUMBER:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::NUMBER }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::NUMBER })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_STRING:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::STRING }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::STRING })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_BOOLEAN:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::BOOLEAN_D }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::BOOLEAN_D })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_ARRAY:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::ARRAY }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::ARRAY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_DICTIONARY:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::DICTIONARY }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::DICTIONARY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_OBJECT:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::OBJECT }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::OBJECT })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_FUNCTION:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::FUNCTION }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::FUNCTION })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TYPE_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::TYPE_NAME }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::TYPE_NAME })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_POINTER:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName({ Value::type_t::POINTER }), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::POINTER })), currentToken);
 			nextToken();
 			return ret;
 		default:
