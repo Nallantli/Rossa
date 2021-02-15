@@ -1533,3 +1533,21 @@ const sym_t ConcatI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 
 	return ops::cct(scope, evalA, evalB, &token, stack_trace);
 }
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class SetIndexI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+SetIndexI::SetIndexI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
+	: BinaryI(SET_INDEX_I, a, b, token)
+{}
+
+const sym_t SetIndexI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	const sym_t evalA = a->evaluate(scope, stack_trace);
+	const sym_t evalB = b->evaluate(scope, stack_trace);
+	for (auto &a : evalA.getVector(&token, stack_trace)) {
+		a.set(&evalB, &token, false, stack_trace);
+	}
+	return evalA;
+}

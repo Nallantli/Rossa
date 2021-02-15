@@ -131,6 +131,7 @@
 #define _LIBRARY_NOT_IN_MEMORY_ "Libreria non s'è caricata in memoria: `{0}`"
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Librera `{0}` non ha esportata la funzione: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Taglia dei valori Vettori [" KEYWORD_ARRAY "] non ha compatabilità"
+#define _CANNOT_MAKE_CONST_ "Non si può processare l'espressione con un modo costante"
 #endif
 
 #ifdef _LOCALE_LAT_
@@ -195,6 +196,7 @@
 #define _LIBRARY_NOT_IN_MEMORY_ "In memoriā nōn lēcta est bibliothēcā: `{0}`"
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Nōn est exportāta ē bibliothēcā `{0}` prōcessiō: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Magnitūdinēs valōrum Tabulae [" KEYWORD_ARRAY "] nōn congruunt"
+#define _CANNOT_MAKE_CONST_ "Ēnūntiātiō nōn cōnstante prōcēditur"
 #endif
 
 #ifdef _LOCALE_JPN_
@@ -259,4 +261,5 @@
 #define _LIBRARY_NOT_IN_MEMORY_ "メモリーにライブラリーはロードされなかった：「{0}」`"
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "「{0}」のライブラリーは関数を輸出しない：「{1}」"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "同意列（" KEYWORD_ARRAY "）の値の大きさは相容れない"
+#define _CANNOT_MAKE_CONST_ "表現は一定の法に解析されない"
 #endif

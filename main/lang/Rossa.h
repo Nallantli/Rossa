@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.5-alpha"
+#define _ROSSA_VERSION_ "v1.14.6-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -389,20 +389,7 @@ private:
 		f_wrapper,
 		sym_map_t,
 		scope_t> value;
-	/*union
-	{
-		bool valueBool;
-		number_t valueNumber;
-	};
 
-	aug_type_t valueType;
-	std::string valueString;
-	std::shared_ptr<void> valuePointer;
-	sym_vec_t valueVector;
-	f_map_t valueFunction;
-	func_ptr_t valueVARGFunction = nullptr;
-	sym_map_t valueDictionary;
-	scope_t valueObject; */
 	refc_ull references = 1;
 
 	Value();
@@ -569,7 +556,8 @@ public:
 	UN_ADD_I,
 	NEG_I,
 	NOT_I,
-	CONCAT_I
+	CONCAT_I,
+	SET_INDEX_I
 	} const type;
 
 	Instruction(const type_t &, const token_t &);
@@ -1338,6 +1326,13 @@ class ConcatI : public BinaryI
 {
 public:
 	ConcatI(const i_ptr_t &, const i_ptr_t &, const token_t &);
+	const sym_t evaluate(const scope_t *, trace_t &) const override;
+};
+
+class SetIndexI : public BinaryI
+{
+public:
+	SetIndexI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 

@@ -79,6 +79,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"&&", 3},
 	{"||", 2},
 	{"=", -1},
+	{".=", -1},
 	{":=", -1},
 	{"**=", -1},
 	{"*=", -1},
