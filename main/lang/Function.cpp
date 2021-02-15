@@ -34,7 +34,7 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 			default:
 			{
 				const sym_t &temp = newScope.createVariable(params[i].second, token);
-				temp.set(&paramValues[i], token, false, stack_trace);
+				temp.set(&paramValues[i], token, stack_trace);
 				break;
 			}
 		}
@@ -54,7 +54,7 @@ const sym_t Function::evaluate(const sym_vec_t &paramValues, const token_t *toke
 	}
 
 	const sym_t ret = sym_t();
-	ret.set(&temp, token, false, stack_trace);
+	ret.set(&temp, token, stack_trace);
 
 	stack_trace.pop_back();
 	return ret;
@@ -81,7 +81,7 @@ const sym_t Function::evaluateVARGS(const sym_vec_t &paramValues, const token_t 
 	}
 
 	const sym_t ret = sym_t();
-	ret.set(&temp, token, false, stack_trace);
+	ret.set(&temp, token, stack_trace);
 
 	stack_trace.pop_back();
 	return ret;

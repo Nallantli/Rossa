@@ -919,7 +919,7 @@ i_ptr_t BinOpNode::genParser() const
 	if (op == "=") {
 		if (a->isConst())
 			throw rossa_error("Cannot reassign constant value", token, stack_trace);
-		return std::make_shared<SetI>(a->genParser(), b->genParser(), b->isConst(), token);
+		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
 	}
 	if (op == ":=") {
 		if (a->getType() != ID_NODE && a->getType() != BID_NODE)

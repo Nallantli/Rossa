@@ -473,7 +473,7 @@ void sym_t::nullify() const
 	d->type = Value::type_t::NIL;
 }
 
-void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace_t &stack_trace) const
+void sym_t::set(const sym_t *b, const token_t *token, trace_t &stack_trace) const
 {
 	if (b->d == d)
 		return;
@@ -508,27 +508,19 @@ void sym_t::set(const sym_t *b, const token_t *token, const bool &isConst, trace
 				d->value = v;
 			},
 			[&](const sym_vec_t &v) {
-				if (isConst) {
-					d->value = v;
-					return;
-				}
 				sym_vec_t nv;
 				nv.resize(v.size());
 				for (size_t i = 0; i < v.size(); i++)
-					nv[i].set(&v[i], token, isConst, stack_trace);
+					nv[i].set(&v[i], token, stack_trace);
 				d->value = nv;
 			},
 			[&](const sym_map_t &v) {
-				if (isConst) {
-					d->value = v;
-					return;
-				}
 				d->value = sym_map_t();
 				for (auto &e : v) {
 					if (e.second.d->type == Value::type_t::NIL)
 						continue;
 					auto newd = sym_t();
-					newd.set(&e.second, token, isConst, stack_trace);
+					newd.set(&e.second, token, stack_trace);
 					std::get<sym_map_t>(d->value).insert({ e.first, newd });
 				}
 			},

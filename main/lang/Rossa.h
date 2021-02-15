@@ -1,6 +1,6 @@
 #pragma once
 
-#define _ROSSA_VERSION_ "v1.14.6-alpha"
+#define _ROSSA_VERSION_ "v1.14.7-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) Rossa::MAIN_HASH.deHash(x)
@@ -476,7 +476,7 @@ public:
 	const sym_t call(const sym_vec_t &, const token_t *, trace_t &) const;
 	void addFunctions(const sym_t *, const token_t *) const;
 	void nullify() const;
-	void set(const sym_t *, const token_t *, const bool &, trace_t &) const;
+	void set(const sym_t *, const token_t *, trace_t &) const;
 	const bool equals(const sym_t *, const token_t *, trace_t &) const;
 	const bool nequals(const sym_t *, const token_t *, trace_t &) const;
 	const bool pureEquals(const sym_t *, const token_t *, trace_t &) const;
@@ -1094,11 +1094,8 @@ public:
 
 class SetI : public BinaryI
 {
-protected:
-	const bool isConst;
-
 public:
-	SetI(const i_ptr_t &, const i_ptr_t &, const bool &, const token_t &);
+	SetI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 

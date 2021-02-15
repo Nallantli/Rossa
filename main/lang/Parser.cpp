@@ -90,7 +90,7 @@ const sym_t DefineI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	hash_sym_map_t capturedVars;
 	for (const hash_ull &e : captures) {
-		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
+		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, stack_trace);
 	}
 	func_ptr_t f = std::make_shared<Function>(key, scope->getPtr(), params, body, capturedVars);
 	if (key > 0) {
@@ -114,7 +114,7 @@ const sym_t VargDefineI::evaluate(const scope_t *scope, trace_t &stack_trace) co
 {
 	hash_sym_map_t capturedVars;
 	for (const hash_ull &e : captures) {
-		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, false, stack_trace);
+		capturedVars[e].set(&scope->getVariable(e, &token, stack_trace), &token, stack_trace);
 	}
 	func_ptr_t f = std::make_shared<Function>(key, scope->getPtr(), body, capturedVars);
 	if (key > 0) {
@@ -284,7 +284,7 @@ const sym_t DeclareI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t v = scope->createVariable(key, &token);
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	v.set(&evalA, &token, isConst, stack_trace);
+	v.set(&evalA, &token, stack_trace);
 	return v;
 }
 
@@ -657,9 +657,8 @@ const sym_t BShiftRightI::evaluate(const scope_t *scope, trace_t &stack_trace) c
 /*class SetI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-SetI::SetI(const i_ptr_t &a, const i_ptr_t &b, const bool &isConst, const token_t &token)
+SetI::SetI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
 	: BinaryI(SET, a, b, token)
-	, isConst{ isConst }
 {}
 
 const sym_t SetI::evaluate(const scope_t *scope, trace_t &stack_trace) const
@@ -671,10 +670,10 @@ const sym_t SetI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 		try {
 			return scope->getVariable(Rossa::HASH_SET, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
 		} catch (const rossa_error &e) {
-			evalA.set(&evalB, &token, isConst, stack_trace);
+			evalA.set(&evalB, &token, stack_trace);
 		}
 	} else {
-		evalA.set(&evalB, &token, isConst, stack_trace);
+		evalA.set(&evalB, &token, stack_trace);
 	}
 	return evalA;
 }
@@ -1547,7 +1546,7 @@ const sym_t SetIndexI::evaluate(const scope_t *scope, trace_t &stack_trace) cons
 	const sym_t evalA = a->evaluate(scope, stack_trace);
 	const sym_t evalB = b->evaluate(scope, stack_trace);
 	for (auto &a : evalA.getVector(&token, stack_trace)) {
-		a.set(&evalB, &token, false, stack_trace);
+		a.set(&evalB, &token, stack_trace);
 	}
 	return evalA;
 }
