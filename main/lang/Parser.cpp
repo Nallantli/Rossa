@@ -198,7 +198,7 @@ const sym_t WhileI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 					break;
 			}
 			if (cflag)
-				continue;
+				break;
 		}
 	}
 	return sym_t();
@@ -237,7 +237,7 @@ const sym_t ForI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 					break;
 			}
 			if (cflag)
-				continue;
+				break;
 		}
 	}
 	return sym_t();
