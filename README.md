@@ -107,3 +107,11 @@ t2 := new Thread(()[f] => f(10, 2));
 t1.join();
 t2.join();
 ```
+
+---
+
+_Making languages_
+
+_is very fun, but I wish_
+
+_that it worked well too_
