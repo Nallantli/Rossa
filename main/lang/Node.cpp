@@ -1107,15 +1107,15 @@ void UnOpNode::printTree(std::string indent, bool last) const
 const node_ptr_t UnOpNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
 {
 	auto na = a->fold(consts);
+	auto ru = std::make_shared<UnOpNode>(path, op, na, token);
 	if (na->isConst()) {
-		auto i = genParser();
 		scope_t newScope(static_cast<hash_ull>(0));
 		trace_t stack_trace;
-		auto r = i->evaluate(&newScope, stack_trace);
+		auto r = ru->genParser()->evaluate(&newScope, stack_trace);
 		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_shared<UnOpNode>(path, op, na, token);
+	return ru;
 }
 
 //------------------------------------------------------------------------------------------------------
