@@ -1587,15 +1587,6 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 				return std::make_shared<ReferNode>(*scopes, ret, currentToken);
 			}
 			return nullptr;
-		case TOK_DELETE:
-			nextToken();
-			if (auto ret = parseEquNode(scopes)) {
-				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
-				nextToken();
-				return std::make_shared<DeleteNode>(*scopes, ret, currentToken);
-			}
-			return nullptr;
 		default:
 			if (auto ret = parseEquNode(scopes)) {
 				if (currentToken.type != ';')

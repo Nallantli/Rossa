@@ -34,6 +34,7 @@ const hash_ull Rossa::HASH_NOT = ROSSA_HASH("!");
 const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("_");
 const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
 const hash_ull Rossa::HASH_CCT = ROSSA_HASH("++");
+const hash_ull Rossa::HASH_DEL = ROSSA_HASH("delete");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
@@ -78,6 +79,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"|", 4},
 	{"&&", 3},
 	{"||", 2},
+	{"delete", 1},
 	{"=", -1},
 	{".=", -1},
 	{":=", -1},
@@ -309,8 +311,6 @@ const int Rossa::getToken(
 			return TOK_BREAK;
 		else if (ID_STRING == KEYWORD_REFER)
 			return TOK_REFER;
-		else if (ID_STRING == KEYWORD_DELETE)
-			return TOK_DELETE;
 		else if (ID_STRING == KEYWORD_NIL_NAME)
 			return TOK_NIL_NAME;
 		else if (ID_STRING == KEYWORD_POINTER)

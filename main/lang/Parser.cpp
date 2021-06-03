@@ -1458,6 +1458,11 @@ const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 				children[0]->evaluate(scope, stack_trace),
 				children[1]->evaluate(scope, stack_trace),
 				&token, stack_trace);
+		case 26:
+			return ops::del(scope,
+				children[0]->evaluate(scope, stack_trace),
+				children[1]->evaluate(scope, stack_trace),
+				&token, stack_trace);
 		default:
 			return sym_t();
 	}
@@ -1467,15 +1472,15 @@ const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 /*class DeleteI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DeleteI::DeleteI(const i_ptr_t &a, const token_t &token)
-	: UnaryI(DELETE_I, a, token)
+DeleteI::DeleteI(const i_ptr_t &a, const i_ptr_t &b, const token_t &token)
+	: BinaryI(DELETE_I, a, b, token)
 {}
 
 const sym_t DeleteI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 {
 	const sym_t evalA = a->evaluate(scope, stack_trace);
-	evalA.nullify();
-	return sym_t();
+	const sym_t evalB = b->evaluate(scope, stack_trace);
+	return ops::del(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

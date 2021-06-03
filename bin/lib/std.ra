@@ -48,6 +48,8 @@ parse := ((ref x) => parse(x));
 `-`(ref a) => _call_op 23 (a);
 `!`(ref a) => _call_op 24 (a);
 
+`delete`(ref a) => _call_op 25 (a);
+
 `==`(ref a, ref b) => a === b;
 `!=`(ref a, ref b) => a !== b;
 

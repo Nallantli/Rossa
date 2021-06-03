@@ -188,7 +188,7 @@ enum LexerTokenType
 	TOK_INNER = -39,
 	TOK_REF = -40,
 	TOK_CASE = -41,
-	TOK_DELETE = -42,
+	//TOK_DELETE = -42,
 	TOK_BREAK = -43,
 	TOK_REFER = -44,
 	TOK_NIL_NAME = -45,
@@ -455,7 +455,7 @@ public:
 	void setSymbolType(const type_t &);
 	const number_t &getNumber(const token_t *, trace_t &) const;
 	void *getPointer(const token_t *, trace_t &) const;
-	const sym_map_t &getDictionary(const token_t *, trace_t &) const;
+	sym_map_t &getDictionary(const token_t *, trace_t &) const;
 	const sym_t &indexVector(const size_t &, const token_t *, trace_t &) const;
 	const sym_vec_t &getVector(const token_t *, trace_t &) const;
 	const std::string getString(const token_t *, trace_t &) const;
@@ -657,8 +657,7 @@ protected:
 		THROW_NODE,
 		PAREN_NODE,
 		CALL_OP_NODE,
-		VARG_DEFINE_NODE,
-		DELETE_NODE
+		VARG_DEFINE_NODE
 	} const type;
 	const token_t token;
 
@@ -781,6 +780,7 @@ public:
 	static const hash_ull HASH_LENGTH;
 	static const hash_ull HASH_NOT;
 	static const hash_ull HASH_CCT;
+	static const hash_ull HASH_DEL;
 
 	Rossa(const std::vector<std::string> &);
 	static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
@@ -1291,10 +1291,10 @@ public:
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 
-class DeleteI : public UnaryI
+class DeleteI : public BinaryI
 {
 public:
-	DeleteI(const i_ptr_t &, const token_t &);
+	DeleteI(const i_ptr_t &, const i_ptr_t &, const token_t &);
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 
@@ -1753,19 +1753,6 @@ public:
 	const node_ptr_t fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>> &) const override;
 };
 
-class DeleteNode : public Node
-{
-private:
-	const node_ptr_t del;
-
-public:
-	DeleteNode(const ns_vec_t &, const node_ptr_t &, const token_t &);
-	i_ptr_t genParser() const override;
-	bool isConst() const override;
-	void printTree(std::string, bool) const override;
-	const node_ptr_t fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>> &) const override;
-};
-
 namespace ops
 {
 	const sym_t index(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
@@ -1773,6 +1760,7 @@ namespace ops
 	const sym_t untilstep(const scope_t *, const bool &, const sym_t &, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	const sym_t untilnostep(const scope_t *, const bool &, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	const sym_t cct(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
+	const sym_t del(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	// Arithmetic
 	const sym_t add(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
 	const sym_t sub(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);

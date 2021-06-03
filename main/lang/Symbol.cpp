@@ -166,11 +166,12 @@ void *sym_t::getPointer(const token_t *token, trace_t &stack_trace) const
 	return std::get<std::shared_ptr<void>>(d->value).get();
 }
 
-const sym_map_t &sym_t::getDictionary(const token_t *token, trace_t &stack_trace) const
+sym_map_t &sym_t::getDictionary(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != Value::type_t::DICTIONARY)
 		throw rossa_error(_NOT_DICTIONARY_, *token, stack_trace);
-	auto &m = std::get<sym_map_t>(d->value);
+	return std::get<sym_map_t>(d->value);
+	/*auto &m = std::get<sym_map_t>(d->value);
 	auto iter = m.begin();
 	for (; iter != m.end();) {
 		if (iter->second.d->type == Value::type_t::NIL)
@@ -178,7 +179,7 @@ const sym_map_t &sym_t::getDictionary(const token_t *token, trace_t &stack_trace
 		else
 			++iter;
 	}
-	return m;
+	return m;*/
 }
 
 const sym_t &sym_t::indexVector(const size_t &i, const token_t *token, trace_t &stack_trace) const

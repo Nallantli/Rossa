@@ -936,6 +936,8 @@ i_ptr_t BinOpNode::genParser() const
 		return std::make_shared<IndexI>(a->genParser(), b->genParser(), token);
 	if (op == "->")
 		return std::make_shared<CastToI>(a->genParser(), b->genParser(), token);
+	if (op == "delete")
+		return std::make_shared<DeleteI>(a->genParser(), b->genParser(), token);
 
 	throw rossa_error(format::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
 }
@@ -1800,43 +1802,4 @@ const node_ptr_t CallOpNode::fold(const std::vector<std::pair<std::vector<hash_u
 		nargs.push_back(c->fold(consts));
 
 	return std::make_shared<CallOpNode>(path, id, nargs, token);
-}
-
-//------------------------------------------------------------------------------------------------------
-
-DeleteNode::DeleteNode(
-	const ns_vec_t &path,
-	const node_ptr_t &del,
-	const token_t &token) : Node(path, DELETE_NODE, token),
-	del(del)
-{}
-
-i_ptr_t DeleteNode::genParser() const
-{
-	return std::make_shared<DeleteI>(del->genParser(), token);
-}
-
-bool DeleteNode::isConst() const
-{
-	return false;
-}
-
-void DeleteNode::printTree(std::string indent, bool last) const
-{
-	std::cout << indent;
-	if (last) {
-		std::cout << "└─";
-		indent += "  ";
-	} else {
-		std::cout << "├─";
-		indent += "│ ";
-	}
-	printc(deHashVec(path) + " ", RED_TEXT);
-	std::cout << "DELETE\n";
-	del->printTree(indent, true);
-}
-
-const node_ptr_t DeleteNode::fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>>&consts) const
-{
-	return std::make_shared<DeleteNode>(path, del->fold(consts), token);
 }
