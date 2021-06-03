@@ -1463,6 +1463,10 @@ const sym_t CallOpI::evaluate(const scope_t *scope, trace_t &stack_trace) const
 				children[0]->evaluate(scope, stack_trace),
 				children[1]->evaluate(scope, stack_trace),
 				&token, stack_trace);
+		case 27:
+			return ops::hash(NULL,
+				children[0]->evaluate(scope, stack_trace),
+				&token, stack_trace);
 		default:
 			return sym_t();
 	}
@@ -1554,4 +1558,17 @@ const sym_t SetIndexI::evaluate(const scope_t *scope, trace_t &stack_trace) cons
 		a.set(&evalB, &token, stack_trace);
 	}
 	return evalA;
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class HashI                                                                                           */
+/*-------------------------------------------------------------------------------------------------------*/
+
+HashI::HashI(const i_ptr_t &a, const token_t &token)
+	: UnaryI(HASH_I, a, token)
+{}
+
+const sym_t HashI::evaluate(const scope_t *scope, trace_t &stack_trace) const
+{
+	return ops::hash(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
 }

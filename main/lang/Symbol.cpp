@@ -135,6 +135,11 @@ void sym_t::operator=(const sym_t &b)
 	this->d->references++;
 }
 
+const unsigned int sym_t::hash() const
+{
+	return d->hash();
+}
+
 const sym_t sym_t::allocate(const size_t &size)
 {
 	sym_vec_t v;
@@ -321,7 +326,7 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 		case Value::type_t::NUMBER:
 			return std::get<number_t>(d->value).toString();
 		case Value::type_t::STRING:
-			return "\"" + std::get<std::string>(d->value) + "\"";
+			return std::get<std::string>(d->value);
 		case Value::type_t::FUNCTION:
 		{
 			std::string ret = "[";
@@ -343,7 +348,7 @@ const std::string sym_t::toString(const token_t *token, trace_t &stack_trace) co
 		case Value::type_t::OBJECT:
 		{
 			if (std::get<scope_t>(d->value).hasValue(ROSSA_HASH("->String")))
-				auto v = std::get<scope_t>(d->value).getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
+				return std::get<scope_t>(d->value).getVariable(ROSSA_HASH("->String"), token, stack_trace).call({}, token, stack_trace).getString(token, stack_trace);
 			std::stringstream ss;
 			ss << "Object<" << std::get<scope_t>(d->value).getKey() << ">";
 			return ss.str();
@@ -593,6 +598,8 @@ const bool sym_t::nequals(const sym_t *b, const token_t *token, trace_t &stack_t
 
 const bool sym_t::pureEquals(const sym_t *b, const token_t *token, trace_t &stack_trace) const
 {
+	if (d->type != b->d->type)
+		return false;
 	switch (d->type) {
 		case Value::type_t::OBJECT:
 			return std::get<scope_t>(d->value) == std::get<scope_t>(b->d->value);

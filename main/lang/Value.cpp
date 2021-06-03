@@ -5,6 +5,18 @@ f_wrapper::f_wrapper(const f_map_t &map, const func_ptr_t &varg)
 	, varg{ varg }
 {}
 
+const unsigned int f_wrapper::hash() const
+{
+	int h = 0;
+	int i = 0;
+	for (auto &e : map) {
+		for (auto &f : e.second){
+		h = (h + (f.second->getKey() << i++)) % 0xFFFFFFFF;
+		}
+	}
+	return h;
+}
+
 Value::Value()
 	: type{ NIL }
 {}
@@ -62,4 +74,51 @@ Value::Value(const std::string &valueString)
 void Value::clearData()
 {
 	value = false;
+}
+
+const unsigned int Value::hash() const
+{
+	switch (type) {
+		case NIL:
+			return 0x00000000;
+		case BOOLEAN_D:
+			return std::get<bool>(value) ? 0x10000001 : 0x10000000;
+		case NUMBER:
+			return 0x20000000 | (std::get<number_t>(value).type == number_t::LONG_NUM ? 0x00000000 : 0x0100000) | (std::get<number_t>(value).getLong() % 0x00FFFFFF);
+		case ARRAY:
+		{
+			int h = 0;
+			int i = 0;
+			for (auto &e : std::get<sym_vec_t>(value)) {
+				h = (h + (e.hash() << i++)) % 0x0FFFFFFF;
+			}
+			return 0x30000000 | h;
+		}
+		case STRING:
+		{
+			int h = 0;
+			int i = 0;
+			for (auto &c : std::get<std::string>(value)) {
+				h = (h + ((int)c << i++)) % 0x0FFFFFFF;
+			}
+			return 0x40000000 | h;
+		}
+		case OBJECT:
+			return 0x50000000 | (std::get<scope_t>(value).hash() % 0x0FFFFFFF);
+		case DICTIONARY:
+		{
+			int h = 0;
+			int i = 0;
+			for (auto &e : std::get<sym_map_t>(value)) {
+				h = (h + (e.second.hash() << i++)) % 0x0FFFFFFF;
+			}
+			return 0x60000000 | h;
+		}
+		case FUNCTION:
+			return 0x70000000 | (std::get<f_wrapper>(value).hash() % 0x0FFFFFFF);
+		case TYPE_NAME:
+			return 0x80000000 | (std::get<param_t>(value).hash() % 0x0FFFFFFF);
+		default:
+			return 0;
+	}
 }

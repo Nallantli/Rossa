@@ -35,6 +35,7 @@ const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("_");
 const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
 const hash_ull Rossa::HASH_CCT = ROSSA_HASH("++");
 const hash_ull Rossa::HASH_DEL = ROSSA_HASH("delete");
+const hash_ull Rossa::HASH_HASH = ROSSA_HASH("@");
 
 Rossa::Rossa(const std::vector<std::string> &args)
 {
@@ -107,6 +108,7 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"+", -1},
 	{"!", -1},
 	{"~", -1},
+	{"@", -1},
 	{"$", -1} };
 
 const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile)

@@ -162,6 +162,23 @@ const sym_t &Scope::createVariable(const hash_ull &key, const sym_t &d, const to
 	return values.insert({ key, d }).first->second;
 }
 
+const unsigned int Scope::hash() const
+{
+	int h = 0;
+	int i = 0;
+	for (auto &e : values) {
+		h = (h + ((e.first + e.second.hash()) << i++)) % 0xFFFFFFFF;
+	}
+	return h;
+}
+
+const unsigned int scope_t::hash() const
+{
+	if (this->scope != NULL)
+		return this->scope->hash();
+	return 0;
+}
+
 const sym_t &scope_t::getVariable(const hash_ull &key, const token_t *token, trace_t &stack_trace) const
 {
 	return scope->getVariable(key, token, stack_trace);

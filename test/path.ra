@@ -1,0 +1,162 @@
+load "graphics";
+load "hashmap";
+
+width := 40;
+height := 20;
+scale := 10;
+
+rand := new Random();
+
+board := alloc(width).map((e) => alloc(height));
+graph := [];
+
+struct Node {
+	var x, y, traversable;
+
+	init(ref x : Number, ref y : Number, ref traversable : Boolean) => {
+		this.x = x;
+		this.y = y;
+		this.traversable = traversable;
+	}
+
+	`->String`() => {
+		return "({0}, {1}, {2})" & [x -> String, y -> String, traversable -> String];
+	}
+}
+
+for x in 0 .. width do {
+	for y in 0 .. height do {
+		graph ++= [new Node(x, y, rand.nexti(0, 3) > 0)];
+		board[x][y] = graph[graph.len() - 1];
+	}
+}
+
+board[0][height / 2].traversable = true;
+board[width - 1][height / 2].traversable = true;
+
+getNeighbors(n : Node) => {
+	neighbors := [];
+
+	if n.x > 0 && board[n.x - 1][n.y].traversable then {
+		neighbors ++= [ board[n.x - 1][n.y] ];
+	}
+	if n.x < width - 1 && board[n.x + 1][n.y].traversable then {
+		neighbors ++= [ board[n.x + 1][n.y] ];
+	}
+	if n.y > 0 && board[n.x][n.y - 1].traversable then {
+		neighbors ++= [ board[n.x][n.y - 1] ];
+	}
+	if n.y < height - 1 && board[n.x][n.y + 1].traversable then {
+		neighbors ++= [ board[n.x][n.y + 1] ];
+	}
+
+	if n.x > 0 && n.y > 0 then {
+		if board[n.x - 1][n.y - 1].traversable && (board[n.x - 1][n.y].traversable || board[n.x][n.y - 1].traversable) then {
+			neighbors ++= [ board[n.x - 1][n.y - 1] ];
+		}
+	}
+
+	if n.x > 0 && n.y < height - 1 then {
+		if board[n.x - 1][n.y + 1].traversable && (board[n.x - 1][n.y].traversable || board[n.x][n.y + 1].traversable) then {
+			neighbors ++= [ board[n.x - 1][n.y + 1] ];
+		}
+	}
+
+	if n.x < width - 1 && n.y > 0 then {
+		if board[n.x + 1][n.y - 1].traversable && (board[n.x + 1][n.y].traversable || board[n.x][n.y - 1].traversable) then {
+			neighbors ++= [ board[n.x + 1][n.y - 1] ];
+		}
+	}
+
+	if n.x < width - 1 && n.y < height - 1 then {
+		if board[n.x + 1][n.y + 1].traversable && (board[n.x + 1][n.y].traversable || board[n.x][n.y + 1].traversable) then {
+			neighbors ++= [ board[n.x + 1][n.y + 1] ];
+		}
+	}
+
+	return neighbors;
+}
+
+astar(ref start : Node, ref end : Node, ref heuristic : Function<Node, Node>) => {
+	gScore := new HashMap();
+	fScore := new HashMap();
+	prev := new HashMap();
+	openset := [start];
+
+	gScore[start] = 0;
+	fScore[start] = heuristic(start, end);
+
+	while openset.len() > 0 do {
+		curr := nil;
+
+		for n in openset do {
+			if curr == nil || fScore[n] < fScore[curr] then {
+				curr = n;
+			}
+		}
+
+		if curr == end then {
+			break;
+		}
+
+		openset.erase(curr);
+
+		for n in getNeighbors(curr) do {
+			d := gScore[curr] + heuristic(n, curr);
+			if gScore[n] == nil || d < gScore[n] then {
+				gScore[n] = d;
+				fScore[n] = d + heuristic(n, end);
+				prev[n] = curr;
+				if !openset.contains(n) then {
+					openset ++= [n];
+				}
+			}
+		}
+	}
+
+	path := [];
+	curr := end;
+	if prev[curr] != nil || curr == start then {
+		while curr != nil do {
+			path ++= [curr];
+			curr = prev[curr];
+		}
+	}
+
+	return path.reverse();
+}
+
+eucDist(ref a : Node, ref b : Node) => {
+	return ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5;
+}
+
+manDist(ref a : Node, ref b : Node) => {
+	return math.abs(a.x - b.x) + math.abs(a.y - b.y);
+}
+
+path := astar(board[0][height / 2], board[width - 1][height / 2], eucDist);
+
+# -------------------------------------------------------------------------------------------------
+
+SDL.INIT();
+
+w := new SDL.Window("Path Finder", width * scale, height * scale);
+r := w.getRenderer();
+
+for x in 0 .. width do {
+	for y in 0 .. height do {
+		if board[x][y].traversable then {
+			r.put(new SDL.Rect(scale, scale, Color.BLACK), x * scale, y * scale);
+		} else {
+			r.put(new SDL.Rect(scale, scale, Color.WHITE), x * scale, y * scale);
+		}
+	}
+}
+
+for n in path do {
+	r.put(new SDL.Rect(scale, scale, Color.RED), n.x * scale, n.y * scale);
+}
+
+r.update();
+
+while SDL.poll()["type"] != SDL.Event.QUIT do {}

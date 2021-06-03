@@ -208,6 +208,19 @@ const std::string param_t::toString() const
 	return s;
 }
 
+const unsigned int param_t::hash() const
+{
+	int h = 0;
+	int i = 0;
+	for (auto &e : base) {
+		h = (h + (std::abs(e) << i++)) % 0xFFFFFFFF;
+	}
+	for (auto &e : qualifiers) {
+		h = (h + (e.hash() << i++)) % 0xFFFFFFFF;
+	}
+	return h;
+}
+
 const std::string param_t::toCodeString() const
 {
 	std::string s = "param_t(static_cast<type_sll>(" + getTypeString(base) + "), ";

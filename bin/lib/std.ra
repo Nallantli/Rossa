@@ -48,7 +48,9 @@ parse := ((ref x) => parse(x));
 `-`(ref a) => _call_op 23 (a);
 `!`(ref a) => _call_op 24 (a);
 
-`delete`(ref a) => _call_op 25 (a);
+`delete`(ref a, ref b) => _call_op 26 (a, b);
+
+`@`(ref a) => _call_op 27 (a);
 
 `==`(ref a, ref b) => a === b;
 `!=`(ref a, ref b) => a !== b;
@@ -312,6 +314,26 @@ filter(ref a : Array, ref f : Function<Any, Number>) => {
 		}
 	}
 	return nv;
+}
+
+erase(ref a : Array, ref value) => {
+	nv := [];
+	for e in a do {
+		if e != value then {
+			nv ++= [e];
+		}
+	}
+	a = nv;
+	refer a;
+}
+
+contains(ref a : Array, ref value) => {
+	for e in a do {
+		if e == value then {
+			return true;
+		}
+	}
+	return false;
 }
 
 reverse(ref a : Array) => {

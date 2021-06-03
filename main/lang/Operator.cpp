@@ -775,3 +775,16 @@ const sym_t ops::del(const scope_t *scope, const sym_t &evalA, const sym_t &eval
 
 	throw rossa_error(format::format(_UNDECLARED_OPERATOR_ERROR_, { "delete" }), *token, stack_trace);
 }
+
+const sym_t ops::hash(const scope_t *scope, const sym_t &evalA, const token_t *token, trace_t &stack_trace)
+{
+	if (evalA.getValueType() == Value::OBJECT) {
+		const auto &o = evalA.getObject(token, stack_trace);
+		if (o->hasValue(Rossa::HASH_HASH))
+			return o->getVariable(Rossa::HASH_HASH, token, stack_trace).call({ }, token, stack_trace);
+		if (scope != NULL)
+			return scope->getVariable(Rossa::HASH_HASH, token, stack_trace).call({ evalA }, token, stack_trace);
+	}
+
+	return sym_t::Number(number_t::Long(evalA.hash()));
+}

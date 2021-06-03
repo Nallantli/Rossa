@@ -1080,6 +1080,8 @@ i_ptr_t UnOpNode::genParser() const
 		return std::make_shared<TypeI>(a->genParser(), token);
 	if (op == "~")
 		return std::make_shared<BNotI>(a->genParser(), token);
+	if (op == "@")
+		return std::make_shared<HashI>(a->genParser(), token);
 
 	trace_t stack_trace;
 	throw rossa_error(format::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);

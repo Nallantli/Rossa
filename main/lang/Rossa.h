@@ -271,6 +271,7 @@ public:
 	const bool operator<(const param_t &) const;
 	const size_t operator&(const param_t &) const;
 	const bool operator==(const param_t &) const;
+	const unsigned int hash() const;
 };
 
 struct token_t
@@ -317,6 +318,8 @@ public:
 		VIRTUAL_O
 	};
 
+	const unsigned int hash() const;
+
 	scope_t();
 	scope_t(Scope *, const type_t &);
 	scope_t(const hash_ull &key);
@@ -357,12 +360,14 @@ struct f_wrapper
 	func_ptr_t varg = nullptr;
 
 	f_wrapper(const f_map_t &, const func_ptr_t &);
+	const unsigned int hash() const;
 };
 
 class Value
 {
 	friend class sym_t;
 public:
+	const unsigned int hash() const;
 	enum type_t
 	{
 		NIL = -1,
@@ -435,6 +440,8 @@ public:
 	sym_t(const type_t &);
 	sym_t(const sym_t &);
 	sym_t();
+
+	const unsigned int hash() const;
 
 	static const sym_t Pointer(const std::shared_ptr<void> &);
 	static const sym_t TypeName(const param_t &);
@@ -557,7 +564,8 @@ public:
 	NEG_I,
 	NOT_I,
 	CONCAT_I,
-	SET_INDEX_I
+	SET_INDEX_I,
+	HASH_I
 	} const type;
 
 	Instruction(const type_t &, const token_t &);
@@ -572,6 +580,7 @@ class Scope
 
 public:
 	Scope *getParent() const;
+	const unsigned int hash() const;
 
 private:
 	const scope_t::scope_type_t type;
@@ -781,6 +790,7 @@ public:
 	static const hash_ull HASH_NOT;
 	static const hash_ull HASH_CCT;
 	static const hash_ull HASH_DEL;
+	static const hash_ull HASH_HASH;
 
 	Rossa(const std::vector<std::string> &);
 	static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
@@ -1333,6 +1343,13 @@ public:
 	const sym_t evaluate(const scope_t *, trace_t &) const override;
 };
 
+class HashI : public UnaryI
+{
+public:
+	HashI(const i_ptr_t &, const token_t &);
+	const sym_t evaluate(const scope_t *, trace_t &) const override;
+};
+
 // NODES -----------------------------------------------------------------------------
 
 class ContainerNode : public Node
@@ -1784,6 +1801,7 @@ namespace ops
 	const sym_t unadd(const scope_t *, const sym_t &, const token_t *, trace_t &);
 	const sym_t neg(const scope_t *, const sym_t &, const token_t *, trace_t &);
 	const sym_t unot(const scope_t *, const sym_t &, const token_t *, trace_t &);
+	const sym_t hash(const scope_t *, const sym_t &, const token_t *, trace_t &);
 }
 
 namespace dir

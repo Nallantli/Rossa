@@ -1,0 +1,64 @@
+struct HashMap {
+	struct Bucket {
+		var data;
+
+		init() => {
+			data = [];
+		}
+
+		push(ref key, ref value) => {
+			data ++= [ [key, value] ];
+			refer data[data.len() - 1][1];
+		}
+	}
+
+	var buckets;
+
+	init() => {
+		buckets = alloc(32).map((e) => new Bucket());
+	}
+
+	init(ref size : Number) => {
+		buckets = alloc(size).map((e) => new Bucket());
+	}
+
+	`[]`(ref key) => {
+		key_hash := @key % buckets.len();
+		bucket := buckets[key_hash];
+		index := nil;
+		for i in 0 .. bucket.data.len() do {
+			if bucket.data[i][0] == key then {
+				index = i;
+				break;
+			}
+		}
+		if index == nil then {
+			refer bucket.push(key, nil);
+		} else {
+			refer bucket.data[index][1];
+		}
+	}
+
+	erase(ref key) => {
+		key_hash := @key % buckets.len();
+		bucket := buckets[key_hash];
+		index := nil;
+		for i in 0 .. bucket.data.len() do {
+			if bucket.data[i][0] == key then {
+				index = i;
+				break;
+			}
+		}
+		if index != nil then {
+			newdata := alloc(bucket.data.len() - 1);
+			j := 0;
+			for k in 0 .. bucket.data.len() do {
+				if k == i then {
+					continue;
+				}
+				newdata[j] = bucket.data[k];
+				j += 1;
+			}
+		}
+	}
+}
