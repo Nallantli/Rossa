@@ -450,7 +450,7 @@ const std::string sym_t::toCodeString() const
 
 const sym_t sym_t::call(const sym_vec_t &params, const token_t *token, trace_t &stack_trace) const
 {
-	return getFunction(params, token, stack_trace)->evaluate(params, token, stack_trace);
+	return function_evaluate(getFunction(params, token, stack_trace), params, token, stack_trace);
 }
 
 void sym_t::addFunctions(const sym_t *b, const token_t *token) const

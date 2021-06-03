@@ -178,10 +178,10 @@ void Rossa::printError(const rossa_error &e)
 		std::string ret = "";
 		if (e.second.getParent().getKey() != "")
 			ret += e.second.getParent().getKey() + ".";
-		ret += ROSSA_DEHASH(e.second.getKey());
+		ret += ROSSA_DEHASH(e.second.key);
 		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;
-		for (auto &p : e.second.getParams()) {
+		for (auto &p : e.second.params) {
 			if (i++ > 0)
 				printc(", ", RESET_TEXT);
 			switch (p.first) {

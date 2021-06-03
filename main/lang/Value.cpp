@@ -11,7 +11,7 @@ const unsigned int f_wrapper::hash() const
 	int i = 0;
 	for (auto &e : map) {
 		for (auto &f : e.second){
-		h = (h + (f.second->getKey() << i++)) % 0xFFFFFFFF;
+		h = (h + (f.second->key << i++)) % 0xFFFFFFFF;
 		}
 	}
 	return h;
@@ -43,7 +43,7 @@ Value::Value(const scope_t &valueObject)
 
 Value::Value(const fsig_t &ftype, const func_ptr_t &function)
 	: type{ FUNCTION }
-	, value{ f_wrapper({ {function->getArgSize(), {{ftype, function}}} }, nullptr) }
+	, value{ f_wrapper({ {function->params.size(), {{ftype, function}}} }, nullptr) }
 {}
 
 Value::Value(const func_ptr_t &function)

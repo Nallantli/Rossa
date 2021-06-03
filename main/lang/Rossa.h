@@ -605,27 +605,23 @@ private:
 	~Scope();
 };
 
-class Function : public std::enable_shared_from_this<Function>
+struct Function : public std::enable_shared_from_this<Function>
 {
-private:
 	const hash_ull key;
 	Scope *parent;
 	const std::vector<std::pair<LexerTokenType, hash_ull>> params;
 	const i_ptr_t body;
 	const hash_sym_map_t captures;
 	const bool isVargs;
-	const sym_t evaluateVARGS(const sym_vec_t &, const token_t *, trace_t &) const;
 
-public:
 	Function(const hash_ull &, Scope *, const std::vector<std::pair<LexerTokenType, hash_ull>> &, const i_ptr_t &, const hash_sym_map_t &);
 	Function(const hash_ull &, Scope *, const i_ptr_t &, const hash_sym_map_t &);
-	const sym_t evaluate(const sym_vec_t &, const token_t *, trace_t &) const;
-	const size_t getArgSize() const;
-	const hash_ull getKey() const;
 	const scope_t getParent() const;
-	const std::vector<std::pair<LexerTokenType, hash_ull>> &getParams() const;
 	void shift();
 };
+
+const sym_t function_evaluate(const func_ptr_t &, const sym_vec_t &, const token_t *, trace_t &);
+const sym_t function_evaluate_vargs(const func_ptr_t &, const sym_vec_t &, const token_t *, trace_t &);
 
 class Node
 {
@@ -1769,7 +1765,7 @@ public:
 	void printTree(std::string, bool) const override;
 	const node_ptr_t fold(const std::vector<std::pair<std::vector<hash_ull>, sym_t>> &) const override;
 };
-
+/*
 namespace ops
 {
 	const sym_t index(const scope_t *, const sym_t &, const sym_t &, const token_t *, trace_t &);
@@ -1802,7 +1798,7 @@ namespace ops
 	const sym_t neg(const scope_t *, const sym_t &, const token_t *, trace_t &);
 	const sym_t unot(const scope_t *, const sym_t &, const token_t *, trace_t &);
 	const sym_t hash(const scope_t *, const sym_t &, const token_t *, trace_t &);
-}
+}*/
 
 namespace dir
 {
