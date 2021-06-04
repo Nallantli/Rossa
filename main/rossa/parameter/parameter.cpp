@@ -1,24 +1,24 @@
-#include "param.h"
+#include "parameter.h"
 
 #include "../global/global.h"
 
-param_t::param_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base)
+parameter_t::parameter_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base)
 	: ancestors(ancestors)
 	, base{ base }
 {}
 
-param_t::param_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base, const std::vector<param_t> &qualifiers)
+parameter_t::parameter_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base, const std::vector<parameter_t> &qualifiers)
 	: ancestors(ancestors)
 	, base{ base }
 	, qualifiers{ qualifiers }
 {}
 
-void param_t::addQualifier(const param_t &param)
+void parameter_t::addQualifier(const parameter_t &param)
 {
 	this->qualifiers.push_back(param);
 }
 
-const std::string param_t::toString() const
+const std::string parameter_t::toString() const
 {
 	std::string s = global::getTypeString(base);
 	if (!qualifiers.empty()) {
@@ -34,7 +34,7 @@ const std::string param_t::toString() const
 	return s;
 }
 
-const unsigned int param_t::hash() const
+const unsigned int parameter_t::hash() const
 {
 	int h = 0;
 	int i = 0;
@@ -47,9 +47,9 @@ const unsigned int param_t::hash() const
 	return h;
 }
 
-const std::string param_t::toCodeString() const
+const std::string parameter_t::toCodeString() const
 {
-	std::string s = "param_t(static_cast<type_sll>(" + global::getTypeString(base) + "), ";
+	std::string s = "parameter_t(static_cast<type_sll>(" + global::getTypeString(base) + "), ";
 	s += "{";
 	size_t i = 0;
 	for (auto &v : qualifiers) {
@@ -61,17 +61,17 @@ const std::string param_t::toCodeString() const
 	return s + ")";
 }
 
-const std::vector<param_t> param_t::getQualifiers() const
+const std::vector<parameter_t> parameter_t::getQualifiers() const
 {
 	return this->qualifiers;
 }
 
-const aug_type_t param_t::getBase() const
+const aug_type_t parameter_t::getBase() const
 {
 	return this->base;
 }
 
-const bool param_t::operator<(const param_t &pt) const
+const bool parameter_t::operator<(const parameter_t &pt) const
 {
 	if (base != pt.base)
 		return base < pt.base;
@@ -90,7 +90,7 @@ const bool param_t::operator<(const param_t &pt) const
 	return false;
 }
 
-const size_t param_t::operator&(const param_t &pt) const
+const size_t parameter_t::operator&(const parameter_t &pt) const
 {
 	if (base[0] == value_type_enum::ANY)
 		return 1;
@@ -114,7 +114,7 @@ const size_t param_t::operator&(const param_t &pt) const
 }
 
 
-const bool param_t::operator==(const param_t &p) const
+const bool parameter_t::operator==(const parameter_t &p) const
 {
 	return base == p.base && qualifiers == p.qualifiers;
 }

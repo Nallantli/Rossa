@@ -4,12 +4,12 @@
 #include "../symbol/symbol.h"
 #include "../object/object.h"
 #include "../function/function.h"
-#include "../param/param.h"
+#include "../parameter/parameter.h"
 
 signature_t::signature_t()
 {}
 
-signature_t::signature_t(const std::vector<param_t> &values)
+signature_t::signature_t(const std::vector<parameter_t> &values)
 	: values{ values }
 {}
 

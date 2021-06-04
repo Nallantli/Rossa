@@ -26,7 +26,7 @@ namespace libstd
 		trace_t stack_trace;
 		try {
 			function_evaluate(f, {}, NULL, stack_trace);
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 			parser_t::printError(e);
 		}
 	}

@@ -1,10 +1,11 @@
 #include "../main/rossa/rossa.h"
 #include "../main/rossa/symbol/symbol.h"
-#include "../main/rossa/error/error.h"
+#include "../main/rossa/rossa_error/rossa_error.h"
 #include "../main/rossa/function/function.h"
 
 #include <zip.h>
 
+#include <cstring>
 #include <fstream>
 
 namespace libfs
@@ -17,17 +18,17 @@ namespace libfs
 			switch (error) {
 				case ZIP_ER_INVAL:
 				case ZIP_ER_NOENT:
-					throw error_t("Path to ZIP archive is invalid", *token, stack_trace);
+					throw rossa_error_t("Path to ZIP archive is invalid", *token, stack_trace);
 				case ZIP_ER_NOZIP:
-					throw error_t("Path does not point to a ZIP archive", *token, stack_trace);
+					throw rossa_error_t("Path does not point to a ZIP archive", *token, stack_trace);
 				case ZIP_ER_OPEN:
-					throw error_t("ZIP archive cannot be opened", *token, stack_trace);
+					throw rossa_error_t("ZIP archive cannot be opened", *token, stack_trace);
 				case ZIP_ER_READ:
-					throw error_t("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
+					throw rossa_error_t("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
 				case ZIP_ER_MEMORY:
-					throw error_t("Enough memory could not be allocated", *token, stack_trace);
+					throw rossa_error_t("Enough memory could not be allocated", *token, stack_trace);
 				default:
-					throw error_t("An error occured while attempting to open archive", *token, stack_trace);
+					throw rossa_error_t("An error occured while attempting to open archive", *token, stack_trace);
 			}
 		}
 
@@ -46,7 +47,7 @@ namespace libfs
 					while (totalRead != statBuffer.size) {
 						int nlen = zip_fread(f, binBuffer, 100);
 						if (nlen < 0)
-							throw error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
+							throw rossa_error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
 						file.write(binBuffer, nlen);
 						totalRead += nlen;
 					}
@@ -54,12 +55,12 @@ namespace libfs
 					zip_fclose(f);
 				}
 			} else {
-				throw error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
+				throw rossa_error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
 			}
 		}
 
 		if (zip_close(z) == -1) {
-			throw error_t("Attempt to close ZIP archive failed", *token, stack_trace);
+			throw rossa_error_t("Attempt to close ZIP archive failed", *token, stack_trace);
 		}
 	}
 }
@@ -73,7 +74,7 @@ ROSSA_EXT_SIG(_writer_init, args, token, hash, stack_trace)
 	else
 		fstr->open(filename, std::ios::binary);
 	if (!fstr->is_open())
-		throw error_t("Failure to initialize writer for filepath <" + filename + ">", *token, stack_trace);
+		throw rossa_error_t("Failure to initialize writer for filepath <" + filename + ">", *token, stack_trace);
 
 	return symbol_t::Pointer(fstr);
 }
@@ -106,7 +107,7 @@ ROSSA_EXT_SIG(_reader_init, args, token, hash, stack_trace)
 	else
 		fstr->open(filename, std::ios::binary);
 	if (!fstr->is_open())
-		throw error_t("Failure to initialize reader for filepath <" + filename + ">", *token, stack_trace);
+		throw rossa_error_t("Failure to initialize reader for filepath <" + filename + ">", *token, stack_trace);
 
 	return symbol_t::Pointer(fstr);
 }

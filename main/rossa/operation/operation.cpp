@@ -1,7 +1,7 @@
 #include "operation.h"
 
 #include "../symbol/symbol.h"
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 #include "../object/object.h"
 #include "../instruction/instruction.h"
 #include "../parser/parser.h"
@@ -18,7 +18,7 @@ const symbol_t operation::index(const object_t *scope, const symbol_t &evalA, co
 		{
 			auto num = evalB.getNumber(token, stack_trace);
 			if (num.type != number_t::LONG_NUM)
-				throw error_t(global::format("Cannot index with non integral value: {0}", { num.toCodeString() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Cannot index with non integral value: {0}", { num.toCodeString() }), *token, stack_trace);
 			return evalA.indexVector(evalB.getNumber(token, stack_trace).getLong(), token, stack_trace);
 		}
 		case value_type_enum::OBJECT:
@@ -32,7 +32,7 @@ const symbol_t operation::index(const object_t *scope, const symbol_t &evalA, co
 				return scope->getVariable(parser_t::HASH_INDEX, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "[]" }), *token, stack_trace);
 }
 
 const symbol_t operation::call(const object_t *scope, const ptr_instruction_t &a, const std::vector<symbol_t> &args, const token_t *token, trace_t &stack_trace)
@@ -103,7 +103,7 @@ const symbol_t operation::untilstep(const object_t *scope, const bool &inclusive
 				return scope->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({ evalA, evalB, step }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<>" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<>" }), *token, stack_trace);
 }
 
 const symbol_t operation::untilnostep(const object_t *scope, const bool &inclusive, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -135,7 +135,7 @@ const symbol_t operation::untilnostep(const object_t *scope, const bool &inclusi
 				return scope->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ".." }), *token, stack_trace);
 }
 
 const symbol_t operation::add(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -148,7 +148,7 @@ const symbol_t operation::add(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = add(scope, av[i], bv[i], token, stack_trace);
@@ -165,7 +165,7 @@ const symbol_t operation::add(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_ADD, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
 }
 
 const symbol_t operation::sub(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -178,7 +178,7 @@ const symbol_t operation::sub(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = sub(scope, av[i], bv[i], token, stack_trace);
@@ -196,7 +196,7 @@ const symbol_t operation::sub(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_SUB, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
 }
 
 const symbol_t operation::mul(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -209,7 +209,7 @@ const symbol_t operation::mul(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = mul(scope, av[i], bv[i], token, stack_trace);
@@ -226,7 +226,7 @@ const symbol_t operation::mul(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_MUL, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "*" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "*" }), *token, stack_trace);
 }
 
 const symbol_t operation::div(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -239,7 +239,7 @@ const symbol_t operation::div(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = div(scope, av[i], bv[i], token, stack_trace);
@@ -256,7 +256,7 @@ const symbol_t operation::div(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_DIV, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "/" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "/" }), *token, stack_trace);
 }
 
 const symbol_t operation::mod(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -269,7 +269,7 @@ const symbol_t operation::mod(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = mod(scope, av[i], bv[i], token, stack_trace);
@@ -286,7 +286,7 @@ const symbol_t operation::mod(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_MOD, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "%" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "%" }), *token, stack_trace);
 }
 
 const symbol_t operation::pow(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -299,7 +299,7 @@ const symbol_t operation::pow(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = pow(scope, av[i], bv[i], token, stack_trace);
@@ -317,7 +317,7 @@ const symbol_t operation::pow(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_POW, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "**" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "**" }), *token, stack_trace);
 }
 
 const symbol_t operation::less(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -332,7 +332,7 @@ const symbol_t operation::less(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = less(scope, av[i], bv[i], token, stack_trace);
@@ -349,7 +349,7 @@ const symbol_t operation::less(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_LESS, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<" }), *token, stack_trace);
 }
 
 const symbol_t operation::more(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -364,7 +364,7 @@ const symbol_t operation::more(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = more(scope, av[i], bv[i], token, stack_trace);
@@ -381,7 +381,7 @@ const symbol_t operation::more(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_MORE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">" }), *token, stack_trace);
 }
 
 const symbol_t operation::eless(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -396,7 +396,7 @@ const symbol_t operation::eless(const object_t *scope, const symbol_t &evalA, co
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = eless(scope, av[i], bv[i], token, stack_trace);
@@ -413,7 +413,7 @@ const symbol_t operation::eless(const object_t *scope, const symbol_t &evalA, co
 				return scope->getVariable(parser_t::HASH_ELESS, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<=" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<=" }), *token, stack_trace);
 }
 
 const symbol_t operation::emore(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -428,7 +428,7 @@ const symbol_t operation::emore(const object_t *scope, const symbol_t &evalA, co
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = emore(scope, av[i], bv[i], token, stack_trace);
@@ -445,7 +445,7 @@ const symbol_t operation::emore(const object_t *scope, const symbol_t &evalA, co
 				return scope->getVariable(parser_t::HASH_EMORE, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">=" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">=" }), *token, stack_trace);
 }
 
 const symbol_t operation::bor(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -460,7 +460,7 @@ const symbol_t operation::bor(const object_t *scope, const symbol_t &evalA, cons
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = bor(scope, av[i], bv[i], token, stack_trace);
@@ -477,7 +477,7 @@ const symbol_t operation::bor(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_B_OR, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "|" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "|" }), *token, stack_trace);
 }
 
 const symbol_t operation::bxor(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -492,7 +492,7 @@ const symbol_t operation::bxor(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = bxor(scope, av[i], bv[i], token, stack_trace);
@@ -509,7 +509,7 @@ const symbol_t operation::bxor(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_B_XOR, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "^" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "^" }), *token, stack_trace);
 }
 
 const symbol_t operation::band(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -531,7 +531,7 @@ const symbol_t operation::band(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = band(scope, av[i], bv[i], token, stack_trace);
@@ -548,7 +548,7 @@ const symbol_t operation::band(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_B_AND, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "&" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "&" }), *token, stack_trace);
 }
 
 const symbol_t operation::bshl(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -561,7 +561,7 @@ const symbol_t operation::bshl(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = bshl(scope, av[i], bv[i], token, stack_trace);
@@ -578,7 +578,7 @@ const symbol_t operation::bshl(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_B_SH_L, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<<" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "<<" }), *token, stack_trace);
 }
 
 const symbol_t operation::bshr(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -591,7 +591,7 @@ const symbol_t operation::bshr(const object_t *scope, const symbol_t &evalA, con
 			auto av = evalA.getVector(token, stack_trace);
 			auto bv = evalB.getVector(token, stack_trace);
 			if (av.size() != bv.size())
-				throw error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+				throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
 			std::vector<symbol_t> v(av.size());
 			for (size_t i = 0; i < v.size(); i++)
 				v[i] = bshr(scope, av[i], bv[i], token, stack_trace);
@@ -608,7 +608,7 @@ const symbol_t operation::bshr(const object_t *scope, const symbol_t &evalA, con
 				return scope->getVariable(parser_t::HASH_B_SH_R, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">>" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { ">>" }), *token, stack_trace);
 }
 
 const symbol_t operation::bnot(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)
@@ -637,7 +637,7 @@ const symbol_t operation::bnot(const object_t *scope, const symbol_t &evalA, con
 	if (scope != NULL)
 		return scope->getVariable(parser_t::HASH_B_NOT, token, stack_trace).call({ evalA }, token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "~" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "~" }), *token, stack_trace);
 }
 
 const symbol_t operation::unadd(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)
@@ -666,7 +666,7 @@ const symbol_t operation::unadd(const object_t *scope, const symbol_t &evalA, co
 	if (scope != NULL)
 		return scope->getVariable(parser_t::HASH_ADD, token, stack_trace).call({ evalA }, token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "+" }), *token, stack_trace);
 }
 
 const symbol_t operation::neg(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)
@@ -695,7 +695,7 @@ const symbol_t operation::neg(const object_t *scope, const symbol_t &evalA, cons
 	if (scope != NULL)
 		return scope->getVariable(parser_t::HASH_SUB, token, stack_trace).call({ evalA }, token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "-" }), *token, stack_trace);
 }
 
 const symbol_t operation::unot(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)
@@ -724,7 +724,7 @@ const symbol_t operation::unot(const object_t *scope, const symbol_t &evalA, con
 	if (scope != NULL)
 		return scope->getVariable(parser_t::HASH_NOT, token, stack_trace).call({ evalA }, token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "!" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "!" }), *token, stack_trace);
 }
 
 const symbol_t operation::cct(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -757,7 +757,7 @@ const symbol_t operation::cct(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_CCT, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "++" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "++" }), *token, stack_trace);
 }
 
 const symbol_t operation::del(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
@@ -780,7 +780,7 @@ const symbol_t operation::del(const object_t *scope, const symbol_t &evalA, cons
 				return scope->getVariable(parser_t::HASH_DEL, token, stack_trace).call({ evalA, evalB }, token, stack_trace);
 	}
 
-	throw error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "delete" }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, { "delete" }), *token, stack_trace);
 }
 
 const symbol_t operation::hash(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)

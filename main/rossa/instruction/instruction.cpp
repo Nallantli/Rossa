@@ -1,7 +1,7 @@
 #include "instruction.h"
 
-#include "../error/error.h"
-#include "../param/param.h"
+#include "../rossa_error/rossa_error.h"
+#include "../parameter/parameter.h"
 #include "../operation/operation.h"
 #include "../global/global.h"
 #include "../node/node.h"
@@ -327,11 +327,11 @@ const symbol_t InnerI::evaluate(const object_t *scope, trace_t &stack_trace) con
 		{
 			const auto &o = evalA.getObject(&token, stack_trace);
 			if (o->getType() != scope_type_enum::SCOPE_STATIC && o->getType() != scope_type_enum::SCOPE_INSTANCE)
-				throw error_t(_CANNOT_INDEX_OBJECT_, token, stack_trace);
+				throw rossa_error_t(_CANNOT_INDEX_OBJECT_, token, stack_trace);
 			return b->evaluate(o, stack_trace);
 		}
 		default:
-			throw error_t(_CANNOT_INDEX_VALUE_, token, stack_trace);
+			throw rossa_error_t(_CANNOT_INDEX_VALUE_, token, stack_trace);
 	}
 }
 
@@ -676,7 +676,7 @@ const symbol_t SetI::evaluate(const object_t *scope, trace_t &stack_trace) const
 	if (evalA.getValueType() == value_type_enum::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(parser_t::HASH_SET)) {
 		try {
 			return scope->getVariable(parser_t::HASH_SET, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 			evalA.set(&evalB, &token, stack_trace);
 		}
 	} else {
@@ -759,7 +759,7 @@ const symbol_t LengthI::evaluate(const object_t *scope, trace_t &stack_trace) co
 				return o->getVariable(parser_t::HASH_LENGTH, &token, stack_trace).call({ }, &token, stack_trace);
 		}
 		default:
-			throw error_t(_FAILURE_LENGTH_, token, stack_trace);
+			throw rossa_error_t(_FAILURE_LENGTH_, token, stack_trace);
 	}
 }
 
@@ -787,7 +787,7 @@ const symbol_t ClassI::evaluate(const object_t *scope, trace_t &stack_trace) con
 		else {
 			ex = e.getObject(&token, stack_trace);
 			if (ex->getType() == scope_type_enum::SCOPE_STATIC)
-				throw error_t(_FAILURE_EXTEND_, token, stack_trace);
+				throw rossa_error_t(_FAILURE_EXTEND_, token, stack_trace);
 			const ptr_instruction_t eb = ex->getBody();
 			std::vector<ptr_instruction_t> temp;
 			temp.push_back(body);
@@ -826,7 +826,7 @@ CastToI::CastToI(const ptr_instruction_t &a, const ptr_instruction_t &b, const t
 const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	const symbol_t evalA = a->evaluate(scope, stack_trace);
-	const param_t convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
+	const parameter_t convert = b->evaluate(scope, stack_trace).getTypeName(&token, stack_trace);
 
 	switch (evalA.getValueType()) {
 		case value_type_enum::NUMBER:
@@ -857,7 +857,7 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 						}
 						return symbol_t::Number(number_t::Double(std::stold(s)));
 					} catch (const std::invalid_argument &e) {
-						throw error_t(global::format(_FAILURE_STR_TO_NUM_, { evalA.getString(&token, stack_trace) }), token, stack_trace);
+						throw rossa_error_t(global::format(_FAILURE_STR_TO_NUM_, { evalA.getString(&token, stack_trace) }), token, stack_trace);
 					}
 				case value_type_enum::STRING:
 					return evalA;
@@ -898,25 +898,25 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 				{
 					const std::string s = evalA.getString(&token, stack_trace);
 					if (s == KEYWORD_NUMBER)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::NUMBER }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::NUMBER }));
 					if (s == KEYWORD_STRING)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::STRING }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::STRING }));
 					if (s == KEYWORD_BOOLEAN)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::BOOLEAN_D }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::BOOLEAN_D }));
 					if (s == KEYWORD_ARRAY)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::ARRAY }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::ARRAY }));
 					if (s == KEYWORD_DICTIONARY)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::DICTIONARY }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::DICTIONARY }));
 					if (s == KEYWORD_FUNCTION)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::FUNCTION }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::FUNCTION }));
 					if (s == KEYWORD_OBJECT)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::OBJECT }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::OBJECT }));
 					if (s == KEYWORD_TYPE)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::TYPE_NAME }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::TYPE_NAME }));
 					if (s == KEYWORD_NIL_NAME)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::NIL }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::NIL }));
 					if (s == KEYWORD_POINTER)
-						return symbol_t::TypeName(param_t({}, { value_type_enum::POINTER }));
+						return symbol_t::TypeName(parameter_t({}, { value_type_enum::POINTER }));
 					//TODO
 					//return symbol_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
 				}
@@ -1022,7 +1022,7 @@ const symbol_t AllocI::evaluate(const object_t *scope, trace_t &stack_trace) con
 {
 	const long_int_t evalA = a->evaluate(scope, stack_trace).getNumber(&token, stack_trace).getLong();
 	if (evalA < 0)
-		throw error_t(_FAILURE_ALLOC_, token, stack_trace);
+		throw rossa_error_t(_FAILURE_ALLOC_, token, stack_trace);
 	return symbol_t::allocate(evalA);
 }
 
@@ -1156,7 +1156,7 @@ const symbol_t TryCatchI::evaluate(const object_t *scope, trace_t &stack_trace) 
 	try {
 		const object_t newScope(scope, 0);
 		return a->evaluate(&newScope, stack_trace);
-	} catch (const error_t &e) {
+	} catch (const rossa_error_t &e) {
 		const object_t newScope(scope, 0);
 		newScope.createVariable(key, symbol_t::String(std::string(e.what())), &token);
 		return b->evaluate(&newScope, stack_trace);
@@ -1174,7 +1174,7 @@ ThrowI::ThrowI(const ptr_instruction_t &a, const token_t &token)
 const symbol_t ThrowI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	const symbol_t evalA = a->evaluate(scope, stack_trace);
-	throw error_t(evalA.getString(&token, stack_trace), token, stack_trace);
+	throw rossa_error_t(evalA.getString(&token, stack_trace), token, stack_trace);
 	return symbol_t();
 }
 
@@ -1248,7 +1248,7 @@ const symbol_t CharSI::evaluate(const object_t *scope, trace_t &stack_trace) con
 			return symbol_t::String(ret);
 		}
 		default:
-			throw error_t(_FAILURE_TO_STR_, token, stack_trace);
+			throw rossa_error_t(_FAILURE_TO_STR_, token, stack_trace);
 	}
 }
 

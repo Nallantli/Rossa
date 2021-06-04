@@ -2,10 +2,10 @@
 
 #include <algorithm>
 
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 #include "../scope/scope.h"
 #include "../symbol/symbol.h"
-#include "../param/param.h"
+#include "../parameter/parameter.h"
 #include "../instruction/instruction.h"
 #include "../parser/parser.h"
 
@@ -95,7 +95,7 @@ void object_t::operator=(const object_t &b)
 const symbol_t object_t::instantiate(const std::vector<symbol_t> &params, const token_t *token, trace_t &stack_trace) const
 {
 	if (scope->type != scope_type_enum::SCOPE_STRUCT)
-		throw error_t(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
+		throw rossa_error_t(_FAILURE_INSTANTIATE_OBJECT_, *token, stack_trace);
 
 	object_t o(scope->parent, scope->name_trace, scope->extensions);
 	scope->body->evaluate(&o, stack_trace);
@@ -103,9 +103,9 @@ const symbol_t object_t::instantiate(const std::vector<symbol_t> &params, const 
 	return symbol_t::Object(o);
 }
 
-const param_t object_t::getTypeVec() const
+const parameter_t object_t::getTypeVec() const
 {
-	return param_t(scope->extensions, scope->name_trace);
+	return parameter_t(scope->extensions, scope->name_trace);
 }
 
 const std::string object_t::getKey() const

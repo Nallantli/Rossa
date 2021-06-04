@@ -103,8 +103,8 @@ bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 bin/rossa: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/param.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/error.o $(DIR)/number.o
-	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/param.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/error.o $(DIR)/number.o
+$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/number.o
+	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/number.o
 
 $(DIR)/parser.o: main/rossa/parser/parser.cpp
 	$(CC) -o $@ main/rossa/parser/parser.cpp -c $(OFLAGS)
@@ -130,8 +130,8 @@ $(DIR)/object.o: main/rossa/object/object.cpp
 $(DIR)/operation.o: main/rossa/operation/operation.cpp
 	$(CC) -o $@ main/rossa/operation/operation.cpp -c $(OFLAGS)
 
-$(DIR)/param.o: main/rossa/param/param.cpp
-	$(CC) -o $@ main/rossa/param/param.cpp -c $(OFLAGS)
+$(DIR)/parameter.o: main/rossa/parameter/parameter.cpp
+	$(CC) -o $@ main/rossa/parameter/parameter.cpp -c $(OFLAGS)
 
 $(DIR)/scope.o: main/rossa/scope/scope.cpp
 	$(CC) -o $@ main/rossa/scope/scope.cpp -c $(OFLAGS)
@@ -148,8 +148,8 @@ $(DIR)/value.o: main/rossa/value/value.cpp
 $(DIR)/wrapper.o: main/rossa/wrapper/wrapper.cpp
 	$(CC) -o $@ main/rossa/wrapper/wrapper.cpp -c $(OFLAGS)
 
-$(DIR)/error.o: main/rossa/error/error.cpp
-	$(CC) -o $@ main/rossa/error/error.cpp -c $(OFLAGS)
+$(DIR)/rossa_error.o: main/rossa/rossa_error/rossa_error.cpp
+	$(CC) -o $@ main/rossa/rossa_error/rossa_error.cpp -c $(OFLAGS)
 
 $(DIR)/number.o: main/rossa/number/number.cpp
 	$(CC) -o $@ main/rossa/number/number.cpp -c $(OFLAGS)

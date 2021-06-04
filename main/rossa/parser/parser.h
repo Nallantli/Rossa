@@ -6,7 +6,7 @@
 #include "../rossa.h"
 
 #include "../object/object.h"
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 
 class parser_t
 {
@@ -63,7 +63,7 @@ public:
 	static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
 	const ptr_node_t compileCode(const std::string &, const std::filesystem::path &);
 	const symbol_t runCode(const ptr_node_t &, const bool &);
-	static void printError(const error_t &);
+	static void printError(const rossa_error_t &);
 	static const std::vector<token_t> lexString(const std::string &, const std::filesystem::path &);
 
 	~parser_t();

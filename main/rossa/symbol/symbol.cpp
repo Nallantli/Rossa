@@ -1,7 +1,7 @@
 #include "symbol.h"
 
 #include "../value/value.h"
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 #include "../parser/parser.h"
 #include "../function/function.h"
 #include "../wrapper/wrapper.h"
@@ -23,7 +23,7 @@ symbol_t::symbol_t(const std::shared_ptr<void> &valuePointer)
 	, type{ ID_CASUAL }
 {}
 
-symbol_t::symbol_t(const param_t &valueType)
+symbol_t::symbol_t(const parameter_t &valueType)
 	: d{ new value_t(valueType) }
 	, type{ ID_CASUAL }
 {}
@@ -73,7 +73,7 @@ const symbol_t symbol_t::Pointer(const std::shared_ptr<void> &v)
 	return symbol_t(v);
 }
 
-const symbol_t symbol_t::TypeName(const param_t &v)
+const symbol_t symbol_t::TypeName(const parameter_t &v)
 {
 	return symbol_t(v);
 }
@@ -168,21 +168,21 @@ void symbol_t::setSymbolType(const type_t &type)
 const number_t &symbol_t::getNumber(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::NUMBER)
-		throw error_t(_NOT_NUMBER_, *token, stack_trace);
+		throw rossa_error_t(_NOT_NUMBER_, *token, stack_trace);
 	return std::get<number_t>(d->value);
 }
 
 void *symbol_t::getPointer(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::POINTER)
-		throw error_t(_NOT_POINTER_, *token, stack_trace);
+		throw rossa_error_t(_NOT_POINTER_, *token, stack_trace);
 	return std::get<std::shared_ptr<void>>(d->value).get();
 }
 
 std::map<const std::string, const symbol_t> &symbol_t::getDictionary(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::DICTIONARY)
-		throw error_t(_NOT_DICTIONARY_, *token, stack_trace);
+		throw rossa_error_t(_NOT_DICTIONARY_, *token, stack_trace);
 	return std::get<std::map<const std::string, const symbol_t>>(d->value);
 	/*auto &m = std::get<std::map<const std::string, const symbol_t>>(d->value);
 	auto iter = m.begin();
@@ -199,35 +199,35 @@ const symbol_t &symbol_t::indexVector(const size_t &i, const token_t *token, tra
 {
 	auto &v = std::get<std::vector<symbol_t>>(d->value);
 	if (i >= v.size())
-		throw error_t(global::format(_INDEX_OUT_OF_BOUNDS_, { std::to_string(v.size()), std::to_string(i) }), *token, stack_trace);
+		throw rossa_error_t(global::format(_INDEX_OUT_OF_BOUNDS_, { std::to_string(v.size()), std::to_string(i) }), *token, stack_trace);
 	return v[i];
 }
 
 const std::vector<symbol_t> &symbol_t::getVector(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::ARRAY)
-		throw error_t(_NOT_VECTOR_, *token, stack_trace);
+		throw rossa_error_t(_NOT_VECTOR_, *token, stack_trace);
 	return std::get<std::vector<symbol_t>>(d->value);
 }
 
 const std::string symbol_t::getString(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::STRING)
-		throw error_t(_NOT_STRING_, *token, stack_trace);
+		throw rossa_error_t(_NOT_STRING_, *token, stack_trace);
 	return std::get<std::string>(d->value);
 }
 
 const bool symbol_t::getBool(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::BOOLEAN_D)
-		throw error_t(_NOT_BOOLEAN_, *token, stack_trace);
+		throw rossa_error_t(_NOT_BOOLEAN_, *token, stack_trace);
 	return std::get<bool>(d->value);
 }
 
 object_t *symbol_t::getObject(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::OBJECT)
-		throw error_t(_NOT_OBJECT_, *token, stack_trace);
+		throw rossa_error_t(_NOT_OBJECT_, *token, stack_trace);
 	return &std::get<object_t>(d->value);
 }
 
@@ -236,23 +236,23 @@ const value_type_enum symbol_t::getValueType() const
 	return d->type;
 }
 
-const param_t symbol_t::getAugValueType() const
+const parameter_t symbol_t::getAugValueType() const
 {
 	return std::visit(overloaded{
 			[](const object_t &v) {
 				return v.getTypeVec();
 			},
 			[&](auto arg) {
-				return param_t({},{ d->type });
+				return parameter_t({},{ d->type });
 			}
 		}, d->value);
 }
 
-const param_t symbol_t::getTypeName(const token_t *token, trace_t &stack_trace) const
+const parameter_t symbol_t::getTypeName(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::TYPE_NAME)
-		throw error_t(_NOT_TYPE_, *token, stack_trace);
-	return std::get<param_t>(d->value);
+		throw rossa_error_t(_NOT_TYPE_, *token, stack_trace);
+	return std::get<parameter_t>(d->value);
 }
 
 const std::map<const size_t, std::map<const signature_t, ptr_function_t>> &symbol_t::getFunctionOverloads(const token_t *token, trace_t &stack_trace) const
@@ -261,7 +261,7 @@ const std::map<const size_t, std::map<const signature_t, ptr_function_t>> &symbo
 		return std::get<wrapper_t>(d->value).map;
 	if (d->type == value_type_enum::OBJECT)
 		return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).getFunctionOverloads(token, stack_trace);
-	throw error_t(_NOT_FUNCTION_, *token, stack_trace);
+	throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
 }
 
 const bool symbol_t::hasVarg(const token_t *token, trace_t &stack_trace) const
@@ -270,19 +270,19 @@ const bool symbol_t::hasVarg(const token_t *token, trace_t &stack_trace) const
 		return std::get<wrapper_t>(d->value).varg != nullptr;
 	if (d->type == value_type_enum::OBJECT)
 		return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).hasVarg(token, stack_trace);
-	throw error_t(_NOT_FUNCTION_, *token, stack_trace);
+	throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
 }
 
 const ptr_function_t symbol_t::getFunction(const std::vector<symbol_t> &params, const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::FUNCTION)
-		throw error_t(_NOT_FUNCTION_, *token, stack_trace);
+		throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
 
 	const auto it = std::get<wrapper_t>(d->value).map.find(params.size());
 	if (it == std::get<wrapper_t>(d->value).map.end()) {
 		if (std::get<wrapper_t>(d->value).varg != nullptr)
 			return std::get<wrapper_t>(d->value).varg;
-		throw error_t(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
+		throw rossa_error_t(_FUNCTION_ARG_SIZE_FAILURE_, *token, stack_trace);
 	}
 
 	ptr_function_t f = nullptr;
@@ -300,7 +300,7 @@ const ptr_function_t symbol_t::getFunction(const std::vector<symbol_t> &params, 
 	if (f == nullptr) {
 		if (std::get<wrapper_t>(d->value).varg != nullptr)
 			return std::get<wrapper_t>(d->value).varg;
-		throw error_t(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
+		throw rossa_error_t(_FUNCTION_VALUE_NOT_EXIST_, *token, stack_trace);
 	}
 
 	return f;
@@ -394,7 +394,7 @@ const std::string symbol_t::toString(const token_t *token, trace_t &stack_trace)
 			return ret + "}";
 		}
 		case value_type_enum::TYPE_NAME:
-			return "Type<" + std::get<param_t>(d->value).toString() + ">";
+			return "Type<" + std::get<parameter_t>(d->value).toString() + ">";
 		default:
 			return "undefined";
 	}
@@ -450,7 +450,7 @@ const std::string symbol_t::toCodeString() const
 			return ret + "]";
 		}
 		case value_type_enum::TYPE_NAME:
-			return "Type@" + std::get<param_t>(d->value).toString();
+			return "Type@" + std::get<parameter_t>(d->value).toString();
 		default:
 			return "<error-type>";
 	}
@@ -478,7 +478,7 @@ const ptr_function_t &symbol_t::getVARGFunction(const token_t *token, trace_t &s
 		return std::get<wrapper_t>(d->value).varg;
 	if (d->type == value_type_enum::OBJECT)
 		return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).getVARGFunction(token, stack_trace);
-	throw error_t(_NOT_FUNCTION_, *token, stack_trace);
+	throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
 }
 
 void symbol_t::nullify() const
@@ -518,7 +518,7 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 			[&](const std::shared_ptr<void> &v) {
 				d->value = v;
 			},
-			[&](const param_t &v) {
+			[&](const parameter_t &v) {
 				d->value = v;
 			},
 			[&](const std::vector<symbol_t> &v) {
@@ -584,7 +584,7 @@ const bool symbol_t::equals(const symbol_t *b, const token_t *token, trace_t &st
 		case value_type_enum::FUNCTION:
 			return std::get<wrapper_t>(d->value).map == std::get<wrapper_t>(b->d->value).map && std::get<wrapper_t>(d->value).varg == std::get<wrapper_t>(b->d->value).varg;
 		case value_type_enum::TYPE_NAME:
-			return std::get<param_t>(d->value) == std::get<param_t>(b->d->value);
+			return std::get<parameter_t>(d->value) == std::get<parameter_t>(b->d->value);
 		default:
 			return false;
 	}

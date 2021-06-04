@@ -1,6 +1,6 @@
 #include "global.h"
 
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 #include "../parser/parser.h"
 #include "../node_parser/node_parser.h"
 #include "../symbol/symbol.h"
@@ -33,7 +33,7 @@ const std::filesystem::path dir::findFile(const std::filesystem::path &currentDi
 	if (std::filesystem::exists(libDirCheck))
 		return libDirCheck;
 	trace_t stack_trace;
-	throw error_t(global::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
+	throw rossa_error_t(global::format(_FILE_NOT_FOUND_, { filename }), *token, stack_trace);
 }
 
 void global::loadLibrary(const std::filesystem::path &currentDir, const std::string &rawlibname, const token_t *token)
@@ -44,7 +44,7 @@ void global::loadLibrary(const std::filesystem::path &currentDir, const std::str
 		auto library = dlopen(dir::findFile(currentDir, libname, token).string().c_str(), RTLD_LAZY);
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw error_t(format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
+			throw rossa_error_t(format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 #else
@@ -53,13 +53,13 @@ void global::loadLibrary(const std::filesystem::path &currentDir, const std::str
 		auto library = LoadLibraryA(path.string().c_str());
 		if (library == NULL) {
 			trace_t stack_trace;
-			throw error_t(format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
+			throw rossa_error_t(format(_EXTERNAL_LIBRARY_NOT_EXIST_, { libname }), *token, stack_trace);
 		}
 		auto f = GetProcAddress(library, (rawlibname + "_rossaExportFunctions").c_str());
 #endif
 		if (f == NULL) {
 			trace_t stack_trace;
-			throw error_t(format(_EXPORT_FUNCTION_NOT_FOUND_, { libname }), *token, stack_trace);
+			throw rossa_error_t(format(_EXPORT_FUNCTION_NOT_FOUND_, { libname }), *token, stack_trace);
 		}
 		std::map<std::string, extf_t> fns;
 		auto ef = (export_fns_t)f;
@@ -72,11 +72,11 @@ extf_t global::loadFunction(const std::string &rawlibname, const std::string &fn
 {
 	if (loaded.find(rawlibname) == loaded.end()) {
 		trace_t stack_trace;
-		throw error_t(format(_LIBRARY_NOT_IN_MEMORY_, { rawlibname }), *token, stack_trace);
+		throw rossa_error_t(format(_LIBRARY_NOT_IN_MEMORY_, { rawlibname }), *token, stack_trace);
 	}
 	if (loaded[rawlibname].find(fname) == loaded[rawlibname].end()) {
 		trace_t stack_trace;
-		throw error_t(format(_LIBRARY_FUNCTION_NOT_EXIST_, { rawlibname, fname }), *token, stack_trace);
+		throw rossa_error_t(format(_LIBRARY_FUNCTION_NOT_EXIST_, { rawlibname, fname }), *token, stack_trace);
 	}
 	return loaded[rawlibname][fname];
 }

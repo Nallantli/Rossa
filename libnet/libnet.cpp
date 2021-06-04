@@ -1,6 +1,6 @@
 #include "../main/rossa/rossa.h"
 #include "../main/rossa/symbol/symbol.h"
-#include "../main/rossa/error/error.h"
+#include "../main/rossa/rossa_error/rossa_error.h"
 #include "../main/rossa/function/function.h"
 
 #include <boost/asio.hpp>
@@ -28,7 +28,7 @@ ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
 			args[1].getNumber(token, stack_trace).getLong()),
 		ec))
 		if (ec)
-			throw error_t(ec.message(), *token, stack_trace);
+			throw rossa_error_t(ec.message(), *token, stack_trace);
 	return symbol_t::Pointer(sock);
 }
 

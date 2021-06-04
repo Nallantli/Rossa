@@ -510,7 +510,7 @@ ptr_instruction_t ClassNode::genParser() const
 			ot = scope_type_enum::SCOPE_VIRTUAL;
 			break;
 		default:
-			throw error_t(_INVALID_OBJECT_TYPE_, token, stack_trace);
+			throw rossa_error_t(_INVALID_OBJECT_TYPE_, token, stack_trace);
 	}
 
 	if (extends == nullptr)
@@ -737,7 +737,7 @@ ptr_instruction_t CallBuiltNode::genParser() const
 	}
 
 	trace_t stack_trace;
-	throw error_t(global::format(_UNKNOWN_BUILT_CALL_, { std::to_string(t) }), token, stack_trace);
+	throw rossa_error_t(global::format(_UNKNOWN_BUILT_CALL_, { std::to_string(t) }), token, stack_trace);
 	return nullptr;
 }
 
@@ -923,12 +923,12 @@ ptr_instruction_t BinOpNode::genParser() const
 
 	if (op == "=") {
 		if (a->isConst())
-			throw error_t("Cannot reassign constant value", token, stack_trace);
+			throw rossa_error_t("Cannot reassign constant value", token, stack_trace);
 		return std::make_shared<SetI>(a->genParser(), b->genParser(), token);
 	}
 	if (op == ":=") {
 		if (a->getType() != ID_NODE && a->getType() != BID_NODE)
-			throw error_t("Only non-const variables may be declared with `:=`", token, stack_trace);
+			throw rossa_error_t("Only non-const variables may be declared with `:=`", token, stack_trace);
 		hash_ull t;
 		if (a->getType() == ID_NODE)
 			t = ((IDNode *)a.get())->getKey();
@@ -944,7 +944,7 @@ ptr_instruction_t BinOpNode::genParser() const
 	if (op == "delete")
 		return std::make_shared<DeleteI>(a->genParser(), b->genParser(), token);
 
-	throw error_t(global::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
+	throw rossa_error_t(global::format(_UNKNOWN_BINARY_OP_, { op }), token, stack_trace);
 }
 
 const std::string &BinOpNode::getOp() const
@@ -980,7 +980,7 @@ bool BinOpNode::isConst() const
 			trace_t stack_trace;
 			genParser()->evaluate(&newScope, stack_trace);
 			return true;
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 			return false;
 		}
 	}
@@ -1045,7 +1045,7 @@ const ptr_node_t BinOpNode::fold(const std::vector<std::pair<std::vector<hash_ul
 			trace_t stack_trace;
 			genParser()->evaluate(&newScope, stack_trace);
 			constmod = true;
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 		}
 	}
 
@@ -1089,7 +1089,7 @@ ptr_instruction_t UnOpNode::genParser() const
 		return std::make_shared<HashI>(a->genParser(), token);
 
 	trace_t stack_trace;
-	throw error_t(global::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);
+	throw rossa_error_t(global::format(_UNKNOWN_UNARY_OP_, { op }), token, stack_trace);
 	return nullptr;
 }
 
@@ -1481,7 +1481,7 @@ bool UntilNode::isConst() const
 			trace_t stack_trace;
 			i->evaluate(&newScope, stack_trace);
 			return true;
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 			return false;
 		}
 	}

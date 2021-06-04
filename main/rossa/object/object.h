@@ -29,7 +29,7 @@ public:
 	const bool extendsObject(const aug_type_t &) const;
 	const scope_type_enum getType() const;
 	const ptr_instruction_t getBody() const;
-	const param_t getTypeVec() const;
+	const parameter_t getTypeVec() const;
 	const std::string getKey() const;
 	const bool hasValue(const hash_ull &) const;
 	const symbol_t getThis(const token_t *, trace_t &) const;

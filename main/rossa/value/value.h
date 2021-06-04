@@ -7,7 +7,7 @@
 
 #include "../object/object.h"
 #include "../wrapper/wrapper.h"
-#include "../param/param.h"
+#include "../parameter/parameter.h"
 #include "../symbol/symbol.h"
 
 class value_t
@@ -22,7 +22,7 @@ private:
 	std::variant<
 		bool,
 		number_t,
-		param_t,
+		parameter_t,
 		std::string,
 		std::shared_ptr<void>,
 		std::vector<symbol_t>,
@@ -33,7 +33,7 @@ private:
 	refc_ull references = 1;
 
 	value_t();
-	value_t(const param_t &);
+	value_t(const parameter_t &);
 	value_t(const bool &);
 	value_t(const std::shared_ptr<void> &);
 	value_t(const object_t &);

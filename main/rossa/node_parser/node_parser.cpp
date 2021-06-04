@@ -4,9 +4,9 @@
 #include "../node/node.h"
 #include "../number/number.h"
 #include "../symbol/symbol.h"
-#include "../param/param.h"
+#include "../parameter/parameter.h"
 #include "../global/global.h"
-#include "../error/error.h"
+#include "../rossa_error/rossa_error.h"
 #include "../instruction/instruction.h"
 #include "../parser/parser.h"
 
@@ -226,9 +226,9 @@ ptr_node_t node_parser_t::parseCallOpNode(std::vector<node_scope_t> *scopes)
 }
 
 
-param_t node_parser_t::parseParamTypeNode(std::vector<node_scope_t> *scopes, const aug_type_t &base)
+parameter_t node_parser_t::parseParamTypeNode(std::vector<node_scope_t> *scopes, const aug_type_t &base)
 {
-	param_t pt({}, base);
+	parameter_t pt({}, base);
 	nextToken();
 
 	int i = 0;
@@ -297,7 +297,7 @@ param_t node_parser_t::parseParamTypeNode(std::vector<node_scope_t> *scopes, con
 		if (currentToken.valueString == "<") {
 			pt.addQualifier(parseParamTypeNode(scopes, qbase));
 		} else {
-			pt.addQualifier(param_t({}, qbase));
+			pt.addQualifier(parameter_t({}, qbase));
 		}
 	}
 	nextToken();
@@ -319,7 +319,7 @@ std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_p
 	}
 
 	std::vector<std::pair<token_type_enum, hash_ull>> args;
-	std::vector<param_t> types;
+	std::vector<parameter_t> types;
 
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
@@ -344,7 +344,7 @@ std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_p
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		param_t pt({}, { value_type_enum::ANY });
+		parameter_t pt({}, { value_type_enum::ANY });
 		if (currentToken.type == ':') {
 			aug_type_t ftype = { value_type_enum::ANY };
 			nextToken();
@@ -406,7 +406,7 @@ std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_p
 			if (currentToken.valueString == "<") {
 				pt = parseParamTypeNode(scopes, ftype);
 			} else {
-				pt = param_t({}, ftype);
+				pt = parameter_t({}, ftype);
 			}
 		}
 
@@ -635,7 +635,7 @@ ptr_node_t node_parser_t::parseTypeNode(std::vector<node_scope_t> *scopes)
 			break;
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { ftype })), currentToken);
+	return std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { ftype })), currentToken);
 }
 
 ptr_node_t node_parser_t::parseUntilNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a, const bool &inclusive)
@@ -757,43 +757,43 @@ ptr_node_t node_parser_t::parseBaseNode(std::vector<node_scope_t> *scopes)
 		case '{':
 			return parseMapNode(scopes);
 		case TOK_NIL_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::NIL })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::NIL })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NUMBER:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::NUMBER })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::NUMBER })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_STRING:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::STRING })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::STRING })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_BOOLEAN:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::BOOLEAN_D })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::BOOLEAN_D })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_ARRAY:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::ARRAY })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::ARRAY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_DICTIONARY:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::DICTIONARY })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::DICTIONARY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_OBJECT:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::OBJECT })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::OBJECT })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_FUNCTION:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::FUNCTION })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::FUNCTION })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TYPE_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::TYPE_NAME })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::TYPE_NAME })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_POINTER:
-			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::POINTER })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(parameter_t({}, { value_type_enum::POINTER })), currentToken);
 			nextToken();
 			return ret;
 		default:
@@ -1479,7 +1479,7 @@ ptr_node_t node_parser_t::parseExprNode(std::vector<node_scope_t> *scopes)
 							object_t newScope(static_cast<hash_ull>(0));
 							trace_t trace;
 							index = parseEquNode(scopes)->fold(*consts)->genParser()->evaluate(&newScope, trace).getNumber(NULL, trace);
-						} catch (const error_t &e) {
+						} catch (const rossa_error_t &e) {
 							return logErrorN(_CANNOT_MAKE_CONST_, marker);
 						}
 						if (currentToken.type == ',') {
@@ -1526,7 +1526,7 @@ ptr_node_t node_parser_t::parseExprNode(std::vector<node_scope_t> *scopes)
 					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ContainerNode>(*scopes, vn, marker);
-			} catch (const error_t &e) {
+			} catch (const rossa_error_t &e) {
 				return logErrorN(_CANNOT_MAKE_CONST_, marker);
 			}
 			return nullptr;
@@ -1624,9 +1624,9 @@ ptr_node_t node_parser_t::logErrorN(const std::string &s, const token_t &t)
 {
 	trace_t stack_trace;
 	if (t.type == NULL_TOK)
-		throw error_t(s, tokens.at(index - 1), stack_trace);
+		throw rossa_error_t(s, tokens.at(index - 1), stack_trace);
 	else
-		throw error_t(s, t, stack_trace);
+		throw rossa_error_t(s, t, stack_trace);
 	return nullptr;
 }
 
@@ -1636,8 +1636,8 @@ std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_p
 	return { signature_t(), {{NULL_TOK, -1}} };
 }
 
-param_t node_parser_t::logErrorPT(const std::string &s, const token_t &t)
+parameter_t node_parser_t::logErrorPT(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return param_t({}, { value_type_enum::NIL });
+	return parameter_t({}, { value_type_enum::NIL });
 }

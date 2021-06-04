@@ -35,7 +35,7 @@ const symbol_t &scope_t::getVariable(const hash_ull &key, const token_t *token, 
 	if (parent != NULL)
 		return parent->getVariable(key, token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, { ROSSA_DEHASH(key) }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, { ROSSA_DEHASH(key) }), *token, stack_trace);
 }
 
 const symbol_t &scope_t::createVariable(const hash_ull &key, const token_t *token)
@@ -71,7 +71,7 @@ const symbol_t scope_t::getThis(const token_t *token, trace_t &stack_trace)
 	if (parent != NULL)
 		return parent->getThis(token, stack_trace);
 
-	throw error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, { KEYWORD_THIS }), *token, stack_trace);
+	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, { KEYWORD_THIS }), *token, stack_trace);
 }
 
 scope_t::~scope_t()

@@ -9,7 +9,7 @@ private:
 	value_t *d;
 
 	symbol_t(const std::shared_ptr<void> &);
-	symbol_t(const param_t &);
+	symbol_t(const parameter_t &);
 	symbol_t(const number_t &);
 	symbol_t(const bool &);
 	symbol_t(const std::vector<symbol_t> &);
@@ -36,7 +36,7 @@ public:
 	const unsigned int hash() const;
 
 	static const symbol_t Pointer(const std::shared_ptr<void> &);
-	static const symbol_t TypeName(const param_t &);
+	static const symbol_t TypeName(const parameter_t &);
 	static const symbol_t Number(const number_t &);
 	static const symbol_t Boolean(const bool &);
 	static const symbol_t Array(const std::vector<symbol_t> &);
@@ -62,8 +62,8 @@ public:
 	const bool hasVarg(const token_t *, trace_t &) const;
 	object_t *getObject(const token_t *, trace_t &) const;
 	const value_type_enum getValueType() const;
-	const param_t getAugValueType() const;
-	const param_t getTypeName(const token_t *, trace_t &) const;
+	const parameter_t getAugValueType() const;
+	const parameter_t getTypeName(const token_t *, trace_t &) const;
 	const ptr_function_t getFunction(const std::vector<symbol_t> &, const token_t *, trace_t &) const;
 	const ptr_function_t &getVARGFunction(const token_t *, trace_t &) const;
 	const symbol_t &indexDict(const std::string &) const;

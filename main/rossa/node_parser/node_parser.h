@@ -44,7 +44,7 @@ private:
 	ptr_node_t parseSwitchNode(std::vector<node_scope_t> *);
 	ptr_node_t parseTryCatchNode(std::vector<node_scope_t> *);
 	ptr_node_t parseTypeNode(std::vector<node_scope_t> *);
-	param_t parseParamTypeNode(std::vector<node_scope_t> *, const aug_type_t &);
+	parameter_t parseParamTypeNode(std::vector<node_scope_t> *, const aug_type_t &);
 	ptr_node_t parseTrailingNode(std::vector<node_scope_t> *, const ptr_node_t &, const bool &);
 	ptr_node_t parseInsNode(std::vector<node_scope_t> *, const ptr_node_t &);
 	ptr_node_t parseUntilNode(std::vector<node_scope_t> *, const ptr_node_t &, const bool &);
@@ -54,7 +54,7 @@ private:
 	ptr_node_t parseThenNode(std::vector<node_scope_t> *, const ptr_node_t &);
 
 	ptr_node_t logErrorN(const std::string &, const token_t &);
-	param_t logErrorPT(const std::string &, const token_t &);
+	parameter_t logErrorPT(const std::string &, const token_t &);
 	std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> logErrorSN(const std::string &, const token_t &);
 
 public:

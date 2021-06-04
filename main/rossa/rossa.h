@@ -35,7 +35,7 @@
 
 struct token_t;
 struct symbol_t;
-struct param_t;
+struct parameter_t;
 struct signature_t;
 struct object_t;
 struct wrapper_t;

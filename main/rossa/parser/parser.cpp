@@ -150,7 +150,7 @@ const symbol_t parser_t::runCode(const ptr_node_t &entry, const bool &tree)
 	return g->evaluate(&main, stack_trace);
 }
 
-void parser_t::printError(const error_t &e)
+void parser_t::printError(const rossa_error_t &e)
 {
 	printc(e.what(), RED_TEXT);
 	std::cout << "\n";

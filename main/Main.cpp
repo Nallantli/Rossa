@@ -63,7 +63,7 @@ int main(int argc, char const *argv[])
 			try {
 				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const error_t &e) {
+			} catch (const rossa_error_t &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
@@ -98,7 +98,7 @@ int main(int argc, char const *argv[])
 #endif
 					}
 				}
-			} catch (const error_t &e) {
+			} catch (const rossa_error_t &e) {
 				parser_t::printError(e);
 			}
 		}
@@ -120,7 +120,7 @@ int main(int argc, char const *argv[])
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
 			wrapper.runCode(entry, tree);
-		} catch (const error_t &e) {
+		} catch (const rossa_error_t &e) {
 			parser_t::printError(e);
 			return 1;
 		}

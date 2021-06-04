@@ -7,7 +7,7 @@ value_t::value_t()
 	: type{ NIL }
 {}
 
-value_t::value_t(const param_t &valueType)
+value_t::value_t(const parameter_t &valueType)
 	: type{ TYPE_NAME }
 	, value{ valueType }
 {}
@@ -103,7 +103,7 @@ const unsigned int value_t::hash() const
 		case FUNCTION:
 			return 0x70000000 | (std::get<wrapper_t>(value).hash() % 0x0FFFFFFF);
 		case TYPE_NAME:
-			return 0x80000000 | (std::get<param_t>(value).hash() % 0x0FFFFFFF);
+			return 0x80000000 | (std::get<parameter_t>(value).hash() % 0x0FFFFFFF);
 		default:
 			return 0;
 	}
