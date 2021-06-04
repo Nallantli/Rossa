@@ -1,4 +1,5 @@
-#pragma once
+#ifndef KEYWORDS_H
+#define KEYWORDS_H
 
 #define KEYWORD_ALLOC "alloc"
 #define KEYWORD_ARRAY "Array"
@@ -52,3 +53,5 @@
 #define KEYWORD_ANY "Any"
 #define KEYWORD_DELETE_FUNC "rem"
 #define KEYWORD_CONST "const"
+
+#endif

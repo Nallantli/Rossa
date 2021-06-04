@@ -1,4 +1,6 @@
-#include "../main/lang/Rossa.h"
+#include "../main/rossa/rossa.h"
+#include "../main/rossa/symbol/symbol.h"
+#include "../main/rossa/function/function.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -9,12 +11,12 @@ namespace libsdl
 {
 	struct capture_t
 	{
-		const sym_t f;
+		const symbol_t f;
 		const token_t token;
 		trace_t stack_trace;
-		const sym_t data;
+		const symbol_t data;
 
-		capture_t(const sym_t &f, const token_t &token, const trace_t &stack_trace, const sym_t &data)
+		capture_t(const symbol_t &f, const token_t &token, const trace_t &stack_trace, const symbol_t &data)
 			: f{ f }
 			, token{ token }
 			, stack_trace{ stack_trace }
@@ -29,11 +31,11 @@ namespace libsdl
 		const char *newValue)
 	{
 		capture_t *capture = reinterpret_cast<capture_t *>(userdata);
-		sym_vec_t v = {
+		std::vector<symbol_t> v = {
 			capture->data,
-			sym_t::String(name),
-			sym_t::String(oldValue),
-			sym_t::String(newValue)
+			symbol_t::String(name),
+			symbol_t::String(oldValue),
+			symbol_t::String(newValue)
 		};
 		capture->f.call(v, &capture->token, capture->stack_trace);
 	}
@@ -41,35 +43,35 @@ namespace libsdl
 
 ROSSA_EXT_SIG(_lib_Init, args, token, hash, stack_trace)
 {
-	return sym_t::Number(number_t::Long(SDL_Init(args[0].getNumber(token, stack_trace).getLong())));
+	return symbol_t::Number(number_t::Long(SDL_Init(args[0].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_lib_InitSubSystem, args, token, hash, stack_trace)
 {
-	return sym_t::Number(number_t::Long(SDL_InitSubSystem(args[0].getNumber(token, stack_trace).getLong())));
+	return symbol_t::Number(number_t::Long(SDL_InitSubSystem(args[0].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_lib_Quit, args, token, hash, stack_trace)
 {
 	SDL_Quit();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_QuitSubSystem, args, token, hash, stack_trace)
 {
 	SDL_QuitSubSystem(args[0].getNumber(token, stack_trace).getLong());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_SetMainReady, args, token, hash, stack_trace)
 {
 	SDL_SetMainReady();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_WasInit, args, token, hash, stack_trace)
 {
-	return sym_t::Number(number_t::Long(SDL_WasInit(args[0].getNumber(token, stack_trace).getLong())));
+	return symbol_t::Number(number_t::Long(SDL_WasInit(args[0].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_lib_AddHintCallback, args, token, hash, stack_trace)
@@ -84,7 +86,7 @@ ROSSA_EXT_SIG(_lib_AddHintCallback, args, token, hash, stack_trace)
 			args[2]
 		)
 	);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_DelHintCallback, args, token, hash, stack_trace)
@@ -99,120 +101,120 @@ ROSSA_EXT_SIG(_lib_DelHintCallback, args, token, hash, stack_trace)
 			args[2]
 		)
 	);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_ClearHints, args, token, hash, stack_trace)
 {
 	SDL_ClearHints();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_GetHint, args, token, hash, stack_trace)
 {
-	return sym_t::String(SDL_GetHint(args[0].getString(token, stack_trace).c_str()));
+	return symbol_t::String(SDL_GetHint(args[0].getString(token, stack_trace).c_str()));
 }
 
 ROSSA_EXT_SIG(_lib_GetHintBoolean, args, token, hash, stack_trace)
 {
-	return sym_t::Boolean(SDL_GetHintBoolean(args[0].getString(token, stack_trace).c_str(), args[1].getBool(token, stack_trace) ? SDL_TRUE : SDL_FALSE) == SDL_TRUE);
+	return symbol_t::Boolean(SDL_GetHintBoolean(args[0].getString(token, stack_trace).c_str(), args[1].getBool(token, stack_trace) ? SDL_TRUE : SDL_FALSE) == SDL_TRUE);
 }
 
 ROSSA_EXT_SIG(_lib_SetHint, args, token, hash, stack_trace)
 {
-	return sym_t::Boolean(SDL_SetHint(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str()) == SDL_TRUE);
+	return symbol_t::Boolean(SDL_SetHint(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str()) == SDL_TRUE);
 }
 
 ROSSA_EXT_SIG(_lib_SetHintWithPriority, args, token, hash, stack_trace)
 {
-	return sym_t::Boolean(SDL_SetHintWithPriority(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str(), static_cast<SDL_HintPriority>(args[2].getNumber(token, stack_trace).getLong())) == SDL_TRUE);
+	return symbol_t::Boolean(SDL_SetHintWithPriority(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str(), static_cast<SDL_HintPriority>(args[2].getNumber(token, stack_trace).getLong())) == SDL_TRUE);
 }
 
 ROSSA_EXT_SIG(_lib_ClearError, args, token, hash, stack_trace)
 {
 	SDL_ClearError();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_GetError, args, token, hash, stack_trace)
 {
-	return sym_t::String(SDL_GetError());
+	return symbol_t::String(SDL_GetError());
 }
 
 ROSSA_EXT_SIG(_lib_SetError, args, token, hash, stack_trace)
 {
-	return sym_t::Number(number_t::Long(SDL_SetError(args[0].getString(token, stack_trace).c_str())));
+	return symbol_t::Number(number_t::Long(SDL_SetError(args[0].getString(token, stack_trace).c_str())));
 }
 
 ROSSA_EXT_SIG(_lib_Log, args, token, hash, stack_trace)
 {
 	SDL_Log(args[0].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogCritical, args, token, hash, stack_trace)
 {
 	SDL_LogCritical(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogDebug, args, token, hash, stack_trace)
 {
 	SDL_LogDebug(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogError, args, token, hash, stack_trace)
 {
 	SDL_LogError(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogGetPriority, args, token, hash, stack_trace)
 {
-	return sym_t::Number(number_t::Long(SDL_LogGetPriority(args[0].getNumber(token, stack_trace).getLong())));
+	return symbol_t::Number(number_t::Long(SDL_LogGetPriority(args[0].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_lib_LogInfo, args, token, hash, stack_trace)
 {
 	SDL_LogInfo(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogMessage, args, token, hash, stack_trace)
 {
 	SDL_LogMessage(args[0].getNumber(token, stack_trace).getLong(), static_cast<SDL_LogPriority>(args[1].getNumber(token, stack_trace).getLong()), args[2].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogResetPriorities, args, token, hash, stack_trace)
 {
 	SDL_LogResetPriorities();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogSetAllPriority, args, token, hash, stack_trace)
 {
 	SDL_LogSetAllPriority(static_cast<SDL_LogPriority>(args[0].getNumber(token, stack_trace).getLong()));
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogSetPriority, args, token, hash, stack_trace)
 {
 	SDL_LogSetPriority(args[0].getNumber(token, stack_trace).getLong(), static_cast<SDL_LogPriority>(args[1].getNumber(token, stack_trace).getLong()));
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogVerbose, args, token, hash, stack_trace)
 {
 	SDL_LogVerbose(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_lib_LogWarn, args, token, hash, stack_trace)
 {
 	SDL_LogWarn(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return sym_t();
+	return symbol_t();
 }
 
 EXPORT_FUNCTIONS(libsdl)

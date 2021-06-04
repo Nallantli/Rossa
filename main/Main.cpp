@@ -1,7 +1,10 @@
 #include <iostream>
 #include <fstream>
 
-#include "lang/Rossa.h"
+#include "rossa/rossa.h"
+#include "rossa/parser/parser.h"
+#include "rossa/symbol/symbol.h"
+#include "rossa/function/function.h"
 
 inline const std::pair<std::map<std::string, std::string>, std::vector<std::string>> parseOptions(int argc, char const *argv[])
 {
@@ -48,7 +51,7 @@ int main(int argc, char const *argv[])
 		std::cout << _ROSSA_VERSION_LONG_ << "\n";
 		return 0;
 	}
-	Rossa wrapper(parsed.second);
+	parser_t wrapper(parsed.second);
 
 	printc("", RESET_TEXT);
 	bool tree = options["tree"] == "true";
@@ -60,7 +63,7 @@ int main(int argc, char const *argv[])
 			try {
 				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const rossa_error &e) {
+			} catch (const error_t &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
 		} else {
@@ -75,7 +78,7 @@ int main(int argc, char const *argv[])
 				auto comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
 				auto value = wrapper.runCode(std::move(comp), tree);
 				trace_t stack_trace;
-				if (value.getValueType() == Value::type_t::ARRAY) {
+				if (value.getValueType() == value_type_enum::ARRAY) {
 					if (value.vectorSize() != 1) {
 						int i = 0;
 						for (auto &e : value.getVector(NULL, stack_trace)) {
@@ -95,8 +98,8 @@ int main(int argc, char const *argv[])
 #endif
 					}
 				}
-			} catch (const rossa_error &e) {
-				Rossa::printError(e);
+			} catch (const error_t &e) {
+				parser_t::printError(e);
 			}
 		}
 	} else {
@@ -117,8 +120,8 @@ int main(int argc, char const *argv[])
 				content = (KEYWORD_LOAD " \"std\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
 			wrapper.runCode(entry, tree);
-		} catch (const rossa_error &e) {
-			Rossa::printError(e);
+		} catch (const error_t &e) {
+			parser_t::printError(e);
 			return 1;
 		}
 	}

@@ -103,35 +103,53 @@ bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 bin/rossa: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/librossa.a: $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
-	ar rcs $@ $(DIR)/Rossa.o $(DIR)/Node.o $(DIR)/NodeParser.o $(DIR)/Parser.o $(DIR)/Scope.o $(DIR)/Function.o $(DIR)/Signature.o $(DIR)/Value.o $(DIR)/Symbol.o $(DIR)/RTError.o
+$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/param.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/error.o $(DIR)/number.o
+	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/param.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/error.o $(DIR)/number.o
 
-$(DIR)/Rossa.o: main/lang/Rossa.cpp
-	$(CC) -o $@ main/lang/Rossa.cpp -c $(OFLAGS)
+$(DIR)/parser.o: main/rossa/parser/parser.cpp
+	$(CC) -o $@ main/rossa/parser/parser.cpp -c $(OFLAGS)
 
-$(DIR)/Node.o: main/lang/Node.cpp
-	$(CC) -o $@ main/lang/Node.cpp -c $(OFLAGS)
+$(DIR)/function.o: main/rossa/function/function.cpp
+	$(CC) -o $@ main/rossa/function/function.cpp -c $(OFLAGS)
 
-$(DIR)/NodeParser.o: main/lang/NodeParser.cpp
-	$(CC) -o $@ main/lang/NodeParser.cpp -c $(OFLAGS)
+$(DIR)/instruction.o: main/rossa/instruction/instruction.cpp
+	$(CC) -o $@ main/rossa/instruction/instruction.cpp -c $(OFLAGS)
 
-$(DIR)/Parser.o: main/lang/Parser.cpp
-	$(CC) -o $@ main/lang/Parser.cpp -c $(OFLAGS)
+$(DIR)/global.o: main/rossa/global/global.cpp
+	$(CC) -o $@ main/rossa/global/global.cpp -c $(OFLAGS)
 
-$(DIR)/Scope.o: main/lang/Scope.cpp
-	$(CC) -o $@ main/lang/Scope.cpp -c $(OFLAGS)
+$(DIR)/node.o: main/rossa/node/node.cpp
+	$(CC) -o $@ main/rossa/node/node.cpp -c $(OFLAGS)
 
-$(DIR)/Function.o: main/lang/Function.cpp
-	$(CC) -o $@ main/lang/Function.cpp -c $(OFLAGS)
+$(DIR)/node_parser.o: main/rossa/node_parser/node_parser.cpp
+	$(CC) -o $@ main/rossa/node_parser/node_parser.cpp -c $(OFLAGS)
 
-$(DIR)/Signature.o: main/lang/Signature.cpp
-	$(CC) -o $@ main/lang/Signature.cpp -c $(OFLAGS)
+$(DIR)/object.o: main/rossa/object/object.cpp
+	$(CC) -o $@ main/rossa/object/object.cpp -c $(OFLAGS)
 
-$(DIR)/Value.o: main/lang/Value.cpp
-	$(CC) -o $@ main/lang/Value.cpp -c $(OFLAGS)
+$(DIR)/operation.o: main/rossa/operation/operation.cpp
+	$(CC) -o $@ main/rossa/operation/operation.cpp -c $(OFLAGS)
 
-$(DIR)/Symbol.o: main/lang/Symbol.cpp
-	$(CC) -o $@ main/lang/Symbol.cpp -c $(OFLAGS)
+$(DIR)/param.o: main/rossa/param/param.cpp
+	$(CC) -o $@ main/rossa/param/param.cpp -c $(OFLAGS)
 
-$(DIR)/RTError.o: main/lang/RTError.cpp
-	$(CC) -o $@ main/lang/RTError.cpp -c $(OFLAGS)
+$(DIR)/scope.o: main/rossa/scope/scope.cpp
+	$(CC) -o $@ main/rossa/scope/scope.cpp -c $(OFLAGS)
+
+$(DIR)/signature.o: main/rossa/signature/signature.cpp
+	$(CC) -o $@ main/rossa/signature/signature.cpp -c $(OFLAGS)
+
+$(DIR)/symbol.o: main/rossa/symbol/symbol.cpp
+	$(CC) -o $@ main/rossa/symbol/symbol.cpp -c $(OFLAGS)
+
+$(DIR)/value.o: main/rossa/value/value.cpp
+	$(CC) -o $@ main/rossa/value/value.cpp -c $(OFLAGS)
+
+$(DIR)/wrapper.o: main/rossa/wrapper/wrapper.cpp
+	$(CC) -o $@ main/rossa/wrapper/wrapper.cpp -c $(OFLAGS)
+
+$(DIR)/error.o: main/rossa/error/error.cpp
+	$(CC) -o $@ main/rossa/error/error.cpp -c $(OFLAGS)
+
+$(DIR)/number.o: main/rossa/number/number.cpp
+	$(CC) -o $@ main/rossa/number/number.cpp -c $(OFLAGS)

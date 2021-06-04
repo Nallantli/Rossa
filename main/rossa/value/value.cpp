@@ -1,82 +1,68 @@
-#include "Rossa.h"
+#include "value.h"
 
-f_wrapper::f_wrapper(const f_map_t &map, const func_ptr_t &varg)
-	: map{ map }
-	, varg{ varg }
-{}
+#include "../function/function.h"
+#include "../signature/signature.h"
 
-const unsigned int f_wrapper::hash() const
-{
-	int h = 0;
-	int i = 0;
-	for (auto &e : map) {
-		for (auto &f : e.second){
-		h = (h + (f.second->key << i++)) % 0xFFFFFFFF;
-		}
-	}
-	return h;
-}
-
-Value::Value()
+value_t::value_t()
 	: type{ NIL }
 {}
 
-Value::Value(const param_t &valueType)
+value_t::value_t(const param_t &valueType)
 	: type{ TYPE_NAME }
 	, value{ valueType }
 {}
 
-Value::Value(const bool &valueBool)
+value_t::value_t(const bool &valueBool)
 	: type{ BOOLEAN_D }
 	, value{ valueBool }
 {}
 
-Value::Value(const std::shared_ptr<void> &valuePointer)
+value_t::value_t(const std::shared_ptr<void> &valuePointer)
 	: type{ POINTER }
 	, value{ valuePointer }
 {}
 
-Value::Value(const scope_t &valueObject)
+value_t::value_t(const object_t &valueObject)
 	: type{ OBJECT }
 	, value{ valueObject }
 {}
 
-Value::Value(const fsig_t &ftype, const func_ptr_t &function)
+value_t::value_t(const signature_t &ftype, const ptr_function_t &function)
 	: type{ FUNCTION }
-	, value{ f_wrapper({ {function->params.size(), {{ftype, function}}} }, nullptr) }
+	, value{ wrapper_t({ {function->params.size(), {{ftype, function}}} }, nullptr) }
 {}
 
-Value::Value(const func_ptr_t &function)
+value_t::value_t(const ptr_function_t &function)
 	: type{ FUNCTION }
-	, value{ f_wrapper({}, function) }
+	, value{ wrapper_t({}, function) }
 {}
 
-Value::Value(const number_t &valueNumber)
+value_t::value_t(const number_t &valueNumber)
 	: type{ NUMBER }
 	, value{ valueNumber }
 {}
 
-Value::Value(const sym_vec_t &valueVector)
+value_t::value_t(const std::vector<symbol_t> &valueVector)
 	: type{ ARRAY }
 	, value{ valueVector }
 {}
 
-Value::Value(const sym_map_t &valueDictionary)
+value_t::value_t(const std::map<const std::string, const symbol_t> &valueDictionary)
 	: type{ DICTIONARY }
 	, value{ valueDictionary }
 {}
 
-Value::Value(const std::string &valueString)
+value_t::value_t(const std::string &valueString)
 	: type{ STRING }
 	, value{ valueString }
 {}
 
-void Value::clearData()
+void value_t::clearData()
 {
 	value = false;
 }
 
-const unsigned int Value::hash() const
+const unsigned int value_t::hash() const
 {
 	switch (type) {
 		case NIL:
@@ -89,7 +75,7 @@ const unsigned int Value::hash() const
 		{
 			int h = 0;
 			int i = 0;
-			for (auto &e : std::get<sym_vec_t>(value)) {
+			for (auto &e : std::get<std::vector<symbol_t>>(value)) {
 				h = (h + (e.hash() << i++)) % 0x0FFFFFFF;
 			}
 			return 0x30000000 | h;
@@ -104,18 +90,18 @@ const unsigned int Value::hash() const
 			return 0x40000000 | h;
 		}
 		case OBJECT:
-			return 0x50000000 | (std::get<scope_t>(value).hash() % 0x0FFFFFFF);
+			return 0x50000000 | (std::get<object_t>(value).hash() % 0x0FFFFFFF);
 		case DICTIONARY:
 		{
 			int h = 0;
 			int i = 0;
-			for (auto &e : std::get<sym_map_t>(value)) {
+			for (auto &e : std::get<std::map<const std::string, const symbol_t>>(value)) {
 				h = (h + (e.second.hash() << i++)) % 0x0FFFFFFF;
 			}
 			return 0x60000000 | h;
 		}
 		case FUNCTION:
-			return 0x70000000 | (std::get<f_wrapper>(value).hash() % 0x0FFFFFFF);
+			return 0x70000000 | (std::get<wrapper_t>(value).hash() % 0x0FFFFFFF);
 		case TYPE_NAME:
 			return 0x80000000 | (std::get<param_t>(value).hash() % 0x0FFFFFFF);
 		default:

@@ -1,4 +1,7 @@
-#pragma once
+#ifndef LOCALE_H
+#define LOCALE_H
+
+#include "Keywords.h"
 
 #ifndef _LOCALIZED_
 #define _LOCALE_ENG_
@@ -262,4 +265,6 @@
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "「{0}」のライブラリーは関数を輸出しない：「{1}」"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "同意列（" KEYWORD_ARRAY "）の値の大きさは相容れない"
 #define _CANNOT_MAKE_CONST_ "表現は一定の法に解析されない"
+#endif
+
 #endif

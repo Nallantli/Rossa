@@ -1,4 +1,8 @@
-#include "../main/lang/Rossa.h"
+#include "../main/rossa/rossa.h"
+#include "../main/rossa/symbol/symbol.h"
+#include "../main/rossa/global/global.h"
+#include "../main/rossa/error/error.h"
+#include "../main/rossa/function/function.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -9,7 +13,7 @@ namespace libgraphics
 {
 	typedef unsigned char color_t;
 
-	static std::map<Uint32, sym_t> registered = {};
+	static std::map<Uint32, symbol_t> registered = {};
 
 	struct Image
 	{
@@ -22,7 +26,7 @@ namespace libgraphics
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw rossa_error(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
@@ -30,7 +34,7 @@ namespace libgraphics
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw rossa_error(format::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
 		}
 
 		SDL_Texture *getImage(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace)
@@ -38,7 +42,7 @@ namespace libgraphics
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw rossa_error(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw error_t(global::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
 			}
@@ -62,7 +66,7 @@ namespace libgraphics
 		{
 			font = TTF_OpenFont(path.c_str(), size);
 			if (font == NULL)
-				throw rossa_error(format::format("Failure to initialize font: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Failure to initialize font: {0}", { TTF_GetError() }), *token, stack_trace);
 		}
 
 		~Font()
@@ -193,9 +197,9 @@ namespace libgraphics
 		{
 			SDL_Rect temp = { x, y, width, height };
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
-				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
@@ -212,9 +216,9 @@ namespace libgraphics
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderDrawLine(renderer, x, y, x1, y1) < 0)
-				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
@@ -227,22 +231,22 @@ namespace libgraphics
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error(format::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
 			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
-				throw rossa_error(format::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 	};
 
 	struct Texture : public Rotatable
 	{
-		sym_t image;
+		symbol_t image;
 
-		Texture(const sym_t &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b)
+		Texture(const symbol_t &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b)
 			: Rotatable(width, height, r, g, b, 0)
 			, image{ image }
 		{}
 
-		void setImage(const sym_t &image)
+		void setImage(const symbol_t &image)
 		{
 			this->image = image;
 		}
@@ -260,16 +264,16 @@ namespace libgraphics
 	{
 		Uint32 windowID;
 		SDL_Renderer *renderer = NULL;
-		std::vector<std::pair<sym_t, std::pair<int, int>>> shapes;
+		std::vector<std::pair<symbol_t, std::pair<int, int>>> shapes;
 
 		Renderer(SDL_Window *window, const token_t *token, trace_t &stack_trace)
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
-				throw rossa_error(format::format("Failure to initialize renderer: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Failure to initialize renderer: {0}", { SDL_GetError() }), *token, stack_trace);
 		}
 
-		void addShape(const sym_t &shape, const int &x, const int &y)
+		void addShape(const symbol_t &shape, const int &x, const int &y)
 		{
 			shapes.push_back({ shape, {x, y} });
 		}
@@ -302,10 +306,10 @@ namespace libgraphics
 		int width;
 		int height;
 		std::string text;
-		sym_t font;
+		symbol_t font;
 
 	public:
-		Text(const sym_t &font, const std::string &s, const token_t *token, trace_t &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
+		Text(const symbol_t &font, const std::string &s, const token_t *token, trace_t &stack_trace, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 			: Shape(r, g, b, a)
 		{
 			this->font = font;
@@ -317,7 +321,7 @@ namespace libgraphics
 			if (image == NULL) {
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw rossa_error(format::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw error_t(global::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
 				SDL_QueryTexture(image, NULL, NULL, &width, &height);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
@@ -335,7 +339,7 @@ namespace libgraphics
 			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), libgraphics::Font))->font;
 			loaded = TTF_RenderText_Solid(fdata, s.c_str(), { r, g, b, a });
 			if (loaded == NULL)
-				throw rossa_error(format::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
 			text = s;
 		}
 
@@ -372,7 +376,7 @@ namespace libgraphics
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
-				throw rossa_error(format::format("Failure to initialize window: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw error_t(global::format("Failure to initialize window: {0}", { SDL_GetError() }), *token, stack_trace);
 
 			this->windowID = SDL_GetWindowID(window);
 		}
@@ -394,16 +398,16 @@ namespace libgraphics
 ROSSA_EXT_SIG(_sdl_init, args, token, hash, stack_trace)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		throw rossa_error(format::format("Failure to initialize SDL: {0}", { SDL_GetError() }), *token, stack_trace);
+		throw error_t(global::format("Failure to initialize SDL: {0}", { SDL_GetError() }), *token, stack_trace);
 
 	int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 	if (!(IMG_Init(imgFlags) & imgFlags))
-		throw rossa_error(format::format("Failure to initialize SDL_image: {0}", { IMG_GetError() }), *token, stack_trace);
+		throw error_t(global::format("Failure to initialize SDL_image: {0}", { IMG_GetError() }), *token, stack_trace);
 
 	if (TTF_Init() < 0)
-		throw rossa_error(format::format("Failure to initialize SDL_ttf: {0}", { TTF_GetError() }), *token, stack_trace);
+		throw error_t(global::format("Failure to initialize SDL_ttf: {0}", { TTF_GetError() }), *token, stack_trace);
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
@@ -411,207 +415,207 @@ ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
 	SDL_Quit();
 	IMG_Quit();
 	TTF_Quit();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_window_init, args, token, hash, stack_trace)
 {
 	auto w = std::make_shared<libgraphics::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
-	sym_vec_t v = { sym_t::Pointer(w), sym_t::Number(number_t::Long(w->windowID)) };
-	return sym_t::Array(v);
+	std::vector<symbol_t> v = { symbol_t::Pointer(w), symbol_t::Number(number_t::Long(w->windowID)) };
+	return symbol_t::Array(v);
 }
 
 ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 {
 	SDL_Event e;
-	sym_map_t data;
+	std::map<const std::string, const symbol_t> data;
 	if (SDL_PollEvent(&e)) {
-		data.insert({ "type", sym_t::Number(number_t::Long(e.type)) });
+		data.insert({ "type", symbol_t::Number(number_t::Long(e.type)) });
 		switch (e.type) {
 			case SDL_WINDOWEVENT:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.window.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.window.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.window.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.window.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.window.windowID] });
-				data.insert({ "event", sym_t::Number(number_t::Long(e.window.event)) });
-				data.insert({ "data1", sym_t::Number(number_t::Long(e.window.data1)) });
-				data.insert({ "data2", sym_t::Number(number_t::Long(e.window.data2)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "event", symbol_t::Number(number_t::Long(e.window.event)) });
+				data.insert({ "data1", symbol_t::Number(number_t::Long(e.window.data1)) });
+				data.insert({ "data2", symbol_t::Number(number_t::Long(e.window.data2)) });
+				return symbol_t::Dictionary(data);
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
 			{
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.key.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.key.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.key.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.key.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.key.windowID] });
-				data.insert({ "state", sym_t::Number(number_t::Long(e.key.state)) });
-				data.insert({ "repeat", sym_t::Number(number_t::Long(e.key.repeat)) });
-				sym_map_t keysym;
-				keysym.insert({ "scancode", sym_t::Number(number_t::Long(e.key.keysym.scancode)) });
-				keysym.insert({ "sym", sym_t::Number(number_t::Long(e.key.keysym.sym)) });
-				keysym.insert({ "mod", sym_t::Number(number_t::Long(e.key.keysym.mod)) });
-				data.insert({ "keysym", sym_t::Dictionary(keysym) });
-				return sym_t::Dictionary(data);
+				data.insert({ "state", symbol_t::Number(number_t::Long(e.key.state)) });
+				data.insert({ "repeat", symbol_t::Number(number_t::Long(e.key.repeat)) });
+				std::map<const std::string, const symbol_t> keysym;
+				keysym.insert({ "scancode", symbol_t::Number(number_t::Long(e.key.keysym.scancode)) });
+				keysym.insert({ "sym", symbol_t::Number(number_t::Long(e.key.keysym.sym)) });
+				keysym.insert({ "mod", symbol_t::Number(number_t::Long(e.key.keysym.mod)) });
+				data.insert({ "keysym", symbol_t::Dictionary(keysym) });
+				return symbol_t::Dictionary(data);
 			}
 			case SDL_TEXTEDITING:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.edit.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.edit.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.edit.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.edit.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.edit.windowID] });
-				data.insert({ "text", sym_t::String(std::string(e.edit.text)) });
-				data.insert({ "start", sym_t::Number(number_t::Long(e.edit.start)) });
-				data.insert({ "length", sym_t::Number(number_t::Long(e.edit.length)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "text", symbol_t::String(std::string(e.edit.text)) });
+				data.insert({ "start", symbol_t::Number(number_t::Long(e.edit.start)) });
+				data.insert({ "length", symbol_t::Number(number_t::Long(e.edit.length)) });
+				return symbol_t::Dictionary(data);
 			case SDL_TEXTINPUT:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.text.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.text.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.text.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.text.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.text.windowID] });
-				data.insert({ "text", sym_t::String(std::string(e.text.text)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "text", symbol_t::String(std::string(e.text.text)) });
+				return symbol_t::Dictionary(data);
 			case SDL_MOUSEMOTION:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.motion.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.motion.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.motion.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.motion.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.motion.windowID] });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.motion.which)) });
-				data.insert({ "state", sym_t::Number(number_t::Long(e.motion.state)) });
-				data.insert({ "x", sym_t::Number(number_t::Long(e.motion.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Long(e.motion.y)) });
-				data.insert({ "xrel", sym_t::Number(number_t::Long(e.motion.xrel)) });
-				data.insert({ "yrel", sym_t::Number(number_t::Long(e.motion.yrel)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.motion.which)) });
+				data.insert({ "state", symbol_t::Number(number_t::Long(e.motion.state)) });
+				data.insert({ "x", symbol_t::Number(number_t::Long(e.motion.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Long(e.motion.y)) });
+				data.insert({ "xrel", symbol_t::Number(number_t::Long(e.motion.xrel)) });
+				data.insert({ "yrel", symbol_t::Number(number_t::Long(e.motion.yrel)) });
+				return symbol_t::Dictionary(data);
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.button.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.button.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.button.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.button.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.button.windowID] });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.button.which)) });
-				data.insert({ "state", sym_t::Number(number_t::Long(e.button.state)) });
-				data.insert({ "x", sym_t::Number(number_t::Long(e.button.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Long(e.button.y)) });
-				data.insert({ "button", sym_t::Number(number_t::Long(e.button.button)) });
-				data.insert({ "clicks", sym_t::Number(number_t::Long(e.button.clicks)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.button.which)) });
+				data.insert({ "state", symbol_t::Number(number_t::Long(e.button.state)) });
+				data.insert({ "x", symbol_t::Number(number_t::Long(e.button.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Long(e.button.y)) });
+				data.insert({ "button", symbol_t::Number(number_t::Long(e.button.button)) });
+				data.insert({ "clicks", symbol_t::Number(number_t::Long(e.button.clicks)) });
+				return symbol_t::Dictionary(data);
 			case SDL_MOUSEWHEEL:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.wheel.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.wheel.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.wheel.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.wheel.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.wheel.windowID] });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.wheel.which)) });
-				data.insert({ "direction", sym_t::Number(number_t::Long(e.wheel.direction)) });
-				data.insert({ "x", sym_t::Number(number_t::Long(e.wheel.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Long(e.wheel.y)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.wheel.which)) });
+				data.insert({ "direction", symbol_t::Number(number_t::Long(e.wheel.direction)) });
+				data.insert({ "x", symbol_t::Number(number_t::Long(e.wheel.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Long(e.wheel.y)) });
+				return symbol_t::Dictionary(data);
 			case SDL_JOYAXISMOTION:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jaxis.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.jaxis.which)) });
-				data.insert({ "axis", sym_t::Number(number_t::Long(e.jaxis.axis)) });
-				data.insert({ "value", sym_t::Number(number_t::Long(e.jaxis.value)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jaxis.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.jaxis.which)) });
+				data.insert({ "axis", symbol_t::Number(number_t::Long(e.jaxis.axis)) });
+				data.insert({ "value", symbol_t::Number(number_t::Long(e.jaxis.value)) });
+				return symbol_t::Dictionary(data);
 			case SDL_JOYBALLMOTION:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jball.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.jball.which)) });
-				data.insert({ "ball", sym_t::Number(number_t::Long(e.jball.ball)) });
-				data.insert({ "xrel", sym_t::Number(number_t::Long(e.jball.xrel)) });
-				data.insert({ "yrel", sym_t::Number(number_t::Long(e.jball.yrel)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jball.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.jball.which)) });
+				data.insert({ "ball", symbol_t::Number(number_t::Long(e.jball.ball)) });
+				data.insert({ "xrel", symbol_t::Number(number_t::Long(e.jball.xrel)) });
+				data.insert({ "yrel", symbol_t::Number(number_t::Long(e.jball.yrel)) });
+				return symbol_t::Dictionary(data);
 			case SDL_JOYHATMOTION:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jhat.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.jhat.which)) });
-				data.insert({ "hat", sym_t::Number(number_t::Long(e.jhat.hat)) });
-				data.insert({ "value", sym_t::Number(number_t::Long(e.jhat.value)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jhat.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.jhat.which)) });
+				data.insert({ "hat", symbol_t::Number(number_t::Long(e.jhat.hat)) });
+				data.insert({ "value", symbol_t::Number(number_t::Long(e.jhat.value)) });
+				return symbol_t::Dictionary(data);
 			case SDL_JOYBUTTONDOWN:
 			case SDL_JOYBUTTONUP:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jbutton.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.jbutton.which)) });
-				data.insert({ "button", sym_t::Number(number_t::Long(e.jbutton.button)) });
-				data.insert({ "state", sym_t::Number(number_t::Long(e.jbutton.state)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jbutton.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.jbutton.which)) });
+				data.insert({ "button", symbol_t::Number(number_t::Long(e.jbutton.button)) });
+				data.insert({ "state", symbol_t::Number(number_t::Long(e.jbutton.state)) });
+				return symbol_t::Dictionary(data);
 			case SDL_JOYDEVICEADDED:
 			case SDL_JOYDEVICEREMOVED:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.jdevice.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.jdevice.which)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jdevice.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.jdevice.which)) });
+				return symbol_t::Dictionary(data);
 			case SDL_CONTROLLERAXISMOTION:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.caxis.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.caxis.which)) });
-				data.insert({ "axis", sym_t::Number(number_t::Long(e.caxis.axis)) });
-				data.insert({ "value", sym_t::Number(number_t::Long(e.caxis.value)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.caxis.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.caxis.which)) });
+				data.insert({ "axis", symbol_t::Number(number_t::Long(e.caxis.axis)) });
+				data.insert({ "value", symbol_t::Number(number_t::Long(e.caxis.value)) });
+				return symbol_t::Dictionary(data);
 			case SDL_CONTROLLERBUTTONDOWN:
 			case SDL_CONTROLLERBUTTONUP:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.cbutton.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.cbutton.which)) });
-				data.insert({ "button", sym_t::Number(number_t::Long(e.cbutton.button)) });
-				data.insert({ "state", sym_t::Number(number_t::Long(e.cbutton.state)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.cbutton.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.cbutton.which)) });
+				data.insert({ "button", symbol_t::Number(number_t::Long(e.cbutton.button)) });
+				data.insert({ "state", symbol_t::Number(number_t::Long(e.cbutton.state)) });
+				return symbol_t::Dictionary(data);
 			case SDL_CONTROLLERDEVICEADDED:
 			case SDL_CONTROLLERDEVICEREMOVED:
 			case SDL_CONTROLLERDEVICEREMAPPED:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.cdevice.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.cdevice.which)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.cdevice.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.cdevice.which)) });
+				return symbol_t::Dictionary(data);
 			case SDL_AUDIODEVICEADDED:
 			case SDL_AUDIODEVICEREMOVED:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.adevice.timestamp)) });
-				data.insert({ "which", sym_t::Number(number_t::Long(e.adevice.which)) });
-				data.insert({ "iscapture", sym_t::Number(number_t::Long(e.adevice.iscapture)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.adevice.timestamp)) });
+				data.insert({ "which", symbol_t::Number(number_t::Long(e.adevice.which)) });
+				data.insert({ "iscapture", symbol_t::Number(number_t::Long(e.adevice.iscapture)) });
+				return symbol_t::Dictionary(data);
 			case SDL_QUIT:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.quit.timestamp)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.quit.timestamp)) });
+				return symbol_t::Dictionary(data);
 			case SDL_FINGERMOTION:
 			case SDL_FINGERDOWN:
 			case SDL_FINGERUP:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.tfinger.timestamp)) });
-				data.insert({ "touchId", sym_t::Number(number_t::Long(e.tfinger.touchId)) });
-				data.insert({ "fingerId", sym_t::Number(number_t::Long(e.tfinger.fingerId)) });
-				data.insert({ "x", sym_t::Number(number_t::Double(e.tfinger.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Double(e.tfinger.y)) });
-				data.insert({ "dx", sym_t::Number(number_t::Double(e.tfinger.dx)) });
-				data.insert({ "dy", sym_t::Number(number_t::Double(e.tfinger.dy)) });
-				data.insert({ "pressure", sym_t::Number(number_t::Double(e.tfinger.pressure)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.tfinger.timestamp)) });
+				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.tfinger.touchId)) });
+				data.insert({ "fingerId", symbol_t::Number(number_t::Long(e.tfinger.fingerId)) });
+				data.insert({ "x", symbol_t::Number(number_t::Double(e.tfinger.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Double(e.tfinger.y)) });
+				data.insert({ "dx", symbol_t::Number(number_t::Double(e.tfinger.dx)) });
+				data.insert({ "dy", symbol_t::Number(number_t::Double(e.tfinger.dy)) });
+				data.insert({ "pressure", symbol_t::Number(number_t::Double(e.tfinger.pressure)) });
+				return symbol_t::Dictionary(data);
 			case SDL_MULTIGESTURE:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.mgesture.timestamp)) });
-				data.insert({ "touchId", sym_t::Number(number_t::Long(e.mgesture.touchId)) });
-				data.insert({ "dTheta", sym_t::Number(number_t::Double(e.mgesture.dTheta)) });
-				data.insert({ "dDist", sym_t::Number(number_t::Double(e.mgesture.dDist)) });
-				data.insert({ "x", sym_t::Number(number_t::Double(e.mgesture.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Double(e.mgesture.y)) });
-				data.insert({ "numFingers", sym_t::Number(number_t::Long(e.mgesture.numFingers)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.mgesture.timestamp)) });
+				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.mgesture.touchId)) });
+				data.insert({ "dTheta", symbol_t::Number(number_t::Double(e.mgesture.dTheta)) });
+				data.insert({ "dDist", symbol_t::Number(number_t::Double(e.mgesture.dDist)) });
+				data.insert({ "x", symbol_t::Number(number_t::Double(e.mgesture.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Double(e.mgesture.y)) });
+				data.insert({ "numFingers", symbol_t::Number(number_t::Long(e.mgesture.numFingers)) });
+				return symbol_t::Dictionary(data);
 			case SDL_DOLLARGESTURE:
 			case SDL_DOLLARRECORD:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.dgesture.timestamp)) });
-				data.insert({ "touchId", sym_t::Number(number_t::Long(e.dgesture.touchId)) });
-				data.insert({ "gestureId", sym_t::Number(number_t::Long(e.dgesture.gestureId)) });
-				data.insert({ "numFingers", sym_t::Number(number_t::Long(e.dgesture.numFingers)) });
-				data.insert({ "error", sym_t::Number(number_t::Double(e.dgesture.error)) });
-				data.insert({ "x", sym_t::Number(number_t::Double(e.dgesture.x)) });
-				data.insert({ "y", sym_t::Number(number_t::Double(e.dgesture.y)) });
-				return sym_t::Dictionary(data);
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.dgesture.timestamp)) });
+				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.dgesture.touchId)) });
+				data.insert({ "gestureId", symbol_t::Number(number_t::Long(e.dgesture.gestureId)) });
+				data.insert({ "numFingers", symbol_t::Number(number_t::Long(e.dgesture.numFingers)) });
+				data.insert({ "error", symbol_t::Number(number_t::Double(e.dgesture.error)) });
+				data.insert({ "x", symbol_t::Number(number_t::Double(e.dgesture.x)) });
+				data.insert({ "y", symbol_t::Number(number_t::Double(e.dgesture.y)) });
+				return symbol_t::Dictionary(data);
 			case SDL_DROPFILE:
 			case SDL_DROPBEGIN:
 			case SDL_DROPTEXT:
 			case SDL_DROPCOMPLETE:
-				data.insert({ "timestamp", sym_t::Number(number_t::Long(e.drop.timestamp)) });
-				data.insert({ "windowID", sym_t::Number(number_t::Long(e.drop.windowID)) });
+				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.drop.timestamp)) });
+				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.drop.windowID)) });
 				data.insert({ "window", libgraphics::registered[e.drop.windowID] });
 				if (e.drop.file != NULL) {
-					data.insert({ "file", sym_t::String(std::string(e.drop.file)) });
+					data.insert({ "file", symbol_t::String(std::string(e.drop.file)) });
 					SDL_free(e.drop.file);
 				}
-				return sym_t::Dictionary(data);
+				return symbol_t::Dictionary(data);
 			default:
-				return sym_t::Dictionary(data);
+				return symbol_t::Dictionary(data);
 		}
 	}
 
-	data.insert({ "type", sym_t::Number(number_t()) });
-	return sym_t::Dictionary(data);
+	data.insert({ "type", symbol_t::Number(number_t()) });
+	return symbol_t::Dictionary(data);
 }
 
 ROSSA_EXT_SIG(_window_register, args, token, hash, stack_trace)
 {
 	libgraphics::registered[args[0].getNumber(token, stack_trace).getLong()] = args[1];
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_window_getRenderer, args, token, hash, stack_trace)
@@ -620,7 +624,7 @@ ROSSA_EXT_SIG(_window_getRenderer, args, token, hash, stack_trace)
 		args[0].getPointer(token, stack_trace),
 		libgraphics::Window);
 
-	return sym_t::Pointer(w->getRenderer(token, stack_trace));
+	return symbol_t::Pointer(w->getRenderer(token, stack_trace));
 }
 
 ROSSA_EXT_SIG(_renderer_draw, args, token, hash, stack_trace)
@@ -633,7 +637,7 @@ ROSSA_EXT_SIG(_renderer_draw, args, token, hash, stack_trace)
 	int y = args[3].getNumber(token, stack_trace).getLong();
 
 	g->addShape(args[1], x, y);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_shape_setColor, args, token, hash, stack_trace)
@@ -649,7 +653,7 @@ ROSSA_EXT_SIG(_shape_setColor, args, token, hash, stack_trace)
 
 	shape->setColor(r, g, b, a);
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rotatable_setAngle, args, token, hash, stack_trace)
@@ -662,7 +666,7 @@ ROSSA_EXT_SIG(_rotatable_setAngle, args, token, hash, stack_trace)
 
 	rot->setAngle(angle);
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rotatable_setCenter, args, token, hash, stack_trace)
@@ -676,7 +680,7 @@ ROSSA_EXT_SIG(_rotatable_setCenter, args, token, hash, stack_trace)
 
 	rot->setCenter(x, y);
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rotatable_deCenter, args, token, hash, stack_trace)
@@ -687,7 +691,7 @@ ROSSA_EXT_SIG(_rotatable_deCenter, args, token, hash, stack_trace)
 
 	rot->deCenter();
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rotatable_setClip, args, token, hash, stack_trace)
@@ -703,7 +707,7 @@ ROSSA_EXT_SIG(_rotatable_setClip, args, token, hash, stack_trace)
 
 	rot->setClip(x, y, width, height);
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rotatable_deClip, args, token, hash, stack_trace)
@@ -714,7 +718,7 @@ ROSSA_EXT_SIG(_rotatable_deClip, args, token, hash, stack_trace)
 
 	rot->deClip();
 
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_rect_init, args, token, hash, stack_trace)
@@ -728,7 +732,7 @@ ROSSA_EXT_SIG(_rect_init, args, token, hash, stack_trace)
 	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
 	auto rect = std::make_shared<libgraphics::Rectangle>(width, height, r, g, b, a);
-	return sym_t::Pointer(rect);
+	return symbol_t::Pointer(rect);
 }
 
 ROSSA_EXT_SIG(_sizable_setSize, args, token, hash, stack_trace)
@@ -741,7 +745,7 @@ ROSSA_EXT_SIG(_sizable_setSize, args, token, hash, stack_trace)
 	int height = args[2].getNumber(token, stack_trace).getLong();
 
 	sizable->setSize(width, height);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_sizable_setWidth, args, token, hash, stack_trace)
@@ -753,7 +757,7 @@ ROSSA_EXT_SIG(_sizable_setWidth, args, token, hash, stack_trace)
 	int width = args[1].getNumber(token, stack_trace).getLong();
 
 	sizable->setWidth(width);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_sizable_setHeight, args, token, hash, stack_trace)
@@ -765,7 +769,7 @@ ROSSA_EXT_SIG(_sizable_setHeight, args, token, hash, stack_trace)
 	int height = args[1].getNumber(token, stack_trace).getLong();
 
 	sizable->setHeight(height);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_line_init, args, token, hash, stack_trace)
@@ -779,7 +783,7 @@ ROSSA_EXT_SIG(_line_init, args, token, hash, stack_trace)
 	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
 	auto line = std::make_shared<libgraphics::Line>(x2, y2, r, g, b, a);
-	return sym_t::Pointer(line);
+	return symbol_t::Pointer(line);
 }
 
 ROSSA_EXT_SIG(_point_init, args, token, hash, stack_trace)
@@ -790,7 +794,7 @@ ROSSA_EXT_SIG(_point_init, args, token, hash, stack_trace)
 	libgraphics::color_t a = args[3].getNumber(token, stack_trace).getLong();
 
 	auto point = std::make_shared<libgraphics::Point>(r, g, b, a);
-	return sym_t::Pointer(point);
+	return symbol_t::Pointer(point);
 }
 
 ROSSA_EXT_SIG(_image_init_nokey, args, token, hash, stack_trace)
@@ -798,7 +802,7 @@ ROSSA_EXT_SIG(_image_init_nokey, args, token, hash, stack_trace)
 	std::string path = args[0].getString(token, stack_trace);
 
 	auto image = std::make_shared<libgraphics::Image>(path, token, stack_trace);
-	return sym_t::Pointer(image);
+	return symbol_t::Pointer(image);
 }
 
 ROSSA_EXT_SIG(_image_init_key, args, token, hash, stack_trace)
@@ -809,7 +813,7 @@ ROSSA_EXT_SIG(_image_init_key, args, token, hash, stack_trace)
 	libgraphics::color_t b = args[3].getNumber(token, stack_trace).getLong();
 
 	auto image = std::make_shared<libgraphics::Image>(path, token, stack_trace, r, g, b);
-	return sym_t::Pointer(image);
+	return symbol_t::Pointer(image);
 }
 
 ROSSA_EXT_SIG(_texture_init, args, token, hash, stack_trace)
@@ -824,7 +828,7 @@ ROSSA_EXT_SIG(_texture_init, args, token, hash, stack_trace)
 	libgraphics::color_t b = args[5].getNumber(token, stack_trace).getLong();
 
 	auto texture = std::make_shared<libgraphics::Texture>(image, width, height, r, g, b);
-	return sym_t::Pointer(texture);
+	return symbol_t::Pointer(texture);
 }
 
 ROSSA_EXT_SIG(_font_init, args, token, hash, stack_trace)
@@ -833,7 +837,7 @@ ROSSA_EXT_SIG(_font_init, args, token, hash, stack_trace)
 	int fsize = args[1].getNumber(token, stack_trace).getLong();
 
 	auto font = std::make_shared<libgraphics::Font>(fpath, fsize, token, stack_trace);
-	return sym_t::Pointer(font);
+	return symbol_t::Pointer(font);
 }
 
 ROSSA_EXT_SIG(_text_init, args, token, hash, stack_trace)
@@ -847,7 +851,7 @@ ROSSA_EXT_SIG(_text_init, args, token, hash, stack_trace)
 	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
 	auto text = std::make_shared<libgraphics::Text>(font, s, token, stack_trace, r, g, b, a);
-	return sym_t::Pointer(text);
+	return symbol_t::Pointer(text);
 }
 
 ROSSA_EXT_SIG(_text_setText, args, token, hash, stack_trace)
@@ -857,7 +861,7 @@ ROSSA_EXT_SIG(_text_setText, args, token, hash, stack_trace)
 		libgraphics::Text);
 
 	text->setText(args[1].getString(token, stack_trace), token, stack_trace);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_texture_setImage, args, token, hash, stack_trace)
@@ -867,7 +871,7 @@ ROSSA_EXT_SIG(_texture_setImage, args, token, hash, stack_trace)
 		libgraphics::Texture);
 
 	texture->setImage(args[1]);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_renderer_update, args, token, hash, stack_trace)
@@ -877,7 +881,7 @@ ROSSA_EXT_SIG(_renderer_update, args, token, hash, stack_trace)
 		libgraphics::Renderer);
 
 	g->draw(token, stack_trace);
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_renderer_clear, args, token, hash, stack_trace)
@@ -887,7 +891,7 @@ ROSSA_EXT_SIG(_renderer_clear, args, token, hash, stack_trace)
 		libgraphics::Renderer);
 
 	g->clearAll();
-	return sym_t();
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
@@ -898,7 +902,7 @@ ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
 
 	g->draw(token, stack_trace);
 	g->clearAll();
-	return sym_t();
+	return symbol_t();
 }
 
 EXPORT_FUNCTIONS(libgraphics)

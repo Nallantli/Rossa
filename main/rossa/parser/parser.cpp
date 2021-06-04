@@ -1,57 +1,64 @@
-#include "Rossa.h"
+#include "parser.h"
 #include <fstream>
 
-Hash Rossa::MAIN_HASH = Hash();
+#include "../symbol/symbol.h"
+#include "../node/node.h"
+#include "../function/function.h"
+#include "../instruction/instruction.h"
+#include "../node_parser/node_parser.h"
+#include "../global/global.h"
 
-const hash_ull Rossa::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);
-const hash_ull Rossa::HASH_BLANK = ROSSA_HASH("");
-const hash_ull Rossa::HASH_THIS = ROSSA_HASH(KEYWORD_THIS);
-const hash_ull Rossa::HASH_DELETER = ROSSA_HASH(KEYWORD_DELETE_FUNC);
+Hash parser_t::MAIN_HASH = Hash();
 
-const hash_ull Rossa::HASH_ADD = ROSSA_HASH("+");
-const hash_ull Rossa::HASH_SUB = ROSSA_HASH("-");
-const hash_ull Rossa::HASH_MUL = ROSSA_HASH("*");
-const hash_ull Rossa::HASH_DIV = ROSSA_HASH("/");
-const hash_ull Rossa::HASH_MOD = ROSSA_HASH("%");
-const hash_ull Rossa::HASH_POW = ROSSA_HASH("**");
-const hash_ull Rossa::HASH_B_AND = ROSSA_HASH("&");
-const hash_ull Rossa::HASH_B_OR = ROSSA_HASH("|");
-const hash_ull Rossa::HASH_B_XOR = ROSSA_HASH("^");
-const hash_ull Rossa::HASH_B_SH_L = ROSSA_HASH("<<");
-const hash_ull Rossa::HASH_B_SH_R = ROSSA_HASH(">>");
-const hash_ull Rossa::HASH_B_NOT = ROSSA_HASH("~");
-const hash_ull Rossa::HASH_LESS = ROSSA_HASH("<");
-const hash_ull Rossa::HASH_MORE = ROSSA_HASH(">");
-const hash_ull Rossa::HASH_ELESS = ROSSA_HASH("<=");
-const hash_ull Rossa::HASH_EMORE = ROSSA_HASH(">=");
-const hash_ull Rossa::HASH_INDEX = ROSSA_HASH("[]");
-const hash_ull Rossa::HASH_EQUALS = ROSSA_HASH("==");
-const hash_ull Rossa::HASH_NEQUALS = ROSSA_HASH("!=");
-const hash_ull Rossa::HASH_SET = ROSSA_HASH("=");
-const hash_ull Rossa::HASH_CALL = ROSSA_HASH("()");
-const hash_ull Rossa::HASH_RANGE = ROSSA_HASH("..");
-const hash_ull Rossa::HASH_NOT = ROSSA_HASH("!");
-const hash_ull Rossa::HASH_VAR_ARGS = ROSSA_HASH("_");
-const hash_ull Rossa::HASH_LENGTH = ROSSA_HASH("len");
-const hash_ull Rossa::HASH_CCT = ROSSA_HASH("++");
-const hash_ull Rossa::HASH_DEL = ROSSA_HASH("delete");
-const hash_ull Rossa::HASH_HASH = ROSSA_HASH("@");
+const hash_ull parser_t::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);
+const hash_ull parser_t::HASH_BLANK = ROSSA_HASH("");
+const hash_ull parser_t::HASH_THIS = ROSSA_HASH(KEYWORD_THIS);
+const hash_ull parser_t::HASH_DELETER = ROSSA_HASH(KEYWORD_DELETE_FUNC);
 
-Rossa::Rossa(const std::vector<std::string> &args)
+const hash_ull parser_t::HASH_ADD = ROSSA_HASH("+");
+const hash_ull parser_t::HASH_SUB = ROSSA_HASH("-");
+const hash_ull parser_t::HASH_MUL = ROSSA_HASH("*");
+const hash_ull parser_t::HASH_DIV = ROSSA_HASH("/");
+const hash_ull parser_t::HASH_MOD = ROSSA_HASH("%");
+const hash_ull parser_t::HASH_POW = ROSSA_HASH("**");
+const hash_ull parser_t::HASH_B_AND = ROSSA_HASH("&");
+const hash_ull parser_t::HASH_B_OR = ROSSA_HASH("|");
+const hash_ull parser_t::HASH_B_XOR = ROSSA_HASH("^");
+const hash_ull parser_t::HASH_B_SH_L = ROSSA_HASH("<<");
+const hash_ull parser_t::HASH_B_SH_R = ROSSA_HASH(">>");
+const hash_ull parser_t::HASH_B_NOT = ROSSA_HASH("~");
+const hash_ull parser_t::HASH_LESS = ROSSA_HASH("<");
+const hash_ull parser_t::HASH_MORE = ROSSA_HASH(">");
+const hash_ull parser_t::HASH_ELESS = ROSSA_HASH("<=");
+const hash_ull parser_t::HASH_EMORE = ROSSA_HASH(">=");
+const hash_ull parser_t::HASH_INDEX = ROSSA_HASH("[]");
+const hash_ull parser_t::HASH_EQUALS = ROSSA_HASH("==");
+const hash_ull parser_t::HASH_NEQUALS = ROSSA_HASH("!=");
+const hash_ull parser_t::HASH_SET = ROSSA_HASH("=");
+const hash_ull parser_t::HASH_CALL = ROSSA_HASH("()");
+const hash_ull parser_t::HASH_RANGE = ROSSA_HASH("..");
+const hash_ull parser_t::HASH_NOT = ROSSA_HASH("!");
+const hash_ull parser_t::HASH_VAR_ARGS = ROSSA_HASH("_");
+const hash_ull parser_t::HASH_LENGTH = ROSSA_HASH("len");
+const hash_ull parser_t::HASH_CCT = ROSSA_HASH("++");
+const hash_ull parser_t::HASH_DEL = ROSSA_HASH("delete");
+const hash_ull parser_t::HASH_HASH = ROSSA_HASH("@");
+
+parser_t::parser_t(const std::vector<std::string> &args)
 {
-	main = scope_t(static_cast<hash_ull>(0));
+	main = object_t(static_cast<hash_ull>(0));
 #ifdef _WIN32
 	SetConsoleOutputCP(65001);
 	SetConsoleCP(65001);
 #endif
-	sym_vec_t argv;
+	std::vector<symbol_t> argv;
 	for (auto &s : args)
-		argv.push_back(sym_t::String(s));
+		argv.push_back(symbol_t::String(s));
 	scopes.push_back({ ROSSA_HASH("<*>") });
-	consts.push_back({ {ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, sym_t::Array(argv) });
+	consts.push_back({ {ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, symbol_t::Array(argv) });
 }
 
-const std::map<std::string, signed int> Rossa::bOperators = {
+const std::map<std::string, signed int> parser_t::bOperators = {
 	{"[]", 999},
 	{"->", 14},
 	{"**", -13},
@@ -103,7 +110,7 @@ const std::map<std::string, signed int> Rossa::bOperators = {
 	{"=>", 0},
 	{"|>", 0} };
 
-const std::map<std::string, signed int> Rossa::uOperators = {
+const std::map<std::string, signed int> parser_t::uOperators = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1},
@@ -111,16 +118,16 @@ const std::map<std::string, signed int> Rossa::uOperators = {
 	{"@", -1},
 	{"$", -1} };
 
-const node_ptr_t Rossa::compileCode(const std::string &code, const std::filesystem::path &currentFile)
+const ptr_node_t parser_t::compileCode(const std::string &code, const std::filesystem::path &currentFile)
 {
 	auto tokens = lexString(code, currentFile);
-	NodeParser testnp(tokens, currentFile);
+	node_parser_t testnp(tokens, currentFile);
 	auto n = testnp.parse(&this->scopes, &this->consts);
 	// fold twice (temporary) to refold constants
 	return n->fold(this->consts)->fold(this->consts);
 }
 
-const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
+const symbol_t parser_t::runCode(const ptr_node_t &entry, const bool &tree)
 {
 	if (tree) {
 		entry->printTree("", true);
@@ -137,13 +144,13 @@ const sym_t Rossa::runCode(const node_ptr_t &entry, const bool &tree)
 		}
 	}
 
-	auto g = NodeParser::genParser(entry);
+	auto g = node_parser_t::genParser(entry);
 
 	trace_t stack_trace;
 	return g->evaluate(&main, stack_trace);
 }
 
-void Rossa::printError(const rossa_error &e)
+void parser_t::printError(const error_t &e)
 {
 	printc(e.what(), RED_TEXT);
 	std::cout << "\n";
@@ -168,7 +175,7 @@ void Rossa::printError(const rossa_error &e)
 	auto trace = e.getTrace();
 	while (!trace.empty()) {
 		if (j++ > 10) {
-			printc(format::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
+			printc(global::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
 			std::cout << "\n";
 			trace.clear();
 			break;
@@ -200,7 +207,7 @@ void Rossa::printError(const rossa_error &e)
 	}
 }
 
-const char Rossa::nextChar(
+const char parser_t::nextChar(
 	const std::string &INPUT,
 	size_t &INPUT_INDEX,
 	size_t &LINE_INDEX,
@@ -216,7 +223,7 @@ const char Rossa::nextChar(
 	return c;
 }
 
-const char Rossa::peekChar(
+const char parser_t::peekChar(
 	const size_t &i,
 	const std::string &INPUT,
 	const size_t &INPUT_INDEX)
@@ -226,7 +233,7 @@ const char Rossa::peekChar(
 	return 0;
 }
 
-const int Rossa::getToken(
+const int parser_t::getToken(
 	const std::string &INPUT,
 	size_t &INPUT_INDEX,
 	size_t &LINE_INDEX,
@@ -349,7 +356,7 @@ const int Rossa::getToken(
 		} else if (ID_STRING == "nan") {
 			NUM_VALUE = number_t::Double(NAN);
 			return TOK_NUM;
-		} else if (Rossa::bOperators.find(ID_STRING) != Rossa::bOperators.end() || Rossa::uOperators.find(ID_STRING) != Rossa::uOperators.end())
+		} else if (parser_t::bOperators.find(ID_STRING) != parser_t::bOperators.end() || parser_t::uOperators.find(ID_STRING) != parser_t::uOperators.end())
 			return TOK_OPR;
 
 		return TOK_IDF;
@@ -402,9 +409,9 @@ const int Rossa::getToken(
 		return '#';
 	} else if (last == EOF || last == 0)
 		return TOK_EOF;
-	else if (Rossa::bOperators.find(std::string(1, last)) != Rossa::bOperators.end()) {
+	else if (parser_t::bOperators.find(std::string(1, last)) != parser_t::bOperators.end()) {
 		std::string opStr = std::string(1, last);
-		while (Rossa::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Rossa::bOperators.end()) {
+		while (parser_t::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::bOperators.end()) {
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
@@ -425,9 +432,9 @@ const int Rossa::getToken(
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
-	} else if (Rossa::uOperators.find(std::string(1, last)) != Rossa::uOperators.end()) {
+	} else if (parser_t::uOperators.find(std::string(1, last)) != parser_t::uOperators.end()) {
 		std::string opStr = std::string(1, last);
-		while (Rossa::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != Rossa::uOperators.end()) {
+		while (parser_t::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::uOperators.end()) {
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
@@ -574,7 +581,7 @@ const int Rossa::getToken(
 	return ret;
 }
 
-const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std::filesystem::path &filename)
+const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const std::filesystem::path &filename)
 {
 	std::vector<std::string> LINES;
 	std::stringstream ss(INPUT);
@@ -644,5 +651,5 @@ const std::vector<token_t> Rossa::lexString(const std::string &INPUT, const std:
 	return tokens;
 }
 
-Rossa::~Rossa()
+parser_t::~parser_t()
 {}

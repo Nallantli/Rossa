@@ -1,13 +1,22 @@
-#include "Rossa.h"
+#include "node_parser.h"
 #include <fstream>
 
-NodeParser::NodeParser(
+#include "../node/node.h"
+#include "../number/number.h"
+#include "../symbol/symbol.h"
+#include "../param/param.h"
+#include "../global/global.h"
+#include "../error/error.h"
+#include "../instruction/instruction.h"
+#include "../parser/parser.h"
+
+node_parser_t::node_parser_t(
 	const std::vector<token_t> &tokens,
 	const std::filesystem::path &currentFile) : tokens(tokens),
 	currentFile(currentFile)
 {}
 
-void NodeParser::nextToken()
+void node_parser_t::nextToken()
 {
 	if (index < this->tokens.size())
 		currentToken = this->tokens.at(index++);
@@ -15,28 +24,28 @@ void NodeParser::nextToken()
 		currentToken = token_t();
 }
 
-node_ptr_t NodeParser::parseNumNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseNumNode(std::vector<node_scope_t> *scopes)
 {
-	const node_ptr_t n = std::make_shared<ContainerNode>(*scopes, sym_t::Number(currentToken.valueNumber), currentToken);
+	const ptr_node_t n = std::make_shared<ContainerNode>(*scopes, symbol_t::Number(currentToken.valueNumber), currentToken);
 	nextToken();
 	return n;
 }
 
-node_ptr_t NodeParser::parseBoolNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseBoolNode(std::vector<node_scope_t> *scopes)
 {
-	auto n = std::make_shared<ContainerNode>(*scopes, sym_t::Boolean(currentToken.valueString == KEYWORD_TRUE), currentToken);
+	auto n = std::make_shared<ContainerNode>(*scopes, symbol_t::Boolean(currentToken.valueString == KEYWORD_TRUE), currentToken);
 	nextToken();
 	return n;
 }
 
-node_ptr_t NodeParser::parseIDNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseIDNode(std::vector<node_scope_t> *scopes)
 {
 	auto n = std::make_shared<IDNode>(*scopes, ROSSA_HASH(currentToken.valueString), currentToken);
 	nextToken();
 	return n;
 }
 
-node_ptr_t NodeParser::parseBIDNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseBIDNode(std::vector<node_scope_t> *scopes)
 {
 	if (currentToken.type == TOK_IDF) {
 		return parseIDNode(scopes);
@@ -46,15 +55,15 @@ node_ptr_t NodeParser::parseBIDNode(ns_vec_t *scopes)
 	return n;
 }
 
-node_ptr_t NodeParser::parseEntryNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseEntryNode(std::vector<node_scope_t> *scopes)
 {
-	node_vec_t v;
+	std::vector<ptr_node_t> v;
 	while (currentToken.type != NULL_TOK)
 		v.push_back(parseExprNode(scopes));
 	return std::make_shared<VectorNode>(*scopes, v, false, currentToken);
 }
 
-node_ptr_t NodeParser::parseTrailingNode(ns_vec_t *scopes, const node_ptr_t &ret, const bool &allowInner)
+ptr_node_t node_parser_t::parseTrailingNode(std::vector<node_scope_t> *scopes, const ptr_node_t &ret, const bool &allowInner)
 {
 	if (currentToken.type == NULL_TOK)
 		return ret;
@@ -74,9 +83,9 @@ node_ptr_t NodeParser::parseTrailingNode(ns_vec_t *scopes, const node_ptr_t &ret
 	}
 }
 
-node_ptr_t NodeParser::parseCallBuiltNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseCallBuiltNode(std::vector<node_scope_t> *scopes)
 {
-	LexerTokenType t = static_cast<LexerTokenType>(currentToken.type);
+	token_type_enum t = static_cast<token_type_enum>(currentToken.type);
 	std::string temp = currentToken.valueString;
 	auto marker = currentToken;
 	nextToken();
@@ -85,22 +94,22 @@ node_ptr_t NodeParser::parseCallBuiltNode(ns_vec_t *scopes)
 	nextToken();
 	auto arg = parseEquNode(scopes);
 	if (currentToken.type != ')')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	nextToken();
 	auto ret = std::make_shared<CallBuiltNode>(*scopes, t, arg, marker);
 	return parseTrailingNode(scopes, ret, true);
 }
 
-node_ptr_t NodeParser::parseCallNode(ns_vec_t *scopes, const node_ptr_t &a)
+ptr_node_t node_parser_t::parseCallNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
-	node_vec_t args;
+	std::vector<ptr_node_t> args;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -109,12 +118,12 @@ node_ptr_t NodeParser::parseCallNode(ns_vec_t *scopes, const node_ptr_t &a)
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 
 	nextToken();
 
-	node_ptr_t ret;
+	ptr_node_t ret;
 	if (a->getType() == Node::type_t::INS_NODE) {
 		auto a_a = reinterpret_cast<InsNode *>(a.get())->getCallee();
 		auto a_b = reinterpret_cast<InsNode *>(a.get())->getArg();
@@ -146,13 +155,13 @@ node_ptr_t NodeParser::parseCallNode(ns_vec_t *scopes, const node_ptr_t &a)
 	return parseTrailingNode(scopes, ret, true);
 }
 
-node_ptr_t NodeParser::parseExternCallNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseExternCallNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 	std::string libname = currentToken.valueString;
 	nextToken();
 	if (currentToken.type != TOK_INNER)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "." }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "." }), currentToken);
 	nextToken();
 	std::string fname = currentToken.valueString;
 
@@ -161,15 +170,15 @@ node_ptr_t NodeParser::parseExternCallNode(ns_vec_t *scopes)
 	nextToken();
 
 	if (currentToken.type != '(')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
-	node_vec_t args;
+	std::vector<ptr_node_t> args;
 	int i = 0;
 	while (currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -178,14 +187,14 @@ node_ptr_t NodeParser::parseExternCallNode(ns_vec_t *scopes)
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 
 	return std::make_shared<ExternCallNode>(*scopes, libname, fname, args, marker);
 }
 
-node_ptr_t NodeParser::parseCallOpNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseCallOpNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 	size_t id = currentToken.valueNumber.getLong();
@@ -193,15 +202,15 @@ node_ptr_t NodeParser::parseCallOpNode(ns_vec_t *scopes)
 	nextToken();
 
 	if (currentToken.type != '(')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
-	node_vec_t args;
+	std::vector<ptr_node_t> args;
 	int i = 0;
 	while (currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -210,14 +219,14 @@ node_ptr_t NodeParser::parseCallOpNode(ns_vec_t *scopes)
 		else
 			return logErrorN(_EXPECTED_FUNCTION_PARAM_, currentToken);
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 	return std::make_shared<CallOpNode>(*scopes, id, args, marker);
 }
 
 
-param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
+param_t node_parser_t::parseParamTypeNode(std::vector<node_scope_t> *scopes, const aug_type_t &base)
 {
 	param_t pt({}, base);
 	nextToken();
@@ -226,48 +235,48 @@ param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
 	while (currentToken.valueString != ">") {
 		if (i++ > 0) {
 			if (currentToken.type != ',')
-				return logErrorPT(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorPT(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
-		aug_type_t qbase = { Value::type_t::ANY };
+		aug_type_t qbase = { value_type_enum::ANY };
 		switch (currentToken.type) {
 			case TOK_BOOLEAN:
-				qbase = { Value::type_t::BOOLEAN_D };
+				qbase = { value_type_enum::BOOLEAN_D };
 				nextToken();
 				break;
 			case TOK_NUMBER:
-				qbase = { Value::type_t::NUMBER };
+				qbase = { value_type_enum::NUMBER };
 				nextToken();
 				break;
 			case TOK_ARRAY:
-				qbase = { Value::type_t::ARRAY };
+				qbase = { value_type_enum::ARRAY };
 				nextToken();
 				break;
 			case TOK_STRING:
-				qbase = { Value::type_t::STRING };
+				qbase = { value_type_enum::STRING };
 				nextToken();
 				break;
 			case TOK_DICTIONARY:
-				qbase = { Value::type_t::DICTIONARY };
+				qbase = { value_type_enum::DICTIONARY };
 				nextToken();
 				break;
 			case TOK_OBJECT:
-				qbase = { Value::type_t::OBJECT };
+				qbase = { value_type_enum::OBJECT };
 				nextToken();
 				break;
 			case TOK_FUNCTION:
-				qbase = { Value::type_t::FUNCTION };
+				qbase = { value_type_enum::FUNCTION };
 				nextToken();
 				break;
 			case TOK_POINTER:
-				qbase = { Value::type_t::POINTER };
+				qbase = { value_type_enum::POINTER };
 				nextToken();
 				break;
 			case TOK_ANY:
 				nextToken();
 				break;
 			case TOK_TYPE_NAME:
-				qbase = { Value::type_t::TYPE_NAME };
+				qbase = { value_type_enum::TYPE_NAME };
 				nextToken();
 				break;
 			case TOK_IDF:
@@ -295,28 +304,28 @@ param_t NodeParser::parseParamTypeNode(ns_vec_t *scopes, const aug_type_t &base)
 	return pt;
 }
 
-std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::parseSigNode(ns_vec_t *scopes)
+std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_parser_t::parseSigNode(std::vector<node_scope_t> *scopes)
 {
 	if (currentToken.type != '(')
-		return logErrorSN(format::format(_EXPECTED_ERROR_, { "(" }), currentToken);
+		return logErrorSN(global::format(_EXPECTED_ERROR_, { "(" }), currentToken);
 	nextToken();
 
 	if (currentToken.type == TOK_VAR_ARGS) {
 		nextToken();
 		if (currentToken.type != ')')
-			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+			return logErrorSN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 		nextToken();
-		return { fsig_t(), {{static_cast<LexerTokenType>(1), static_cast<hash_ull>(0)}} };
+		return { signature_t(), {{static_cast<token_type_enum>(1), static_cast<hash_ull>(0)}} };
 	}
 
-	std::vector<std::pair<LexerTokenType, hash_ull>> args;
-	param_vec_t types;
+	std::vector<std::pair<token_type_enum, hash_ull>> args;
+	std::vector<param_t> types;
 
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ')') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorSN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorSN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -335,48 +344,48 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 			return logErrorSN("Expected variable identifier", currentToken);
 		nextToken();
 
-		param_t pt({}, { Value::type_t::ANY });
+		param_t pt({}, { value_type_enum::ANY });
 		if (currentToken.type == ':') {
-			aug_type_t ftype = { Value::type_t::ANY };
+			aug_type_t ftype = { value_type_enum::ANY };
 			nextToken();
 			switch (currentToken.type) {
 				case TOK_BOOLEAN:
-					ftype = { Value::type_t::BOOLEAN_D };
+					ftype = { value_type_enum::BOOLEAN_D };
 					nextToken();
 					break;
 				case TOK_NUMBER:
-					ftype = { Value::type_t::NUMBER };
+					ftype = { value_type_enum::NUMBER };
 					nextToken();
 					break;
 				case TOK_ARRAY:
-					ftype = { Value::type_t::ARRAY };
+					ftype = { value_type_enum::ARRAY };
 					nextToken();
 					break;
 				case TOK_STRING:
-					ftype = { Value::type_t::STRING };
+					ftype = { value_type_enum::STRING };
 					nextToken();
 					break;
 				case TOK_DICTIONARY:
-					ftype = { Value::type_t::DICTIONARY };
+					ftype = { value_type_enum::DICTIONARY };
 					nextToken();
 					break;
 				case TOK_OBJECT:
-					ftype = { Value::type_t::OBJECT };
+					ftype = { value_type_enum::OBJECT };
 					nextToken();
 					break;
 				case TOK_FUNCTION:
-					ftype = { Value::type_t::FUNCTION };
+					ftype = { value_type_enum::FUNCTION };
 					nextToken();
 					break;
 				case TOK_POINTER:
-					ftype = { Value::type_t::POINTER };
+					ftype = { value_type_enum::POINTER };
 					nextToken();
 					break;
 				case TOK_ANY:
 					nextToken();
 					break;
 				case TOK_TYPE_NAME:
-					ftype = { Value::type_t::TYPE_NAME };
+					ftype = { value_type_enum::TYPE_NAME };
 					nextToken();
 					break;
 				case TOK_IDF:
@@ -401,20 +410,20 @@ std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::
 			}
 		}
 
-		args.push_back({ static_cast<LexerTokenType>(type), ROSSA_HASH(arg) });
+		args.push_back({ static_cast<token_type_enum>(type), ROSSA_HASH(arg) });
 		types.push_back(pt);
 
 		scopes->back().var_ids.push_back(ROSSA_HASH(arg));
 
 		if (currentToken.type == NULL_TOK)
-			return logErrorSN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+			return logErrorSN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 	}
 	nextToken();
 
 	return { types, args };
 }
 
-node_ptr_t NodeParser::parseDefineNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseDefineNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 
@@ -440,7 +449,7 @@ node_ptr_t NodeParser::parseDefineNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
 		if (currentToken.type != ';')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		nextToken();
 
 		scopes->pop_back();
@@ -449,7 +458,7 @@ node_ptr_t NodeParser::parseDefineNode(ns_vec_t *scopes)
 		else
 			return std::make_shared<DefineNode>(*scopes, key, sig.first, sig.second, body, captures, currentToken);
 	} else {
-		node_vec_t vbody;
+		std::vector<ptr_node_t> vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -462,7 +471,7 @@ node_ptr_t NodeParser::parseDefineNode(ns_vec_t *scopes)
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(*scopes, vbody, true, currentToken);
@@ -474,7 +483,7 @@ node_ptr_t NodeParser::parseDefineNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseNewNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseNewNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 
@@ -487,7 +496,7 @@ node_ptr_t NodeParser::parseNewNode(ns_vec_t *scopes)
 	return std::make_shared<NewNode>(*scopes, object, params, currentToken);
 }
 
-node_ptr_t NodeParser::parseLambdaNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseLambdaNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 	scopes->push_back({ ROSSA_HASH("<LAM@" + std::to_string(scope_i++) + ">") });
@@ -506,7 +515,7 @@ node_ptr_t NodeParser::parseLambdaNode(ns_vec_t *scopes)
 		while (currentToken.type != ']') {
 			if (i++ > 0) {
 				if (currentToken.type != ',')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 				nextToken();
 			}
 
@@ -535,7 +544,7 @@ node_ptr_t NodeParser::parseLambdaNode(ns_vec_t *scopes)
 		else
 			return std::make_shared<DefineNode>(*scopes, 0, sig.first, sig.second, body, captures, currentToken);
 	} else {
-		node_vec_t vbody;
+		std::vector<ptr_node_t> vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -548,7 +557,7 @@ node_ptr_t NodeParser::parseLambdaNode(ns_vec_t *scopes)
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 
 		auto body = std::make_shared<VectorNode>(*scopes, vbody, true, currentToken);
@@ -561,12 +570,12 @@ node_ptr_t NodeParser::parseLambdaNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseNPLambdaNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseNPLambdaNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 
-	fsig_t sig;
-	std::vector<std::pair<LexerTokenType, hash_ull>> p;
+	signature_t sig;
+	std::vector<std::pair<token_type_enum, hash_ull>> p;
 	std::vector<hash_ull> c;
 
 	scopes->push_back({ ROSSA_HASH("<LM2@" + std::to_string(scope_i++) + ">") });
@@ -579,7 +588,7 @@ node_ptr_t NodeParser::parseNPLambdaNode(ns_vec_t *scopes)
 		scopes->pop_back();
 		return std::make_shared<DefineNode>(*scopes, 0, sig, p, body, c, currentToken);
 	} else {
-		node_vec_t vbody;
+		std::vector<ptr_node_t> vbody;
 
 		nextToken();
 		while (currentToken.type != NULL_TOK) {
@@ -592,7 +601,7 @@ node_ptr_t NodeParser::parseNPLambdaNode(ns_vec_t *scopes)
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 
 		scopes->pop_back();
@@ -601,13 +610,13 @@ node_ptr_t NodeParser::parseNPLambdaNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseIndexNode(ns_vec_t *scopes, const node_ptr_t &a)
+ptr_node_t node_parser_t::parseIndexNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a)
 {
 	auto marker = tokens.at(index - 2);
 	nextToken();
 	if (auto b = parseEquNode(scopes)) {
 		if (currentToken.type != ']')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "]" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "]" }), currentToken);
 		nextToken();
 		auto ret = std::make_shared<BinOpNode>(*scopes, "[]", a, b, marker);
 		return parseTrailingNode(scopes, ret, true);
@@ -615,7 +624,7 @@ node_ptr_t NodeParser::parseIndexNode(ns_vec_t *scopes, const node_ptr_t &a)
 	return nullptr;
 }
 
-node_ptr_t NodeParser::parseTypeNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseTypeNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 	aug_type_t ftype = {};
@@ -626,10 +635,10 @@ node_ptr_t NodeParser::parseTypeNode(ns_vec_t *scopes)
 			break;
 		nextToken();
 	}
-	return std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { ftype })), currentToken);
+	return std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { ftype })), currentToken);
 }
 
-node_ptr_t NodeParser::parseUntilNode(ns_vec_t *scopes, const node_ptr_t &a, const bool &inclusive)
+ptr_node_t node_parser_t::parseUntilNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a, const bool &inclusive)
 {
 	nextToken();
 
@@ -649,12 +658,12 @@ node_ptr_t NodeParser::parseUntilNode(ns_vec_t *scopes, const node_ptr_t &a, con
 	return std::make_shared<UntilNode>(*scopes, a, b, nullptr, inclusive, currentToken);
 }
 
-node_ptr_t NodeParser::parseBinOpNode(ns_vec_t *scopes, const node_ptr_t &a)
+ptr_node_t node_parser_t::parseBinOpNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a)
 {
-	node_ptr_t current = a;
+	ptr_node_t current = a;
 	int pastPrec = 999;
 
-	while (currentToken.type != NULL_TOK && Rossa::bOperators.find(currentToken.valueString) != Rossa::bOperators.end()) {
+	while (currentToken.type != NULL_TOK && parser_t::bOperators.find(currentToken.valueString) != parser_t::bOperators.end()) {
 		std::string opStr = currentToken.valueString;
 
 		/*
@@ -662,7 +671,7 @@ node_ptr_t NodeParser::parseBinOpNode(ns_vec_t *scopes, const node_ptr_t &a)
 			scopes->back().var_ids.push_back(ROSSA_HASH(a->getToken().valueString));
 		}*/
 
-		int prec = Rossa::bOperators.at(opStr);
+		int prec = parser_t::bOperators.at(opStr);
 
 		auto marker = currentToken;
 
@@ -677,14 +686,14 @@ node_ptr_t NodeParser::parseBinOpNode(ns_vec_t *scopes, const node_ptr_t &a)
 					marker);
 				pastPrec = prec;
 			} else {
-				node_ptr_t parent = nullptr;
+				ptr_node_t parent = nullptr;
 				auto n = current;
 				while (n->getType() == Node::type_t::BIN_OP_NODE) {
 					auto bon = reinterpret_cast<BinOpNode *>(n.get());
 					auto oldOp = bon->getOp();
 					auto bon_b = bon->getB();
 
-					if (!(std::abs(Rossa::bOperators.at(oldOp) < std::abs(prec) || (std::abs(Rossa::bOperators.at(oldOp)) == std::abs(prec) && Rossa::bOperators.at(oldOp) < 0)))) {
+					if (!(std::abs(parser_t::bOperators.at(oldOp) < std::abs(prec) || (std::abs(parser_t::bOperators.at(oldOp)) == std::abs(prec) && parser_t::bOperators.at(oldOp) < 0)))) {
 						reinterpret_cast<BinOpNode *>(parent.get())->setB(std::make_shared<BinOpNode>(*scopes,
 							opStr,
 							n,
@@ -705,7 +714,7 @@ node_ptr_t NodeParser::parseBinOpNode(ns_vec_t *scopes, const node_ptr_t &a)
 					parent = n;
 					n = bon_b;
 				}
-				pastPrec = Rossa::bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
+				pastPrec = parser_t::bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
 			}
 		} else {
 			return logErrorN(_EXPECTED_RH_, currentToken);
@@ -715,23 +724,23 @@ node_ptr_t NodeParser::parseBinOpNode(ns_vec_t *scopes, const node_ptr_t &a)
 	return current;
 }
 
-node_ptr_t NodeParser::parseBaseNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseBaseNode(std::vector<node_scope_t> *scopes)
 {
 	if (currentToken.type == NULL_TOK)
 		logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
 
-	node_ptr_t ret;
+	ptr_node_t ret;
 	switch (currentToken.type) {
 		case TOK_NUM:
 			return parseNumNode(scopes);
 		case TOK_IDF:
 			return parseIDNode(scopes);
 		case TOK_STR_LIT:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::String(currentToken.valueString), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::String(currentToken.valueString), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NIL:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t(), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t(), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TRUE:
@@ -748,43 +757,43 @@ node_ptr_t NodeParser::parseBaseNode(ns_vec_t *scopes)
 		case '{':
 			return parseMapNode(scopes);
 		case TOK_NIL_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::NIL })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::NIL })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_NUMBER:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::NUMBER })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::NUMBER })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_STRING:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::STRING })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::STRING })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_BOOLEAN:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::BOOLEAN_D })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::BOOLEAN_D })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_ARRAY:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::ARRAY })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::ARRAY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_DICTIONARY:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::DICTIONARY })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::DICTIONARY })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_OBJECT:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::OBJECT })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::OBJECT })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_FUNCTION:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::FUNCTION })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::FUNCTION })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_TYPE_NAME:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::TYPE_NAME })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::TYPE_NAME })), currentToken);
 			nextToken();
 			return ret;
 		case TOK_POINTER:
-			ret = std::make_shared<ContainerNode>(*scopes, sym_t::TypeName(param_t({}, { Value::type_t::POINTER })), currentToken);
+			ret = std::make_shared<ContainerNode>(*scopes, symbol_t::TypeName(param_t({}, { value_type_enum::POINTER })), currentToken);
 			nextToken();
 			return ret;
 		default:
@@ -792,12 +801,12 @@ node_ptr_t NodeParser::parseBaseNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseUnOpNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseUnOpNode(std::vector<node_scope_t> *scopes)
 {
 	std::string opStr = currentToken.valueString;
 	auto marker = currentToken;
 	nextToken();
-	if (Rossa::uOperators.find(opStr) != Rossa::uOperators.end()) {
+	if (parser_t::uOperators.find(opStr) != parser_t::uOperators.end()) {
 		if (auto a = parseUnitNode(scopes))
 			return std::make_shared<UnOpNode>(*scopes, opStr, a, marker);
 		return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
@@ -806,11 +815,11 @@ node_ptr_t NodeParser::parseUnOpNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseVectorNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseVectorNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
-	node_vec_t args;
-	node_vec_t curr;
+	std::vector<ptr_node_t> args;
+	std::vector<ptr_node_t> curr;
 	bool flag = false;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != ']') {
@@ -818,7 +827,7 @@ node_ptr_t NodeParser::parseVectorNode(ns_vec_t *scopes)
 
 		if (i > 0) {
 			if (currentToken.type != ',' && currentToken.type != ';')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { ",` `;" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { ",` `;" }), currentToken);
 			delim = currentToken.type;
 			nextToken();
 		}
@@ -835,7 +844,7 @@ node_ptr_t NodeParser::parseVectorNode(ns_vec_t *scopes)
 		else
 			return nullptr;
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "]" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "]" }), currentToken);
 	}
 	nextToken();
 	if (flag) {
@@ -846,15 +855,15 @@ node_ptr_t NodeParser::parseVectorNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseMapNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseMapNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
-	std::vector<std::pair<std::string, node_ptr_t>> args;
+	std::vector<std::pair<std::string, ptr_node_t>> args;
 	int i = 0;
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (i > 0) {
 			if (currentToken.type != ',')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 			nextToken();
 		}
 		i++;
@@ -863,49 +872,49 @@ node_ptr_t NodeParser::parseMapNode(ns_vec_t *scopes)
 		auto key = currentToken.valueString;
 		nextToken();
 		if (currentToken.type != ':')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ":" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ":" }), currentToken);
 		nextToken();
 		if (auto b = parseEquNode(scopes)) {
-			std::pair<std::string, node_ptr_t> p = { key, b };
+			std::pair<std::string, ptr_node_t> p = { key, b };
 			args.push_back(p);
 		} else
 			return nullptr;
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	}
 	nextToken();
 	return std::make_shared<MapNode>(*scopes, args, currentToken);
 }
 
-node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseSwitchNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
-	std::map<node_ptr_t, size_t> cases;
-	node_vec_t gotos;
+	std::map<ptr_node_t, size_t> cases;
+	std::vector<ptr_node_t> gotos;
 
 	scopes->push_back({ ROSSA_HASH("<SWI@" + std::to_string(scope_i++) + ">") });
 	auto switchs = parseEquNode(scopes);
 	if (!switchs)
-		return logErrorN(format::format(_EXPECTED_AFTER_, { KEYWORD_SWITCH }), currentToken);
+		return logErrorN(global::format(_EXPECTED_AFTER_, { KEYWORD_SWITCH }), currentToken);
 	if (currentToken.type != TOK_OF)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_OF }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_OF }), currentToken);
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
 
 	while (currentToken.type != NULL_TOK && currentToken.type != '}') {
 		if (currentToken.type != TOK_CASE)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CASE }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_CASE }), currentToken);
 		nextToken();
 
-		node_vec_t keys;
+		std::vector<ptr_node_t> keys;
 
 		size_t i = 0;
 		while (currentToken.type != NULL_TOK) {
 			if (i++ > 0) {
 				if (currentToken.type != ',')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 				nextToken();
 			}
 			auto c = parseUnitNode(scopes);
@@ -917,7 +926,7 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 		}
 
 		if (currentToken.type != TOK_DO)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 		nextToken();
 
 		if (currentToken.type != '{') {
@@ -927,13 +936,13 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 
 			if (currentToken.type != ';')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 
 			gotos.push_back(eq);
 		} else {
 			nextToken();
-			node_vec_t body;
+			std::vector<ptr_node_t> body;
 			while (currentToken.type != NULL_TOK) {
 				if (currentToken.type == '}')
 					break;
@@ -943,7 +952,7 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 			}
 			if (currentToken.type != '}')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 			nextToken();
 
 			if (body.size() == 1)
@@ -956,7 +965,7 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 			cases[c] = gotos.size();
 
 		if (currentToken.type == NULL_TOK)
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	}
 	nextToken();
 	auto ret = std::make_shared<SwitchNode>(*scopes, switchs, cases, gotos, currentToken);
@@ -964,9 +973,9 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 	if (currentToken.type == TOK_ELSE) {
 		nextToken();
 		if (currentToken.type != '{')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 		nextToken();
-		node_vec_t elses;
+		std::vector<ptr_node_t> elses;
 		while (currentToken.type != NULL_TOK) {
 			if (currentToken.type == '}')
 				break;
@@ -977,7 +986,7 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 		}
 		if (currentToken.type != '}')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 		nextToken();
 		ret->setElse(std::make_shared<VectorNode>(*scopes, elses, true, currentToken));
 	}
@@ -986,12 +995,12 @@ node_ptr_t NodeParser::parseSwitchNode(ns_vec_t *scopes)
 	return ret;
 }
 
-node_ptr_t NodeParser::parseUnitNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseUnitNode(std::vector<node_scope_t> *scopes)
 {
 	if (currentToken.type == NULL_TOK)
 		return logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
 
-	node_ptr_t ret = nullptr;
+	ptr_node_t ret = nullptr;
 	switch (currentToken.type) {
 		case ';':
 		case 0:
@@ -1037,7 +1046,7 @@ node_ptr_t NodeParser::parseUnitNode(ns_vec_t *scopes)
 			nextToken();
 			if (ret = parseEquNode(scopes)) {
 				if (currentToken.type != ')')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ")" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ")" }), currentToken);
 				ret = std::make_shared<ParenNode>(*scopes, ret, currentToken);
 				nextToken();
 				return parseTrailingNode(scopes, ret, true);
@@ -1048,7 +1057,7 @@ node_ptr_t NodeParser::parseUnitNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseInsNode(ns_vec_t *scopes, const node_ptr_t &ret)
+ptr_node_t node_parser_t::parseInsNode(std::vector<node_scope_t> *scopes, const ptr_node_t &ret)
 {
 	auto curr = ret;
 	while (currentToken.type == TOK_INNER) {
@@ -1059,20 +1068,20 @@ node_ptr_t NodeParser::parseInsNode(ns_vec_t *scopes, const node_ptr_t &ret)
 	return parseTrailingNode(scopes, curr, false);
 }
 
-node_ptr_t NodeParser::parseThenNode(ns_vec_t *scopes, const node_ptr_t &a)
+ptr_node_t node_parser_t::parseThenNode(std::vector<node_scope_t> *scopes, const ptr_node_t &a)
 {
 	scopes->push_back({ ROSSA_HASH("<IFI@" + std::to_string(scope_i++) + ">") });
 	nextToken();
 	auto b = parseEquNode(scopes);
 	if (!b)
-		return logErrorN(format::format(_EXPECTED_AFTER_, { "?" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_AFTER_, { "?" }), currentToken);
 	if (currentToken.type != ':')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { ":" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { ":" }), currentToken);
 	nextToken();
 	auto c = parseEquNode(scopes);
 	if (!c) {
 		scopes->pop_back();
-		return logErrorN(format::format(_EXPECTED_AFTER_, { ":" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_AFTER_, { ":" }), currentToken);
 	}
 	auto ret = std::make_shared<IfElseNode>(*scopes, a, b, currentToken);
 	ret->setElse(c);
@@ -1080,7 +1089,7 @@ node_ptr_t NodeParser::parseThenNode(ns_vec_t *scopes, const node_ptr_t &a)
 	return ret;
 }
 
-node_ptr_t NodeParser::parseEquNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseEquNode(std::vector<node_scope_t> *scopes)
 {
 	if (currentToken.type == NULL_TOK)
 		return logErrorN(_UNEXPECTED_TERMINATION_, currentToken);
@@ -1108,7 +1117,7 @@ node_ptr_t NodeParser::parseEquNode(ns_vec_t *scopes)
 	return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 }
 
-node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseIfElseNode(std::vector<node_scope_t> *scopes)
 {
 	scopes->push_back({ ROSSA_HASH("<IFS@" + std::to_string(scope_i++) + ">") });
 	nextToken();
@@ -1116,15 +1125,15 @@ node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type != TOK_THEN)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t body;
+	std::vector<ptr_node_t> body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1135,7 +1144,7 @@ node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	std::shared_ptr<IfElseNode> ret;
@@ -1155,9 +1164,9 @@ node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
 		{
 			nextToken();
 			if (currentToken.type != '{')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 			nextToken();
-			node_vec_t elses;
+			std::vector<ptr_node_t> elses;
 			while (currentToken.type != NULL_TOK) {
 				if (currentToken.type == '}')
 					break;
@@ -1168,7 +1177,7 @@ node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
 					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 			}
 			if (currentToken.type != '}')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 			nextToken();
 			if (elses.size() != 1)
 				ret->setElse(std::make_shared<VectorNode>(*scopes, elses, true, currentToken));
@@ -1189,14 +1198,14 @@ node_ptr_t NodeParser::parseIfElseNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parseTryCatchNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseTryCatchNode(std::vector<node_scope_t> *scopes)
 {
 	scopes->push_back({ ROSSA_HASH("<TRY@" + std::to_string(scope_i++) + ">") });
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t tbody;
+	std::vector<ptr_node_t> tbody;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1207,11 +1216,11 @@ node_ptr_t NodeParser::parseTryCatchNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	if (currentToken.type != TOK_CATCH)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_CATCH }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_CATCH }), currentToken);
 	nextToken();
 
 	if (currentToken.type != TOK_IDF)
@@ -1220,13 +1229,13 @@ node_ptr_t NodeParser::parseTryCatchNode(ns_vec_t *scopes)
 	nextToken();
 
 	if (currentToken.type != TOK_THEN)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_THEN }), currentToken);
 	nextToken();
 
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t cbody;
+	std::vector<ptr_node_t> cbody;
 
 	scopes->pop_back();
 	scopes->push_back({ ROSSA_HASH("<CAT@" + std::to_string(scope_i++) + ">") });
@@ -1240,14 +1249,14 @@ node_ptr_t NodeParser::parseTryCatchNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	scopes->pop_back();
 	return std::make_shared<TryCatchNode>(*scopes, std::make_shared<VectorNode>(*scopes, tbody, true, currentToken), std::make_shared<VectorNode>(*scopes, cbody, true, currentToken), key, currentToken);
 }
 
-node_ptr_t NodeParser::parseWhileNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseWhileNode(std::vector<node_scope_t> *scopes)
 {
 	scopes->push_back({ ROSSA_HASH("<WHI@" + std::to_string(scope_i++) + ">") });
 	nextToken();
@@ -1255,15 +1264,15 @@ node_ptr_t NodeParser::parseWhileNode(ns_vec_t *scopes)
 	if (!ifs)
 		return nullptr;
 	if (currentToken.type != TOK_DO)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t body;
+	std::vector<ptr_node_t> body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1274,33 +1283,33 @@ node_ptr_t NodeParser::parseWhileNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	scopes->pop_back();
 	return std::make_shared<WhileNode>(*scopes, ifs, body, marker);
 }
 
-node_ptr_t NodeParser::parseForNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseForNode(std::vector<node_scope_t> *scopes)
 {
 	scopes->push_back({ ROSSA_HASH("<FOR@" + std::to_string(scope_i++) + ">") });
 	nextToken();
 	auto id = ROSSA_HASH(currentToken.valueString);
 	nextToken();
 	if (currentToken.type != TOK_IN)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_IN }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_IN }), currentToken);
 	nextToken();
 	auto fors = parseEquNode(scopes);
 	if (currentToken.type != TOK_DO)
-		return logErrorN(format::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_DO }), currentToken);
 
 	auto marker = currentToken;
 
 	nextToken();
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t body;
+	std::vector<ptr_node_t> body;
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
 			break;
@@ -1311,14 +1320,14 @@ node_ptr_t NodeParser::parseForNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	scopes->pop_back();
 	return std::make_shared<ForNode>(*scopes, id, fors, body, marker);
 }
 
-node_ptr_t NodeParser::parseExternNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseExternNode(std::vector<node_scope_t> *scopes)
 {
 
 	nextToken();
@@ -1327,28 +1336,28 @@ node_ptr_t NodeParser::parseExternNode(ns_vec_t *scopes)
 
 	nextToken();
 	if (currentToken.type != ';')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 	nextToken();
 
-	lib::loadLibrary(currentFile.parent_path(), libname, &currentToken);
+	global::loadLibrary(currentFile.parent_path(), libname, &currentToken);
 	return nullptr;
 }
 
-node_ptr_t NodeParser::parseClassNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseClassNode(std::vector<node_scope_t> *scopes)
 {
 	auto type = currentToken.type;
 	nextToken();
 	auto key = ROSSA_HASH(currentToken.valueString);
 	nextToken();
-	node_ptr_t extends = nullptr;
+	ptr_node_t extends = nullptr;
 	if (currentToken.type == ':') {
 		nextToken();
 		extends = parseUnitNode(scopes);
 	}
 	if (currentToken.type != '{')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 	nextToken();
-	node_vec_t body;
+	std::vector<ptr_node_t> body;
 	scopes->push_back({ key });
 	while (currentToken.type != NULL_TOK) {
 		if (currentToken.type == '}')
@@ -1360,14 +1369,14 @@ node_ptr_t NodeParser::parseClassNode(ns_vec_t *scopes)
 			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
 	}
 	if (currentToken.type != '}')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
 	nextToken();
 
 	scopes->pop_back();
 	return std::make_shared<ClassNode>(*scopes, key, type, body, extends, currentToken);
 }
 
-node_ptr_t NodeParser::parseLoadNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseLoadNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
 	if (currentToken.type != TOK_STR_LIT)
@@ -1379,7 +1388,7 @@ node_ptr_t NodeParser::parseLoadNode(ns_vec_t *scopes)
 
 	if (std::find(dir::loaded.begin(), dir::loaded.end(), path) != dir::loaded.end()) {
 		if (currentToken.type != ';')
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		nextToken();
 		return nullptr;
 	}
@@ -1395,18 +1404,18 @@ node_ptr_t NodeParser::parseLoadNode(ns_vec_t *scopes)
 		myfile.close();
 	}
 
-	auto tokens = Rossa::lexString(content, path.filename().string());
-	NodeParser np(tokens, path);
+	auto tokens = parser_t::lexString(content, path.filename().string());
+	node_parser_t np(tokens, path);
 	auto n = np.parse(scopes, consts);
 
 	if (currentToken.type != ';')
-		return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+		return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 	nextToken();
 
 	return n;
 }
 
-node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
+ptr_node_t node_parser_t::parseExprNode(std::vector<node_scope_t> *scopes)
 {
 
 	if (currentToken.type == NULL_TOK)
@@ -1448,7 +1457,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 			number_t index = number_t::Long(0);
 
 			if (currentToken.valueString != "{")
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "{" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "{" }), currentToken);
 			nextToken();
 
 			while (currentToken.type != '}') {
@@ -1467,27 +1476,27 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 						nextToken();
 						auto marker = currentToken;
 						try {
-							scope_t newScope(static_cast<hash_ull>(0));
+							object_t newScope(static_cast<hash_ull>(0));
 							trace_t trace;
 							index = parseEquNode(scopes)->fold(*consts)->genParser()->evaluate(&newScope, trace).getNumber(NULL, trace);
-						} catch (const rossa_error &e) {
+						} catch (const error_t &e) {
 							return logErrorN(_CANNOT_MAKE_CONST_, marker);
 						}
 						if (currentToken.type == ',') {
 							nextToken();
 						} else if (currentToken.type != '}')
-							return logErrorN(format::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
+							return logErrorN(global::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
 					} else
-						return logErrorN(format::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
+						return logErrorN(global::format(_EXPECTED_ERROR_, { "}` `," }), currentToken);
 				} else if (currentToken.type == ',') {
 					nextToken();
 				}
-				consts->push_back({ path, sym_t::Number(index) });
+				consts->push_back({ path, symbol_t::Number(index) });
 				index += number_t::Long(1);
 			}
 			nextToken();
 			scopes->pop_back();
-			return std::make_shared<ContainerNode>(*scopes, sym_t(), currentToken);
+			return std::make_shared<ContainerNode>(*scopes, symbol_t(), currentToken);
 		}
 		case TOK_CONST:
 		{
@@ -1500,11 +1509,11 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 			nextToken();
 
 			if (currentToken.valueString != "=")
-				return logErrorN(format::format(_EXPECTED_ERROR_, { "=" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "=" }), currentToken);
 			nextToken();
 
 			try {
-				scope_t newScope(static_cast<hash_ull>(0));
+				object_t newScope(static_cast<hash_ull>(0));
 				trace_t trace;
 				auto vn = parseEquNode(scopes)->fold(*consts)->genParser()->evaluate(&newScope, trace);
 				//scopes->back().var_ids.push_back({ id, vn });
@@ -1514,10 +1523,10 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 				path.push_back(id);
 				consts->push_back({ path, vn });
 				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ContainerNode>(*scopes, vn, marker);
-			} catch (const rossa_error &e) {
+			} catch (const error_t &e) {
 				return logErrorN(_CANNOT_MAKE_CONST_, marker);
 			}
 			return nullptr;
@@ -1531,7 +1540,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 			while (currentToken.type != NULL_TOK) {
 				if (i++ > 0) {
 					if (currentToken.type != ',')
-						return logErrorN(format::format(_EXPECTED_ERROR_, { "," }), currentToken);
+						return logErrorN(global::format(_EXPECTED_ERROR_, { "," }), currentToken);
 					nextToken();
 				}
 				if (currentToken.type != TOK_IDF)
@@ -1543,7 +1552,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 					return std::make_shared<VarNode>(*scopes, v, marker);
 				}
 			}
-			return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+			return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 		}
 		case TOK_THROW:
 		{
@@ -1551,7 +1560,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 			nextToken();
 			if (auto ret = parseEquNode(scopes)) {
 				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ThrowNode>(*scopes, ret, marker);
 			}
@@ -1560,20 +1569,20 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 		case TOK_BREAK:
 			nextToken();
 			if (currentToken.type != ';')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 			return std::make_shared<BreakNode>(*scopes, currentToken);
 		case TOK_CONTINUE:
 			nextToken();
 			if (currentToken.type != ';')
-				return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+				return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 			nextToken();
 			return std::make_shared<ContinueNode>(*scopes, currentToken);
 		case TOK_RETURN:
 			nextToken();
 			if (auto ret = parseEquNode(scopes)) {
 				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ReturnNode>(*scopes, ret, currentToken);
 			}
@@ -1582,7 +1591,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 			nextToken();
 			if (auto ret = parseEquNode(scopes)) {
 				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return std::make_shared<ReferNode>(*scopes, ret, currentToken);
 			}
@@ -1590,7 +1599,7 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 		default:
 			if (auto ret = parseEquNode(scopes)) {
 				if (currentToken.type != ';')
-					return logErrorN(format::format(_EXPECTED_ERROR_, { ";" }), currentToken);
+					return logErrorN(global::format(_EXPECTED_ERROR_, { ";" }), currentToken);
 				nextToken();
 				return ret;
 			}
@@ -1598,37 +1607,37 @@ node_ptr_t NodeParser::parseExprNode(ns_vec_t *scopes)
 	}
 }
 
-node_ptr_t NodeParser::parse(ns_vec_t *scopes, std::vector<std::pair<std::vector<hash_ull>, sym_t>> *consts)
+ptr_node_t node_parser_t::parse(std::vector<node_scope_t> *scopes, std::vector<std::pair<std::vector<hash_ull>, symbol_t>> *consts)
 {
 	this->consts = consts;
 	nextToken();
-	//ns_vec_t init = { {ROSSA_HASH("<*>")} };
+	//std::vector<node_scope_t> init = { {ROSSA_HASH("<*>")} };
 	return parseEntryNode(scopes);
 }
 
-i_ptr_t NodeParser::genParser(const node_ptr_t &n)
+ptr_instruction_t node_parser_t::genParser(const ptr_node_t &n)
 {
 	return n->genParser();
 }
 
-node_ptr_t NodeParser::logErrorN(const std::string &s, const token_t &t)
+ptr_node_t node_parser_t::logErrorN(const std::string &s, const token_t &t)
 {
 	trace_t stack_trace;
 	if (t.type == NULL_TOK)
-		throw rossa_error(s, tokens.at(index - 1), stack_trace);
+		throw error_t(s, tokens.at(index - 1), stack_trace);
 	else
-		throw rossa_error(s, t, stack_trace);
+		throw error_t(s, t, stack_trace);
 	return nullptr;
 }
 
-std::pair<fsig_t, std::vector<std::pair<LexerTokenType, hash_ull>>> NodeParser::logErrorSN(const std::string &s, const token_t &t)
+std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> node_parser_t::logErrorSN(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return { fsig_t(), {{NULL_TOK, -1}} };
+	return { signature_t(), {{NULL_TOK, -1}} };
 }
 
-param_t NodeParser::logErrorPT(const std::string &s, const token_t &t)
+param_t node_parser_t::logErrorPT(const std::string &s, const token_t &t)
 {
 	logErrorN(s, t);
-	return param_t({}, { Value::type_t::NIL });
+	return param_t({}, { value_type_enum::NIL });
 }
