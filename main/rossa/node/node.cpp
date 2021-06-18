@@ -1469,22 +1469,6 @@ ptr_instruction_t UntilNode::genParser() const
 
 bool UntilNode::isConst() const
 {
-	bool flag = false;
-	if (step == nullptr)
-		flag = a->isConst() && b->isConst();
-	else
-		flag = a->isConst() && b->isConst() && step->isConst();
-	if (flag) {
-		try {
-			auto i = genParser();
-			object_t newScope(static_cast<hash_ull>(0));
-			trace_t stack_trace;
-			i->evaluate(&newScope, stack_trace);
-			return true;
-		} catch (const rossa_error_t &e) {
-			return false;
-		}
-	}
 	return false;
 }
 
@@ -1508,14 +1492,6 @@ void UntilNode::printTree(std::string indent, bool last) const
 
 const ptr_node_t UntilNode::fold(const std::vector<std::pair<std::vector<hash_ull>, symbol_t>>&consts) const
 {
-	if (isConst()) {
-		auto i = genParser();
-		object_t newScope(static_cast<hash_ull>(0));
-		trace_t stack_trace;
-		auto r = i->evaluate(&newScope, stack_trace);
-		return std::make_shared<ContainerNode>(path, r, token);
-	}
-
 	if (step == nullptr)
 		return std::make_shared<UntilNode>(path, a->fold(consts), b->fold(consts), nullptr, inclusive, token);
 	else
