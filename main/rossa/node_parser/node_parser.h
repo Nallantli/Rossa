@@ -30,6 +30,7 @@ private:
 	ptr_node_t parseIfElseNode(std::vector<node_scope_t> *);
 	ptr_node_t parseWhileNode(std::vector<node_scope_t> *);
 	ptr_node_t parseForNode(std::vector<node_scope_t> *);
+	ptr_node_t parseEachNode(std::vector<node_scope_t> *);
 	std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> parseSigNode(std::vector<node_scope_t> *);
 	ptr_node_t parseDefineNode(std::vector<node_scope_t> *);
 	ptr_node_t parseLambdaNode(std::vector<node_scope_t> *);

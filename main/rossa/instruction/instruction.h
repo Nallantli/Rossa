@@ -822,4 +822,21 @@ public:
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 
+/**
+ * Each loop instruction
+ * `each <VAR> in <EXPR> (where <EXPR>) do <EXPR>`
+ */
+class EachI : public Instruction
+{
+protected:
+	const hash_ull id;
+	const ptr_instruction_t eachs;
+	const ptr_instruction_t wheres;
+	const ptr_instruction_t body;
+
+public:
+	EachI(const hash_ull &, const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
 #endif

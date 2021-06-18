@@ -8,9 +8,9 @@
 #include "../node_parser/node_parser.h"
 #include "../parser/parser.h"
 
- /*-------------------------------------------------------------------------------------------------------*/
- /*class Instruction                                                                                      */
- /*-------------------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+/*class Instruction                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
 
 Instruction::Instruction(const instruction_type_enum &type, const token_t &token)
 	: token{ token }
@@ -144,7 +144,7 @@ const symbol_t SequenceI::evaluate(const object_t *scope, trace_t &stack_trace) 
 {
 	std::vector<symbol_t> evals;
 	for (const ptr_instruction_t &e : children) {
-		if (e->getType() == UNTIL_I) {
+		if (e->getType() == UNTIL_I || e->getType() == EACH_I) {
 			std::vector<symbol_t> v = e->evaluate(scope, stack_trace).getVector(&token, stack_trace);
 			evals.insert(evals.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
 		} else {
@@ -1578,4 +1578,37 @@ HashI::HashI(const ptr_instruction_t &a, const token_t &token)
 const symbol_t HashI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	return operation::hash(scope, a->evaluate(scope, stack_trace), &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class EachI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+EachI::EachI(const hash_ull &id, const ptr_instruction_t &eachs, const ptr_instruction_t &wheres, const ptr_instruction_t &body, const token_t &token)
+	: Instruction(EACH_I, token)
+	, id{ id }
+	, eachs{ eachs }
+	, wheres{ wheres }
+	, body{ body }
+{}
+
+const symbol_t EachI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const std::vector<symbol_t> evalFor = eachs->evaluate(scope, stack_trace).getVector(&token, stack_trace);
+	std::vector<symbol_t> list;
+	for (const symbol_t &e : evalFor) {
+		const object_t newScope(scope, 0);
+		newScope.createVariable(id, e, &token);
+		symbol_t r = e;
+		if (wheres) {
+			auto check = wheres->evaluate(&newScope, stack_trace);
+			if (!check.getBool(&token, stack_trace))
+				continue;
+		}
+		if (body) {
+			r = body->evaluate(&newScope, stack_trace);
+		}
+		list.push_back(r);
+	}
+	return symbol_t::Array(list);
 }

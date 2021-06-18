@@ -1042,6 +1042,8 @@ ptr_node_t node_parser_t::parseUnitNode(std::vector<node_scope_t> *scopes)
 			return parseNewNode(scopes);
 		case TOK_OPR:
 			return parseUnOpNode(scopes);
+		case TOK_EACH:
+			return parseEachNode(scopes);
 		case '(':
 			nextToken();
 			if (ret = parseEquNode(scopes)) {
@@ -1325,6 +1327,38 @@ ptr_node_t node_parser_t::parseForNode(std::vector<node_scope_t> *scopes)
 
 	scopes->pop_back();
 	return std::make_shared<ForNode>(*scopes, id, fors, body, marker);
+}
+
+ptr_node_t node_parser_t::parseEachNode(std::vector<node_scope_t> *scopes)
+{
+	auto marker = currentToken;
+	scopes->push_back({ ROSSA_HASH("<EACH@" + std::to_string(scope_i++) + ">") });
+	nextToken();
+	auto id = ROSSA_HASH(currentToken.valueString);
+	nextToken();
+	if (currentToken.type != TOK_IN)
+		return logErrorN(global::format(_EXPECTED_ERROR_, { KEYWORD_IN }), currentToken);
+	nextToken();
+	auto eachs = parseEquNode(scopes);
+	ptr_node_t wheres = nullptr;
+	ptr_node_t body = nullptr;
+
+	if (currentToken.type == TOK_WHERE) {
+		nextToken();
+		wheres = parseEquNode(scopes);
+		if (!wheres)
+			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+	}
+
+	if (currentToken.type == TOK_DO) {
+		nextToken();
+		body = parseEquNode(scopes);
+		if (!body)
+			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+	}
+
+	scopes->pop_back();
+	return std::make_shared<EachNode>(*scopes, id, eachs, wheres, body, marker);
 }
 
 ptr_node_t node_parser_t::parseExternNode(std::vector<node_scope_t> *scopes)

@@ -350,6 +350,10 @@ const int parser_t::getToken(
 			return TOK_ANY;
 		else if (ID_STRING == KEYWORD_CONST)
 			return TOK_CONST;
+		else if (ID_STRING == KEYWORD_EACH)
+			return TOK_EACH;
+		else if (ID_STRING == KEYWORD_WHERE)
+			return TOK_WHERE;
 		else if (ID_STRING == "inf") {
 			NUM_VALUE = number_t::Double(INFINITY);
 			return TOK_NUM;

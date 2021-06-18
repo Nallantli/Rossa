@@ -53,5 +53,7 @@
 #define KEYWORD_ANY "Any"
 #define KEYWORD_DELETE_FUNC "rem"
 #define KEYWORD_CONST "const"
+#define KEYWORD_WHERE "where"
+#define KEYWORD_EACH "each"
 
 #endif

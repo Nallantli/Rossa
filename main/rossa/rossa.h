@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#define _ROSSA_VERSION_ "v1.15.0-alpha"
+#define _ROSSA_VERSION_ "v1.16.0-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
@@ -140,7 +140,7 @@ enum token_type_enum
 	TOK_INNER = -39,
 	TOK_REF = -40,
 	TOK_CASE = -41,
-	//TOK_DELETE = -42,
+	TOK_EACH = -42,
 	TOK_BREAK = -43,
 	TOK_REFER = -44,
 	TOK_NIL_NAME = -45,
@@ -160,7 +160,8 @@ enum token_type_enum
 	TOK_CALL_OP = -59,
 	TOK_NO_PARAM_LAMBDA = -60,
 	TOK_VAR_ARGS = -61,
-	TOK_CONST = -62
+	TOK_CONST = -62,
+	TOK_WHERE = -63
 };
 
 enum object_type_enum
@@ -240,7 +241,8 @@ NEG_I,
 NOT_I,
 CONCAT_I,
 SET_INDEX_I,
-HASH_I
+HASH_I,
+EACH_I
 };
 
 #ifndef _WIN32

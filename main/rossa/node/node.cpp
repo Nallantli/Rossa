@@ -1810,3 +1810,53 @@ const ptr_node_t CallOpNode::fold(const std::vector<std::pair<std::vector<hash_u
 
 	return std::make_shared<CallOpNode>(path, id, nargs, token);
 }
+
+//------------------------------------------------------------------------------------------------------
+
+EachNode::EachNode(
+	const std::vector<node_scope_t> &path,
+	const hash_ull &id,
+	const ptr_node_t &eachs,
+	const ptr_node_t &wheres,
+	const ptr_node_t &body,
+	const token_t &token) : Node(path, EACH_NODE,
+		token),
+	id(id),
+	eachs(eachs),
+	wheres(wheres),
+	body(body)
+{}
+
+ptr_instruction_t EachNode::genParser() const
+{
+	return std::make_shared<EachI>(id, eachs->genParser(), wheres ? wheres->genParser() : nullptr, body ? body->genParser() : nullptr, token);
+}
+
+bool EachNode::isConst() const
+{
+	return false;
+}
+
+void EachNode::printTree(std::string indent, bool last) const
+{
+	std::cout << indent;
+	if (last) {
+		std::cout << "└─";
+		indent += "  ";
+	} else {
+		std::cout << "├─";
+		indent += "│ ";
+	}
+	printc(global::deHashVec(path) + " ", RED_TEXT);
+	std::cout << "FOR : " << ROSSA_DEHASH(id) << "\n";
+	eachs->printTree(indent, wheres == nullptr && body == nullptr);
+	if (wheres)
+		wheres->printTree(indent, body == nullptr);
+	if (body)
+		body->printTree(indent, true);
+}
+
+const ptr_node_t EachNode::fold(const std::vector<std::pair<std::vector<hash_ull>, symbol_t>>&consts) const
+{
+	return std::make_shared<EachNode>(path, id, eachs->fold(consts), wheres ? wheres->fold(consts) : nullptr, body ? body->fold(consts) : nullptr, token);
+}

@@ -45,7 +45,8 @@ protected:
 		THROW_NODE,
 		PAREN_NODE,
 		CALL_OP_NODE,
-		VARG_DEFINE_NODE
+		VARG_DEFINE_NODE,
+		EACH_NODE
 	} const type;
 	const token_t token;
 
@@ -472,6 +473,22 @@ private:
 
 public:
 	CallOpNode(const std::vector<node_scope_t> &, const size_t &, const std::vector<ptr_node_t> &, const token_t &);
+	ptr_instruction_t genParser() const override;
+	bool isConst() const override;
+	void printTree(std::string, bool) const override;
+	const ptr_node_t fold(const std::vector<std::pair<std::vector<hash_ull>, symbol_t>> &) const override;
+};
+
+class EachNode : public Node
+{
+private:
+	hash_ull id;
+	ptr_node_t eachs;
+	ptr_node_t wheres;
+	ptr_node_t body;
+
+public:
+	EachNode(const std::vector<node_scope_t> &, const hash_ull &, const ptr_node_t &, const ptr_node_t &, const ptr_node_t &, const token_t &);
 	ptr_instruction_t genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;
