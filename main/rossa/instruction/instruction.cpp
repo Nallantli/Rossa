@@ -1607,6 +1607,9 @@ const symbol_t EachI::evaluate(const object_t *scope, trace_t &stack_trace) cons
 		}
 		if (body) {
 			r = body->evaluate(&newScope, stack_trace);
+			if (r.getSymbolType() == symbol_t::type_t::ID_REFER) {
+				r.setSymbolType(symbol_t::type_t::ID_CASUAL);
+			}
 		}
 		list.push_back(r);
 	}

@@ -69,15 +69,13 @@ static snake_game {
 
 	setApple() => {
 		scoreText.setText("Score: {0}" & [snake_size - 1]);
-		var x, y;
-		while true do {
-			x = rand.nexti(0, width - 1);
-			y = rand.nexti(0, height - 1);
-			if cache[x][y] == 0 then {
-				break;
-			}
-		}
-		cache[x][y] = -1;
+		free := [
+			each i in 0 .. (width * height)
+			where cache[math.floor(i / width)][i % height] == 0
+			do [math.floor(i / width), i % height]
+		];
+		i := rand.nexti(0, free.len());
+		cache[free[i][0]][free[i][1]] = -1;
 	}
 
 	reset() => {

@@ -1345,16 +1345,52 @@ ptr_node_t node_parser_t::parseEachNode(std::vector<node_scope_t> *scopes)
 
 	if (currentToken.type == TOK_WHERE) {
 		nextToken();
-		wheres = parseEquNode(scopes);
-		if (!wheres)
-			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		if (currentToken.type == '{') {
+			nextToken();
+			std::vector<ptr_node_t> where_body;
+			while (currentToken.type != NULL_TOK) {
+				if (currentToken.type == '}')
+					break;
+
+				if (auto e = parseExprNode(scopes))
+					where_body.push_back(e);
+				else
+					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+			}
+			if (currentToken.type != '}')
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			nextToken();
+			wheres = std::make_shared<VectorNode>(*scopes, where_body, true, marker);
+		} else {
+			wheres = parseEquNode(scopes);
+			if (!wheres)
+				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		}
 	}
 
 	if (currentToken.type == TOK_DO) {
 		nextToken();
-		body = parseEquNode(scopes);
-		if (!body)
-			return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		if (currentToken.type == '{') {
+			nextToken();
+			std::vector<ptr_node_t> body_body;
+			while (currentToken.type != NULL_TOK) {
+				if (currentToken.type == '}')
+					break;
+
+				if (auto e = parseExprNode(scopes))
+					body_body.push_back(e);
+				else
+					return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+			}
+			if (currentToken.type != '}')
+				return logErrorN(global::format(_EXPECTED_ERROR_, { "}" }), currentToken);
+			nextToken();
+			body = std::make_shared<VectorNode>(*scopes, body_body, true, marker);
+		} else {
+			body = parseEquNode(scopes);
+			if (!body)
+				return logErrorN(_FAILURE_PARSE_CODE_, currentToken);
+		}
 	}
 
 	scopes->pop_back();
