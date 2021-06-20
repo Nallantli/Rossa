@@ -266,6 +266,93 @@ ROSSA_EXT_SIG(_arbitrary_nequals_arbitrary, args, token, hash, stack_trace)
 	return symbol_t::Boolean(*a != *b);
 }
 
+ROSSA_EXT_SIG(_arbitrary_band_number, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a & (long)args[1].getNumber(token, stack_trace).getLong());
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_band_arbitrary, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	auto b = COERCE_PTR(
+		args[1].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a & *b);
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_bor_number, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a | (long)args[1].getNumber(token, stack_trace).getLong());
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_bor_arbitrary, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	auto b = COERCE_PTR(
+		args[1].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a | *b);
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_bxor_number, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a ^ (long)args[1].getNumber(token, stack_trace).getLong());
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_bxor_arbitrary, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	auto b = COERCE_PTR(
+		args[1].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a ^ *b);
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_pow_number, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>();
+	mpz_pow_ui(c->get_mpz_t(), a->get_mpz_t(), (long)args[1].getNumber(token, stack_trace).getLong());
+	return symbol_t::Pointer(c);
+}
+
+ROSSA_EXT_SIG(_arbitrary_pow_arbitrary, args, token, hash, stack_trace)
+{
+	auto a = COERCE_PTR(
+		args[0].getPointer(token, stack_trace),
+		mpz_class);
+	auto b = COERCE_PTR(
+		args[1].getPointer(token, stack_trace),
+		mpz_class);
+	// why is there no power function for mpz_t mpz_t?
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>();
+	mpz_pow_ui(c->get_mpz_t(), a->get_mpz_t(), b->get_ui());
+	return symbol_t::Pointer(c);
+}
+
 EXPORT_FUNCTIONS(libarbitrary)
 {
 	ADD_EXT(_arbitrary_init);
@@ -293,6 +380,8 @@ EXPORT_FUNCTIONS(libarbitrary)
 	ADD_EXT(_arbitrary_equals_arbitrary);
 	ADD_EXT(_arbitrary_nequals_number);
 	ADD_EXT(_arbitrary_nequals_arbitrary);
+	ADD_EXT(_arbitrary_pow_number);
+	ADD_EXT(_arbitrary_pow_arbitrary);
 	ADD_EXT(_arbitrary_set_number);
 	ADD_EXT(_arbitrary_set_arbitrary);
 }

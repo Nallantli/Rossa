@@ -113,6 +113,14 @@ struct Arbitrary : Number {
 		return new Arbitrary(extern_call libarbitrary._arbitrary_mod_arbitrary(ptr, b.ptr));
 	}
 
+	`**`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_pow_number(ptr, b));
+	}
+
+	`**`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_pow_arbitrary(ptr, b.ptr));
+	}
+
 	`<`(ref b : Number) => {
 		return (extern_call libarbitrary._arbitrary_less_number(ptr, b));
 	}
@@ -196,6 +204,10 @@ struct Arbitrary : Number {
 
 `%`(ref a : Number, ref b : Arbitrary) => {
 	return a % (b -> Number);
+}
+
+`**`(ref a : Number, ref b : Arbitrary) => {
+	return a ** (b -> Number);
 }
 
 `<`(ref a : Number, ref b : Arbitrary) => {
