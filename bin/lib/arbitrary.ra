@@ -1,0 +1,239 @@
+extern "libarbitrary";
+
+struct Arbitrary : Number {
+	var ptr;
+
+	init() => {
+		ptr = (extern_call libarbitrary._arbitrary_init());
+	}
+
+	init(ref v : Number) => {
+		ptr = (extern_call libarbitrary._arbitrary_init());
+		extern_call libarbitrary._arbitrary_set_number(ptr, v);
+	}
+
+	init(ref v : Arbitrary) => {
+		ptr = (extern_call libarbitrary._arbitrary_init());
+		extern_call libarbitrary._arbitrary_set_arbitrary(ptr, v.ptr);
+	}
+
+	init(ref ptr : Pointer) => {
+		this.ptr = ptr;
+	}
+
+	`->Number`() => {
+		return (extern_call libarbitrary._arbitrary_to_number(ptr));
+	}
+
+	`->String`() => {
+		return (extern_call libarbitrary._arbitrary_to_string(ptr));
+	}
+
+	`..`(ref b) => {
+		list := [];
+		temp := this + 0;
+		while temp < b do {
+			list ++= [ temp + 0 ];
+			temp += 1;
+		}
+		return list;
+	}
+
+	`..`(ref b, ref step) => {
+		list := [];
+		temp := this + 0;
+		while temp < b do {
+			list ++= [ temp + 0 ];
+			temp += step;
+		}
+		return list;
+	}
+
+	`<>`(ref b) => {
+		list := [];
+		temp := this + 0;
+		while temp <= b do {
+			list ++= [ temp + 0 ];
+			temp += 1;
+		}
+		return list;
+	}
+
+	`<>`(ref b, ref step) => {
+		list := [];
+		temp := this + 0;
+		while temp <= b do {
+			list ++= [ temp + 0 ];
+			temp += step;
+		}
+		return list;
+	}
+
+	`-`() => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_mul_number(ptr, -1));
+	}
+
+	`+`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_add_number(ptr, b));
+	}
+
+	`+`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_add_arbitrary(ptr, b.ptr));
+	}
+
+	`-`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_sub_number(ptr, b));
+	}
+
+	`-`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_sub_arbitrary(ptr, b.ptr));
+	}
+
+	`*`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_mul_number(ptr, b));
+	}
+
+	`*`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_mul_arbitrary(ptr, b.ptr));
+	}
+
+	`/`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_div_number(ptr, b));
+	}
+
+	`/`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_div_arbitrary(ptr, b.ptr));
+	}
+
+	`%`(ref b : Number) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_mod_number(ptr, b));
+	}
+
+	`%`(ref b : Arbitrary) => {
+		return new Arbitrary(extern_call libarbitrary._arbitrary_mod_arbitrary(ptr, b.ptr));
+	}
+
+	`<`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_less_number(ptr, b));
+	}
+
+	`<`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_less_arbitrary(ptr, b.ptr));
+	}
+
+	`>`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_more_number(ptr, b));
+	}
+
+	`>`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_more_arbitrary(ptr, b.ptr));
+	}
+
+	`<=`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_eless_number(ptr, b));
+	}
+
+	`<=`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_eless_arbitrary(ptr, b.ptr));
+	}
+
+	`>=`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_emore_number(ptr, b));
+	}
+
+	`>=`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_emore_arbitrary(ptr, b.ptr));
+	}
+
+	`==`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_equals_number(ptr, b));
+	}
+
+	`==`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_equals_arbitrary(ptr, b.ptr));
+	}
+
+	`!=`(ref b : Number) => {
+		return (extern_call libarbitrary._arbitrary_nequals_number(ptr, b));
+	}
+
+	`!=`(ref b : Arbitrary) => {
+		return (extern_call libarbitrary._arbitrary_nequals_arbitrary(ptr, b.ptr));
+	}
+
+	`=`(ref b : Number) => {
+		extern_call libarbitrary._arbitrary_set_number(ptr, b);
+	}
+
+	`=`(ref b : Arbitrary) => {
+		extern_call libarbitrary._arbitrary_set_arbitrary(ptr, b.ptr);
+	}
+}
+
+`=`(ref a, ref b : Arbitrary) => {
+	if $a != $Arbitrary then {
+		a = b + 0;
+	} else {
+		a = b;
+	}
+}
+
+`+`(ref a : Number, ref b : Arbitrary) => {
+	return a + (b -> Number);
+}
+
+`-`(ref a : Number, ref b : Arbitrary) => {
+	return a - (b -> Number);
+}
+
+`*`(ref a : Number, ref b : Arbitrary) => {
+	return a * (b -> Number);
+}
+
+`/`(ref a : Number, ref b : Arbitrary) => {
+	return a / (b -> Number);
+}
+
+`%`(ref a : Number, ref b : Arbitrary) => {
+	return a % (b -> Number);
+}
+
+`<`(ref a : Number, ref b : Arbitrary) => {
+	return a < (b -> Number);
+}
+
+`>`(ref a : Number, ref b : Arbitrary) => {
+	return a > (b -> Number);
+}
+
+`<=`(ref a : Number, ref b : Arbitrary) => {
+	return a <= (b -> Number);
+}
+
+`>=`(ref a : Number, ref b : Arbitrary) => {
+	return a >= (b -> Number);
+}
+
+`==`(ref a : Number, ref b : Arbitrary) => {
+	return a == (b -> Number);
+}
+
+`!=`(ref a : Number, ref b : Arbitrary) => {
+	return a != (b -> Number);
+}
+
+`..`(ref a : Number, ref b : Arbitrary) => {
+	return a .. (b -> Number);
+}
+
+`<>`(ref a : Number, ref b : Arbitrary) => {
+	return a <> (b -> Number);
+}
+
+`..`(ref a : Number, ref b : Arbitrary, ref step : Number) => {
+	return a .. (b -> Number) : step;
+}
+
+`<>`(ref a : Number, ref b : Arbitrary, ref step : Number) => {
+	return a <> (b -> Number) : step;
+}

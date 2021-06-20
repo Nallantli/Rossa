@@ -281,17 +281,17 @@ shift(ref a : Array) => {
 }
 
 map(ref a : Array, ref f : Function<Any>) => {
-	nv := a;
-	for e in nv do {
-		e = f(e);
+	nv := alloc(len(a));
+	for i in 0 .. len(nv) do {
+		nv[i] = f(a[i]);
 	}
 	return nv;
 }
 
 map(ref a : Array, ref f : Function<Any, Number>) => {
-	nv := a;
-	for i in 0 .. nv.len() do {
-		nv[i] = f(nv[i], i);
+	nv := alloc(len(a));
+	for i in 0 .. len(nv) do {
+		nv[i] = f(a[i], i);
 	}
 	return nv;
 }

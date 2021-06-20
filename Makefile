@@ -17,6 +17,7 @@ LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system-mt
 LIBFS_FLAGS=-lzip
 LIBSDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
 LIBNCURSES_FLAGS=-lncurses
+LIBARBITRARY_FLAGS=-lgmp -lgmpxx
 
 DIR=build/win/$(locale)
 
@@ -45,6 +46,7 @@ LIBNET_FLAGS=-lboost_system
 LIBFS_FLAGS=-lzip
 LIBSDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
 LIBNCURSES_FLAGS=-lncurses
+LIBARBITRARY_FLAGS=-lgmp -lgmpxx
 
 DIR=build/nix/$(locale)
 
@@ -65,7 +67,7 @@ endif
 
 dirs: $(DIR)
 
-libs: libstd libfs libnet libgraphics libsdl libncurses
+libs: libstd libfs libnet libgraphics libsdl libncurses libarbitrary
 
 libstd: bin/lib/libstd$(LIB_EXT)
 
@@ -78,6 +80,8 @@ libgraphics: bin/lib/libgraphics$(LIB_EXT)
 libsdl: bin/lib/libsdl$(LIB_EXT)
 
 libncurses: bin/lib/libncurses$(LIB_EXT)
+
+libarbitrary: bin/lib/libarbitrary$(LIB_EXT)
 
 bin/lib/libstd$(LIB_EXT): libstd/libstd.cpp $(DIR)/librossa.a
 	$(CC) -o $@ libstd/libstd.cpp $(DIR)/librossa.a $(LFLAGS)
@@ -96,6 +100,9 @@ bin/lib/libsdl$(LIB_EXT): libsdl/libsdl.cpp $(DIR)/librossa.a
 
 bin/lib/libncurses$(LIB_EXT): libncurses/libncurses.cpp $(DIR)/librossa.a
 	$(CC) -o $@ libncurses/libncurses.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNCURSES_FLAGS)
+
+bin/lib/libarbitrary$(LIB_EXT): libarbitrary/libarbitrary.cpp $(DIR)/librossa.a
+	$(CC) -o $@ libarbitrary/libarbitrary.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBARBITRARY_FLAGS)
 
 bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)

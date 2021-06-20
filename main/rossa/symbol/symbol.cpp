@@ -492,8 +492,11 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 	if (b->d == d)
 		return;
 	if (d->type == value_type_enum::OBJECT && std::get<object_t>(d->value).hasValue(parser_t::HASH_SET)) {
-		std::get<object_t>(d->value).getVariable(parser_t::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
-		return;
+		try {
+			std::get<object_t>(d->value).getVariable(parser_t::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
+			return;
+		} catch (const rossa_error_t &e) {
+		}
 	}
 	d->type = b->d->type;
 	if (d->type == value_type_enum::NIL) {
