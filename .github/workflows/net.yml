@@ -1,4 +1,4 @@
-name: libnet
+name: net
 
 on:
   push:
@@ -18,4 +18,4 @@ jobs:
     - name: boost
       run: sudo apt-get install libboost-all-dev
     - name: make
-      run: make dirs && make GCC="g++-10" libnet
+      run: make dirs && make GCC="g++-10" lib_net

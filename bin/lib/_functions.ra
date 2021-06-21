@@ -1,0 +1,7 @@
+extern "lib_standard";
+
+split(ref f : Function) => extern_call lib_standard._function_split(f);
+
+`+`(ref f : Function, ref g : Function<Any>) => {
+	return (...)[f, g] => g(`()`(f, _));
+}

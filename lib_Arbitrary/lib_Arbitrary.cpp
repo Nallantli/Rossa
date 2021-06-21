@@ -353,7 +353,7 @@ ROSSA_EXT_SIG(_arbitrary_pow_arbitrary, args, token, hash, stack_trace)
 	return symbol_t::Pointer(c);
 }
 
-EXPORT_FUNCTIONS(libarbitrary)
+EXPORT_FUNCTIONS(lib_Arbitrary)
 {
 	ADD_EXT(_arbitrary_init);
 	ADD_EXT(_arbitrary_to_string);

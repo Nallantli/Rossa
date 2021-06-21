@@ -7,7 +7,19 @@
 
 <div align="center">
 
-![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) ![libstd](https://github.com/Nallantli/Rossa/workflows/libstd/badge.svg) ![libfs](https://github.com/Nallantli/Rossa/workflows/libfs/badge.svg) ![libnet](https://github.com/Nallantli/Rossa/workflows/libnet/badge.svg) ![libgraphics](https://github.com/Nallantli/Rossa/workflows/libgraphics/badge.svg) ![libsdl](https://github.com/Nallantli/Rossa/workflows/libsdl/badge.svg) ![libncurses](https://github.com/Nallantli/Rossa/workflows/libncurses/badge.svg) [![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
+![Rossa](https://github.com/Nallantli/Rossa/workflows/Rossa/badge.svg) 
+
+</div>
+
+<div align="center">
+
+![standard](https://github.com/Nallantli/Rossa/workflows/standard/badge.svg) ![fs](https://github.com/Nallantli/Rossa/workflows/fs/badge.svg) ![net](https://github.com/Nallantli/Rossa/workflows/net/badge.svg) ![graphics](https://github.com/Nallantli/Rossa/workflows/graphics/badge.svg) ![SDL](https://github.com/Nallantli/Rossa/workflows/SDL/badge.svg) ![ncurses](https://github.com/Nallantli/Rossa/workflows/ncurses/badge.svg) ![Arbitrary](https://github.com/Nallantli/Rossa/workflows/Arbitrary/badge.svg)
+
+</div>
+
+<div align="center">
+
+[![License](https://img.shields.io/badge/license-BSD%203--Clause-blue)](LICENSE)
 
 </div>
 

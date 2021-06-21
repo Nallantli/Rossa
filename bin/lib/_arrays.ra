@@ -1,0 +1,162 @@
+# ARRAY
+
+join(ref a : Array) => {
+	s := "";
+	for e in a do {
+		s ++= (e -> String);
+	}
+	return s;
+}
+
+push(ref a : Array, ref value) => {
+	refer a ++= [value];
+}
+
+unshift(ref a : Array, ref value) => {
+	refer a = [value] ++ a;
+}
+
+pop(ref a : Array, ref count : Number) => {
+	nv := alloc(len(a) - count);
+	for i in 0 .. (len(a) - count) do {
+		nv[i] = a[i];
+	}
+	refer a = nv;
+}
+
+shift(ref a : Array, ref count : Number) => {
+	nv := alloc(len(a) - count);
+	for i in count .. len(a) do {
+		nv[i - count] = a[i];
+	}
+	refer a = nv;
+}
+
+tail(ref a : Array, ref count : Number) => {
+	nv := a;
+	return nv.shift(count);
+}
+
+tail(ref a : Array) => {
+	return a.tail(1);
+}
+
+head(ref a : Array, ref count : Number) => {
+	nv := a;
+	return nv.pop(count);
+}
+
+head(ref a : Array) => {
+	return a.pop(1);
+}
+
+pop(ref a : Array) => {
+	refer pop(a, 1);
+}
+
+shift(ref a : Array) => {
+	refer shift(a, 1);
+}
+
+map(ref a : Array, ref f : Function<Any>) => {
+	nv := alloc(len(a));
+	for i in 0 .. len(nv) do {
+		nv[i] = f(a[i]);
+	}
+	return nv;
+}
+
+map(ref a : Array, ref f : Function<Any, Number>) => {
+	nv := alloc(len(a));
+	for i in 0 .. len(nv) do {
+		nv[i] = f(a[i], i);
+	}
+	return nv;
+}
+
+filter(ref a : Array, ref f : Function<Any>) => {
+	nv := [];
+	for e in a do {
+		if f(e) then {
+			nv ++= [e];
+		}
+	}
+	return nv;
+}
+
+filter(ref a : Array, ref f : Function<Any, Number>) => {
+	nv := [];
+	for i in 0 .. a.len() do {
+		if f(a[i], i) then {
+			nv ++= [a[i]];
+		}
+	}
+	return nv;
+}
+
+erase(ref a : Array, ref value) => {
+	nv := [];
+	for e in a do {
+		if e != value then {
+			nv ++= [e];
+		}
+	}
+	a = nv;
+	refer a;
+}
+
+contains(ref a : Array, ref value) => {
+	for e in a do {
+		if e == value then {
+			return true;
+		}
+	}
+	return false;
+}
+
+reverse(ref a : Array) => {
+	nv := alloc(len(a));
+	for i in 0 .. len(a) do {
+		nv[i] = a[len(a) - i - 1];
+	}
+	return nv;
+}
+
+back(ref a : Array) => {
+	refer a[len(a) - 1];
+}
+
+empty(ref a : Array) => {
+	return len(a) == 0;
+}
+
+sort(ref a : Array, ref comp : Function<Any, Any>) => {
+	if a.len() < 2 then {
+		return a;
+	}
+
+	left := [];
+	right := [];
+	pivot := a[0];
+	for i in 1 .. a.len() do {
+		if comp(a[i], pivot) then {
+			left.push(a[i]);
+		} else {
+			right.push(a[i]);
+		}
+	}
+
+	return sort(left) ++ [ pivot ] ++ sort(right);
+}
+
+sort(ref a : Array) => {
+	return a.sort(`<`);
+}
+
+first(ref a : Array) => {
+	refer a[0];
+}
+
+second(ref a : Array) => {
+	refer a[1];
+}

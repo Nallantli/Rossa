@@ -8,7 +8,7 @@ static snake_game {
 		newDir,
 		posX,
 		posY,
-		snake_size,
+		snakeSize,
 		rand,
 		cache,
 		buffer,
@@ -33,14 +33,14 @@ static snake_game {
 			}
 
 			if cache[posX][posY] == -1 then {
-				snake_size += 1;
+				snakeSize += 1;
 				setApple();
 			} elif cache[posX][posY] > 0 then {
 				LOST = true;
 				putln("You Lost!");
 			}
 
-			cache[posX][posY] = snake_size;
+			cache[posX][posY] = snakeSize;
 		}
 
 		for x in 0 .. width do {
@@ -68,7 +68,7 @@ static snake_game {
 	}
 
 	setApple() => {
-		scoreText.setText("Score: {0}" & [snake_size - 1]);
+		scoreText.setText("Score: {0}" & [snakeSize - 1]);
 		free := [
 			each i in 0 .. (width * height)
 			where cache[math.floor(i / width)][i % height] == 0
@@ -85,7 +85,7 @@ static snake_game {
 		newDir = 0;
 		posX = 5;
 		posY = 5;
-		snake_size = 1;
+		snakeSize = 1;
 		for x in cache do {
 			for y in x do {
 				y = 0;

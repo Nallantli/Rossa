@@ -1,0 +1,11 @@
+extern "lib_standard";
+
+static clock {
+	milliseconds() => extern_call lib_standard._timeMS();
+
+	sleep(ref ms : Number) => extern_call lib_standard._sleep(ms);
+
+	format(ref s : String, ref time : Number) => extern_call lib_standard._clock_format(time, s);
+
+	timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { sleep(ms); f(); })).detach();
+}

@@ -1,0 +1,7 @@
+extern "lib_standard";
+
+static regex {
+	match(ref s : String, ref r : String) => extern_call lib_standard._regex_match(r, s);
+
+	replace(ref s : String, ref r : String, ref x : String) => extern_call lib_standard._regex_replace(r, x, s);
+}

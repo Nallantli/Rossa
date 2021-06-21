@@ -1,4 +1,4 @@
-name: libncurses
+name: SDL
 
 on:
   push:
@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: update
       run: sudo apt-get update
-    - name: ncurses
-      run: sudo apt-get install libncurses5-dev
+    - name: sdl
+      run: sudo apt-get install libsdl2-dev && sudo apt-get install libsdl2-image-dev && sudo apt-get install libsdl2-ttf-dev
     - name: make
-      run: make dirs && make GCC="g++-10" libncurses
+      run: make dirs && make GCC="g++-10" lib_SDL

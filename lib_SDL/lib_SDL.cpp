@@ -7,7 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 
-namespace libsdl
+namespace lib_SDL
 {
 	struct capture_t
 	{
@@ -78,8 +78,8 @@ ROSSA_EXT_SIG(_lib_AddHintCallback, args, token, hash, stack_trace)
 {
 	SDL_AddHintCallback(
 		args[0].getString(token, stack_trace).c_str(),
-		&libsdl::hint_callback,
-		new libsdl::capture_t(
+		&lib_SDL::hint_callback,
+		new lib_SDL::capture_t(
 			args[1],
 			*token,
 			stack_trace,
@@ -93,8 +93,8 @@ ROSSA_EXT_SIG(_lib_DelHintCallback, args, token, hash, stack_trace)
 {
 	SDL_DelHintCallback(
 		args[0].getString(token, stack_trace).c_str(),
-		&libsdl::hint_callback,
-		new libsdl::capture_t(
+		&lib_SDL::hint_callback,
+		new lib_SDL::capture_t(
 			args[1],
 			*token,
 			stack_trace,
@@ -217,7 +217,7 @@ ROSSA_EXT_SIG(_lib_LogWarn, args, token, hash, stack_trace)
 	return symbol_t();
 }
 
-EXPORT_FUNCTIONS(libsdl)
+EXPORT_FUNCTIONS(lib_SDL)
 {
 	ADD_EXT(_lib_Init);
 	ADD_EXT(_lib_InitSubSystem);

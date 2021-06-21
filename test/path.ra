@@ -1,5 +1,5 @@
 load "graphics";
-load "hashmap";
+load "HashMap";
 
 width := 40;
 height := 20;

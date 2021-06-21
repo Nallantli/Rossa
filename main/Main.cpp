@@ -11,7 +11,7 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 	std::map<std::string, std::string> options = {
 		{"tree", "false"},
 		{"version", "false"},
-		{"std", "true"},
+		{"standard", "true"},
 		{"file", ""},
 		{"output", ""}
 	};
@@ -23,8 +23,8 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 		if (flag == false && argv[i][0] == '-') {
 			if (std::string(argv[i]) == "--tree" || std::string(argv[i]) == "-t")
 				options["tree"] = "true";
-			else if (std::string(argv[i]) == "--no-std" || std::string(argv[i]) == "-ns")
-				options["std"] = "false";
+			else if (std::string(argv[i]) == "--no-standard" || std::string(argv[i]) == "-ns")
+				options["standard"] = "false";
 			else if (std::string(argv[i]) == "--version" || std::string(argv[i]) == "-v")
 				options["version"] = "true";
 			else if (std::string(argv[i]) == "--output" || std::string(argv[i]) == "-o")
@@ -59,9 +59,9 @@ int main(int argc, char const *argv[])
 	if (options["file"] == "") {
 		std::cout << _ROSSA_INTERPRETER_START_ << "\n";
 
-		if (options["std"] == "true") {
+		if (options["standard"] == "true") {
 			try {
-				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"std\";", std::filesystem::current_path() / "*"), false);
+				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"standard\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
 			} catch (const rossa_error_t &e) {
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
@@ -116,8 +116,8 @@ int main(int argc, char const *argv[])
 			content += line + "\n";
 
 		try {
-			if (options["std"] == "true")
-				content = (KEYWORD_LOAD " \"std\";\n") + content;
+			if (options["standard"] == "true")
+				content = (KEYWORD_LOAD " \"standard\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
 			wrapper.runCode(entry, tree);
 		} catch (const rossa_error_t &e) {

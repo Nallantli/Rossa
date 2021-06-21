@@ -1,4 +1,4 @@
-load "arbitrary";
+load "Arbitrary";
 
 fib(ref size : Number) => {
 	array := [new Arbitrary(0), new Arbitrary(1)] ++ alloc(size - 2);

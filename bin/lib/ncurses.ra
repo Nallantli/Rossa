@@ -1,23 +1,23 @@
-extern "libncurses";
+extern "lib_ncurses";
 
 var stdscr;
 
-ATTR := extern_call libncurses._fetch_constants();
+ATTR := extern_call lib_ncurses._fetch_constants();
 
 struct Window {
 	var ptr;
 
 	init(ref height : Number, ref width : Number, ref x : Number, ref y : Number) => {
-		ptr = extern_call libncurses._newwin(height, width, x, y);
+		ptr = extern_call lib_ncurses._newwin(height, width, x, y);
 	}
 
 	init(ref ptr : Pointer) => {
 		this.ptr = ptr;
 	}
 
-	keypad(ref b : Boolean) => extern_call libncurses._keypad(ptr, b);
+	keypad(ref b : Boolean) => extern_call lib_ncurses._keypad(ptr, b);
 
-	box(ref a : Number, ref b : Number) => extern_call libncurses._box(ptr, a, b);
+	box(ref a : Number, ref b : Number) => extern_call lib_ncurses._box(ptr, a, b);
 
 	border(
 		ref ls : Number,
@@ -28,28 +28,28 @@ struct Window {
 		ref tr : Number,
 		ref bl : Number,
 		ref br : Number
-	) => extern_call libncurses._wborder(ptr, ls, rs, ts, bs, tl, tr, bl, br);
+	) => extern_call lib_ncurses._wborder(ptr, ls, rs, ts, bs, tl, tr, bl, br);
 
-	refresh() => extern_call libncurses._wrefresh(ptr);
+	refresh() => extern_call lib_ncurses._wrefresh(ptr);
 
-	move(ref y : Number, ref x : Number) => extern_call libncurses._wmove(ptr, y, x);
+	move(ref y : Number, ref x : Number) => extern_call lib_ncurses._wmove(ptr, y, x);
 
-	printw(ref a) => extern_call libncurses._wprintw(ptr, a -> String);
+	printw(ref a) => extern_call lib_ncurses._wprintw(ptr, a -> String);
 	mvprintw(ref y : Number, ref x : Number, ref a) => (move(y, x) == -1 ? -1 : printw(a -> String));
 
-	addch(ref a : Number) => extern_call libncurses._waddch(ptr, a);
+	addch(ref a : Number) => extern_call lib_ncurses._waddch(ptr, a);
 	mvaddch(ref y : Number, ref x : Number, ref a : Number) => (move(y, x) == -1 ? -1 : addch(a));
 
-	getch() => extern_call libncurses._wgetch(ptr);
+	getch() => extern_call lib_ncurses._wgetch(ptr);
 	mvgetch(ref y : Number, ref x : Number, ref a : Number) => (move(y, x) == -1 ? -1 : getch());
 
-	attron(ref a : Number) => extern_call libncurses._wattron(ptr, a);
-	attroff(ref a : Number) => extern_call libncurses._wattroff(ptr, a);
-	attrset(ref a : Number) => extern_call libncurses._wattrset(ptr, a);
+	attron(ref a : Number) => extern_call lib_ncurses._wattron(ptr, a);
+	attroff(ref a : Number) => extern_call lib_ncurses._wattroff(ptr, a);
+	attrset(ref a : Number) => extern_call lib_ncurses._wattrset(ptr, a);
 
 	delwin() => {
 		if ptr != nil then {
-			r := extern_call libncurses._delwin(ptr);
+			r := extern_call lib_ncurses._delwin(ptr);
 			ptr = nil;
 			return r;
 		}
@@ -61,25 +61,25 @@ struct Window {
 }
 
 initscr() => {
-	stdscr = new Window(extern_call libncurses._initscr());
+	stdscr = new Window(extern_call lib_ncurses._initscr());
 	refer stdscr;
 }
 
 endwin() => {
 	stdscr.ptr = nil;
 	stdscr = nil;
-	return extern_call libncurses._endwin();
+	return extern_call lib_ncurses._endwin();
 }
 
-raw() => extern_call libncurses._raw();
-noraw() => extern_call libncurses._noraw();
+raw() => extern_call lib_ncurses._raw();
+noraw() => extern_call lib_ncurses._noraw();
 
-cbreak() => extern_call libncurses._cbreak();
-nocbreak() => extern_call libncurses._nocbreak();
+cbreak() => extern_call lib_ncurses._cbreak();
+nocbreak() => extern_call lib_ncurses._nocbreak();
 
-echo() => extern_call libncurses._echo();
-noecho() => extern_call libncurses._noecho();
+echo() => extern_call lib_ncurses._echo();
+noecho() => extern_call lib_ncurses._noecho();
 
-typeahead(ref n : Number) => extern_call libncurses._typeahead(n);
+typeahead(ref n : Number) => extern_call lib_ncurses._typeahead(n);
 
-halfdelay(ref n : Number) => extern_call libncurses._halfdelay(n);
+halfdelay(ref n : Number) => extern_call lib_ncurses._halfdelay(n);

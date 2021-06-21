@@ -188,7 +188,7 @@ ROSSA_EXT_SIG(_fetch_constants, args, token, hash, stack_trace)
 	return symbol_t::Dictionary(m);
 }
 
-EXPORT_FUNCTIONS(libncurses)
+EXPORT_FUNCTIONS(lib_ncurses)
 {
 	ADD_EXT(_initscr);
 	ADD_EXT(_typeahead);

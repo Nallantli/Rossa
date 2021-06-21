@@ -13,11 +13,11 @@ CFLAGS=
 LFLAGS=-shared
 OFLAGS=$(CFLAGS)
 
-LIBNET_FLAGS=-lwsock32 -lws2_32 -lboost_system-mt
-LIBFS_FLAGS=-lzip
-LIBSDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
-LIBNCURSES_FLAGS=-lncurses
-LIBARBITRARY_FLAGS=-lgmp -lgmpxx
+LIB_NET_FLAGS=-lwsock32 -lws2_32 -lboost_system-mt
+LIB_FS_FLAGS=-lzip
+LIB_SDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
+LIB_NCURSES_FLAGS=-lncurses
+LIB_ARBITRARY_FLAGS=-lgmp -lgmpxx
 
 DIR=build/win/$(locale)
 
@@ -42,11 +42,11 @@ CFLAGS=-ldl -pthread
 LFLAGS=-fPIC -shared -ldl -pthread
 OFLAGS=-fPIC $(CFLAGS)
 
-LIBNET_FLAGS=-lboost_system
-LIBFS_FLAGS=-lzip
-LIBSDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
-LIBNCURSES_FLAGS=-lncurses
-LIBARBITRARY_FLAGS=-lgmp -lgmpxx
+LIB_NET_FLAGS=-lboost_system
+LIB_FS_FLAGS=-lzip
+LIB_SDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
+LIB_NCURSES_FLAGS=-lncurses
+LIB_ARBITRARY_FLAGS=-lgmp -lgmpxx
 
 DIR=build/nix/$(locale)
 
@@ -67,42 +67,42 @@ endif
 
 dirs: $(DIR)
 
-libs: libstd libfs libnet libgraphics libsdl libncurses libarbitrary
+libs: lib_standard lib_fs lib_net lib_graphics lib_SDL lib_ncurses lib_Arbitrary
 
-libstd: bin/lib/libstd$(LIB_EXT)
+lib_standard: bin/lib/lib_standard$(LIB_EXT)
 
-libfs: bin/lib/libfs$(LIB_EXT)
+lib_fs: bin/lib/lib_fs$(LIB_EXT)
 
-libnet: bin/lib/libnet$(LIB_EXT)
+lib_net: bin/lib/lib_net$(LIB_EXT)
 
-libgraphics: bin/lib/libgraphics$(LIB_EXT)
+lib_graphics: bin/lib/lib_graphics$(LIB_EXT)
 
-libsdl: bin/lib/libsdl$(LIB_EXT)
+lib_SDL: bin/lib/lib_SDL$(LIB_EXT)
 
-libncurses: bin/lib/libncurses$(LIB_EXT)
+lib_ncurses: bin/lib/lib_ncurses$(LIB_EXT)
 
-libarbitrary: bin/lib/libarbitrary$(LIB_EXT)
+lib_Arbitrary: bin/lib/lib_Arbitrary$(LIB_EXT)
 
-bin/lib/libstd$(LIB_EXT): libstd/libstd.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libstd/libstd.cpp $(DIR)/librossa.a $(LFLAGS)
+bin/lib/lib_standard$(LIB_EXT): lib_standard/lib_standard.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_standard/lib_standard.cpp $(DIR)/librossa.a $(LFLAGS)
 
-bin/lib/libfs$(LIB_EXT): libfs/libfs.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libfs/libfs.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBFS_FLAGS)
+bin/lib/lib_fs$(LIB_EXT): lib_fs/lib_fs.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_fs/lib_fs.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_FS_FLAGS)
 
-bin/lib/libnet$(LIB_EXT): libnet/libnet.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libnet/libnet.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNET_FLAGS)
+bin/lib/lib_net$(LIB_EXT): lib_net/lib_net.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_net/lib_net.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_NET_FLAGS)
 
-bin/lib/libgraphics$(LIB_EXT): libgraphics/libgraphics.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libgraphics/libgraphics.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+bin/lib/lib_graphics$(LIB_EXT): lib_graphics/lib_graphics.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_graphics/lib_graphics.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_SDL_FLAGS)
 
-bin/lib/libsdl$(LIB_EXT): libsdl/libsdl.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libsdl/libsdl.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBSDL_FLAGS)
+bin/lib/lib_SDL$(LIB_EXT): lib_SDL/lib_SDL.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_SDL/lib_SDL.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_SDL_FLAGS)
 
-bin/lib/libncurses$(LIB_EXT): libncurses/libncurses.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libncurses/libncurses.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBNCURSES_FLAGS)
+bin/lib/lib_ncurses$(LIB_EXT): lib_ncurses/lib_ncurses.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_ncurses/lib_ncurses.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_NCURSES_FLAGS)
 
-bin/lib/libarbitrary$(LIB_EXT): libarbitrary/libarbitrary.cpp $(DIR)/librossa.a
-	$(CC) -o $@ libarbitrary/libarbitrary.cpp $(DIR)/librossa.a $(LFLAGS) $(LIBARBITRARY_FLAGS)
+bin/lib/lib_Arbitrary$(LIB_EXT): lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_ARBITRARY_FLAGS)
 
 bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)

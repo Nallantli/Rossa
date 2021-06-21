@@ -1,0 +1,17 @@
+extern "lib_standard";
+
+struct Thread {
+	var ptr;
+
+	init(ref f : Function) => {
+		ptr = (extern_call lib_standard._thread_init(f));
+	}
+
+	join() => extern_call lib_standard._thread_join(ptr);
+
+	detach() => extern_call lib_standard._thread_detach(ptr);
+
+	rem() => {
+		detach();
+	}
+}

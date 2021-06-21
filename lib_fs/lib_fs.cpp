@@ -8,7 +8,7 @@
 #include <cstring>
 #include <fstream>
 
-namespace libfs
+namespace lib_fs
 {
 	inline void unzip(const std::filesystem::path &zipdir, const std::filesystem::path &unzipdir, const token_t *token, trace_t &stack_trace)
 	{
@@ -262,7 +262,7 @@ ROSSA_EXT_SIG(_path_unzip_a, args, token, hash, stack_trace)
 		args[1].getPointer(token, stack_trace),
 		std::filesystem::path);
 
-	libfs::unzip(*path1, *path2, token, stack_trace);
+	lib_fs::unzip(*path1, *path2, token, stack_trace);
 	return symbol_t();
 }
 
@@ -273,11 +273,11 @@ ROSSA_EXT_SIG(_path_unzip_b, args, token, hash, stack_trace)
 		std::filesystem::path);
 	auto path2 = args[1].getString(token, stack_trace);
 
-	libfs::unzip(*path1, path2, token, stack_trace);
+	lib_fs::unzip(*path1, path2, token, stack_trace);
 	return symbol_t();
 }
 
-EXPORT_FUNCTIONS(libfs)
+EXPORT_FUNCTIONS(lib_fs)
 {
 	ADD_EXT(_path_append_path);
 	ADD_EXT(_path_append_string);

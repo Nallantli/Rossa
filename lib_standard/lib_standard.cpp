@@ -19,7 +19,7 @@
 #include <termios.h>
 #endif
 
-namespace libstd
+namespace lib_standard
 {
 	inline void threadWrapper(const ptr_function_t &f)
 	{
@@ -247,7 +247,7 @@ ROSSA_EXT_SIG(_thread_init, args, token, hash, stack_trace)
 {
 	//auto params = args[1].getVector(token, stack_trace);
 	auto f = args[0].getFunction({}, token, stack_trace);
-	auto t = std::make_shared<std::thread>(libstd::threadWrapper, f);
+	auto t = std::make_shared<std::thread>(lib_standard::threadWrapper, f);
 	return symbol_t::Pointer(t);
 }
 
@@ -301,7 +301,7 @@ ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	return symbol_t::Dictionary(m);
 }
 
-EXPORT_FUNCTIONS(libstd)
+EXPORT_FUNCTIONS(lib_standard)
 {
 	ADD_EXT(_acos);
 	ADD_EXT(_asin);

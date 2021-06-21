@@ -9,7 +9,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 
-namespace libgraphics
+namespace lib_graphics
 {
 	typedef unsigned char color_t;
 
@@ -336,7 +336,7 @@ namespace libgraphics
 			freeData();
 			if (s == "")
 				return;
-			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), libgraphics::Font))->font;
+			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), lib_graphics::Font))->font;
 			loaded = TTF_RenderText_Solid(fdata, s.c_str(), { r, g, b, a });
 			if (loaded == NULL)
 				throw rossa_error_t(global::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
@@ -389,7 +389,7 @@ namespace libgraphics
 
 		~Window()
 		{
-			libgraphics::registered.erase(windowID);
+			lib_graphics::registered.erase(windowID);
 			SDL_DestroyWindow(window);
 		}
 	};
@@ -420,7 +420,7 @@ ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
 
 ROSSA_EXT_SIG(_window_init, args, token, hash, stack_trace)
 {
-	auto w = std::make_shared<libgraphics::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
+	auto w = std::make_shared<lib_graphics::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
 	std::vector<symbol_t> v = { symbol_t::Pointer(w), symbol_t::Number(number_t::Long(w->windowID)) };
 	return symbol_t::Array(v);
 }
@@ -435,7 +435,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_WINDOWEVENT:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.window.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.window.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.window.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.window.windowID] });
 				data.insert({ "event", symbol_t::Number(number_t::Long(e.window.event)) });
 				data.insert({ "data1", symbol_t::Number(number_t::Long(e.window.data1)) });
 				data.insert({ "data2", symbol_t::Number(number_t::Long(e.window.data2)) });
@@ -445,7 +445,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			{
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.key.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.key.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.key.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.key.windowID] });
 				data.insert({ "state", symbol_t::Number(number_t::Long(e.key.state)) });
 				data.insert({ "repeat", symbol_t::Number(number_t::Long(e.key.repeat)) });
 				std::map<const std::string, const symbol_t> keysym;
@@ -458,7 +458,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_TEXTEDITING:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.edit.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.edit.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.edit.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.edit.windowID] });
 				data.insert({ "text", symbol_t::String(std::string(e.edit.text)) });
 				data.insert({ "start", symbol_t::Number(number_t::Long(e.edit.start)) });
 				data.insert({ "length", symbol_t::Number(number_t::Long(e.edit.length)) });
@@ -466,13 +466,13 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_TEXTINPUT:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.text.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.text.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.text.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.text.windowID] });
 				data.insert({ "text", symbol_t::String(std::string(e.text.text)) });
 				return symbol_t::Dictionary(data);
 			case SDL_MOUSEMOTION:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.motion.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.motion.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.motion.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.motion.windowID] });
 				data.insert({ "which", symbol_t::Number(number_t::Long(e.motion.which)) });
 				data.insert({ "state", symbol_t::Number(number_t::Long(e.motion.state)) });
 				data.insert({ "x", symbol_t::Number(number_t::Long(e.motion.x)) });
@@ -484,7 +484,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_MOUSEBUTTONUP:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.button.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.button.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.button.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.button.windowID] });
 				data.insert({ "which", symbol_t::Number(number_t::Long(e.button.which)) });
 				data.insert({ "state", symbol_t::Number(number_t::Long(e.button.state)) });
 				data.insert({ "x", symbol_t::Number(number_t::Long(e.button.x)) });
@@ -495,7 +495,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_MOUSEWHEEL:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.wheel.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.wheel.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.wheel.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.wheel.windowID] });
 				data.insert({ "which", symbol_t::Number(number_t::Long(e.wheel.which)) });
 				data.insert({ "direction", symbol_t::Number(number_t::Long(e.wheel.direction)) });
 				data.insert({ "x", symbol_t::Number(number_t::Long(e.wheel.x)) });
@@ -597,7 +597,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 			case SDL_DROPCOMPLETE:
 				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.drop.timestamp)) });
 				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.drop.windowID)) });
-				data.insert({ "window", libgraphics::registered[e.drop.windowID] });
+				data.insert({ "window", lib_graphics::registered[e.drop.windowID] });
 				if (e.drop.file != NULL) {
 					data.insert({ "file", symbol_t::String(std::string(e.drop.file)) });
 					SDL_free(e.drop.file);
@@ -614,7 +614,7 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 
 ROSSA_EXT_SIG(_window_register, args, token, hash, stack_trace)
 {
-	libgraphics::registered[args[0].getNumber(token, stack_trace).getLong()] = args[1];
+	lib_graphics::registered[args[0].getNumber(token, stack_trace).getLong()] = args[1];
 	return symbol_t();
 }
 
@@ -622,7 +622,7 @@ ROSSA_EXT_SIG(_window_getRenderer, args, token, hash, stack_trace)
 {
 	auto w = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Window);
+		lib_graphics::Window);
 
 	return symbol_t::Pointer(w->getRenderer(token, stack_trace));
 }
@@ -631,7 +631,7 @@ ROSSA_EXT_SIG(_renderer_draw, args, token, hash, stack_trace)
 {
 	auto g = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Renderer);
+		lib_graphics::Renderer);
 
 	int x = args[2].getNumber(token, stack_trace).getLong();
 	int y = args[3].getNumber(token, stack_trace).getLong();
@@ -644,12 +644,12 @@ ROSSA_EXT_SIG(_shape_setColor, args, token, hash, stack_trace)
 {
 	auto shape = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Shape);
+		lib_graphics::Shape);
 
-	libgraphics::color_t r = args[1].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[3].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t a = args[4].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[1].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t a = args[4].getNumber(token, stack_trace).getLong();
 
 	shape->setColor(r, g, b, a);
 
@@ -660,7 +660,7 @@ ROSSA_EXT_SIG(_rotatable_setAngle, args, token, hash, stack_trace)
 {
 	auto rot = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Rotatable);
+		lib_graphics::Rotatable);
 
 	int angle = args[1].getNumber(token, stack_trace).getDouble();
 
@@ -673,7 +673,7 @@ ROSSA_EXT_SIG(_rotatable_setCenter, args, token, hash, stack_trace)
 {
 	auto rot = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Rotatable);
+		lib_graphics::Rotatable);
 
 	int x = args[1].getNumber(token, stack_trace).getLong();
 	int y = args[2].getNumber(token, stack_trace).getLong();
@@ -687,7 +687,7 @@ ROSSA_EXT_SIG(_rotatable_deCenter, args, token, hash, stack_trace)
 {
 	auto rot = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Rotatable);
+		lib_graphics::Rotatable);
 
 	rot->deCenter();
 
@@ -698,7 +698,7 @@ ROSSA_EXT_SIG(_rotatable_setClip, args, token, hash, stack_trace)
 {
 	auto rot = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Rotatable);
+		lib_graphics::Rotatable);
 
 	int x = args[1].getNumber(token, stack_trace).getLong();
 	int y = args[2].getNumber(token, stack_trace).getLong();
@@ -714,7 +714,7 @@ ROSSA_EXT_SIG(_rotatable_deClip, args, token, hash, stack_trace)
 {
 	auto rot = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Rotatable);
+		lib_graphics::Rotatable);
 
 	rot->deClip();
 
@@ -726,12 +726,12 @@ ROSSA_EXT_SIG(_rect_init, args, token, hash, stack_trace)
 	int width = args[0].getNumber(token, stack_trace).getLong();
 	int height = args[1].getNumber(token, stack_trace).getLong();
 
-	libgraphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
-	auto rect = std::make_shared<libgraphics::Rectangle>(width, height, r, g, b, a);
+	auto rect = std::make_shared<lib_graphics::Rectangle>(width, height, r, g, b, a);
 	return symbol_t::Pointer(rect);
 }
 
@@ -739,7 +739,7 @@ ROSSA_EXT_SIG(_sizable_setSize, args, token, hash, stack_trace)
 {
 	auto sizable = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Sizable);
+		lib_graphics::Sizable);
 
 	int width = args[1].getNumber(token, stack_trace).getLong();
 	int height = args[2].getNumber(token, stack_trace).getLong();
@@ -752,7 +752,7 @@ ROSSA_EXT_SIG(_sizable_setWidth, args, token, hash, stack_trace)
 {
 	auto sizable = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Sizable);
+		lib_graphics::Sizable);
 
 	int width = args[1].getNumber(token, stack_trace).getLong();
 
@@ -764,7 +764,7 @@ ROSSA_EXT_SIG(_sizable_setHeight, args, token, hash, stack_trace)
 {
 	auto sizable = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Sizable);
+		lib_graphics::Sizable);
 
 	int height = args[1].getNumber(token, stack_trace).getLong();
 
@@ -777,23 +777,23 @@ ROSSA_EXT_SIG(_line_init, args, token, hash, stack_trace)
 	int x2 = args[0].getNumber(token, stack_trace).getLong();
 	int y2 = args[1].getNumber(token, stack_trace).getLong();
 
-	libgraphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
-	auto line = std::make_shared<libgraphics::Line>(x2, y2, r, g, b, a);
+	auto line = std::make_shared<lib_graphics::Line>(x2, y2, r, g, b, a);
 	return symbol_t::Pointer(line);
 }
 
 ROSSA_EXT_SIG(_point_init, args, token, hash, stack_trace)
 {
-	libgraphics::color_t r = args[0].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[1].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t a = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[0].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[1].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t a = args[3].getNumber(token, stack_trace).getLong();
 
-	auto point = std::make_shared<libgraphics::Point>(r, g, b, a);
+	auto point = std::make_shared<lib_graphics::Point>(r, g, b, a);
 	return symbol_t::Pointer(point);
 }
 
@@ -801,18 +801,18 @@ ROSSA_EXT_SIG(_image_init_nokey, args, token, hash, stack_trace)
 {
 	std::string path = args[0].getString(token, stack_trace);
 
-	auto image = std::make_shared<libgraphics::Image>(path, token, stack_trace);
+	auto image = std::make_shared<lib_graphics::Image>(path, token, stack_trace);
 	return symbol_t::Pointer(image);
 }
 
 ROSSA_EXT_SIG(_image_init_key, args, token, hash, stack_trace)
 {
 	std::string path = args[0].getString(token, stack_trace);
-	libgraphics::color_t r = args[1].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[1].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[3].getNumber(token, stack_trace).getLong();
 
-	auto image = std::make_shared<libgraphics::Image>(path, token, stack_trace, r, g, b);
+	auto image = std::make_shared<lib_graphics::Image>(path, token, stack_trace, r, g, b);
 	return symbol_t::Pointer(image);
 }
 
@@ -823,11 +823,11 @@ ROSSA_EXT_SIG(_texture_init, args, token, hash, stack_trace)
 	int width = args[1].getNumber(token, stack_trace).getLong();
 	int height = args[2].getNumber(token, stack_trace).getLong();
 
-	libgraphics::color_t r = args[3].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[4].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[5].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[4].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[5].getNumber(token, stack_trace).getLong();
 
-	auto texture = std::make_shared<libgraphics::Texture>(image, width, height, r, g, b);
+	auto texture = std::make_shared<lib_graphics::Texture>(image, width, height, r, g, b);
 	return symbol_t::Pointer(texture);
 }
 
@@ -836,7 +836,7 @@ ROSSA_EXT_SIG(_font_init, args, token, hash, stack_trace)
 	std::string fpath = args[0].getString(token, stack_trace);
 	int fsize = args[1].getNumber(token, stack_trace).getLong();
 
-	auto font = std::make_shared<libgraphics::Font>(fpath, fsize, token, stack_trace);
+	auto font = std::make_shared<lib_graphics::Font>(fpath, fsize, token, stack_trace);
 	return symbol_t::Pointer(font);
 }
 
@@ -845,12 +845,12 @@ ROSSA_EXT_SIG(_text_init, args, token, hash, stack_trace)
 	auto font = args[0];
 	std::string s = args[1].getString(token, stack_trace);
 
-	libgraphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
-	libgraphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t r = args[2].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t g = args[3].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t b = args[4].getNumber(token, stack_trace).getLong();
+	lib_graphics::color_t a = args[5].getNumber(token, stack_trace).getLong();
 
-	auto text = std::make_shared<libgraphics::Text>(font, s, token, stack_trace, r, g, b, a);
+	auto text = std::make_shared<lib_graphics::Text>(font, s, token, stack_trace, r, g, b, a);
 	return symbol_t::Pointer(text);
 }
 
@@ -858,7 +858,7 @@ ROSSA_EXT_SIG(_text_setText, args, token, hash, stack_trace)
 {
 	auto text = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Text);
+		lib_graphics::Text);
 
 	text->setText(args[1].getString(token, stack_trace), token, stack_trace);
 	return symbol_t();
@@ -868,7 +868,7 @@ ROSSA_EXT_SIG(_texture_setImage, args, token, hash, stack_trace)
 {
 	auto texture = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Texture);
+		lib_graphics::Texture);
 
 	texture->setImage(args[1]);
 	return symbol_t();
@@ -878,7 +878,7 @@ ROSSA_EXT_SIG(_renderer_update, args, token, hash, stack_trace)
 {
 	auto g = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Renderer);
+		lib_graphics::Renderer);
 
 	g->draw(token, stack_trace);
 	return symbol_t();
@@ -888,7 +888,7 @@ ROSSA_EXT_SIG(_renderer_clear, args, token, hash, stack_trace)
 {
 	auto g = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Renderer);
+		lib_graphics::Renderer);
 
 	g->clearAll();
 	return symbol_t();
@@ -898,14 +898,14 @@ ROSSA_EXT_SIG(_renderer_flush, args, token, hash, stack_trace)
 {
 	auto g = COERCE_PTR(
 		args[0].getPointer(token, stack_trace),
-		libgraphics::Renderer);
+		lib_graphics::Renderer);
 
 	g->draw(token, stack_trace);
 	g->clearAll();
 	return symbol_t();
 }
 
-EXPORT_FUNCTIONS(libgraphics)
+EXPORT_FUNCTIONS(lib_graphics)
 {
 	ADD_EXT(_event_poll);
 	ADD_EXT(_font_init);

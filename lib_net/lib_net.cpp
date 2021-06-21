@@ -182,7 +182,7 @@ ROSSA_EXT_SIG(_decodeURI, args, token, hash, stack_trace)
 	return symbol_t::String(decodeURIComponent(s));
 }
 
-EXPORT_FUNCTIONS(libnet)
+EXPORT_FUNCTIONS(lib_net)
 {
 	ADD_EXT(_decodeURI);
 	ADD_EXT(_encodeURI);
