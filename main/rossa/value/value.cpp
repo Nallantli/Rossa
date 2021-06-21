@@ -59,7 +59,7 @@ value_t::value_t(const std::string &valueString)
 
 void value_t::clearData()
 {
-	value = false;
+	value = std::monostate();
 }
 
 const unsigned int value_t::hash() const

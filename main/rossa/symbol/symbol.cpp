@@ -184,15 +184,6 @@ std::map<const std::string, const symbol_t> &symbol_t::getDictionary(const token
 	if (d->type != value_type_enum::DICTIONARY)
 		throw rossa_error_t(_NOT_DICTIONARY_, *token, stack_trace);
 	return std::get<std::map<const std::string, const symbol_t>>(d->value);
-	/*auto &m = std::get<std::map<const std::string, const symbol_t>>(d->value);
-	auto iter = m.begin();
-	for (; iter != m.end();) {
-		if (iter->second.d->type == value_type_enum::NIL)
-			iter = m.erase(iter);
-		else
-			++iter;
-	}
-	return m;*/
 }
 
 const symbol_t &symbol_t::indexVector(const size_t &i, const token_t *token, trace_t &stack_trace) const
@@ -238,14 +229,9 @@ const value_type_enum symbol_t::getValueType() const
 
 const parameter_t symbol_t::getAugValueType() const
 {
-	return std::visit(overloaded{
-			[](const object_t &v) {
-				return v.getTypeVec();
-			},
-			[&](auto arg) {
-				return parameter_t({},{ d->type });
-			}
-		}, d->value);
+	if (d->type == value_type_enum::OBJECT)
+		return std::get<object_t>(d->value).getTypeVec();
+	return parameter_t({}, { d->type });
 }
 
 const parameter_t symbol_t::getTypeName(const token_t *token, trace_t &stack_trace) const
@@ -257,20 +243,26 @@ const parameter_t symbol_t::getTypeName(const token_t *token, trace_t &stack_tra
 
 const std::map<const size_t, std::map<const signature_t, ptr_function_t>> &symbol_t::getFunctionOverloads(const token_t *token, trace_t &stack_trace) const
 {
-	if (d->type == value_type_enum::FUNCTION)
-		return std::get<wrapper_t>(d->value).map;
-	if (d->type == value_type_enum::OBJECT)
-		return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).getFunctionOverloads(token, stack_trace);
-	throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
+	switch (d->type) {
+		case value_type_enum::FUNCTION:
+			return std::get<wrapper_t>(d->value).map;
+		case value_type_enum::OBJECT:
+			return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).getFunctionOverloads(token, stack_trace);
+		default:
+			throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
+	}
 }
 
 const bool symbol_t::hasVarg(const token_t *token, trace_t &stack_trace) const
 {
-	if (d->type == value_type_enum::FUNCTION)
-		return std::get<wrapper_t>(d->value).varg != nullptr;
-	if (d->type == value_type_enum::OBJECT)
-		return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).hasVarg(token, stack_trace);
-	throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
+	switch (d->type) {
+		case value_type_enum::FUNCTION:
+			return std::get<wrapper_t>(d->value).varg != nullptr;
+		case value_type_enum::OBJECT:
+			return std::get<object_t>(d->value).getVariable(parser_t::HASH_CALL, token, stack_trace).hasVarg(token, stack_trace);
+		default:
+			throw rossa_error_t(_NOT_FUNCTION_, *token, stack_trace);
+	}
 }
 
 const ptr_function_t symbol_t::getFunction(const std::vector<symbol_t> &params, const token_t *token, trace_t &stack_trace) const
@@ -492,59 +484,47 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 	if (b->d == d)
 		return;
 	if (d->type == value_type_enum::OBJECT && std::get<object_t>(d->value).hasValue(parser_t::HASH_SET)) {
+		ptr_function_t f = nullptr;
 		try {
-			std::get<object_t>(d->value).getVariable(parser_t::HASH_SET, token, stack_trace).call({ *b }, token, stack_trace);
-			return;
+			f = std::get<object_t>(d->value)
+				.getVariable(parser_t::HASH_SET, token, stack_trace)
+				.getFunction({ *b }, token, stack_trace);
 		} catch (const rossa_error_t &e) {
+		}
+		if (f) {
+			function_evaluate(f, { *b }, token, stack_trace);
+			return;
 		}
 	}
 	d->type = b->d->type;
-	if (d->type == value_type_enum::NIL) {
-		d->value = false;
-	} else {
-		std::visit(overloaded{
-			[&](const number_t &v) {
-				d->value = v;
-			},
-			[&](const bool &v) {
-				d->value = v;
-			},
-			[&](const std::string &v) {
-				d->value = v;
-			},
-			[&](const wrapper_t &v) {
-				d->value = v;
-			},
-			[&](const object_t &v) {
-				d->value = v;
-			},
-			[&](const std::shared_ptr<void> &v) {
-				d->value = v;
-			},
-			[&](const parameter_t &v) {
-				d->value = v;
-			},
-			[&](const std::vector<symbol_t> &v) {
-				std::vector<symbol_t> nv;
-				nv.resize(v.size());
-				for (size_t i = 0; i < v.size(); i++)
-					nv[i].set(&v[i], token, stack_trace);
-				d->value = nv;
-			},
-			[&](const std::map<const std::string, const symbol_t> &v) {
-				d->value = std::map<const std::string, const symbol_t>();
-				for (auto &e : v) {
-					if (e.second.d->type == value_type_enum::NIL)
-						continue;
-					auto newd = symbol_t();
-					newd.set(&e.second, token, stack_trace);
-					std::get<std::map<const std::string, const symbol_t>>(d->value).insert({ e.first, newd });
-				}
-			},
-			[](auto arg) {
-				return;
+	switch (d->type) {
+		case value_type_enum::NIL:
+			d->clearData();
+			break;
+		case value_type_enum::ARRAY: {
+			std::vector<symbol_t> nv;
+			auto v = std::get<std::vector<symbol_t>>(b->d->value);
+			nv.resize(v.size());
+			for (size_t i = 0; i < v.size(); i++)
+				nv[i].set(&v[i], token, stack_trace);
+			d->value = nv;
+			break;
+		}
+		case value_type_enum::DICTIONARY: {
+			d->value = std::map<const std::string, const symbol_t>();
+			auto v = std::get<std::map<const std::string, const symbol_t>>(b->d->value);
+			for (auto &e : v) {
+				if (e.second.d->type == value_type_enum::NIL)
+					continue;
+				auto newd = symbol_t();
+				newd.set(&e.second, token, stack_trace);
+				std::get<std::map<const std::string, const symbol_t>>(d->value).insert({ e.first, newd });
 			}
-			}, b->d->value);
+			break;
+		}
+		default:
+			d->value = b->d->value;
+			break;
 	}
 }
 
@@ -565,7 +545,7 @@ const bool symbol_t::equals(const symbol_t *b, const token_t *token, trace_t &st
 		{
 			auto o = std::get<object_t>(d->value);
 			if (o.hasValue(parser_t::HASH_EQUALS))
-				return std::get<bool>(o.getVariable(parser_t::HASH_EQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->value);
+				return o.getVariable(parser_t::HASH_EQUALS, token, stack_trace).call({ *b }, token, stack_trace).getBool(token, stack_trace);
 			return o == std::get<object_t>(b->d->value);
 		}
 		case value_type_enum::ARRAY:
@@ -600,7 +580,7 @@ const bool symbol_t::nequals(const symbol_t *b, const token_t *token, trace_t &s
 		{
 			auto &o = std::get<object_t>(d->value);
 			if (o.hasValue(parser_t::HASH_NEQUALS))
-				return std::get<bool>(o.getVariable(parser_t::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).d->value);
+				return o.getVariable(parser_t::HASH_NEQUALS, token, stack_trace).call({ *b }, token, stack_trace).getBool(token, stack_trace);
 		}
 		default:
 			return !this->equals(b, token, stack_trace);

@@ -292,10 +292,14 @@ const symbol_t DeclareI::evaluate(const object_t *scope, trace_t &stack_trace) c
 	const symbol_t v = scope->createVariable(key, &token);
 	const symbol_t evalA = a->evaluate(scope, stack_trace);
 	if (scope->hasValue(parser_t::HASH_SET) && evalA.getValueType() == value_type_enum::OBJECT) {
+		ptr_function_t f = nullptr;
 		try {
-			scope->getVariable(parser_t::HASH_SET, &token, stack_trace).call({ v, evalA }, &token, stack_trace);
-			return v;
+			f = scope->getVariable(parser_t::HASH_SET, &token, stack_trace).getFunction({ v, evalA }, &token, stack_trace);
 		} catch (const rossa_error_t &e) {
+		}
+		if (f) {
+			function_evaluate(f, { v, evalA }, &token, stack_trace);
+			return v;
 		}
 	}
 	v.set(&evalA, &token, stack_trace);
@@ -681,10 +685,14 @@ const symbol_t SetI::evaluate(const object_t *scope, trace_t &stack_trace) const
 	const symbol_t evalB = b->evaluate(scope, stack_trace);
 
 	if (scope->hasValue(parser_t::HASH_SET) && ((evalA.getValueType() == value_type_enum::OBJECT && !evalA.getObject(&token, stack_trace)->hasValue(parser_t::HASH_SET)) || evalB.getValueType() == value_type_enum::OBJECT)) {
+		ptr_function_t f = nullptr;
 		try {
-			scope->getVariable(parser_t::HASH_SET, &token, stack_trace).call({ evalA, evalB }, &token, stack_trace);
-			return evalA;
+			f = scope->getVariable(parser_t::HASH_SET, &token, stack_trace).getFunction({ evalA, evalB }, &token, stack_trace);
 		} catch (const rossa_error_t &e) {
+		}
+		if (f) {
+			function_evaluate(f, { evalA, evalB }, &token, stack_trace);
+			return evalA;
 		}
 	}
 	evalA.set(&evalB, &token, stack_trace);

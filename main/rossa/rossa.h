@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#define _ROSSA_VERSION_ "v1.16.3-alpha"
+#define _ROSSA_VERSION_ "v1.16.4-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
@@ -61,9 +61,6 @@ typedef std::shared_ptr<function_t> ptr_function_t;
 
 typedef std::vector<std::pair<token_t, function_t>> trace_t;
 typedef std::vector<type_sll> aug_type_t;
-
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...)->overloaded<Ts...>;
 
 typedef const symbol_t(*extf_t)(const std::vector<symbol_t> &, const token_t *, Hash &, trace_t &);
 typedef void (*export_fns_t)(std::map<std::string, extf_t> &);

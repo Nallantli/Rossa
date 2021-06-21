@@ -20,6 +20,7 @@ public:
 
 private:
 	std::variant<
+		std::monostate,
 		bool,
 		number_t,
 		parameter_t,

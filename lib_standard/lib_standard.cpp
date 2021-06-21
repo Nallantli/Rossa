@@ -84,6 +84,7 @@ ROSSA_EXT_SIG(_rand_nextInt, args, token, hash, stack_trace)
 ROSSA_EXT_SIG(_exit, args, token, hash, stack_trace)
 {
 	exit(args[0].getNumber(token, stack_trace).getLong());
+	return symbol_t();
 }
 
 ROSSA_EXT_SIG(_system_call, args, token, hash, stack_trace)
