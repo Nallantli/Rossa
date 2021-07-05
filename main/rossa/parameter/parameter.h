@@ -9,6 +9,7 @@ private:
 	std::vector<aug_type_t> ancestors;
 	aug_type_t base;
 	std::vector<parameter_t> qualifiers;
+
 public:
 	parameter_t(const std::vector<aug_type_t> &, const aug_type_t &);
 	parameter_t(const std::vector<aug_type_t> &, const aug_type_t &, const std::vector<parameter_t> &);

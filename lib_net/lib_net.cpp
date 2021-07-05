@@ -23,10 +23,10 @@ ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
 	auto sock = std::make_shared<boost::asio::ip::tcp::socket>(*io_service_object);
 	boost::system::error_code ec;
 	if (sock->connect(
-		boost::asio::ip::tcp::endpoint(
-			boost::asio::ip::address::from_string(args[0].getString(token, stack_trace)),
-			args[1].getNumber(token, stack_trace).getLong()),
-		ec))
+			boost::asio::ip::tcp::endpoint(
+				boost::asio::ip::address::from_string(args[0].getString(token, stack_trace)),
+				args[1].getNumber(token, stack_trace).getLong()),
+			ec))
 		if (ec)
 			throw rossa_error_t(ec.message(), *token, stack_trace);
 	return symbol_t::Pointer(sock);
@@ -63,7 +63,8 @@ ROSSA_EXT_SIG(_socket_read_until, args, token, hash, stack_trace)
 		boost::asio::ip::tcp::socket);
 
 	boost::asio::streambuf sb;
-	if (boost::asio::read_until(*sock, sb, args[1].getString(token, stack_trace))) {
+	if (boost::asio::read_until(*sock, sb, args[1].getString(token, stack_trace)))
+	{
 		std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
 		return symbol_t::String(str);
 	}
@@ -139,7 +140,8 @@ ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
 
 	boost::beast::http::request<boost::beast::http::string_body> req(boost::beast::http::verb::get, target, version);
 
-	for (auto &p : params) {
+	for (auto &p : params)
+	{
 		req.set(p.first, p.second.getString(token, stack_trace));
 	}
 
@@ -150,11 +152,12 @@ ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
 
 	std::map<const std::string, const symbol_t> ret;
 
-	for (auto &r : res) {
-		ret.insert({ r.name_string().to_string(), symbol_t::String(r.value().to_string()) });
+	for (auto &r : res)
+	{
+		ret.insert({r.name_string().to_string(), symbol_t::String(r.value().to_string())});
 	}
 
-	ret.insert({ "CONTENT",symbol_t::String(res.body()) });
+	ret.insert({"CONTENT", symbol_t::String(res.body())});
 
 	return symbol_t::Dictionary(ret);
 }

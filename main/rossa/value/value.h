@@ -29,7 +29,8 @@ private:
 		std::vector<symbol_t>,
 		wrapper_t,
 		std::map<const std::string, const symbol_t>,
-		object_t> value;
+		object_t>
+		value;
 
 	refc_ull references = 1;
 

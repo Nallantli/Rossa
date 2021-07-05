@@ -10,48 +10,48 @@
 #include "../parser/parser.h"
 
 object_t::object_t(scope_t *scope, const object_type_enum &type)
-	: scope{ scope }
-	, type{ type }
+	: scope{scope}, type{type}
 {
 	if (type == OBJECT_STRONG)
 		scope->references++;
 }
 
 object_t::object_t()
-	: scope{ NULL }
-	, type{ OBJECT_STRONG }
-{}
+	: scope{NULL}, type{OBJECT_STRONG}
+{
+}
 
 object_t::object_t(const hash_ull &key)
-	: scope{ new scope_t(scope_type_enum::SCOPE_BOUNDED, NULL, nullptr, key) }
-	, type{ OBJECT_STRONG }
-{}
+	: scope{new scope_t(scope_type_enum::SCOPE_BOUNDED, NULL, nullptr, key)}, type{OBJECT_STRONG}
+{
+}
 
 object_t::object_t(const object_t *parent, const hash_ull &key)
-	: scope{ new scope_t(scope_type_enum::SCOPE_BOUNDED, parent->scope, nullptr, key) }
-	, type{ OBJECT_STRONG }
-{}
+	: scope{new scope_t(scope_type_enum::SCOPE_BOUNDED, parent->scope, nullptr, key)}, type{OBJECT_STRONG}
+{
+}
 
 object_t::object_t(const object_t *parent, const scope_type_enum &type, const ptr_instruction_t &body, const hash_ull &key, const object_t *ex, const std::vector<aug_type_t> &extensions)
-	: scope{ new scope_t(type, parent->scope, body, key) }
-	, type{ OBJECT_STRONG }
+	: scope{new scope_t(type, parent->scope, body, key)}, type{OBJECT_STRONG}
 {
-	if (ex != NULL) {
+	if (ex != NULL)
+	{
 		this->scope->extensions = ex->scope->extensions;
 		this->scope->extensions.push_back(ex->scope->name_trace);
-	} else {
+	}
+	else
+	{
 		this->scope->extensions = extensions;
 	}
 }
 
 object_t::object_t(scope_t *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
-	: scope{ new scope_t(parent, name_trace, extensions) }
-	, type{ OBJECT_STRONG }
-{}
+	: scope{new scope_t(parent, name_trace, extensions)}, type{OBJECT_STRONG}
+{
+}
 
 object_t::object_t(const object_t &s)
-	: scope{ s.scope }
-	, type{ OBJECT_STRONG }
+	: scope{s.scope}, type{OBJECT_STRONG}
 {
 #ifdef DEBUG
 	std::cout << "&object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
@@ -66,7 +66,8 @@ object_t::~object_t()
 #ifdef DEBUG
 	std::cout << "~object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\n";
 #endif
-	if (scope != NULL && type == OBJECT_STRONG) {
+	if (scope != NULL && type == OBJECT_STRONG)
+	{
 		scope->references--;
 		if (scope->references == 0)
 			delete scope;
@@ -79,7 +80,8 @@ void object_t::operator=(const object_t &b)
 	std::cout << "=object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
 	std::cout << (b.scope == NULL ? "NULL" : b.getKey()) << ")\n";
 #endif
-	if (this->scope != NULL && type == OBJECT_STRONG) {
+	if (this->scope != NULL && type == OBJECT_STRONG)
+	{
 		this->scope->references--;
 		if (this->scope->references == 0)
 			delete scope;
@@ -112,7 +114,8 @@ const std::string object_t::getKey() const
 {
 	size_t i = 0;
 	std::string path = "";
-	for (auto &p : scope->name_trace) {
+	for (auto &p : scope->name_trace)
+	{
 		if (i++ > 0)
 			path += ".";
 		path += ROSSA_DEHASH(p);

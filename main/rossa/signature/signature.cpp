@@ -7,11 +7,13 @@
 #include "../parameter/parameter.h"
 
 signature_t::signature_t()
-{}
+{
+}
 
 signature_t::signature_t(const std::vector<parameter_t> &values)
-	: values{ values }
-{}
+	: values{values}
+{
+}
 
 const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &stack_trace) const
 {
@@ -19,11 +21,13 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 		return 1;
 
 	size_t v = 0;
-	for (size_t i = 0; i < values.size(); i++) {
+	for (size_t i = 0; i < values.size(); i++)
+	{
 		auto check_i = check[i];
 		auto values_i = values[i];
 		auto vt = check_i.getAugValueType();
-		if (values_i.getQualifiers().empty()) {
+		if (values_i.getQualifiers().empty())
+		{
 			auto base = values_i.getBase();
 			if (base == vt.getBase())
 				v += 3;
@@ -31,28 +35,38 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 				v += 2;
 			else if (base[0] == value_type_enum::ANY)
 				v += 1;
-			else if (check[0].getValueType() == value_type_enum::OBJECT) {
+			else if (check[0].getValueType() == value_type_enum::OBJECT)
+			{
 				if (base[0] == value_type_enum::OBJECT || check_i.getObject(NULL, stack_trace)->extendsObject(base))
 					v += 2;
 				else
 					return 0;
-			} else
+			}
+			else
 				return 0;
-		} else {
+		}
+		else
+		{
 			auto ql = values_i.getQualifiers();
 			auto fo = check_i.getFunctionOverloads(NULL, stack_trace);
 			const auto it = fo.find(ql.size());
-			if (it == fo.end()) {
+			if (it == fo.end())
+			{
 				if (check_i.hasVarg(NULL, stack_trace))
 					v += 1;
 				else
 					return 0;
-			} else {
+			}
+			else
+			{
 				size_t flag = 0;
-				for (auto f : it->second) {
-					for (size_t i = 0; i < ql.size(); i++) {
+				for (auto f : it->second)
+				{
+					for (size_t i = 0; i < ql.size(); i++)
+					{
 						auto val = ql[i] & f.first.values[i];
-						if (val > flag) {
+						if (val > flag)
+						{
 							flag = val;
 							if (val == 3)
 								break;
@@ -63,7 +77,8 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 				}
 				if (flag > 0)
 					v += flag;
-				else {
+				else
+				{
 					if (check_i.hasVarg(NULL, stack_trace))
 						v += 1;
 					else
@@ -79,7 +94,8 @@ const std::string signature_t::toCodeString() const
 {
 	std::string s = "{";
 	size_t i = 0;
-	for (auto &v : values) {
+	for (auto &v : values)
+	{
 		if (i++ > 0)
 			s += ", ";
 		s += v.toCodeString();
@@ -91,7 +107,8 @@ const std::string signature_t::toString() const
 {
 	std::string s = "";
 	size_t i = 0;
-	for (auto &v : values) {
+	for (auto &v : values)
+	{
 		if (i++ > 0)
 			s += ", ";
 		s += v.toString();

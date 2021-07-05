@@ -54,8 +54,8 @@ parser_t::parser_t(const std::vector<std::string> &args)
 	std::vector<symbol_t> argv;
 	for (auto &s : args)
 		argv.push_back(symbol_t::String(s));
-	scopes.push_back({ ROSSA_HASH("<*>") });
-	consts.push_back({ {ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, symbol_t::Array(argv) });
+	scopes.push_back({ROSSA_HASH("<*>")});
+	consts.push_back({{ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, symbol_t::Array(argv)});
 }
 
 const std::map<std::string, signed int> parser_t::bOperators = {
@@ -108,7 +108,7 @@ const std::map<std::string, signed int> parser_t::bOperators = {
 	{"...", 0},
 	{":", 0},
 	{"=>", 0},
-	{"|>", 0} };
+	{"|>", 0}};
 
 const std::map<std::string, signed int> parser_t::uOperators = {
 	{"-", -1},
@@ -116,7 +116,7 @@ const std::map<std::string, signed int> parser_t::uOperators = {
 	{"!", -1},
 	{"~", -1},
 	{"@", -1},
-	{"$", -1} };
+	{"$", -1}};
 
 const ptr_node_t parser_t::compileCode(const std::string &code, const std::filesystem::path &currentFile)
 {
@@ -129,11 +129,14 @@ const ptr_node_t parser_t::compileCode(const std::string &code, const std::files
 
 const symbol_t parser_t::runCode(const ptr_node_t &entry, const bool &tree)
 {
-	if (tree) {
+	if (tree)
+	{
 		entry->printTree("", true);
-		for (auto &c : consts) {
+		for (auto &c : consts)
+		{
 			int i = 0;
-			for (auto &p : c.first) {
+			for (auto &p : c.first)
+			{
 				if (i++ > 0)
 					printc(".", CYAN_TEXT);
 				printc(ROSSA_DEHASH(p), CYAN_TEXT);
@@ -155,7 +158,8 @@ void parser_t::printError(const rossa_error_t &e)
 	printc(e.what(), RED_TEXT);
 	std::cout << "\n";
 
-	if (e.getToken().type != NULL_TOK) {
+	if (e.getToken().type != NULL_TOK)
+	{
 		std::string lineInfoRaw = "<" + e.getToken().filename.string() + ">:" + std::to_string(e.getToken().lineNumber + 1) + " | ";
 		printc(lineInfoRaw, CYAN_TEXT);
 		printc(e.getToken().line + "\n", MAGENTA_TEXT);
@@ -173,9 +177,11 @@ void parser_t::printError(const rossa_error_t &e)
 
 	size_t j = 0;
 	auto trace = e.getTrace();
-	while (!trace.empty()) {
-		if (j++ > 10) {
-			printc(global::format(_STACK_TRACE_MORE_, { std::to_string(trace.size()) }), MAGENTA_TEXT);
+	while (!trace.empty())
+	{
+		if (j++ > 10)
+		{
+			printc(global::format(_STACK_TRACE_MORE_, {std::to_string(trace.size())}), MAGENTA_TEXT);
 			std::cout << "\n";
 			trace.clear();
 			break;
@@ -188,15 +194,17 @@ void parser_t::printError(const rossa_error_t &e)
 		ret += ROSSA_DEHASH(e.second.key);
 		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;
-		for (auto &p : e.second.params) {
+		for (auto &p : e.second.params)
+		{
 			if (i++ > 0)
 				printc(", ", RESET_TEXT);
-			switch (p.first) {
-				case TOK_REF:
-					printc("ref ", BLUE_TEXT);
-					break;
-				default:
-					break;
+			switch (p.first)
+			{
+			case TOK_REF:
+				printc("ref ", BLUE_TEXT);
+				break;
+			default:
+				break;
 			}
 			printc(ROSSA_DEHASH(p.second), RESET_TEXT);
 		}
@@ -214,10 +222,13 @@ const char parser_t::nextChar(
 	size_t &TOKEN_DIST)
 {
 	auto c = INPUT[INPUT_INDEX++];
-	if (c == '\n') {
+	if (c == '\n')
+	{
 		LINE_INDEX++;
 		TOKEN_DIST = 0;
-	} else {
+	}
+	else
+	{
 		TOKEN_DIST++;
 	}
 	return c;
@@ -245,9 +256,11 @@ const int parser_t::getToken(
 	while (isspace(last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)))
 		;
 
-	if (isalpha(last) || last == '_') {
+	if (isalpha(last) || last == '_')
+	{
 		ID_STRING = last;
-		while (isalnum(peekChar(0, INPUT, INPUT_INDEX)) || peekChar(0, INPUT, INPUT_INDEX) == '_') {
+		while (isalnum(peekChar(0, INPUT, INPUT_INDEX)) || peekChar(0, INPUT, INPUT_INDEX) == '_')
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			ID_STRING += last;
 		}
@@ -354,32 +367,41 @@ const int parser_t::getToken(
 			return TOK_EACH;
 		else if (ID_STRING == KEYWORD_WHERE)
 			return TOK_WHERE;
-		else if (ID_STRING == "inf") {
+		else if (ID_STRING == "inf")
+		{
 			NUM_VALUE = number_t::Double(INFINITY);
 			return TOK_NUM;
-		} else if (ID_STRING == "nan") {
+		}
+		else if (ID_STRING == "nan")
+		{
 			NUM_VALUE = number_t::Double(NAN);
 			return TOK_NUM;
-		} else if (parser_t::bOperators.find(ID_STRING) != parser_t::bOperators.end() || parser_t::uOperators.find(ID_STRING) != parser_t::uOperators.end())
+		}
+		else if (parser_t::bOperators.find(ID_STRING) != parser_t::bOperators.end() || parser_t::uOperators.find(ID_STRING) != parser_t::uOperators.end())
 			return TOK_OPR;
 
 		return TOK_IDF;
-	} else if (isdigit(last) || (last == '.' && isdigit(peekChar(0, INPUT, INPUT_INDEX)))) {
-		if (last == '0' && isalpha(peekChar(0, INPUT, INPUT_INDEX))) {
+	}
+	else if (isdigit(last) || (last == '.' && isdigit(peekChar(0, INPUT, INPUT_INDEX))))
+	{
+		if (last == '0' && isalpha(peekChar(0, INPUT, INPUT_INDEX)))
+		{
 			char base = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			std::string numStr = "";
-			while (isalnum(peekChar(0, INPUT, INPUT_INDEX))) {
+			while (isalnum(peekChar(0, INPUT, INPUT_INDEX)))
+			{
 				last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 				numStr += last;
 			}
-			switch (base) {
-				case 'b':
-				case 'B':
-					NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 2));
-					break;
-				default:
-					NUM_VALUE = number_t::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
-					break;
+			switch (base)
+			{
+			case 'b':
+			case 'B':
+				NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 2));
+				break;
+			default:
+				NUM_VALUE = number_t::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
+				break;
 			}
 			ID_STRING = "0" + std::string(1, base) + numStr;
 			return TOK_NUM;
@@ -387,7 +409,8 @@ const int parser_t::getToken(
 
 		std::string numStr = std::string(1, last);
 		bool flag = false;
-		while (isdigit(peekChar(0, INPUT, INPUT_INDEX)) || (peekChar(0, INPUT, INPUT_INDEX) == '.' && isdigit(peekChar(1, INPUT, INPUT_INDEX)))) {
+		while (isdigit(peekChar(0, INPUT, INPUT_INDEX)) || (peekChar(0, INPUT, INPUT_INDEX) == '.' && isdigit(peekChar(1, INPUT, INPUT_INDEX))))
+		{
 			if (flag && peekChar(0, INPUT, INPUT_INDEX) == '.')
 				break;
 			if (!flag)
@@ -402,20 +425,26 @@ const int parser_t::getToken(
 		else
 			NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 10));
 		return TOK_NUM;
-	} else if (last == '#') {
+	}
+	else if (last == '#')
+	{
 		std::string commentStr = "";
-		do {
+		do
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			commentStr += last;
 		} while (last != EOF && last != '\n' && last != '\r');
 
 		ID_STRING = commentStr;
 		return '#';
-	} else if (last == EOF || last == 0)
+	}
+	else if (last == EOF || last == 0)
 		return TOK_EOF;
-	else if (parser_t::bOperators.find(std::string(1, last)) != parser_t::bOperators.end()) {
+	else if (parser_t::bOperators.find(std::string(1, last)) != parser_t::bOperators.end())
+	{
 		std::string opStr = std::string(1, last);
-		while (parser_t::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::bOperators.end()) {
+		while (parser_t::bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::bOperators.end())
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
@@ -436,144 +465,165 @@ const int parser_t::getToken(
 		if (ID_STRING == ":")
 			return ':';
 		return TOK_OPR;
-	} else if (parser_t::uOperators.find(std::string(1, last)) != parser_t::uOperators.end()) {
+	}
+	else if (parser_t::uOperators.find(std::string(1, last)) != parser_t::uOperators.end())
+	{
 		std::string opStr = std::string(1, last);
-		while (parser_t::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::uOperators.end()) {
+		while (parser_t::uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != parser_t::uOperators.end())
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
 		}
 
 		ID_STRING = opStr;
 		return TOK_OPR;
-	} else if (last == '`') {
+	}
+	else if (last == '`')
+	{
 		std::string value = "";
-		while (true) {
+		while (true)
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
-			if (last == '`') {
+			if (last == '`')
+			{
 				ID_STRING = value;
 				return TOK_IDF;
 			}
 			value += last;
 		}
-	} else if (last == '"') {
+	}
+	else if (last == '"')
+	{
 		std::string value = "";
-		while (true) {
+		while (true)
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
-			if (last == '"') {
+			if (last == '"')
+			{
 				ID_STRING = value;
 				return TOK_STR_LIT;
-			} else if (last == '\\') {
-				switch (last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)) {
-					case '"':
-						last = '"';
-						break;
-					case '\'':
-						last = '\'';
-						break;
-					case 'n':
-						last = '\n';
-						break;
-					case '?':
-						last = '\?';
-						break;
-					case 'a':
-						last = '\a';
-						break;
-					case 'b':
-						last = '\b';
-						break;
-					case 'f':
-						last = '\f';
-						break;
-					case 'r':
-						last = '\r';
-						break;
-					case 't':
-						last = '\t';
-						break;
-					case 'v':
-						last = '\v';
-						break;
-					case '0':
-						last = '\0';
-						break;
-					case 'x':
-					{
-						std::string code = std::string({ nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST) });
-						char hex = std::stoul(code, nullptr, 16);
-						last = hex;
-						break;
-					}
-					case 'u':
-					{
-						std::string code = std::string({ nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST) });
-						char hex = std::stoul(code, nullptr, 16);
-						last = hex;
-						break;
-					}
+			}
+			else if (last == '\\')
+			{
+				switch (last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST))
+				{
+				case '"':
+					last = '"';
+					break;
+				case '\'':
+					last = '\'';
+					break;
+				case 'n':
+					last = '\n';
+					break;
+				case '?':
+					last = '\?';
+					break;
+				case 'a':
+					last = '\a';
+					break;
+				case 'b':
+					last = '\b';
+					break;
+				case 'f':
+					last = '\f';
+					break;
+				case 'r':
+					last = '\r';
+					break;
+				case 't':
+					last = '\t';
+					break;
+				case 'v':
+					last = '\v';
+					break;
+				case '0':
+					last = '\0';
+					break;
+				case 'x':
+				{
+					std::string code = std::string({nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
+				case 'u':
+				{
+					std::string code = std::string({nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
 				}
 			}
 			value += last;
 		}
-	} else if (last == '\'') {
+	}
+	else if (last == '\'')
+	{
 		std::string value = "";
-		while (true) {
+		while (true)
+		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
-			if (last == '\'') {
+			if (last == '\'')
+			{
 				if (value.size() < 1)
 					value = std::string(1, 0);
 				ID_STRING = value;
 				NUM_VALUE = number_t::Long(static_cast<unsigned char>(value[0]));
 				return TOK_NUM;
-			} else if (last == '\\') {
-				switch (last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)) {
-					case '"':
-						last = '"';
-						break;
-					case '\'':
-						last = '\'';
-						break;
-					case 'n':
-						last = '\n';
-						break;
-					case '?':
-						last = '\?';
-						break;
-					case 'a':
-						last = '\a';
-						break;
-					case 'b':
-						last = '\b';
-						break;
-					case 'f':
-						last = '\f';
-						break;
-					case 'r':
-						last = '\r';
-						break;
-					case 't':
-						last = '\t';
-						break;
-					case 'v':
-						last = '\v';
-						break;
-					case '0':
-						last = '\0';
-						break;
-					case 'x':
-					{
-						std::string code = std::string({ nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST) });
-						char hex = std::stoul(code, nullptr, 16);
-						last = hex;
-						break;
-					}
-					case 'u':
-					{
-						std::string code = std::string({ nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST) });
-						char hex = std::stoul(code, nullptr, 16);
-						last = hex;
-						break;
-					}
+			}
+			else if (last == '\\')
+			{
+				switch (last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST))
+				{
+				case '"':
+					last = '"';
+					break;
+				case '\'':
+					last = '\'';
+					break;
+				case 'n':
+					last = '\n';
+					break;
+				case '?':
+					last = '\?';
+					break;
+				case 'a':
+					last = '\a';
+					break;
+				case 'b':
+					last = '\b';
+					break;
+				case 'f':
+					last = '\f';
+					break;
+				case 'r':
+					last = '\r';
+					break;
+				case 't':
+					last = '\t';
+					break;
+				case 'v':
+					last = '\v';
+					break;
+				case '0':
+					last = '\0';
+					break;
+				case 'x':
+				{
+					std::string code = std::string({nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
+				case 'u':
+				{
+					std::string code = std::string({nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST), nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)});
+					char hex = std::stoul(code, nullptr, 16);
+					last = hex;
+					break;
+				}
 				}
 			}
 			value += last;
@@ -591,7 +641,8 @@ const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const s
 	std::stringstream ss(INPUT);
 	std::string item;
 
-	while (std::getline(ss, item, '\n')) {
+	while (std::getline(ss, item, '\n'))
+	{
 		LINES.push_back(item);
 	}
 
@@ -602,51 +653,69 @@ const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const s
 	std::string ID_STRING;
 	number_t NUM_VALUE;
 
-	while (true) {
+	while (true)
+	{
 		int token = getToken(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE);
 		if (token == TOK_EOF)
 			break;
 		if (token == '#')
 			continue;
-		token_t t = { filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token };
+		token_t t = {filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token};
 
-		if (t.type == TOK_DEF) {
+		if (t.type == TOK_DEF)
+		{
 			std::vector<token_t> temp;
-			while (tokens.back().type != '(') {
-				if (tokens.back().valueString == ">>") {
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
-				} else if (tokens.back().valueString == "<<") {
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
-				} else if (tokens.back().valueString == "<>") {
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<' });
-					temp.push_back({ tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>' });
-				} else {
+			while (tokens.back().type != '(')
+			{
+				if (tokens.back().valueString == ">>")
+				{
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
+				}
+				else if (tokens.back().valueString == "<<")
+				{
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
+				}
+				else if (tokens.back().valueString == "<>")
+				{
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
+					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
+				}
+				else
+				{
 					temp.push_back(tokens.back());
 				}
 				tokens.pop_back();
 			}
 			temp.push_back(tokens.back());
 			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE)) {
+			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE))
+			{
 				temp.push_back(tokens.back());
 				tokens.pop_back();
 				tokens.push_back(t);
-			} else {
-				tokens.push_back({ filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, TOK_LAMBDA });
 			}
-			while (!temp.empty()) {
+			else
+			{
+				tokens.push_back({filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, TOK_LAMBDA});
+			}
+			while (!temp.empty())
+			{
 				tokens.push_back(temp.back());
 				temp.pop_back();
 			}
-		} else {
+		}
+		else
+		{
 			tokens.push_back(t);
 		}
 	}
 
-	for (auto &t : tokens) {
-		while (!t.line.empty() && isspace(t.line[0])) {
+	for (auto &t : tokens)
+	{
+		while (!t.line.empty() && isspace(t.line[0]))
+		{
 			t.line = t.line.substr(1);
 			t.distance--;
 		}
@@ -656,4 +725,5 @@ const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const s
 }
 
 parser_t::~parser_t()
-{}
+{
+}

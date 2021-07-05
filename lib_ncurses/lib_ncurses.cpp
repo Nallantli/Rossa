@@ -20,8 +20,7 @@ ROSSA_EXT_SIG(_newwin, args, token, hash, stack_trace)
 		args[0].getNumber(token, stack_trace).getLong(),
 		args[1].getNumber(token, stack_trace).getLong(),
 		args[2].getNumber(token, stack_trace).getLong(),
-		args[3].getNumber(token, stack_trace).getLong()
-	));
+		args[3].getNumber(token, stack_trace).getLong()));
 	return symbol_t::Pointer(win);
 }
 
@@ -29,24 +28,22 @@ ROSSA_EXT_SIG(_box, args, token, hash, stack_trace)
 {
 	auto win = COERCE_PTR(args[0].getPointer(token, stack_trace), WINDOW);
 	return symbol_t::Number(number_t::Long(box(win,
-		args[1].getNumber(token, stack_trace).getLong(),
-		args[2].getNumber(token, stack_trace).getLong()
-	)));
+											   args[1].getNumber(token, stack_trace).getLong(),
+											   args[2].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_wborder, args, token, hash, stack_trace)
 {
 	auto win = COERCE_PTR(args[0].getPointer(token, stack_trace), WINDOW);
 	return symbol_t::Number(number_t::Long(wborder(win,
-		args[1].getNumber(token, stack_trace).getLong(),
-		args[2].getNumber(token, stack_trace).getLong(),
-		args[3].getNumber(token, stack_trace).getLong(),
-		args[4].getNumber(token, stack_trace).getLong(),
-		args[5].getNumber(token, stack_trace).getLong(),
-		args[6].getNumber(token, stack_trace).getLong(),
-		args[7].getNumber(token, stack_trace).getLong(),
-		args[8].getNumber(token, stack_trace).getLong()
-	)));
+												   args[1].getNumber(token, stack_trace).getLong(),
+												   args[2].getNumber(token, stack_trace).getLong(),
+												   args[3].getNumber(token, stack_trace).getLong(),
+												   args[4].getNumber(token, stack_trace).getLong(),
+												   args[5].getNumber(token, stack_trace).getLong(),
+												   args[6].getNumber(token, stack_trace).getLong(),
+												   args[7].getNumber(token, stack_trace).getLong(),
+												   args[8].getNumber(token, stack_trace).getLong())));
 }
 
 ROSSA_EXT_SIG(_delwin, args, token, hash, stack_trace)
@@ -164,7 +161,7 @@ ROSSA_EXT_SIG(_wattrset, args, token, hash, stack_trace)
 ROSSA_EXT_SIG(_fetch_constants, args, token, hash, stack_trace)
 {
 	std::map<const std::string, const symbol_t> m = {
-		{"NORMAL", symbol_t::Number(number_t::Long(A_NORMAL)) },
+		{"NORMAL", symbol_t::Number(number_t::Long(A_NORMAL))},
 		{"ATTRIBUTES", symbol_t::Number(number_t::Long(A_ATTRIBUTES))},
 		{"CHARTEXT", symbol_t::Number(number_t::Long(A_CHARTEXT))},
 		{"COLOR", symbol_t::Number(number_t::Long(A_COLOR))},
@@ -183,8 +180,7 @@ ROSSA_EXT_SIG(_fetch_constants, args, token, hash, stack_trace)
 		{"RIGHT", symbol_t::Number(number_t::Long(A_RIGHT))},
 		{"TOP", symbol_t::Number(number_t::Long(A_TOP))},
 		{"VERTICAL", symbol_t::Number(number_t::Long(A_VERTICAL))},
-		{"ITALIC", symbol_t::Number(number_t::Long(A_ITALIC))}
-	};
+		{"ITALIC", symbol_t::Number(number_t::Long(A_ITALIC))}};
 	return symbol_t::Dictionary(m);
 }
 

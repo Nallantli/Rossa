@@ -17,11 +17,9 @@ namespace lib_SDL
 		const symbol_t data;
 
 		capture_t(const symbol_t &f, const token_t &token, const trace_t &stack_trace, const symbol_t &data)
-			: f{ f }
-			, token{ token }
-			, stack_trace{ stack_trace }
-			, data{ data }
-		{}
+			: f{f}, token{token}, stack_trace{stack_trace}, data{data}
+		{
+		}
 	};
 
 	void hint_callback(
@@ -35,8 +33,7 @@ namespace lib_SDL
 			capture->data,
 			symbol_t::String(name),
 			symbol_t::String(oldValue),
-			symbol_t::String(newValue)
-		};
+			symbol_t::String(newValue)};
 		capture->f.call(v, &capture->token, capture->stack_trace);
 	}
 };
@@ -83,9 +80,7 @@ ROSSA_EXT_SIG(_lib_AddHintCallback, args, token, hash, stack_trace)
 			args[1],
 			*token,
 			stack_trace,
-			args[2]
-		)
-	);
+			args[2]));
 	return symbol_t();
 }
 
@@ -98,9 +93,7 @@ ROSSA_EXT_SIG(_lib_DelHintCallback, args, token, hash, stack_trace)
 			args[1],
 			*token,
 			stack_trace,
-			args[2]
-		)
-	);
+			args[2]));
 	return symbol_t();
 }
 

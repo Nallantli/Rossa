@@ -8,6 +8,7 @@ struct signature_t
 {
 private:
 	const std::vector<parameter_t> values;
+
 public:
 	signature_t();
 	signature_t(const std::vector<parameter_t> &values);

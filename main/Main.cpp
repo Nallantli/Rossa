@@ -13,14 +13,15 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 		{"version", "false"},
 		{"standard", "true"},
 		{"file", ""},
-		{"output", ""}
-	};
+		{"output", ""}};
 	std::vector<std::string> passed;
 
 	bool flag = false;
 
-	for (int i = 1; i < argc; i++) {
-		if (flag == false && argv[i][0] == '-') {
+	for (int i = 1; i < argc; i++)
+	{
+		if (flag == false && argv[i][0] == '-')
+		{
 			if (std::string(argv[i]) == "--tree" || std::string(argv[i]) == "-t")
 				options["tree"] = "true";
 			else if (std::string(argv[i]) == "--no-standard" || std::string(argv[i]) == "-ns")
@@ -29,25 +30,30 @@ inline const std::pair<std::map<std::string, std::string>, std::vector<std::stri
 				options["version"] = "true";
 			else if (std::string(argv[i]) == "--output" || std::string(argv[i]) == "-o")
 				options["output"] = argv[++i];
-			else {
+			else
+			{
 				std::cerr << "Unknown command line option: " << argv[i] << "\n";
 				exit(1);
 			}
-		} else if (flag == false) {
+		}
+		else if (flag == false)
+		{
 			flag = true;
 			options["file"] = argv[i];
-		} else
+		}
+		else
 			passed.push_back(argv[i]);
 	}
 
-	return { options, passed };
+	return {options, passed};
 }
 
 int main(int argc, char const *argv[])
 {
 	auto parsed = parseOptions(argc, argv);
 	auto options = parsed.first;
-	if (options["version"] == "true") {
+	if (options["version"] == "true")
+	{
 		std::cout << _ROSSA_VERSION_LONG_ << "\n";
 		return 0;
 	}
@@ -56,32 +62,44 @@ int main(int argc, char const *argv[])
 	printc("", RESET_TEXT);
 	bool tree = options["tree"] == "true";
 
-	if (options["file"] == "") {
+	if (options["file"] == "")
+	{
 		std::cout << _ROSSA_INTERPRETER_START_ << "\n";
 
-		if (options["standard"] == "true") {
-			try {
+		if (options["standard"] == "true")
+		{
+			try
+			{
 				wrapper.runCode(wrapper.compileCode(KEYWORD_LOAD " \"standard\";", std::filesystem::current_path() / "*"), false);
 				std::cout << _STANDARD_LIBRARY_LOADED_ << "\n";
-			} catch (const rossa_error_t &e) {
+			}
+			catch (const rossa_error_t &e)
+			{
 				std::cout << _STANDARD_LIBRARY_LOAD_FAIL_ << std::string(e.what()) << "\n";
 			}
-		} else {
+		}
+		else
+		{
 			std::cout << _OPTION_NO_STD_ << "\n";
 		}
 
 		std::string code;
-		while (true) {
+		while (true)
+		{
 			std::cout << "> ";
 			std::getline(std::cin, code);
-			try {
+			try
+			{
 				auto comp = wrapper.compileCode(code, std::filesystem::current_path() / "*");
 				auto value = wrapper.runCode(std::move(comp), tree);
 				trace_t stack_trace;
-				if (value.getValueType() == value_type_enum::ARRAY) {
-					if (value.vectorSize() != 1) {
+				if (value.getValueType() == value_type_enum::ARRAY)
+				{
+					if (value.vectorSize() != 1)
+					{
 						int i = 0;
-						for (auto &e : value.getVector(NULL, stack_trace)) {
+						for (auto &e : value.getVector(NULL, stack_trace))
+						{
 							printc("\t(" + std::to_string(i) + ")\t", CYAN_TEXT);
 #ifdef DEBUG
 							std::cout << e.toCodeString() << "\n";
@@ -90,7 +108,9 @@ int main(int argc, char const *argv[])
 #endif
 							i++;
 						}
-					} else {
+					}
+					else
+					{
 #ifdef DEBUG
 						std::cout << "\t" << value.getVector(NULL, stack_trace)[0].toCodeString() << "\n";
 #else
@@ -98,14 +118,19 @@ int main(int argc, char const *argv[])
 #endif
 					}
 				}
-			} catch (const rossa_error_t &e) {
+			}
+			catch (const rossa_error_t &e)
+			{
 				parser_t::printError(e);
 			}
 		}
-	} else {
+	}
+	else
+	{
 		std::ifstream file;
 		file.open(options["file"]);
-		if (!file.is_open()) {
+		if (!file.is_open())
+		{
 			std::cerr << _FAILURE_FILEPATH_ << options["file"] << "\n";
 			return 1;
 		}
@@ -115,12 +140,15 @@ int main(int argc, char const *argv[])
 		while (std::getline(file, line))
 			content += line + "\n";
 
-		try {
+		try
+		{
 			if (options["standard"] == "true")
 				content = (KEYWORD_LOAD " \"standard\";\n") + content;
 			auto entry = wrapper.compileCode(content, std::filesystem::path(options["file"]));
 			wrapper.runCode(entry, tree);
-		} catch (const rossa_error_t &e) {
+		}
+		catch (const rossa_error_t &e)
+		{
 			parser_t::printError(e);
 			return 1;
 		}

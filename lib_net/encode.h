@@ -17,20 +17,22 @@ const std::string decodeURIComponent(const std::string &encoded)
 
 	int dynamicLength = decoded.size() - 2;
 
-	if (decoded.size() < 3) return decoded;
+	if (decoded.size() < 3)
+		return decoded;
 
-	for (int i = 0; i < dynamicLength; i++) {
+	for (int i = 0; i < dynamicLength; i++)
+	{
 
 		haystack = decoded.substr(i, 3);
 
-		if (std::regex_match(haystack, sm, std::regex("%[0-9A-F]{2}"))) {
+		if (std::regex_match(haystack, sm, std::regex("%[0-9A-F]{2}")))
+		{
 			haystack = haystack.replace(0, 1, "0x");
-			std::string rc = { static_cast<char>(std::stoi(haystack, nullptr, 16)) };
+			std::string rc = {static_cast<char>(std::stoi(haystack, nullptr, 16))};
 			decoded = decoded.replace(decoded.begin() + i, decoded.begin() + i + 3, rc);
 		}
 
 		dynamicLength = decoded.size() - 2;
-
 	}
 
 	return decoded;
@@ -41,10 +43,14 @@ const std::string encodeURIComponent(const std::string &decoded)
 	std::ostringstream oss;
 	std::regex r("[!'\\(\\)*-.0-9A-Za-z_~]");
 
-	for (auto &c : decoded) {
-		if (std::regex_match(std::string(1, c), r)) {
+	for (auto &c : decoded)
+	{
+		if (std::regex_match(std::string(1, c), r))
+		{
 			oss << c;
-		} else {
+		}
+		else
+		{
 			oss << "%" << std::uppercase << std::hex << (0xff & c);
 		}
 	}

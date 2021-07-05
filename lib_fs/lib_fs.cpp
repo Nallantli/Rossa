@@ -14,21 +14,23 @@ namespace lib_fs
 	{
 		int error;
 		zip_t *z = zip_open(zipdir.string().c_str(), ZIP_RDONLY, &error);
-		if (z == NULL) {
-			switch (error) {
-				case ZIP_ER_INVAL:
-				case ZIP_ER_NOENT:
-					throw rossa_error_t("Path to ZIP archive is invalid", *token, stack_trace);
-				case ZIP_ER_NOZIP:
-					throw rossa_error_t("Path does not point to a ZIP archive", *token, stack_trace);
-				case ZIP_ER_OPEN:
-					throw rossa_error_t("ZIP archive cannot be opened", *token, stack_trace);
-				case ZIP_ER_READ:
-					throw rossa_error_t("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
-				case ZIP_ER_MEMORY:
-					throw rossa_error_t("Enough memory could not be allocated", *token, stack_trace);
-				default:
-					throw rossa_error_t("An error occured while attempting to open archive", *token, stack_trace);
+		if (z == NULL)
+		{
+			switch (error)
+			{
+			case ZIP_ER_INVAL:
+			case ZIP_ER_NOENT:
+				throw rossa_error_t("Path to ZIP archive is invalid", *token, stack_trace);
+			case ZIP_ER_NOZIP:
+				throw rossa_error_t("Path does not point to a ZIP archive", *token, stack_trace);
+			case ZIP_ER_OPEN:
+				throw rossa_error_t("ZIP archive cannot be opened", *token, stack_trace);
+			case ZIP_ER_READ:
+				throw rossa_error_t("ZIP archive cannot be read (possibly corrupt)", *token, stack_trace);
+			case ZIP_ER_MEMORY:
+				throw rossa_error_t("Enough memory could not be allocated", *token, stack_trace);
+			default:
+				throw rossa_error_t("An error occured while attempting to open archive", *token, stack_trace);
 			}
 		}
 
@@ -36,15 +38,21 @@ namespace lib_fs
 		zip_file_t *f;
 		zip_uint64_t totalRead;
 		char binBuffer[100];
-		for (int i = 0; i < zip_get_num_entries(z, 0); i++) {
-			if (zip_stat_index(z, i, 0, &statBuffer) == 0) {
-				if (statBuffer.name[strlen(statBuffer.name) - 1] == '/') {
+		for (int i = 0; i < zip_get_num_entries(z, 0); i++)
+		{
+			if (zip_stat_index(z, i, 0, &statBuffer) == 0)
+			{
+				if (statBuffer.name[strlen(statBuffer.name) - 1] == '/')
+				{
 					std::filesystem::create_directories(unzipdir / statBuffer.name);
-				} else {
+				}
+				else
+				{
 					f = zip_fopen_index(z, i, 0);
 					std::ofstream file(unzipdir / statBuffer.name, std::ios_base::binary);
 					totalRead = 0;
-					while (totalRead != statBuffer.size) {
+					while (totalRead != statBuffer.size)
+					{
 						int nlen = zip_fread(f, binBuffer, 100);
 						if (nlen < 0)
 							throw rossa_error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
@@ -54,12 +62,15 @@ namespace lib_fs
 					file.close();
 					zip_fclose(f);
 				}
-			} else {
+			}
+			else
+			{
 				throw rossa_error_t("Error reading file within archive (possibly corrupt)", *token, stack_trace);
 			}
 		}
 
-		if (zip_close(z) == -1) {
+		if (zip_close(z) == -1)
+		{
 			throw rossa_error_t("Attempt to close ZIP archive failed", *token, stack_trace);
 		}
 	}
@@ -153,7 +164,8 @@ ROSSA_EXT_SIG(_reader_read, args, token, hash, stack_trace)
 
 	std::string line = "";
 	char c;
-	for (size_t i = 0; i < max; i++) {
+	for (size_t i = 0; i < max; i++)
+	{
 		if (fstr->get(c))
 			line += c;
 		else

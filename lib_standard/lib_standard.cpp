@@ -24,9 +24,12 @@ namespace lib_standard
 	inline void threadWrapper(const ptr_function_t &f)
 	{
 		trace_t stack_trace;
-		try {
+		try
+		{
 			function_evaluate(f, {}, NULL, stack_trace);
-		} catch (const rossa_error_t &e) {
+		}
+		catch (const rossa_error_t &e)
+		{
 			parser_t::printError(e);
 		}
 	}
@@ -219,7 +222,8 @@ ROSSA_EXT_SIG(_regex_match, args, token, hash, stack_trace)
 	std::regex r(args[0].getString(token, stack_trace));
 	std::string s = args[1].getString(token, stack_trace);
 	std::vector<symbol_t> v;
-	for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++) {
+	for (std::sregex_iterator i = std::sregex_iterator(s.begin(), s.end(), r); i != std::sregex_iterator(); i++)
+	{
 		std::string m = (*i).str();
 		v.push_back(symbol_t::String(m));
 	}
@@ -286,19 +290,24 @@ ROSSA_EXT_SIG(_function_split, args, token, hash, stack_trace)
 	auto f = args[0].getFunctionOverloads(token, stack_trace);
 	auto varg = args[0].getVARGFunction(token, stack_trace);
 	std::map<const std::string, const symbol_t> m;
-	for (auto &e : f) {
-		if (e.first == 0) {
-			m.insert({ "0", symbol_t::FunctionSIG({}, e.second.at(signature_t())) });
-		} else {
+	for (auto &e : f)
+	{
+		if (e.first == 0)
+		{
+			m.insert({"0", symbol_t::FunctionSIG({}, e.second.at(signature_t()))});
+		}
+		else
+		{
 			std::map<const std::string, const symbol_t> m2;
-			for (auto &e2 : e.second) {
-				m2.insert({ "Function<" + e2.first.toString() + ">", symbol_t::FunctionSIG(e2.first, e2.second) });
+			for (auto &e2 : e.second)
+			{
+				m2.insert({"Function<" + e2.first.toString() + ">", symbol_t::FunctionSIG(e2.first, e2.second)});
 			}
-			m.insert({ std::to_string(e.first), symbol_t::Dictionary(m2) });
+			m.insert({std::to_string(e.first), symbol_t::Dictionary(m2)});
 		}
 	}
 	if (varg != nullptr)
-		m.insert({ "...", symbol_t::FunctionVARG(varg) });
+		m.insert({"...", symbol_t::FunctionVARG(varg)});
 	return symbol_t::Dictionary(m);
 }
 

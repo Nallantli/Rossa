@@ -62,9 +62,9 @@ typedef std::shared_ptr<function_t> ptr_function_t;
 typedef std::vector<std::pair<token_t, function_t>> trace_t;
 typedef std::vector<type_sll> aug_type_t;
 
-typedef const symbol_t(*extf_t)(const std::vector<symbol_t> &, const token_t *, Hash &, trace_t &);
+typedef const symbol_t (*extf_t)(const std::vector<symbol_t> &, const token_t *, Hash &, trace_t &);
 typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
-typedef std::string(*cm_fns_t)();
+typedef std::string (*cm_fns_t)();
 
 struct node_scope_t
 {
@@ -228,18 +228,18 @@ enum instruction_type_enum
 	B_SH_L,
 	B_SH_R,
 	DECLARE_VARS_I,
-B_NOT_I,
-TYPE_I,
-CALL_OP_I,
-GET_THIS_I,
-DELETE_I,
-UN_ADD_I,
-NEG_I,
-NOT_I,
-CONCAT_I,
-SET_INDEX_I,
-HASH_I,
-EACH_I
+	B_NOT_I,
+	TYPE_I,
+	CALL_OP_I,
+	GET_THIS_I,
+	DELETE_I,
+	UN_ADD_I,
+	NEG_I,
+	NOT_I,
+	CONCAT_I,
+	SET_INDEX_I,
+	HASH_I,
+	EACH_I
 };
 
 #ifndef _WIN32
@@ -315,6 +315,7 @@ class Hash
 {
 private:
 	std::vector<std::string> variable_hash;
+
 public:
 	Hash()
 	{

@@ -178,13 +178,7 @@ struct Arbitrary : Number {
 	}
 }
 
-`=`(ref a, ref b : Arbitrary) => {
-	if $a != $Arbitrary then {
-		a = b + 0;
-	} else {
-		a = b;
-	}
-}
+`=`(ref a, ref b : Arbitrary) => a = ($a == $Arbirary ? b : (new Arbitrary() = b));
 
 `+`(ref a : Number, ref b : Arbitrary) => {
 	return a + (b -> Number);

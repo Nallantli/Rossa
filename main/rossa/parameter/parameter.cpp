@@ -3,15 +3,14 @@
 #include "../global/global.h"
 
 parameter_t::parameter_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base)
-	: ancestors(ancestors)
-	, base{ base }
-{}
+	: ancestors(ancestors), base{base}
+{
+}
 
 parameter_t::parameter_t(const std::vector<aug_type_t> &ancestors, const aug_type_t &base, const std::vector<parameter_t> &qualifiers)
-	: ancestors(ancestors)
-	, base{ base }
-	, qualifiers{ qualifiers }
-{}
+	: ancestors(ancestors), base{base}, qualifiers{qualifiers}
+{
+}
 
 void parameter_t::addQualifier(const parameter_t &param)
 {
@@ -21,10 +20,12 @@ void parameter_t::addQualifier(const parameter_t &param)
 const std::string parameter_t::toString() const
 {
 	std::string s = global::getTypeString(base);
-	if (!qualifiers.empty()) {
+	if (!qualifiers.empty())
+	{
 		s += "<";
 		size_t i = 0;
-		for (auto &v : qualifiers) {
+		for (auto &v : qualifiers)
+		{
 			if (i++ > 0)
 				s += ", ";
 			s += v.toString();
@@ -38,10 +39,12 @@ const unsigned int parameter_t::hash() const
 {
 	int h = 0;
 	int i = 0;
-	for (auto &e : base) {
+	for (auto &e : base)
+	{
 		h = (h + (std::abs(e) << i++)) % 0xFFFFFFFF;
 	}
-	for (auto &e : qualifiers) {
+	for (auto &e : qualifiers)
+	{
 		h = (h + (e.hash() << i++)) % 0xFFFFFFFF;
 	}
 	return h;
@@ -52,7 +55,8 @@ const std::string parameter_t::toCodeString() const
 	std::string s = "parameter_t(static_cast<type_sll>(" + global::getTypeString(base) + "), ";
 	s += "{";
 	size_t i = 0;
-	for (auto &v : qualifiers) {
+	for (auto &v : qualifiers)
+	{
 		if (i++ > 0)
 			s += ", ";
 		s += v.toCodeString();
@@ -77,13 +81,15 @@ const bool parameter_t::operator<(const parameter_t &pt) const
 		return base < pt.base;
 	if (qualifiers.size() != pt.qualifiers.size())
 		return qualifiers.size() < pt.qualifiers.size();
-	for (size_t i = 0; i < qualifiers.size(); i++) {
+	for (size_t i = 0; i < qualifiers.size(); i++)
+	{
 		if (qualifiers[i] < pt.qualifiers[i])
 			return true;
 	}
 	if (ancestors.size() != pt.ancestors.size())
 		return ancestors.size() < pt.ancestors.size();
-	for (size_t i = 0; i < ancestors.size(); i++) {
+	for (size_t i = 0; i < ancestors.size(); i++)
+	{
 		if (ancestors[i] < pt.ancestors[i])
 			return true;
 	}
@@ -103,7 +109,8 @@ const size_t parameter_t::operator&(const parameter_t &pt) const
 	if (!qualifiers.empty() && qualifiers.size() != pt.qualifiers.size())
 		return 0;
 	size_t v = 3;
-	for (size_t i = 0; i < qualifiers.size(); i++) {
+	for (size_t i = 0; i < qualifiers.size(); i++)
+	{
 		auto val = qualifiers[i] & pt.qualifiers[i];
 		if (val == 0)
 			return 0;
@@ -112,7 +119,6 @@ const size_t parameter_t::operator&(const parameter_t &pt) const
 	}
 	return v;
 }
-
 
 const bool parameter_t::operator==(const parameter_t &p) const
 {

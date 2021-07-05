@@ -26,7 +26,7 @@ namespace lib_graphics
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw rossa_error_t(global::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Texture file `{0}` loading error: {1}", {path, IMG_GetError()}), *token, stack_trace);
 			SDL_SetColorKey(loaded, SDL_TRUE, SDL_MapRGB(loaded->format, r, g, b));
 		}
 
@@ -34,15 +34,16 @@ namespace lib_graphics
 		{
 			loaded = IMG_Load(path.c_str());
 			if (loaded == NULL)
-				throw rossa_error_t(global::format("Texture file `{0}` loading error: {1}", { path, IMG_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Texture file `{0}` loading error: {1}", {path, IMG_GetError()}), *token, stack_trace);
 		}
 
 		SDL_Texture *getImage(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace)
 		{
-			if (image == NULL) {
+			if (image == NULL)
+			{
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw rossa_error_t(global::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw rossa_error_t(global::format("Cannot create renderable image: {0}", {SDL_GetError()}), *token, stack_trace);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
 			}
@@ -66,7 +67,7 @@ namespace lib_graphics
 		{
 			font = TTF_OpenFont(path.c_str(), size);
 			if (font == NULL)
-				throw rossa_error_t(global::format("Failure to initialize font: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Failure to initialize font: {0}", {TTF_GetError()}), *token, stack_trace);
 		}
 
 		~Font()
@@ -82,12 +83,9 @@ namespace lib_graphics
 		static hash_ull id_count;
 
 		Shape(const color_t &r, const color_t &b, const color_t &g, const color_t &a)
-			: r{ r }
-			, g{ g }
-			, b{ b }
-			, a{ a }
-			, id{ id_count++ }
-		{}
+			: r{r}, g{g}, b{b}, a{a}, id{id_count++}
+		{
+		}
 
 		virtual void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) = 0;
 
@@ -113,10 +111,9 @@ namespace lib_graphics
 		int height;
 
 		Sizable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
-			: Shape(r, g, b, a)
-			, width{ width }
-			, height{ height }
-		{}
+			: Shape(r, g, b, a), width{width}, height{height}
+		{
+		}
 
 		void setSize(const int &width, const int &height)
 		{
@@ -143,7 +140,8 @@ namespace lib_graphics
 
 		Rotatable(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 			: Sizable(width, height, r, g, b, a)
-		{}
+		{
+		}
 
 		void setAngle(const double &angle)
 		{
@@ -154,7 +152,7 @@ namespace lib_graphics
 		{
 			if (center != NULL)
 				SDL_free(center);
-			center = new SDL_Point({ x, y });
+			center = new SDL_Point({x, y});
 		}
 
 		void deCenter()
@@ -168,7 +166,7 @@ namespace lib_graphics
 		{
 			if (clip != NULL)
 				SDL_free(clip);
-			clip = new SDL_Rect({ cx, cy, cwidth, cheight });
+			clip = new SDL_Rect({cx, cy, cwidth, cheight});
 		}
 
 		void deClip()
@@ -191,15 +189,16 @@ namespace lib_graphics
 	{
 		Rectangle(const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 			: Sizable(width, height, r, g, b, a)
-		{}
+		{
+		}
 
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
-			SDL_Rect temp = { x, y, width, height };
+			SDL_Rect temp = {x, y, width, height};
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error setting shape color: {0}", {SDL_GetError()}), *token, stack_trace);
 			if (SDL_RenderFillRect(renderer, &temp) < 0)
-				throw rossa_error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error drawing shape: {0}", {SDL_GetError()}), *token, stack_trace);
 		}
 	};
 
@@ -208,17 +207,16 @@ namespace lib_graphics
 		int x1;
 		int y1;
 		Line(const int &x1, const int &y1, const color_t &r, const color_t &g, const color_t &b, const color_t &a)
-			: Shape(r, g, b, a)
-			, x1{ x1 }
-			, y1{ y1 }
-		{}
+			: Shape(r, g, b, a), x1{x1}, y1{y1}
+		{
+		}
 
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error setting shape color: {0}", {SDL_GetError()}), *token, stack_trace);
 			if (SDL_RenderDrawLine(renderer, x, y, x1, y1) < 0)
-				throw rossa_error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error drawing shape: {0}", {SDL_GetError()}), *token, stack_trace);
 		}
 	};
 
@@ -226,14 +224,15 @@ namespace lib_graphics
 	{
 		Point(const color_t &r, const color_t &g, const color_t &b, const color_t &a)
 			: Shape(r, g, b, a)
-		{}
+		{
+		}
 
 		void draw(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace, const int &x, const int &y) override
 		{
 			if (SDL_SetRenderDrawColor(renderer, r, g, b, a) < 0)
-				throw rossa_error_t(global::format("Error setting shape color: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error setting shape color: {0}", {SDL_GetError()}), *token, stack_trace);
 			if (SDL_RenderDrawPoint(renderer, x, y) < 0)
-				throw rossa_error_t(global::format("Error drawing shape: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Error drawing shape: {0}", {SDL_GetError()}), *token, stack_trace);
 		}
 	};
 
@@ -242,9 +241,9 @@ namespace lib_graphics
 		symbol_t image;
 
 		Texture(const symbol_t &image, const int &width, const int &height, const color_t &r, const color_t &g, const color_t &b)
-			: Rotatable(width, height, r, g, b, 0)
-			, image{ image }
-		{}
+			: Rotatable(width, height, r, g, b, 0), image{image}
+		{
+		}
 
 		void setImage(const symbol_t &image)
 		{
@@ -255,7 +254,7 @@ namespace lib_graphics
 		{
 			auto img = COERCE_PTR(image.getPointer(token, stack_trace), Image)->getImage(renderer, token, stack_trace);
 			SDL_SetTextureColorMod(img, r, g, b);
-			SDL_Rect temp = { x, y, width, height };
+			SDL_Rect temp = {x, y, width, height};
 			SDL_RenderCopyEx(renderer, img, clip, &temp, angle, center, SDL_FLIP_NONE);
 		}
 	};
@@ -270,12 +269,12 @@ namespace lib_graphics
 		{
 			renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 			if (renderer == NULL)
-				throw rossa_error_t(global::format("Failure to initialize renderer: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Failure to initialize renderer: {0}", {SDL_GetError()}), *token, stack_trace);
 		}
 
 		void addShape(const symbol_t &shape, const int &x, const int &y)
 		{
-			shapes.push_back({ shape, {x, y} });
+			shapes.push_back({shape, {x, y}});
 		}
 
 		void clearAll()
@@ -318,10 +317,11 @@ namespace lib_graphics
 
 		SDL_Texture *renderFont(SDL_Renderer *renderer, const token_t *token, trace_t &stack_trace)
 		{
-			if (image == NULL) {
+			if (image == NULL)
+			{
 				image = SDL_CreateTextureFromSurface(renderer, loaded);
 				if (image == NULL)
-					throw rossa_error_t(global::format("Cannot create renderable image: {0}", { SDL_GetError() }), *token, stack_trace);
+					throw rossa_error_t(global::format("Cannot create renderable image: {0}", {SDL_GetError()}), *token, stack_trace);
 				SDL_QueryTexture(image, NULL, NULL, &width, &height);
 				SDL_FreeSurface(loaded);
 				loaded = NULL;
@@ -337,9 +337,9 @@ namespace lib_graphics
 			if (s == "")
 				return;
 			auto fdata = (COERCE_PTR(font.getPointer(token, stack_trace), lib_graphics::Font))->font;
-			loaded = TTF_RenderText_Solid(fdata, s.c_str(), { r, g, b, a });
+			loaded = TTF_RenderText_Solid(fdata, s.c_str(), {r, g, b, a});
 			if (loaded == NULL)
-				throw rossa_error_t(global::format("Font rendering error: {0}", { TTF_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Font rendering error: {0}", {TTF_GetError()}), *token, stack_trace);
 			text = s;
 		}
 
@@ -347,7 +347,7 @@ namespace lib_graphics
 		{
 			if (text == "")
 				return;
-			SDL_Rect temp = { x, y, width, height };
+			SDL_Rect temp = {x, y, width, height};
 			SDL_RenderCopy(renderer, renderFont(renderer, token, stack_trace), NULL, &temp);
 		}
 
@@ -376,7 +376,7 @@ namespace lib_graphics
 		{
 			window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
 			if (window == NULL)
-				throw rossa_error_t(global::format("Failure to initialize window: {0}", { SDL_GetError() }), *token, stack_trace);
+				throw rossa_error_t(global::format("Failure to initialize window: {0}", {SDL_GetError()}), *token, stack_trace);
 
 			this->windowID = SDL_GetWindowID(window);
 		}
@@ -398,14 +398,14 @@ namespace lib_graphics
 ROSSA_EXT_SIG(_sdl_init, args, token, hash, stack_trace)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		throw rossa_error_t(global::format("Failure to initialize SDL: {0}", { SDL_GetError() }), *token, stack_trace);
+		throw rossa_error_t(global::format("Failure to initialize SDL: {0}", {SDL_GetError()}), *token, stack_trace);
 
 	int imgFlags = IMG_INIT_PNG | IMG_INIT_JPG;
 	if (!(IMG_Init(imgFlags) & imgFlags))
-		throw rossa_error_t(global::format("Failure to initialize SDL_image: {0}", { IMG_GetError() }), *token, stack_trace);
+		throw rossa_error_t(global::format("Failure to initialize SDL_image: {0}", {IMG_GetError()}), *token, stack_trace);
 
 	if (TTF_Init() < 0)
-		throw rossa_error_t(global::format("Failure to initialize SDL_ttf: {0}", { TTF_GetError() }), *token, stack_trace);
+		throw rossa_error_t(global::format("Failure to initialize SDL_ttf: {0}", {TTF_GetError()}), *token, stack_trace);
 
 	return symbol_t();
 }
@@ -421,7 +421,7 @@ ROSSA_EXT_SIG(_sdl_quit, args, token, hash, stack_trace)
 ROSSA_EXT_SIG(_window_init, args, token, hash, stack_trace)
 {
 	auto w = std::make_shared<lib_graphics::Window>(args[0].getString(token, stack_trace), args[1].getNumber(token, stack_trace).getLong(), args[2].getNumber(token, stack_trace).getLong(), token, stack_trace);
-	std::vector<symbol_t> v = { symbol_t::Pointer(w), symbol_t::Number(number_t::Long(w->windowID)) };
+	std::vector<symbol_t> v = {symbol_t::Pointer(w), symbol_t::Number(number_t::Long(w->windowID))};
 	return symbol_t::Array(v);
 }
 
@@ -429,186 +429,189 @@ ROSSA_EXT_SIG(_event_poll, args, token, hash, stack_trace)
 {
 	SDL_Event e;
 	std::map<const std::string, const symbol_t> data;
-	if (SDL_PollEvent(&e)) {
-		data.insert({ "type", symbol_t::Number(number_t::Long(e.type)) });
-		switch (e.type) {
-			case SDL_WINDOWEVENT:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.window.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.window.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.window.windowID] });
-				data.insert({ "event", symbol_t::Number(number_t::Long(e.window.event)) });
-				data.insert({ "data1", symbol_t::Number(number_t::Long(e.window.data1)) });
-				data.insert({ "data2", symbol_t::Number(number_t::Long(e.window.data2)) });
-				return symbol_t::Dictionary(data);
-			case SDL_KEYDOWN:
-			case SDL_KEYUP:
+	if (SDL_PollEvent(&e))
+	{
+		data.insert({"type", symbol_t::Number(number_t::Long(e.type))});
+		switch (e.type)
+		{
+		case SDL_WINDOWEVENT:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.window.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.window.windowID))});
+			data.insert({"window", lib_graphics::registered[e.window.windowID]});
+			data.insert({"event", symbol_t::Number(number_t::Long(e.window.event))});
+			data.insert({"data1", symbol_t::Number(number_t::Long(e.window.data1))});
+			data.insert({"data2", symbol_t::Number(number_t::Long(e.window.data2))});
+			return symbol_t::Dictionary(data);
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+		{
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.key.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.key.windowID))});
+			data.insert({"window", lib_graphics::registered[e.key.windowID]});
+			data.insert({"state", symbol_t::Number(number_t::Long(e.key.state))});
+			data.insert({"repeat", symbol_t::Number(number_t::Long(e.key.repeat))});
+			std::map<const std::string, const symbol_t> keysym;
+			keysym.insert({"scancode", symbol_t::Number(number_t::Long(e.key.keysym.scancode))});
+			keysym.insert({"sym", symbol_t::Number(number_t::Long(e.key.keysym.sym))});
+			keysym.insert({"mod", symbol_t::Number(number_t::Long(e.key.keysym.mod))});
+			data.insert({"keysym", symbol_t::Dictionary(keysym)});
+			return symbol_t::Dictionary(data);
+		}
+		case SDL_TEXTEDITING:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.edit.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.edit.windowID))});
+			data.insert({"window", lib_graphics::registered[e.edit.windowID]});
+			data.insert({"text", symbol_t::String(std::string(e.edit.text))});
+			data.insert({"start", symbol_t::Number(number_t::Long(e.edit.start))});
+			data.insert({"length", symbol_t::Number(number_t::Long(e.edit.length))});
+			return symbol_t::Dictionary(data);
+		case SDL_TEXTINPUT:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.text.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.text.windowID))});
+			data.insert({"window", lib_graphics::registered[e.text.windowID]});
+			data.insert({"text", symbol_t::String(std::string(e.text.text))});
+			return symbol_t::Dictionary(data);
+		case SDL_MOUSEMOTION:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.motion.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.motion.windowID))});
+			data.insert({"window", lib_graphics::registered[e.motion.windowID]});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.motion.which))});
+			data.insert({"state", symbol_t::Number(number_t::Long(e.motion.state))});
+			data.insert({"x", symbol_t::Number(number_t::Long(e.motion.x))});
+			data.insert({"y", symbol_t::Number(number_t::Long(e.motion.y))});
+			data.insert({"xrel", symbol_t::Number(number_t::Long(e.motion.xrel))});
+			data.insert({"yrel", symbol_t::Number(number_t::Long(e.motion.yrel))});
+			return symbol_t::Dictionary(data);
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.button.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.button.windowID))});
+			data.insert({"window", lib_graphics::registered[e.button.windowID]});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.button.which))});
+			data.insert({"state", symbol_t::Number(number_t::Long(e.button.state))});
+			data.insert({"x", symbol_t::Number(number_t::Long(e.button.x))});
+			data.insert({"y", symbol_t::Number(number_t::Long(e.button.y))});
+			data.insert({"button", symbol_t::Number(number_t::Long(e.button.button))});
+			data.insert({"clicks", symbol_t::Number(number_t::Long(e.button.clicks))});
+			return symbol_t::Dictionary(data);
+		case SDL_MOUSEWHEEL:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.wheel.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.wheel.windowID))});
+			data.insert({"window", lib_graphics::registered[e.wheel.windowID]});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.wheel.which))});
+			data.insert({"direction", symbol_t::Number(number_t::Long(e.wheel.direction))});
+			data.insert({"x", symbol_t::Number(number_t::Long(e.wheel.x))});
+			data.insert({"y", symbol_t::Number(number_t::Long(e.wheel.y))});
+			return symbol_t::Dictionary(data);
+		case SDL_JOYAXISMOTION:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.jaxis.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.jaxis.which))});
+			data.insert({"axis", symbol_t::Number(number_t::Long(e.jaxis.axis))});
+			data.insert({"value", symbol_t::Number(number_t::Long(e.jaxis.value))});
+			return symbol_t::Dictionary(data);
+		case SDL_JOYBALLMOTION:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.jball.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.jball.which))});
+			data.insert({"ball", symbol_t::Number(number_t::Long(e.jball.ball))});
+			data.insert({"xrel", symbol_t::Number(number_t::Long(e.jball.xrel))});
+			data.insert({"yrel", symbol_t::Number(number_t::Long(e.jball.yrel))});
+			return symbol_t::Dictionary(data);
+		case SDL_JOYHATMOTION:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.jhat.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.jhat.which))});
+			data.insert({"hat", symbol_t::Number(number_t::Long(e.jhat.hat))});
+			data.insert({"value", symbol_t::Number(number_t::Long(e.jhat.value))});
+			return symbol_t::Dictionary(data);
+		case SDL_JOYBUTTONDOWN:
+		case SDL_JOYBUTTONUP:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.jbutton.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.jbutton.which))});
+			data.insert({"button", symbol_t::Number(number_t::Long(e.jbutton.button))});
+			data.insert({"state", symbol_t::Number(number_t::Long(e.jbutton.state))});
+			return symbol_t::Dictionary(data);
+		case SDL_JOYDEVICEADDED:
+		case SDL_JOYDEVICEREMOVED:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.jdevice.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.jdevice.which))});
+			return symbol_t::Dictionary(data);
+		case SDL_CONTROLLERAXISMOTION:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.caxis.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.caxis.which))});
+			data.insert({"axis", symbol_t::Number(number_t::Long(e.caxis.axis))});
+			data.insert({"value", symbol_t::Number(number_t::Long(e.caxis.value))});
+			return symbol_t::Dictionary(data);
+		case SDL_CONTROLLERBUTTONDOWN:
+		case SDL_CONTROLLERBUTTONUP:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.cbutton.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.cbutton.which))});
+			data.insert({"button", symbol_t::Number(number_t::Long(e.cbutton.button))});
+			data.insert({"state", symbol_t::Number(number_t::Long(e.cbutton.state))});
+			return symbol_t::Dictionary(data);
+		case SDL_CONTROLLERDEVICEADDED:
+		case SDL_CONTROLLERDEVICEREMOVED:
+		case SDL_CONTROLLERDEVICEREMAPPED:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.cdevice.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.cdevice.which))});
+			return symbol_t::Dictionary(data);
+		case SDL_AUDIODEVICEADDED:
+		case SDL_AUDIODEVICEREMOVED:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.adevice.timestamp))});
+			data.insert({"which", symbol_t::Number(number_t::Long(e.adevice.which))});
+			data.insert({"iscapture", symbol_t::Number(number_t::Long(e.adevice.iscapture))});
+			return symbol_t::Dictionary(data);
+		case SDL_QUIT:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.quit.timestamp))});
+			return symbol_t::Dictionary(data);
+		case SDL_FINGERMOTION:
+		case SDL_FINGERDOWN:
+		case SDL_FINGERUP:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.tfinger.timestamp))});
+			data.insert({"touchId", symbol_t::Number(number_t::Long(e.tfinger.touchId))});
+			data.insert({"fingerId", symbol_t::Number(number_t::Long(e.tfinger.fingerId))});
+			data.insert({"x", symbol_t::Number(number_t::Double(e.tfinger.x))});
+			data.insert({"y", symbol_t::Number(number_t::Double(e.tfinger.y))});
+			data.insert({"dx", symbol_t::Number(number_t::Double(e.tfinger.dx))});
+			data.insert({"dy", symbol_t::Number(number_t::Double(e.tfinger.dy))});
+			data.insert({"pressure", symbol_t::Number(number_t::Double(e.tfinger.pressure))});
+			return symbol_t::Dictionary(data);
+		case SDL_MULTIGESTURE:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.mgesture.timestamp))});
+			data.insert({"touchId", symbol_t::Number(number_t::Long(e.mgesture.touchId))});
+			data.insert({"dTheta", symbol_t::Number(number_t::Double(e.mgesture.dTheta))});
+			data.insert({"dDist", symbol_t::Number(number_t::Double(e.mgesture.dDist))});
+			data.insert({"x", symbol_t::Number(number_t::Double(e.mgesture.x))});
+			data.insert({"y", symbol_t::Number(number_t::Double(e.mgesture.y))});
+			data.insert({"numFingers", symbol_t::Number(number_t::Long(e.mgesture.numFingers))});
+			return symbol_t::Dictionary(data);
+		case SDL_DOLLARGESTURE:
+		case SDL_DOLLARRECORD:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.dgesture.timestamp))});
+			data.insert({"touchId", symbol_t::Number(number_t::Long(e.dgesture.touchId))});
+			data.insert({"gestureId", symbol_t::Number(number_t::Long(e.dgesture.gestureId))});
+			data.insert({"numFingers", symbol_t::Number(number_t::Long(e.dgesture.numFingers))});
+			data.insert({"error", symbol_t::Number(number_t::Double(e.dgesture.error))});
+			data.insert({"x", symbol_t::Number(number_t::Double(e.dgesture.x))});
+			data.insert({"y", symbol_t::Number(number_t::Double(e.dgesture.y))});
+			return symbol_t::Dictionary(data);
+		case SDL_DROPFILE:
+		case SDL_DROPBEGIN:
+		case SDL_DROPTEXT:
+		case SDL_DROPCOMPLETE:
+			data.insert({"timestamp", symbol_t::Number(number_t::Long(e.drop.timestamp))});
+			data.insert({"windowID", symbol_t::Number(number_t::Long(e.drop.windowID))});
+			data.insert({"window", lib_graphics::registered[e.drop.windowID]});
+			if (e.drop.file != NULL)
 			{
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.key.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.key.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.key.windowID] });
-				data.insert({ "state", symbol_t::Number(number_t::Long(e.key.state)) });
-				data.insert({ "repeat", symbol_t::Number(number_t::Long(e.key.repeat)) });
-				std::map<const std::string, const symbol_t> keysym;
-				keysym.insert({ "scancode", symbol_t::Number(number_t::Long(e.key.keysym.scancode)) });
-				keysym.insert({ "sym", symbol_t::Number(number_t::Long(e.key.keysym.sym)) });
-				keysym.insert({ "mod", symbol_t::Number(number_t::Long(e.key.keysym.mod)) });
-				data.insert({ "keysym", symbol_t::Dictionary(keysym) });
-				return symbol_t::Dictionary(data);
+				data.insert({"file", symbol_t::String(std::string(e.drop.file))});
+				SDL_free(e.drop.file);
 			}
-			case SDL_TEXTEDITING:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.edit.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.edit.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.edit.windowID] });
-				data.insert({ "text", symbol_t::String(std::string(e.edit.text)) });
-				data.insert({ "start", symbol_t::Number(number_t::Long(e.edit.start)) });
-				data.insert({ "length", symbol_t::Number(number_t::Long(e.edit.length)) });
-				return symbol_t::Dictionary(data);
-			case SDL_TEXTINPUT:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.text.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.text.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.text.windowID] });
-				data.insert({ "text", symbol_t::String(std::string(e.text.text)) });
-				return symbol_t::Dictionary(data);
-			case SDL_MOUSEMOTION:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.motion.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.motion.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.motion.windowID] });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.motion.which)) });
-				data.insert({ "state", symbol_t::Number(number_t::Long(e.motion.state)) });
-				data.insert({ "x", symbol_t::Number(number_t::Long(e.motion.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Long(e.motion.y)) });
-				data.insert({ "xrel", symbol_t::Number(number_t::Long(e.motion.xrel)) });
-				data.insert({ "yrel", symbol_t::Number(number_t::Long(e.motion.yrel)) });
-				return symbol_t::Dictionary(data);
-			case SDL_MOUSEBUTTONDOWN:
-			case SDL_MOUSEBUTTONUP:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.button.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.button.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.button.windowID] });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.button.which)) });
-				data.insert({ "state", symbol_t::Number(number_t::Long(e.button.state)) });
-				data.insert({ "x", symbol_t::Number(number_t::Long(e.button.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Long(e.button.y)) });
-				data.insert({ "button", symbol_t::Number(number_t::Long(e.button.button)) });
-				data.insert({ "clicks", symbol_t::Number(number_t::Long(e.button.clicks)) });
-				return symbol_t::Dictionary(data);
-			case SDL_MOUSEWHEEL:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.wheel.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.wheel.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.wheel.windowID] });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.wheel.which)) });
-				data.insert({ "direction", symbol_t::Number(number_t::Long(e.wheel.direction)) });
-				data.insert({ "x", symbol_t::Number(number_t::Long(e.wheel.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Long(e.wheel.y)) });
-				return symbol_t::Dictionary(data);
-			case SDL_JOYAXISMOTION:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jaxis.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.jaxis.which)) });
-				data.insert({ "axis", symbol_t::Number(number_t::Long(e.jaxis.axis)) });
-				data.insert({ "value", symbol_t::Number(number_t::Long(e.jaxis.value)) });
-				return symbol_t::Dictionary(data);
-			case SDL_JOYBALLMOTION:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jball.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.jball.which)) });
-				data.insert({ "ball", symbol_t::Number(number_t::Long(e.jball.ball)) });
-				data.insert({ "xrel", symbol_t::Number(number_t::Long(e.jball.xrel)) });
-				data.insert({ "yrel", symbol_t::Number(number_t::Long(e.jball.yrel)) });
-				return symbol_t::Dictionary(data);
-			case SDL_JOYHATMOTION:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jhat.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.jhat.which)) });
-				data.insert({ "hat", symbol_t::Number(number_t::Long(e.jhat.hat)) });
-				data.insert({ "value", symbol_t::Number(number_t::Long(e.jhat.value)) });
-				return symbol_t::Dictionary(data);
-			case SDL_JOYBUTTONDOWN:
-			case SDL_JOYBUTTONUP:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jbutton.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.jbutton.which)) });
-				data.insert({ "button", symbol_t::Number(number_t::Long(e.jbutton.button)) });
-				data.insert({ "state", symbol_t::Number(number_t::Long(e.jbutton.state)) });
-				return symbol_t::Dictionary(data);
-			case SDL_JOYDEVICEADDED:
-			case SDL_JOYDEVICEREMOVED:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.jdevice.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.jdevice.which)) });
-				return symbol_t::Dictionary(data);
-			case SDL_CONTROLLERAXISMOTION:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.caxis.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.caxis.which)) });
-				data.insert({ "axis", symbol_t::Number(number_t::Long(e.caxis.axis)) });
-				data.insert({ "value", symbol_t::Number(number_t::Long(e.caxis.value)) });
-				return symbol_t::Dictionary(data);
-			case SDL_CONTROLLERBUTTONDOWN:
-			case SDL_CONTROLLERBUTTONUP:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.cbutton.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.cbutton.which)) });
-				data.insert({ "button", symbol_t::Number(number_t::Long(e.cbutton.button)) });
-				data.insert({ "state", symbol_t::Number(number_t::Long(e.cbutton.state)) });
-				return symbol_t::Dictionary(data);
-			case SDL_CONTROLLERDEVICEADDED:
-			case SDL_CONTROLLERDEVICEREMOVED:
-			case SDL_CONTROLLERDEVICEREMAPPED:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.cdevice.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.cdevice.which)) });
-				return symbol_t::Dictionary(data);
-			case SDL_AUDIODEVICEADDED:
-			case SDL_AUDIODEVICEREMOVED:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.adevice.timestamp)) });
-				data.insert({ "which", symbol_t::Number(number_t::Long(e.adevice.which)) });
-				data.insert({ "iscapture", symbol_t::Number(number_t::Long(e.adevice.iscapture)) });
-				return symbol_t::Dictionary(data);
-			case SDL_QUIT:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.quit.timestamp)) });
-				return symbol_t::Dictionary(data);
-			case SDL_FINGERMOTION:
-			case SDL_FINGERDOWN:
-			case SDL_FINGERUP:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.tfinger.timestamp)) });
-				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.tfinger.touchId)) });
-				data.insert({ "fingerId", symbol_t::Number(number_t::Long(e.tfinger.fingerId)) });
-				data.insert({ "x", symbol_t::Number(number_t::Double(e.tfinger.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Double(e.tfinger.y)) });
-				data.insert({ "dx", symbol_t::Number(number_t::Double(e.tfinger.dx)) });
-				data.insert({ "dy", symbol_t::Number(number_t::Double(e.tfinger.dy)) });
-				data.insert({ "pressure", symbol_t::Number(number_t::Double(e.tfinger.pressure)) });
-				return symbol_t::Dictionary(data);
-			case SDL_MULTIGESTURE:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.mgesture.timestamp)) });
-				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.mgesture.touchId)) });
-				data.insert({ "dTheta", symbol_t::Number(number_t::Double(e.mgesture.dTheta)) });
-				data.insert({ "dDist", symbol_t::Number(number_t::Double(e.mgesture.dDist)) });
-				data.insert({ "x", symbol_t::Number(number_t::Double(e.mgesture.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Double(e.mgesture.y)) });
-				data.insert({ "numFingers", symbol_t::Number(number_t::Long(e.mgesture.numFingers)) });
-				return symbol_t::Dictionary(data);
-			case SDL_DOLLARGESTURE:
-			case SDL_DOLLARRECORD:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.dgesture.timestamp)) });
-				data.insert({ "touchId", symbol_t::Number(number_t::Long(e.dgesture.touchId)) });
-				data.insert({ "gestureId", symbol_t::Number(number_t::Long(e.dgesture.gestureId)) });
-				data.insert({ "numFingers", symbol_t::Number(number_t::Long(e.dgesture.numFingers)) });
-				data.insert({ "error", symbol_t::Number(number_t::Double(e.dgesture.error)) });
-				data.insert({ "x", symbol_t::Number(number_t::Double(e.dgesture.x)) });
-				data.insert({ "y", symbol_t::Number(number_t::Double(e.dgesture.y)) });
-				return symbol_t::Dictionary(data);
-			case SDL_DROPFILE:
-			case SDL_DROPBEGIN:
-			case SDL_DROPTEXT:
-			case SDL_DROPCOMPLETE:
-				data.insert({ "timestamp", symbol_t::Number(number_t::Long(e.drop.timestamp)) });
-				data.insert({ "windowID", symbol_t::Number(number_t::Long(e.drop.windowID)) });
-				data.insert({ "window", lib_graphics::registered[e.drop.windowID] });
-				if (e.drop.file != NULL) {
-					data.insert({ "file", symbol_t::String(std::string(e.drop.file)) });
-					SDL_free(e.drop.file);
-				}
-				return symbol_t::Dictionary(data);
-			default:
-				return symbol_t::Dictionary(data);
+			return symbol_t::Dictionary(data);
+		default:
+			return symbol_t::Dictionary(data);
 		}
 	}
 
-	data.insert({ "type", symbol_t::Number(number_t()) });
+	data.insert({"type", symbol_t::Number(number_t())});
 	return symbol_t::Dictionary(data);
 }
 
