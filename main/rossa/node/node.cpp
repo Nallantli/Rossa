@@ -949,6 +949,8 @@ ptr_instruction_t BinOpNode::genParser() const
 		return std::make_shared<MulI>(a->genParser(), b->genParser(), token);
 	if (op == "/")
 		return std::make_shared<DivI>(a->genParser(), b->genParser(), token);
+	if (op == "//")
+		return std::make_shared<FDivI>(a->genParser(), b->genParser(), token);
 	if (op == "%")
 		return std::make_shared<ModI>(a->genParser(), b->genParser(), token);
 	if (op == "**")
@@ -1091,6 +1093,8 @@ const ptr_node_t BinOpNode::fold(const std::vector<std::pair<std::vector<hash_ul
 		return std::make_shared<BinOpNode>(path, "=", a, std::make_shared<BinOpNode>(path, "*", a, b, token), token)->fold(consts);
 	if (op == "/=")
 		return std::make_shared<BinOpNode>(path, "=", a, std::make_shared<BinOpNode>(path, "/", a, b, token), token)->fold(consts);
+	if (op == "//=")
+		return std::make_shared<BinOpNode>(path, "=", a, std::make_shared<BinOpNode>(path, "//", a, b, token), token)->fold(consts);
 	if (op == "%=")
 		return std::make_shared<BinOpNode>(path, "=", a, std::make_shared<BinOpNode>(path, "%", a, b, token), token)->fold(consts);
 	if (op == "**=")

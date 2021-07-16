@@ -279,6 +279,37 @@ const symbol_t operation::div(const object_t *scope, const symbol_t &evalA, cons
 	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"/"}), *token, stack_trace);
 }
 
+const symbol_t operation::fdiv(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
+{
+	switch (COMP(evalA.getValueType(), evalB.getValueType()))
+	{
+	case COMP(value_type_enum::NUMBER, value_type_enum::NUMBER):
+		return symbol_t::Number(number_t::Long((evalA.getNumber(token, stack_trace) / evalB.getNumber(token, stack_trace)).getLong()));
+	case COMP(value_type_enum::ARRAY, value_type_enum::ARRAY):
+	{
+		auto av = evalA.getVector(token, stack_trace);
+		auto bv = evalB.getVector(token, stack_trace);
+		if (av.size() != bv.size())
+			throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, *token, stack_trace);
+		std::vector<symbol_t> v(av.size());
+		for (size_t i = 0; i < v.size(); i++)
+			v[i] = div(scope, av[i], bv[i], token, stack_trace);
+		return symbol_t::Array(v);
+	}
+	case value_type_enum::OBJECT:
+	{
+		const auto &o = evalA.getObject(token, stack_trace);
+		if (o->hasValue(parser_t::HASH_FDIV))
+			return o->getVariable(parser_t::HASH_FDIV, token, stack_trace).call({evalB}, token, stack_trace);
+	}
+	default:
+		if (scope != NULL)
+			return scope->getVariable(parser_t::HASH_FDIV, token, stack_trace).call({evalA, evalB}, token, stack_trace);
+	}
+
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"//"}), *token, stack_trace);
+}
+
 const symbol_t operation::mod(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (COMP(evalA.getValueType(), evalB.getValueType()))

@@ -34,6 +34,7 @@ public:
 	static const hash_ull HASH_SUB;
 	static const hash_ull HASH_MUL;
 	static const hash_ull HASH_DIV;
+	static const hash_ull HASH_FDIV;
 	static const hash_ull HASH_MOD;
 	static const hash_ull HASH_POW;
 	static const hash_ull HASH_B_AND;

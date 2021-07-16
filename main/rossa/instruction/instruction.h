@@ -839,4 +839,15 @@ public:
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 
+/**
+ * Floor Division
+ * `<EXPR> // <EXPR>`
+ */
+class FDivI : public BinaryI
+{
+public:
+	FDivI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
 #endif

@@ -71,8 +71,8 @@ static snake_game {
 		scoreText.setText("Score: {0}" & [snakeSize - 1]);
 		free := [
 			each i in 0 .. (width * height)
-			where cache[math.floor(i / width)][i % height] == 0
-			do [math.floor(i / width), i % height]
+			where cache[i // width][i % height] == 0
+			do [i // width, i % height]
 		];
 		i := rand.nexti(0, free.len());
 		cache[free[i][0]][free[i][1]] = -1;

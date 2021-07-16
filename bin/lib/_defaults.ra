@@ -22,6 +22,7 @@ parse := ((ref x) => parse(x));
 `-`(ref a, ref b) => _call_op 6 (a, b);
 `*`(ref a, ref b) => _call_op 7 (a, b);
 `/`(ref a, ref b) => _call_op 8 (a, b);
+`//`(ref a, ref b) => _call_op 28 (a, b);
 `%`(ref a, ref b) => _call_op 9 (a, b);
 `**`(ref a, ref b) => _call_op 10 (a, b);
 

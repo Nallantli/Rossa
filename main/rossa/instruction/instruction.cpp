@@ -1575,6 +1575,11 @@ const symbol_t CallOpI::evaluate(const object_t *scope, trace_t &stack_trace) co
 		return operation::hash(NULL,
 							   children[0]->evaluate(scope, stack_trace),
 							   &token, stack_trace);
+	case 28:
+		return operation::fdiv(NULL,
+							   children[0]->evaluate(scope, stack_trace),
+							   children[1]->evaluate(scope, stack_trace),
+							   &token, stack_trace);
 	default:
 		return symbol_t();
 	}
@@ -1724,4 +1729,21 @@ const symbol_t EachI::evaluate(const object_t *scope, trace_t &stack_trace) cons
 		list.push_back(r);
 	}
 	return symbol_t::Array(list);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class FDivI                                                                                      */
+/*-------------------------------------------------------------------------------------------------------*/
+
+FDivI::FDivI(const ptr_instruction_t &a, const ptr_instruction_t &b, const token_t &token)
+	: BinaryI(FDIV_I, a, b, token)
+{
+}
+
+const symbol_t FDivI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const symbol_t evalA = a->evaluate(scope, stack_trace);
+	const symbol_t evalB = b->evaluate(scope, stack_trace);
+
+	return operation::fdiv(scope, evalA, evalB, &token, stack_trace);
 }

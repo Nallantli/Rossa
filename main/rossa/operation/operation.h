@@ -18,6 +18,7 @@ namespace operation
 	const symbol_t div(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t mod(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t pow(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
+	const symbol_t fdiv(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	// Comparison
 	const symbol_t less(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t more(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);

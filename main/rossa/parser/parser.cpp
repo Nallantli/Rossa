@@ -19,6 +19,7 @@ const hash_ull parser_t::HASH_ADD = ROSSA_HASH("+");
 const hash_ull parser_t::HASH_SUB = ROSSA_HASH("-");
 const hash_ull parser_t::HASH_MUL = ROSSA_HASH("*");
 const hash_ull parser_t::HASH_DIV = ROSSA_HASH("/");
+const hash_ull parser_t::HASH_FDIV = ROSSA_HASH("//");
 const hash_ull parser_t::HASH_MOD = ROSSA_HASH("%");
 const hash_ull parser_t::HASH_POW = ROSSA_HASH("**");
 const hash_ull parser_t::HASH_B_AND = ROSSA_HASH("&");
@@ -64,6 +65,7 @@ const std::map<std::string, signed int> parser_t::bOperators = {
 	{"**", -13},
 	{"*", 12},
 	{"/", 12},
+	{"//", 12},
 	{"%", 12},
 	{"+", 11},
 	{"++", 11},
@@ -94,6 +96,7 @@ const std::map<std::string, signed int> parser_t::bOperators = {
 	{"**=", -1},
 	{"*=", -1},
 	{"/=", -1},
+	{"//=", -1},
 	{"%=", -1},
 	{"+=", -1},
 	{"++=", -1},
