@@ -706,32 +706,20 @@ const symbol_t operation::bnot(const object_t *scope, const symbol_t &evalA, con
 
 const symbol_t operation::unadd(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)
 {
-	switch (evalA.getValueType())
-	{
-	case value_type_enum::NUMBER:
-		return symbol_t::Number(+evalA.getNumber(token, stack_trace));
-	case value_type_enum::ARRAY:
-	{
-		auto av = evalA.getVector(token, stack_trace);
-		std::vector<symbol_t> v(av.size());
-		for (size_t i = 0; i < v.size(); i++)
-			v[i] = unadd(scope, av[i], token, stack_trace);
-		return symbol_t::Array(v);
-	}
-	case value_type_enum::OBJECT:
+	if (evalA.getValueType() == value_type_enum::OBJECT)
 	{
 		const auto &o = evalA.getObject(token, stack_trace);
 		if (o->hasValue(parser_t::HASH_ADD))
 			return o->getVariable(parser_t::HASH_ADD, token, stack_trace).call({}, token, stack_trace);
-	}
-	default:
-		break;
-	}
 
-	if (scope != NULL)
-		return scope->getVariable(parser_t::HASH_ADD, token, stack_trace).call({evalA}, token, stack_trace);
+		if (scope != NULL)
+			return scope->getVariable(parser_t::HASH_ADD, token, stack_trace).call({evalA}, token, stack_trace);
 
-	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"+"}), *token, stack_trace);
+		throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"+"}), *token, stack_trace);
+	}
+	symbol_t temp;
+	temp.set(&evalA, token, stack_trace);
+	return temp;
 }
 
 const symbol_t operation::neg(const object_t *scope, const symbol_t &evalA, const token_t *token, trace_t &stack_trace)

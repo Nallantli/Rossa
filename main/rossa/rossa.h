@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#define _ROSSA_VERSION_ "v1.16.5-alpha"
+#define _ROSSA_VERSION_ "v1.16.6-alpha"
 #define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
