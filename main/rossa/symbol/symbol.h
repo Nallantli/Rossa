@@ -50,6 +50,7 @@ public:
 
 	void operator=(const symbol_t &);
 	static const symbol_t allocate(const size_t &);
+	static const symbol_t allocateAs(const size_t &, const symbol_t *, const token_t *, trace_t &);
 	const type_t getSymbolType() const;
 	void setSymbolType(const type_t &);
 	const number_t &getNumber(const token_t *, trace_t &) const;

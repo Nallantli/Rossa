@@ -70,6 +70,7 @@
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Library `{0}` has not exported function: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Size of " KEYWORD_ARRAY " values are not compatible"
 #define _CANNOT_MAKE_CONST_ "Expression cannot be parsed in a constant manner"
+#define _TOO_MANY_ARGUMENTS_ "Unexpected amount of arguments for function: `{0}`"
 #endif
 
 #ifdef _LOCALE_ITA_
@@ -135,6 +136,7 @@
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Librera `{0}` non ha esportata la funzione: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Taglia dei valori Vettori [" KEYWORD_ARRAY "] non ha compatabilità"
 #define _CANNOT_MAKE_CONST_ "Non si può processare l'espressione con un modo costante"
+#define _TOO_MANY_ARGUMENTS_ "Il numero degli argomenti è inaspettato per la funzione: `{0}`"
 #endif
 
 #ifdef _LOCALE_LAT_
@@ -185,7 +187,7 @@
 #define _EXPECTED_OBJECT_NAME_ "Dēclārātiō Strūctūrae [" KEYWORD_OBJECT "] exspectābātur"
 #define _EXPECTED_BASE_CAST_ "Genus simplex in iussō mūtātiōnis exspectābātur"
 #define _EXPECTED_RH_ "In dextrō ēnūntiātiō exspectābātur"
-#define _UNEXPECTED_TERMINATION_ "Ad fīnem suam attigit ēnūntiātiō inexspectāte"
+#define _UNEXPECTED_TERMINATION_ "Ad fīnem suam attigit ēnūntiātiō inexspectātō"
 #define _NOT_UNARY_OP_ "In iussō ūnāriō nōn agī potest"
 #define _VALUE_KEY_PAIR_ERROR_ "In coniugiō Mātrīcis [" KEYWORD_DICTIONARY "] nōn accēdere potest valor"
 #define _EXPECTED_AFTER_ "Post `{0}` ēnūntiātiō exspectābātur"
@@ -200,6 +202,7 @@
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "Nōn est exportāta ē bibliothēcā `{0}` prōcessiō: `{1}`"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "Magnitūdinēs valōrum Tabulae [" KEYWORD_ARRAY "] nōn congruunt"
 #define _CANNOT_MAKE_CONST_ "Ēnūntiātiō nōn cōnstante prōcēditur"
+#define _TOO_MANY_ARGUMENTS_ "Numerus argūmentōrum inexspectātus est prō prōcessiōne: `{0}`"
 #endif
 
 #ifdef _LOCALE_JPN_
@@ -261,10 +264,11 @@
 #define _STACK_TRACE_MORE_ " ... （これから{0}以上） ..."
 #define _EXTERNAL_LIBRARY_NOT_EXIST_ "外付けのライブラリーはない：「{0}」"
 #define _EXPORT_FUNCTION_NOT_FOUND_ "ライブラリーの中に輸出の関数はない：「{0}」"
-#define _LIBRARY_NOT_IN_MEMORY_ "メモリーにライブラリーはロードされなかった：「{0}」`"
+#define _LIBRARY_NOT_IN_MEMORY_ "メモリーにライブラリーはロードされなかった：「{0}」"
 #define _LIBRARY_FUNCTION_NOT_EXIST_ "「{0}」のライブラリーは関数を輸出しない：「{1}」"
 #define _INCOMPATIBLE_VECTOR_SIZES_ "同意列（" KEYWORD_ARRAY "）の値の大きさは相容れない"
 #define _CANNOT_MAKE_CONST_ "表現は一定の法に解析されない"
+#define _TOO_MANY_ARGUMENTS_ "関数に助変数の数は案外：「{0}」"
 #endif
 
 #endif

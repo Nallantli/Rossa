@@ -247,9 +247,10 @@ class CallBuiltNode : public Node
 {
 private:
 	const token_type_enum t;
-	const ptr_node_t arg;
+	const std::vector<ptr_node_t> args;
 
 public:
+	CallBuiltNode(const std::vector<node_scope_t> &, const token_type_enum &, const std::vector<ptr_node_t> &, const token_t &);
 	CallBuiltNode(const std::vector<node_scope_t> &, const token_type_enum &, const ptr_node_t &, const token_t &);
 	ptr_instruction_t genParser() const override;
 	bool isConst() const override;

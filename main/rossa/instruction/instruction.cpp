@@ -994,8 +994,8 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 				return symbol_t::TypeName(parameter_t({}, {value_type_enum::NIL}));
 			if (s == KEYWORD_POINTER)
 				return symbol_t::TypeName(parameter_t({}, {value_type_enum::POINTER}));
-			//TODO
-			//return symbol_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
+			// TODO
+			// return symbol_t::TypeName(ROSSA_HASH(evalA.getString(&token, stack_trace)));
 		}
 		default:
 			break;
@@ -1097,8 +1097,9 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 /*class AllocI                                                                                           */
 /*-------------------------------------------------------------------------------------------------------*/
 
-AllocI::AllocI(const ptr_instruction_t &a, const token_t &token)
-	: UnaryI(ALLOC_I, a, token)
+AllocI::AllocI(const ptr_instruction_t &a, const ptr_instruction_t &setall, const token_t &token)
+	: UnaryI(ALLOC_I, a, token),
+	  setall(setall)
 {
 }
 
@@ -1107,6 +1108,11 @@ const symbol_t AllocI::evaluate(const object_t *scope, trace_t &stack_trace) con
 	const long_int_t evalA = a->evaluate(scope, stack_trace).getNumber(&token, stack_trace).getLong();
 	if (evalA < 0)
 		throw rossa_error_t(_FAILURE_ALLOC_, token, stack_trace);
+	if (setall)
+	{
+		auto evalB = setall->evaluate(scope, stack_trace);
+		return symbol_t::allocateAs(evalA, &evalB, &token, stack_trace);
+	}
 	return symbol_t::allocate(evalA);
 }
 
@@ -1671,11 +1677,16 @@ SetIndexI::SetIndexI(const ptr_instruction_t &a, const ptr_instruction_t &b, con
 
 const symbol_t SetIndexI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
-	const symbol_t evalA = a->evaluate(scope, stack_trace);
-	const symbol_t evalB = b->evaluate(scope, stack_trace);
-	for (auto &a : evalA.getVector(&token, stack_trace))
+	auto evalA = a->evaluate(scope, stack_trace);
+	auto evalAVector = evalA.getVector(&token, stack_trace);
+	auto evalBVector = b->evaluate(scope, stack_trace).getVector(&token, stack_trace);
+	if (evalAVector.size() != evalBVector.size())
 	{
-		a.set(&evalB, &token, stack_trace);
+		throw rossa_error_t(_INCOMPATIBLE_VECTOR_SIZES_, token, stack_trace);
+	}
+	for (size_t i = 0; i < evalAVector.size(); i++)
+	{
+		evalAVector[i].set(&evalBVector[i], &token, stack_trace);
 	}
 	return evalA;
 }

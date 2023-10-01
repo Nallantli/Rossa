@@ -155,6 +155,17 @@ const symbol_t symbol_t::allocate(const size_t &size)
 	return symbol_t(v);
 }
 
+const symbol_t symbol_t::allocateAs(const size_t &size, const symbol_t *value, const token_t *token, trace_t &stack_trace)
+{
+	std::vector<symbol_t> v;
+	v.resize(size);
+	for (auto e : v)
+	{
+		e.set(value, token, stack_trace);
+	}
+	return symbol_t(v);
+}
+
 const symbol_t::type_t symbol_t::getSymbolType() const
 {
 	return type;
@@ -516,8 +527,7 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 			return;
 		}
 	}
-	d->type = b->d->type;
-	switch (d->type)
+	switch (b->d->type)
 	{
 	case value_type_enum::NIL:
 		d->clearData();
@@ -550,6 +560,7 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 		d->value = b->d->value;
 		break;
 	}
+	d->type = b->d->type;
 }
 
 const bool symbol_t::equals(const symbol_t *b, const token_t *token, trace_t &stack_trace) const

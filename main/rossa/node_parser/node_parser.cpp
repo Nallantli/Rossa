@@ -93,11 +93,17 @@ ptr_node_t node_parser_t::parseCallBuiltNode(std::vector<node_scope_t> *scopes)
 	if (currentToken.type != '(')
 		return std::make_shared<IDNode>(*scopes, ROSSA_HASH(temp), marker);
 	nextToken();
-	auto arg = parseEquNode(scopes);
+	std::vector<ptr_node_t> args;
+	args.push_back(parseEquNode(scopes));
+	if (currentToken.type == ',')
+	{
+		nextToken();
+		args.push_back(parseEquNode(scopes));
+	}
 	if (currentToken.type != ')')
 		return logErrorN(global::format(_EXPECTED_ERROR_, {")"}), currentToken);
 	nextToken();
-	auto ret = std::make_shared<CallBuiltNode>(*scopes, t, arg, marker);
+	auto ret = std::make_shared<CallBuiltNode>(*scopes, t, args, marker);
 	return parseTrailingNode(scopes, ret, true);
 }
 
@@ -139,15 +145,25 @@ ptr_node_t node_parser_t::parseCallNode(std::vector<node_scope_t> *scopes, const
 				return logErrorN("Built in functions take a single argument", currentToken);*/
 
 			if (key == KEYWORD_LENGTH)
+			{
 				ret = std::make_shared<CallBuiltNode>(*scopes, TOK_LENGTH, a_a, marker);
+			}
 			if (key == KEYWORD_ALLOC)
+			{
 				ret = std::make_shared<CallBuiltNode>(*scopes, TOK_ALLOC, a_a, marker);
+			}
 			if (key == KEYWORD_PARSE)
+			{
 				ret = std::make_shared<CallBuiltNode>(*scopes, TOK_PARSE, a_a, marker);
+			}
 			if (key == KEYWORD_CHAR_N)
+			{
 				ret = std::make_shared<CallBuiltNode>(*scopes, TOK_CHARN, a_a, marker);
+			}
 			if (key == KEYWORD_CHAR_S)
+			{
 				ret = std::make_shared<CallBuiltNode>(*scopes, TOK_CHARS, a_a, marker);
+			}
 
 			ret = parseTrailingNode(scopes, ret, true);
 		}
@@ -1104,8 +1120,8 @@ ptr_node_t node_parser_t::parseUnitNode(std::vector<node_scope_t> *scopes)
 		return parseExternCallNode(scopes);
 	case TOK_CALL_OP:
 		return parseCallOpNode(scopes);
-	case TOK_LENGTH:
 	case TOK_ALLOC:
+	case TOK_LENGTH:
 	case TOK_CHARN:
 	case TOK_CHARS:
 	case TOK_PARSE:
@@ -1699,7 +1715,7 @@ ptr_node_t node_parser_t::parseExprNode(std::vector<node_scope_t> *scopes)
 			object_t newScope(static_cast<hash_ull>(0));
 			trace_t trace;
 			auto vn = parseEquNode(scopes)->fold(*consts)->genParser()->evaluate(&newScope, trace);
-			//scopes->back().var_ids.push_back({ id, vn });
+			// scopes->back().var_ids.push_back({ id, vn });
 			std::vector<hash_ull> path;
 			for (auto &k : *scopes)
 				path.push_back(k.id);
@@ -1803,7 +1819,7 @@ ptr_node_t node_parser_t::parse(std::vector<node_scope_t> *scopes, std::vector<s
 {
 	this->consts = consts;
 	nextToken();
-	//std::vector<node_scope_t> init = { {ROSSA_HASH("<*>")} };
+	// std::vector<node_scope_t> init = { {ROSSA_HASH("<*>")} };
 	return parseEntryNode(scopes);
 }
 

@@ -41,11 +41,11 @@ struct Chip {
 		timer;
 
 	init() => {
-		memory = alloc(4096) .= 0;
-		V = alloc(16) .= 0;
-		gfx = alloc(2048) .= false;
-		stack = alloc(16) .= 0;
-		key = alloc(16) .= 0;
+		memory = alloc(4096, 0);
+		V = alloc(16, 0);
+		gfx = alloc(2048, false);
+		stack = alloc(16, 0);
+		key = alloc(16, 0);
 		pc = 0x200;
 		I = 0;
 		sp = 0;
@@ -68,7 +68,7 @@ struct Chip {
 					# 0x00E0 - CLS
 					# Clear screen
 					case 0x0000 do {
-						gfx .= false;
+						gfx = alloc(len(gfx), false);
 						drawFlag = true;
 						pc += 2;
 					}

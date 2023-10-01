@@ -2,6 +2,8 @@
 
 alloc := ((ref x) => alloc(x));
 
+alloc := ((ref x, ref y) => alloc(x, y));
+
 len := ((ref x) => len(x));
 
 codes := ((ref x) => codes(x));

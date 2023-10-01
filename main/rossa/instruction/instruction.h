@@ -550,8 +550,10 @@ public:
  */
 class AllocI : public UnaryI
 {
+private:
+	const ptr_instruction_t setall;
 public:
-	AllocI(const ptr_instruction_t &, const token_t &);
+	AllocI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 
@@ -801,7 +803,7 @@ public:
 };
 
 /**
- * Set all indices of array
+ * Set all values of an array by index to indexed values of second array
  * `<EXPR> .= <EXPR>`
  */
 class SetIndexI : public BinaryI

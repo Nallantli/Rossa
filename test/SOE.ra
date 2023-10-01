@@ -1,6 +1,6 @@
 SOE(ref MAX : Number) => {
 	start := clock.milliseconds();
-	a := alloc(MAX) .= true;
+	a := alloc(MAX, true);
 	putln("Alloc Time: ", clock.milliseconds() - start, "ms");
 
 	start = clock.milliseconds();

@@ -766,40 +766,77 @@ const ptr_node_t ExternCallNode::fold(const std::vector<std::pair<std::vector<ha
 CallBuiltNode::CallBuiltNode(
 	const std::vector<node_scope_t> &path,
 	const token_type_enum &t,
+	const std::vector<ptr_node_t> &args,
+	const token_t &token) : Node(path, CALL_BUILT_NODE,
+								 token),
+							t(t),
+							args(args)
+{
+}
+CallBuiltNode::CallBuiltNode(
+	const std::vector<node_scope_t> &path,
+	const token_type_enum &t,
 	const ptr_node_t &arg,
 	const token_t &token) : Node(path, CALL_BUILT_NODE,
 								 token),
 							t(t),
-							arg(arg)
+							args({arg})
 {
 }
 
 ptr_instruction_t CallBuiltNode::genParser() const
 {
+	trace_t stack_trace;
 	switch (t)
 	{
 	case TOK_LENGTH:
-		return std::make_shared<LengthI>(arg->genParser(), token);
+		if (args.size() > 1)
+		{
+			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_LENGTH}), token, stack_trace);
+		}
+		return std::make_shared<LengthI>(args[0]->genParser(), token);
 	case TOK_ALLOC:
-		return std::make_shared<AllocI>(arg->genParser(), token);
+		if (args.size() > 2)
+		{
+			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_ALLOC}), token, stack_trace);
+		}
+		return std::make_shared<AllocI>(args[0]->genParser(), args.size() > 1 ? args[1]->genParser() : nullptr, token);
 	case TOK_PARSE:
-		return std::make_shared<ParseI>(arg->genParser(), token);
+		if (args.size() > 1)
+		{
+			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_PARSE}), token, stack_trace);
+		}
+		return std::make_shared<ParseI>(args[0]->genParser(), token);
 	case TOK_CHARN:
-		return std::make_shared<CharNI>(arg->genParser(), token);
+		if (args.size() > 1)
+		{
+			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_N}), token, stack_trace);
+		}
+		return std::make_shared<CharNI>(args[0]->genParser(), token);
 	case TOK_CHARS:
-		return std::make_shared<CharSI>(arg->genParser(), token);
+		if (args.size() > 1)
+		{
+			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_S}), token, stack_trace);
+		}
+		return std::make_shared<CharSI>(args[0]->genParser(), token);
 	default:
 		break;
 	}
 
-	trace_t stack_trace;
 	throw rossa_error_t(global::format(_UNKNOWN_BUILT_CALL_, {std::to_string(t)}), token, stack_trace);
 	return nullptr;
 }
 
 bool CallBuiltNode::isConst() const
 {
-	return arg->isConst();
+	for (auto &arg : args)
+	{
+		if (!arg->isConst())
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 void CallBuiltNode::printTree(std::string indent, bool last) const
@@ -817,7 +854,8 @@ void CallBuiltNode::printTree(std::string indent, bool last) const
 	}
 	printc(global::deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL_BUILT : " << std::to_string(t) << "\n";
-	arg->printTree(indent, true);
+	for (size_t i = 0; i < args.size(); i++)
+		args[i]->printTree(indent, i == args.size() - 1);
 }
 
 const ptr_node_t CallBuiltNode::fold(const std::vector<std::pair<std::vector<hash_ull>, symbol_t>> &consts) const
@@ -831,7 +869,11 @@ const ptr_node_t CallBuiltNode::fold(const std::vector<std::pair<std::vector<has
 		return std::make_shared<ContainerNode>(path, r, token);
 	}
 
-	return std::make_shared<CallBuiltNode>(path, t, arg->fold(consts), token);
+	std::vector<ptr_node_t> nargs;
+	for (auto &c : args)
+		nargs.push_back(c->fold(consts));
+
+	return std::make_shared<CallBuiltNode>(path, t, nargs, token);
 }
 
 //------------------------------------------------------------------------------------------------------
