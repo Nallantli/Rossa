@@ -18,8 +18,8 @@ for i in 1 <> 100 do {
 
 [1<>100].map((i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i).map(putln);
 
-map(map(1<>100,(i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i),putln);
+map(map([1<>100],(i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i),putln);
 
 [1<>100].map((i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
 
-map(1<>100,(i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
+map([1<>100],(i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));

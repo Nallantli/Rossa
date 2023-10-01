@@ -146,7 +146,7 @@ sort(ref a : Array, ref comp : Function<Any, Any>) => {
 		}
 	}
 
-	return sort(left) ++ [ pivot ] ++ sort(right);
+	return sort(left, comp) ++ [ pivot ] ++ sort(right, comp);
 }
 
 sort(ref a : Array) => {
