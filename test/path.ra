@@ -160,3 +160,6 @@ for n in path do {
 r.update();
 
 while SDL.poll()["type"] != SDL.Event.QUIT do {}
+
+SDL.QUIT();
+exit();

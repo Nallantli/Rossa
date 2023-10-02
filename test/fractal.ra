@@ -16,17 +16,38 @@ drawBranch(ref x : Number, ref y : Number, ref a : Number, ref size : Number, re
 	}
 }
 
-drawBranch(
-	370,
-	500,
-	-math.PI / 2,
-	150,
-	0.5,
-	-1,
-	(2 ** (1/2)) / 2,
-	13);
+drawTree(a) => {
+	drawBranch(
+		370,
+		500,
+		-math.PI / 2,
+		150,
+		a,
+		-1,
+		(2 ** (1/2)) / 2,
+		10);
 
-renderer.flush();
+	renderer.flush();
+}
 
-while SDL.poll()["type"] != SDL.Event.QUIT do {}
-SDL.QUIT();
+a := 1;
+
+drawTree(a);
+
+while true do {
+	e := SDL.poll();
+	if e["type"] == SDL.Event.QUIT then {
+		SDL.QUIT();
+		exit();
+	} elif e["type"] == SDL.Event.KEYDOWN then {
+		switch e["keysym"]["sym"] of {
+			case 'a' do {
+				a -= .01;
+			}
+			case 'd' do {
+				a += .01;
+			}
+		}
+		drawTree(a);
+	}
+}

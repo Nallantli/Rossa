@@ -29,3 +29,8 @@ pfact(ref n : Number) => {
 	}
 	return [ n ];
 }
+
+putln([0 <> 100]
+	.map((v) => ([v, pfact(v)]))
+	.sort((a, b) => a[1].len() > b[1].len())
+	.map((e) => e[0]));

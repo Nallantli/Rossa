@@ -50,3 +50,4 @@ while SDL.poll()["type"] != SDL.Event.QUIT do {
 }
 
 SDL.QUIT();
+exit();
