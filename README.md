@@ -46,7 +46,7 @@ putln("Hello World!");
 Factorial:
 
 ```ra
-fact(x) => {
+fn fact(x) {
 	if x > 1 then {
 		return x * fact(x - 1);
 	} else {
@@ -60,7 +60,7 @@ putln(fact(5)); # 120
 Fibonacci Sequence:
 
 ```ra
-fib(ref size : Number) => {
+fn fib(ref size: Number) {
 	array := [0, 1] ++ alloc(size - 2);
 	for i in 2 .. size do {
 		array[i] = array[i - 1] + array[i - 2];
@@ -68,7 +68,7 @@ fib(ref size : Number) => {
 	return array;
 }
 
-fib(20).map((e, i) => putln("{0}:\t{1}" & [i, e]));
+fib(20).map(fn(e, i) putln("{0}:\t{1}" & [i, e]));
 ```
 
 FizzBuzz:
@@ -109,14 +109,14 @@ Threading:
 ```ra
 load "Thread"
 
-f(ref x : Number, ref id : Number) => {
+fn f(ref x: Number, ref id: Number) {
 	for i in 0 .. x do {
 		putln("Thread {0} says {1}" & [id, i]);
 	}
 }
 
-t1 := new Thread(()[f] => f(10, 1));
-t2 := new Thread(()[f] => f(10, 2));
+t1 := new Thread(fn()[f] f(10, 1));
+t2 := new Thread(fn()[f] f(10, 2));
 
 t1.join();
 t2.join();

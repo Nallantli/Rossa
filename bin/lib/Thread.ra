@@ -3,17 +3,17 @@ extern "lib_thread";
 struct Thread {
 	var ptr;
 
-	init(ref f : Function) => {
+	fn init(ref f: Function) {
 		ptr = (extern_call lib_thread._thread_init(f));
 	}
 
-	join() => extern_call lib_thread._thread_join(ptr);
+	fn join() extern_call lib_thread._thread_join(ptr);
 
-	detach() => extern_call lib_thread._thread_detach(ptr);
+	fn detach() extern_call lib_thread._thread_detach(ptr);
 
-	rem() => {
+	fn rem() {
 		detach();
 	}
 }
 
-timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { clock.sleep(ms); f(); })).detach();
+fn timeout(ref f: Function, ref ms: Number) (new Thread(fn()[f, ms] { clock.sleep(ms); f(); })).detach();

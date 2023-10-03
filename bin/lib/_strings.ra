@@ -2,55 +2,55 @@ extern "lib_standard";
 
 # STRING
 
-push(ref s : String, ref value : Number) => {
+fn push(ref s: String, ref value: Number) {
 	refer s ++= chars(value);
 }
 
-unshift(ref s : String, ref value : Number) => {
+fn unshift(ref s: String, ref value: Number) {
 	refer s = chars(value) ++ s;
 }
 
-pop(ref s : String, ref count : Number) => {
+fn pop(ref s: String, ref count: Number) {
 	refer s = (s -> Array).pop(count).join();
 }
 
-shift(ref s : String, ref count : Number) => {
+fn shift(ref s: String, ref count: Number) {
 	refer s = (s -> Array).shift(count).join();
 }
 
-pop(ref s : String) => {
+fn pop(ref s: String) {
 	refer s = pop(s, 1);
 }
 
-shift(ref s : String) => {
+fn shift(ref s: String) {
 	refer s = shift(s, 1);
 }
 
-reverse(ref s : String) => {
+fn reverse(ref s: String) {
 	return (s -> Array).reverse().join();
 }
 
-empty(ref s : String) => {
+fn empty(ref s: String) {
 	return len(s) == 0;
 }
 
-`[]`(ref s : String, ref i : Number) => {
+fn `[]`(ref s: String, ref i: Number) {
 	return (s -> Array)[i];
 }
 
-`..`(ref a : String, ref b : String) => {
+fn `..`(ref a: String, ref b: String) {
 	return [codes(a)[0] .. codes(b)[0]];
 }
 
-parseDict(ref a : String) => {
+fn parseDict(ref a: String) {
 	return parse(a ++ ";")[0];
 }
 
-size(ref a : String) => extern_call lib_standard._string_size(a);
+fn size(ref a: String) extern_call lib_standard._string_size(a);
 
-split(ref s : String, ref c : Number) => s.split(chars(c));
+fn split(ref s: String, ref c: Number) s.split(chars(c));
 
-split(ref s : String, ref d : String) => {
+fn split(ref s: String, ref d: String) {
 	if d.len() != 1 then {
 		throw "Cannot split a String where the delimiter's length is not 1";
 	}

@@ -16,10 +16,10 @@ for i in 1 <> 100 do {
 	putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i);
 }
 
-[1<>100].map((i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i).map(putln);
+[1<>100].map(fn(i)i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i).map(putln);
 
-map(map([1<>100],(i)=>i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i),putln);
+map(map([1<>100],fn(i)i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i),putln);
 
-[1<>100].map((i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
+[1<>100].map(fn(i)putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
 
-map([1<>100],(i)=>putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));
+map([1<>100],fn(i)putln(i%3==0?i%5==0?"FizzBuzz":"Fizz":i%5==0?"Buzz":i));

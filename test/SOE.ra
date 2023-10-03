@@ -1,4 +1,4 @@
-SOE(ref MAX : Number) => {
+fn SOE(ref MAX: Number) {
 	start := clock.milliseconds();
 	a := alloc(MAX, true);
 	putln("Alloc Time: ", clock.milliseconds() - start, "ms");
@@ -33,7 +33,7 @@ SOE(ref MAX : Number) => {
 	return b;
 }
 
-test(ref MAX : Number) => {
+fn test(ref MAX: Number) {
 	start := clock.milliseconds();
 	result := SOE(MAX);
 	time := clock.milliseconds() - start;

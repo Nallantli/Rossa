@@ -1,4 +1,4 @@
-levDist(ref _a, ref _b) => {
+fn levDist(ref _a, ref _b) {
 	a := _a -> Array;
 	b := _b -> Array;
 	if a.len() == 0 then {

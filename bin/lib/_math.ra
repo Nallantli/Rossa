@@ -11,59 +11,59 @@ static math {
 
 	const PI = 3.14159265359;
 
-	rand() => extern_call lib_standard._math_rand();
+	fn rand() extern_call lib_standard._math_rand();
 
-	srand(ref x : Number) => extern_call lib_standard._math_srand(x);
+	fn srand(ref x: Number) extern_call lib_standard._math_srand(x);
 
-	log(ref x : Number) => extern_call lib_standard._log(x);
+	fn log(ref x: Number) extern_call lib_standard._log(x);
 
-	abs(ref x : Number) => (x < 0 ? -x : x);
+	fn abs(ref x: Number) (x < 0 ? -x : x);
 
-	floor(ref x : Number) => extern_call lib_standard._floor(x);
+	fn floor(ref x: Number) extern_call lib_standard._floor(x);
 
-	ceil(ref x : Number) => extern_call lib_standard._ceil(x);
+	fn ceil(ref x: Number) extern_call lib_standard._ceil(x);
 
-	round(ref x : Number) => extern_call lib_standard._round(x);
+	fn round(ref x: Number) extern_call lib_standard._round(x);
 
-	round(ref x : Number, ref place : Number) => (extern_call lib_standard._round(x * (10 ** place))) / (10 ** place);
+	fn round(ref x: Number, ref place: Number) (extern_call lib_standard._round(x * (10 ** place))) / (10 ** place);
 
-	min(ref a : Number, ref b : Number) => (a < b ? a : b);
+	fn min(ref a: Number, ref b: Number) (a < b ? a : b);
 
-	max(ref a : Number, ref b : Number) => (a > b ? a : b);
+	fn max(ref a: Number, ref b: Number) (a > b ? a : b);
 
-	sin(ref x : Number) => extern_call lib_standard._sin(x);
+	fn sin(ref x: Number) extern_call lib_standard._sin(x);
 
-	cos(ref x : Number) => extern_call lib_standard._cos(x);
+	fn cos(ref x: Number) extern_call lib_standard._cos(x);
 
-	tan(ref x : Number) => extern_call lib_standard._tan(x);
+	fn tan(ref x: Number) extern_call lib_standard._tan(x);
 
-	csc(ref x : Number) => 1 / sin(x);
+	fn csc(ref x: Number) 1 / sin(x);
 
-	sec(ref x : Number) => 1 / cos(x);
+	fn sec(ref x: Number) 1 / cos(x);
 
-	cot(ref x : Number) => 1 / tan(x);
+	fn cot(ref x: Number) 1 / tan(x);
 
-	asin(ref x : Number) => extern_call lib_standard._asin(x);
+	fn asin(ref x: Number) extern_call lib_standard._asin(x);
 
-	acos(ref x : Number) => extern_call lib_standard._acos(x);
+	fn acos(ref x: Number) extern_call lib_standard._acos(x);
 
-	atan(ref x : Number) => extern_call lib_standard._atan(x);
+	fn atan(ref x: Number) extern_call lib_standard._atan(x);
 
-	sinh(ref x : Number) => extern_call lib_standard._sinh(x);
+	fn sinh(ref x: Number) extern_call lib_standard._sinh(x);
 
-	cosh(ref x : Number) => extern_call lib_standard._cosh(x);
+	fn cosh(ref x: Number) extern_call lib_standard._cosh(x);
 
-	tanh(ref x : Number) => extern_call lib_standard._tanh(x);
+	fn tanh(ref x: Number) extern_call lib_standard._tanh(x);
 
-	csch(ref x : Number) => 1 / sinh(x);
+	fn csch(ref x: Number) 1 / sinh(x);
 
-	sech(ref x : Number) => 1 / cosh(x);
+	fn sech(ref x: Number) 1 / cosh(x);
 
-	coth(ref x : Number) => 1 / tanh(x);
+	fn coth(ref x: Number) 1 / tanh(x);
 
-	asinh(ref x : Number) => extern_call lib_standard._asinh(x);
+	fn asinh(ref x: Number) extern_call lib_standard._asinh(x);
 
-	acosh(ref x : Number) => extern_call lib_standard._acosh(x);
+	fn acosh(ref x: Number) extern_call lib_standard._acosh(x);
 
-	atanh(ref x : Number) => extern_call lib_standard._atanh(x);
+	fn atanh(ref x: Number) extern_call lib_standard._atanh(x);
 }

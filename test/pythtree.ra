@@ -8,13 +8,13 @@ renderer := window.getRenderer();
 
 struct Point {
 	var x, y;
-	init(ref x : Number, ref y : Number) => {
+	fn init(ref x: Number, ref y: Number) {
 		this.x = x;
 		this.y = y;
 	}
 }
 
-drawSquare(ref pA : Point, ref pB : Point, ref i : Number) => {
+fn drawSquare(ref pA: Point, ref pB: Point, ref i: Number) {
 	color := Color.HSL(i / 10, 1, 0.5);
 	pC := new Point(pB.x - (pA.y - pB.y), pB.y - (pB.x - pA.x));
 	pD := new Point(pA.x - (pA.y - pB.y), pA.y - (pB.x - pA.x));

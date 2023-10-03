@@ -1,10 +1,10 @@
 # TPK Algorithm
 
-f(ref x : Number) => (math.abs(x) ** (1/2)) * x ** 3;
+fn f(ref x: Number) (math.abs(x) ** (1/2)) * x ** 3;
 
 alloc(11)
-	.map((x) => input.token() -> Number)
-	.map((x, i) => {
+	.map(fn(x) input.token() -> Number)
+	.map(fn(x, i) {
 		if (y := f(x)) > 400 then {
 			return "{0} TOO LARGE" & [i];
 		} else {

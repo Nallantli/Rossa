@@ -3,78 +3,78 @@ extern "lib_fs";
 struct Path {
 	var ptr;
 
-	init() => {
+	fn init() {
 		ptr = (extern_call lib_fs._path_init("."));
 	}
 
-	init(ref path : String) => {
+	fn init(ref path: String) {
 		ptr = (extern_call lib_fs._path_init(path));
 	}
 
-	filename() => extern_call lib_fs._path_filename(ptr);
+	fn filename() extern_call lib_fs._path_filename(ptr);
 
-	up() => this / "..";
+	fn up() this / "..";
 
-	mkdirs() => extern_call lib_fs._path_mkdirs(ptr);
+	fn mkdirs() extern_call lib_fs._path_mkdirs(ptr);
 
-	exists() => extern_call lib_fs._path_exists(ptr);
+	fn exists() extern_call lib_fs._path_exists(ptr);
 
-	unzip(ref path : Path) => {
+	fn unzip(ref path: Path) {
 		extern_call lib_fs._path_unzip_a(ptr, path.ptr);
 		refer path;
 	}
 
-	unzip(ref path : String) => {
+	fn unzip(ref path: String) {
 		extern_call lib_fs._path_unzip_b(ptr, path);
 		return new Path(path);
 	}
 
-	`=`(ref a : Path) => {
+	fn `=`(ref a: Path) {
 		this.ptr = a.ptr;
 	}
 
-	`=`(ref a) => {
+	fn `=`(ref a) {
 		this.init(a -> String);
 	}
 
-	`==`(ref a) => this -> String == a -> String;
+	fn `==`(ref a) this -> String == a -> String;
 
-	`!=`(ref a) => this -> String != a -> String;
+	fn `!=`(ref a) this -> String != a -> String;
 
-	`/`(ref a : Path) => {
+	fn `/`(ref a: Path) {
 		return new Path(extern_call lib_fs._path_append_path(ptr, a.ptr));
 	}
 
-	`/`(ref a) => {
+	fn `/`(ref a) {
 		return new Path(extern_call lib_fs._path_append_string(ptr, a -> String));
 	}
 
-	`->String`() => extern_call lib_fs._path_string(ptr);
+	fn `->String`() extern_call lib_fs._path_string(ptr);
 }
 
 struct Writer {
 	var ptr;
 
-	init(ref filename) => {
+	fn init(ref filename) {
 		ptr = (extern_call lib_fs._writer_init(filename -> String, false));
 	}
 
-	init(ref filename, ref binary : Boolean) => {
+	fn init(ref filename, ref binary: Boolean) {
 		ptr = (extern_call lib_fs._writer_init(filename -> String, binary));
 	}
 
-	isOpen() => extern_call lib_fs._writer_isOpen(ptr);
+	fn isOpen() extern_call lib_fs._writer_isOpen(ptr);
 
-	write(ref s : String) => extern_call lib_fs._writer_write(ptr, s);
+	fn write(ref s: String) extern_call lib_fs._writer_write(ptr, s);
 
-	close() => {
+	fn close() {
 		if ptr != nil then {
 			extern_call lib_fs._writer_close(ptr);
 			ptr = nil;
 		}
 	}
 
-	rem() => {
+	fn rem() {
 		close();
 	}
 }
@@ -82,32 +82,32 @@ struct Writer {
 struct Reader {
 	var ptr;
 
-	init(ref filename) => {
+	fn init(ref filename) {
 		ptr = (extern_call lib_fs._reader_init(filename -> String, false));
 	}
 
-	init(ref filename, ref binary : Boolean) => {
+	fn init(ref filename, ref binary: Boolean) {
 		ptr = (extern_call lib_fs._reader_init(filename -> String, binary));
 	}
 
-	isOpen() => extern_call lib_fs._reader_isOpen(ptr);
+	fn isOpen() extern_call lib_fs._reader_isOpen(ptr);
 
-	read(ref n : Number) => extern_call lib_fs._reader_read(ptr, n);
+	fn read(ref n: Number) extern_call lib_fs._reader_read(ptr, n);
 
-	read() => read(1);
+	fn read() read(1);
 
-	size() => extern_call lib_fs._reader_size(ptr);
+	fn size() extern_call lib_fs._reader_size(ptr);
 
-	readLine() => extern_call lib_fs._reader_readLine(ptr);
+	fn readLine() extern_call lib_fs._reader_readLine(ptr);
 
-	close() => {
+	fn close() {
 		if ptr != nil then {
 			extern_call lib_fs._reader_close(ptr);
 			ptr = nil;
 		}
 	}
 
-	rem() => {
+	fn rem() {
 		close();
 	}
 }

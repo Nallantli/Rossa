@@ -150,43 +150,43 @@ SDL_NUM_LOG_PRIORITIES := 7;
 # SDL.h
 # 86% (6/7)
 # SDL_WinRTRunApp deemed unnecessary
-SDL_Init(ref flags : Number) => extern_call lib_SDL._lib_Init(flags);
-SDL_InitSubSystem(ref flags : Number) => extern_call lib_SDL._lib_InitSubSystem(flags);
-SDL_Quit() => lib_SDL._lib_Quit();
-SDL_QuitSubSystem(ref flags : Number) => extern_call lib_SDL._lib_QuitSubSystem(flags);
-SDL_SetMainReady() => extern_call lib_SDL._lib_SetMainReady();
-SDL_WasInit(ref flags : Number) => extern_call lib_SDL._lib_WasInit(flags);
+fn SDL_Init(ref flags: Number) extern_call lib_SDL._lib_Init(flags);
+fn SDL_InitSubSystem(ref flags: Number) extern_call lib_SDL._lib_InitSubSystem(flags);
+fn SDL_Quit() lib_SDL._lib_Quit();
+fn SDL_QuitSubSystem(ref flags: Number) extern_call lib_SDL._lib_QuitSubSystem(flags);
+fn SDL_SetMainReady() extern_call lib_SDL._lib_SetMainReady();
+fn SDL_WasInit(ref flags: Number) extern_call lib_SDL._lib_WasInit(flags);
 
 # SDL_hints.h
 # 100% (5/7)
-SDL_ClearHints() => extern_call lib_SDL._lib_ClearHints();
-SDL_GetHint(ref s : String) => extern_call lib_SDL._lib_GetHint(s);
-SDL_GetHintBoolean(ref a : String, ref b : Boolean) => extern_call lib_SDL._lib_GetHintBoolean(a, b);
-SDL_SetHint(ref a : String, ref b : String) => extern_call lib_SDL._lib_SetHint(a, b);
-SDL_SetHintWithPriority(ref a : String, ref b : String, ref n : Number) => extern_call lib_SDL._lib_SetHintWithPriority(a, b, n);
-# SDL_AddHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_AddHintCallback(a, f, data);
-# SDL_DelHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_DelHintCallback(a, f, data);
+fn SDL_ClearHints() extern_call lib_SDL._lib_ClearHints();
+fn SDL_GetHint(ref s: String) extern_call lib_SDL._lib_GetHint(s);
+fn SDL_GetHintBoolean(ref a: String, ref b: Boolean) extern_call lib_SDL._lib_GetHintBoolean(a, b);
+fn SDL_SetHint(ref a: String, ref b: String) extern_call lib_SDL._lib_SetHint(a, b);
+fn SDL_SetHintWithPriority(ref a: String, ref b: String, ref n: Number) extern_call lib_SDL._lib_SetHintWithPriority(a, b, n);
+# SDL_AddHintCallback(ref a: String, ref f: Function<Any, String, String, String>, ref data) extern_call lib_SDL._lib_AddHintCallback(a, f, data);
+# SDL_DelHintCallback(ref a: String, ref f: Function<Any, String, String, String>, ref data) extern_call lib_SDL._lib_DelHintCallback(a, f, data);
 
 # SDL_error.h
 # 100% (3/3)
-SDL_ClearError() => extern_call lib_SDL._lib_ClearError();
-SDL_GetError() => extern_call lib_SDL._lib_GetError();
-SDL_SetError(ref a : String) => extern_call lib_SDL._lib_SetError(a);
+fn SDL_ClearError() extern_call lib_SDL._lib_ClearError();
+fn SDL_GetError() extern_call lib_SDL._lib_GetError();
+fn SDL_SetError(ref a: String) extern_call lib_SDL._lib_SetError(a);
 
 # SDL_log.h
 # 80% (12/15)
-SDL_Log(ref a : String) => extern_call lib_SDL._lib_Log(a);
-SDL_LogCritical(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogCritical(n, a);
-SDL_LogDebug(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogDebug(n, a);
-SDL_LogError(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogError(n, a);
-SDL_LogGetPriority(ref n : Number) => extern_call lib_SDL._lib_LogGetPriority(n);
-SDL_LogInfo(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogInfo(n, a);
-SDL_LogMessage(ref n : Number, ref p : Number, ref a : String) => extern_call lib_SDL._lib_LogMessage(n, p, a);
-SDL_LogResetPriorities() => extern_call lib_SDL._lib_LogResetPriorities();
-SDL_LogSetAllPriority(ref p : Number) => extern_call lib_SDL._lib_LogSetAllPriority(p);
-SDL_LogSetPriority(ref n : Number, ref p : Number) => extern_call lib_SDL._lib_LogSetPriority(n, p);
-SDL_LogVerbose(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogVerbose(n, a);
-SDL_LogWarn(ref n : Number, ref a : String) => extern_call lib_SDL._lib_LogWarn(n, a);
+fn SDL_Log(ref a: String) extern_call lib_SDL._lib_Log(a);
+fn SDL_LogCritical(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogCritical(n, a);
+fn SDL_LogDebug(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogDebug(n, a);
+fn SDL_LogError(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogError(n, a);
+fn SDL_LogGetPriority(ref n: Number) extern_call lib_SDL._lib_LogGetPriority(n);
+fn SDL_LogInfo(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogInfo(n, a);
+fn SDL_LogMessage(ref n: Number, ref p: Number, ref a: String) extern_call lib_SDL._lib_LogMessage(n, p, a);
+fn SDL_LogResetPriorities() extern_call lib_SDL._lib_LogResetPriorities();
+fn SDL_LogSetAllPriority(ref p: Number) extern_call lib_SDL._lib_LogSetAllPriority(p);
+fn SDL_LogSetPriority(ref n: Number, ref p: Number) extern_call lib_SDL._lib_LogSetPriority(n, p);
+fn SDL_LogVerbose(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogVerbose(n, a);
+fn SDL_LogWarn(ref n: Number, ref a: String) extern_call lib_SDL._lib_LogWarn(n, a);
 
 # SDL_assert.h
 # 0% (0/9)

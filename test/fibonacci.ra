@@ -1,4 +1,4 @@
-fib(ref size : Number) => {
+fn fib(ref size: Number) {
 	array := [0, 1] ++ alloc(size - 2);
 	for i in 2 .. size do {
 		array[i] = array[i - 1] + array[i - 2];
@@ -6,4 +6,4 @@ fib(ref size : Number) => {
 	return array;
 }
 
-fib(20).map((e, i) => putln("{0}:\t{1}" & [i, e]));
+fib(20).map(fn(e, i) putln("{0}:\t{1}" & [i, e]));

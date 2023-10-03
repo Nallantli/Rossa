@@ -1,7 +1,7 @@
 load "fs";
 
 static bitmap {
-	allocate(ref height : Number, ref width : Number) => {
+	fn allocate(ref height: Number, ref width: Number) {
 		image := alloc(height);
 		for i in image do {
 			i = alloc(width);
@@ -12,7 +12,7 @@ static bitmap {
 		return image;
 	}
 
-	write(ref image : Array, ref height : Number, ref width : Number, ref filename : String) => {
+	fn write(ref image: Array, ref height: Number, ref width: Number, ref filename: String) {
 		f := new Writer(filename, true);
 		widthInBytes := width * 3;
 		paddingSize := (4 - (widthInBytes) % 4) % 4;
@@ -36,7 +36,7 @@ static bitmap {
 		f.write(out);
 	}
 
-	createHeader(ref height : Number, ref stride : Number) => {
+	fn createHeader(ref height: Number, ref stride: Number) {
 		fileSize := 54 + (stride * height);
 
 		fileHeader := [
@@ -46,10 +46,10 @@ static bitmap {
 			54, 0, 0, 0
 		];
 
-		return fileHeader.map((n) => chars(n)).join();
+		return fileHeader.map(fn(n) chars(n)).join();
 	}
 
-	createInfo(ref height : Number, ref width : Number) => {
+	fn createInfo(ref height: Number, ref width: Number) {
 		infoHeader := [
 			40, 0, 0, 0,
 			width, width >> 8, width >> 16, width >> 24,
@@ -64,6 +64,6 @@ static bitmap {
 			0,0,0,0
 		];
 
-		return infoHeader.map((n) => chars(n)).join();
+		return infoHeader.map(fn(n) chars(n)).join();
 	}
 }

@@ -13,7 +13,7 @@ static conway {
 	paused := true;
 	speed := 80;
 
-	getNeighborCount(ref x : Number, ref y : Number) => {
+	fn getNeighborCount(ref x: Number, ref y: Number) {
 		n := 0;
 		for i in -1 <> 1 do {
 			for j in -1 <> 1 do {
@@ -28,8 +28,8 @@ static conway {
 		return n;
 	}
 
-	refresh() => {
-		tempCache := alloc(width).map((e) => alloc(height));
+	fn refresh() {
+		tempCache := alloc(width).map(fn(e) alloc(height));
 
 		for x in 0 .. width do {
 			for y in 0 .. height do {
@@ -58,7 +58,7 @@ static conway {
 		r.update();
 	}
 
-	evaluateInput() => {
+	fn evaluateInput() {
 		e := SDL.poll();
 		if e["type"] == SDL.Event.QUIT then {
 			SDL.QUIT();
@@ -74,7 +74,7 @@ static conway {
 		}
 	}
 
-	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+	fn `()`(ref width: Number, ref height: Number, ref scale: Number) {
 		SDL.INIT();
 
 		this.width = width;
@@ -83,8 +83,8 @@ static conway {
 
 		rand = new Random();
 
-		cache = alloc(width).map((e) => alloc(height));
-		buffer = alloc(width).map((e) => alloc(height));
+		cache = alloc(width).map(fn(e) alloc(height));
+		buffer = alloc(width).map(fn(e) alloc(height));
 
 		w = new SDL.Window("Conway's Game of Life", width * scale, height * scale);
 		r = w.getRenderer();

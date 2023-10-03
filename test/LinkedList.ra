@@ -2,7 +2,7 @@ struct LinkedList {
 	struct Node {
 		var next, prev, value;
 
-		init(ref prev : LinkedList.Node, ref next : LinkedList.Node, ref value) => {
+		fn init(ref prev: LinkedList.Node, ref next: LinkedList.Node, ref value) {
 			this.prev = prev;
 			this.next = next;
 			this.value = value;
@@ -15,7 +15,7 @@ struct LinkedList {
 			}
 		}
 
-		`->String`() => {
+		fn `->String`() {
 			return value -> String;
 		}
 	}
@@ -23,15 +23,15 @@ struct LinkedList {
 	var tail;
 	length := 0;
 
-	init() => {}
+	fn init() {}
 
-	push(ref value) => {
+	fn push(ref value) {
 		tail = new Node(tail, nil, value);
 		length += 1;
 		refer tail.value;
 	}
 
-	`[]`(ref index : Number) => {
+	fn `[]`(ref index: Number) {
 		curr := tail;
 		for i in 1 .. (length - index) do {
 			curr = curr.prev;
@@ -39,19 +39,19 @@ struct LinkedList {
 		refer curr.value;
 	}
 
-	`+`(ref a : Array) => {
+	fn `+`(ref a: Array) {
 		for e in a do {
 			push(e);
 		}
 	}
 
-	`+`(ref l : LinkedList) => {
+	fn `+`(ref l: LinkedList) {
 		for e in l -> Array do {
 			push(e);
 		}
 	}
 
-	remove(ref index : Number) => {
+	fn remove(ref index: Number) {
 		curr := tail;
 		for i in 1 .. (length - index) do {
 			curr = curr.prev;
@@ -69,7 +69,7 @@ struct LinkedList {
 		refer curr.value;
 	}
 
-	pop() => {
+	fn pop() {
 		r := tail;
 		tail = tail.prev;
 		tail.next = nil;
@@ -77,11 +77,11 @@ struct LinkedList {
 		refer r.value;
 	}
 
-	len() => {
+	fn len() {
 		return length;
 	}
 
-	`->Array`() => {
+	fn `->Array`() {
 		a := alloc(length);
 		curr := tail;
 		for i in [0 .. length].reverse() do {
@@ -91,7 +91,7 @@ struct LinkedList {
 		refer a;
 	}
 
-	`->String`() => {
+	fn `->String`() {
 		return this -> Array -> String;
 	}
 }

@@ -3,25 +3,25 @@ extern "lib_standard";
 struct Random {
 	var ptr;
 
-	init() => {
+	fn init() {
 		ptr = (extern_call lib_standard._rand_init(clock.milliseconds()));
 	}
 
-	init(ref seed : Number) => {
+	fn init(ref seed: Number) {
 		ptr = (extern_call lib_standard._rand_init(seed));
 	}
 
-	nextf() => extern_call lib_standard._rand_nextFloat(ptr, 0, 1);
+	fn nextf() extern_call lib_standard._rand_nextFloat(ptr, 0, 1);
 
-	nextf(ref max : Number) => extern_call lib_standard._rand_nextFloat(ptr, 0, max);
+	fn nextf(ref max: Number) extern_call lib_standard._rand_nextFloat(ptr, 0, max);
 
-	nextf(ref min : Number, ref max : Number) => extern_call lib_standard._rand_nextFloat(ptr, min, max);
+	fn nextf(ref min: Number, ref max: Number) extern_call lib_standard._rand_nextFloat(ptr, min, max);
 
-	nexti() => extern_call lib_standard._rand_nextInt(ptr, 0, 1);
+	fn nexti() extern_call lib_standard._rand_nextInt(ptr, 0, 1);
 
-	nexti(ref max : Number) => extern_call lib_standard._rand_nextInt(ptr, 0, max);
+	fn nexti(ref max: Number) extern_call lib_standard._rand_nextInt(ptr, 0, max);
 
-	nexti(ref min : Number, ref max : Number) => extern_call lib_standard._rand_nextInt(ptr, min, max);
+	fn nexti(ref min: Number, ref max: Number) extern_call lib_standard._rand_nextInt(ptr, min, max);
 
-	nextb() => (nexti() -> Boolean);
+	fn nextb() (nexti() -> Boolean);
 }

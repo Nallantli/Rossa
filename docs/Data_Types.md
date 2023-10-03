@@ -210,8 +210,8 @@ If `P[i]` is not explicitly declared with a type, +1
 Thus, given two overloads:
 
 ```ra
-f(a : Number, b : Number) => {}
-f(a : Number, b) => {}
+fn f(a: Number, b: Number) {}
+fn f(a: Number, b) {}
 ```
 
 Calling `f(1, 2)` gives `6` for the first overload, and `4` for the second. The first is chosen.
@@ -225,7 +225,7 @@ Calling `f("Hello", "World")` gives `0` for both. Neither is chosen and the inte
 `Function` values may be declared explicitly for the scope using an identifier as such:
 
 ```ra
-abs(x) => {
+fn abs(x) {
 	if x < 0 then {
 		return -x;
 	}
@@ -236,7 +236,7 @@ abs(x) => {
 `Function` values may also be declared anonymously without an identifier:
 
 ```ra
-(x) => {
+fn (x) {
 	if x < 0 then {
 		return -x;
 	}
@@ -251,7 +251,7 @@ Anonymous function may also capture variables at the point of their initializati
 ```ra
 x := "I'm captured!";
 
-f := ()[x] => {
+f := fn()[x] {
 	putln(x)
 };
 
@@ -264,7 +264,7 @@ f();		# I'm captured!
 Both declaration forms can be simplified for single-line methods as:
 
 ```ra
-abs(x) => (x < 0 ? -x : x);
+fn abs(x) (x < 0 ? -x : x);
 ```
 
 Here no explicit `return` statement is required.
@@ -272,13 +272,13 @@ Here no explicit `return` statement is required.
 From this we have the following syntaxes:
 
 ```
-<IDENTIFIER>(<ARGS>*) => { <BODY> }
-<IDENTIFIER>(<ARGS>*) => <BODY>;
-(<ARGS>*) => { <BODY> };
-(<ARGS>*) => <BODY>;
+fn <IDENTIFIER>(<ARGS>*) { <BODY> }
+fn <IDENTIFIER>(<ARGS>*) <BODY>;
+fn(<ARGS>*) { <BODY> };
+fn(<ARGS>*) <BODY>;
 ```
 
-\* The `Function` signature may also have no arguments, in which the syntax is equivalent - only that within the parantheses be nothing (e.g. `f() => { ... }`).
+\* The `Function` signature may also have no arguments, in which the syntax is equivalent - only that within the parantheses be nothing (e.g. `fn f() { ... }`).
 
 ### Operators
 

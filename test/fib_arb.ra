@@ -1,6 +1,6 @@
 load "Arbitrary";
 
-fib(ref size : Number) => {
+fn fib(ref size: Number) {
 	array := [new Arbitrary(0), new Arbitrary(1)] ++ alloc(size - 2);
 	for i in 2 .. size do {
 		array[i] = array[i - 1] + array[i - 2];
@@ -8,4 +8,4 @@ fib(ref size : Number) => {
 	return array;
 }
 
-fib(200).map((e, i) => putln("{0}:\t{1}" & [i, e]));
+fib(200).map(fn(e, i) putln("{0}:\t{1}" & [i, e]));

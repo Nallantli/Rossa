@@ -40,7 +40,7 @@ struct Chip {
 		key,
 		timer;
 
-	init() => {
+	fn init() {
 		memory = alloc(4096, 0);
 		V = alloc(16, 0);
 		gfx = alloc(2048, false);
@@ -59,7 +59,7 @@ struct Chip {
 		}
 	}
 
-	cycle() => {
+	fn cycle() {
 		opcode := memory[pc] << 8 | memory[pc + 1];
 
 		switch opcode & 0xF000 of {
@@ -351,7 +351,7 @@ struct Chip {
 		}
 	}
 
-	loadFile(ref filename : String) => {
+	fn loadFile(ref filename: String) {
 		putln("Loading: {0}" & [filename]);
 		pFile := new Reader(filename, true);
 		lSize := pFile.size();
@@ -369,7 +369,7 @@ struct Chip {
 	}
 }
 
-evaluateInput() => {
+fn evaluateInput() {
 	e := SDL.poll();
 	if e["type"] == SDL.Event.QUIT then {
 		SDL.QUIT();
@@ -440,8 +440,8 @@ r := w.getRenderer();
 font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.RED);
 
-buffer := alloc(64).map((e) => alloc(32));
-pixelBuffer := alloc(64).map((e) => alloc(32).map((e2) => false));
+buffer := alloc(64).map(fn(e) alloc(32));
+pixelBuffer := alloc(64).map(fn(e) alloc(32).map(fn(e2) false));
 
 for x in 0 .. 64 do {
 	for y in 0 .. 32 do {
@@ -450,7 +450,7 @@ for x in 0 .. 64 do {
 	}
 }
 
-updateDisplayBuffered() => {
+fn updateDisplayBuffered() {
 	for x in 0 .. 64 do {
 		for y in 0 .. 32 do {
 			if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {
@@ -463,7 +463,7 @@ updateDisplayBuffered() => {
 	}
 }
 
-updateDisplay() => {
+fn updateDisplay() {
 	for x in 0 .. 64 do {
 		for y in 0 .. 32 do {
 			if pixelBuffer[x][y] != chip.gfx[y * 64 + x] then {

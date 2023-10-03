@@ -7,47 +7,47 @@ ATTR := extern_call lib_ncurses._fetch_constants();
 struct Window {
 	var ptr;
 
-	init(ref height : Number, ref width : Number, ref x : Number, ref y : Number) => {
+	fn init(ref height: Number, ref width: Number, ref x: Number, ref y: Number) {
 		ptr = extern_call lib_ncurses._newwin(height, width, x, y);
 	}
 
-	init(ref ptr : Pointer) => {
+	fn init(ref ptr: Pointer) {
 		this.ptr = ptr;
 	}
 
-	keypad(ref b : Boolean) => extern_call lib_ncurses._keypad(ptr, b);
+	fn keypad(ref b: Boolean) extern_call lib_ncurses._keypad(ptr, b);
 
-	box(ref a : Number, ref b : Number) => extern_call lib_ncurses._box(ptr, a, b);
+	fn box(ref a: Number, ref b: Number) extern_call lib_ncurses._box(ptr, a, b);
 
-	border(
-		ref ls : Number,
-		ref rs : Number,
-		ref ts : Number,
-		ref bs : Number,
-		ref tl : Number,
-		ref tr : Number,
-		ref bl : Number,
-		ref br : Number
-	) => extern_call lib_ncurses._wborder(ptr, ls, rs, ts, bs, tl, tr, bl, br);
+	fn border(
+		ref ls: Number,
+		ref rs: Number,
+		ref ts: Number,
+		ref bs: Number,
+		ref tl: Number,
+		ref tr: Number,
+		ref bl: Number,
+		ref br: Number
+	) extern_call lib_ncurses._wborder(ptr, ls, rs, ts, bs, tl, tr, bl, br);
 
-	refresh() => extern_call lib_ncurses._wrefresh(ptr);
+	fn refresh() extern_call lib_ncurses._wrefresh(ptr);
 
-	move(ref y : Number, ref x : Number) => extern_call lib_ncurses._wmove(ptr, y, x);
+	fn move(ref y: Number, ref x: Number) extern_call lib_ncurses._wmove(ptr, y, x);
 
-	printw(ref a) => extern_call lib_ncurses._wprintw(ptr, a -> String);
-	mvprintw(ref y : Number, ref x : Number, ref a) => (move(y, x) == -1 ? -1 : printw(a -> String));
+	fn printw(ref a) extern_call lib_ncurses._wprintw(ptr, a -> String);
+	fn mvprintw(ref y: Number, ref x: Number, ref a) (move(y, x) == -1 ? -1 : printw(a -> String));
 
-	addch(ref a : Number) => extern_call lib_ncurses._waddch(ptr, a);
-	mvaddch(ref y : Number, ref x : Number, ref a : Number) => (move(y, x) == -1 ? -1 : addch(a));
+	fn addch(ref a: Number) extern_call lib_ncurses._waddch(ptr, a);
+	fn mvaddch(ref y: Number, ref x: Number, ref a: Number) (move(y, x) == -1 ? -1 : addch(a));
 
-	getch() => extern_call lib_ncurses._wgetch(ptr);
-	mvgetch(ref y : Number, ref x : Number, ref a : Number) => (move(y, x) == -1 ? -1 : getch());
+	fn getch() extern_call lib_ncurses._wgetch(ptr);
+	fn mvgetch(ref y: Number, ref x: Number, ref a: Number) (move(y, x) == -1 ? -1 : getch());
 
-	attron(ref a : Number) => extern_call lib_ncurses._wattron(ptr, a);
-	attroff(ref a : Number) => extern_call lib_ncurses._wattroff(ptr, a);
-	attrset(ref a : Number) => extern_call lib_ncurses._wattrset(ptr, a);
+	fn attron(ref a: Number) extern_call lib_ncurses._wattron(ptr, a);
+	fn attroff(ref a: Number) extern_call lib_ncurses._wattroff(ptr, a);
+	fn attrset(ref a: Number) extern_call lib_ncurses._wattrset(ptr, a);
 
-	delwin() => {
+	fn delwin() {
 		if ptr != nil then {
 			r := extern_call lib_ncurses._delwin(ptr);
 			ptr = nil;
@@ -55,31 +55,31 @@ struct Window {
 		}
 	}
 
-	rem() => {
+	fn rem() {
 		delwin();
 	}
 }
 
-initscr() => {
+fn initscr() {
 	stdscr = new Window(extern_call lib_ncurses._initscr());
 	refer stdscr;
 }
 
-endwin() => {
+fn endwin() {
 	stdscr.ptr = nil;
 	stdscr = nil;
 	return extern_call lib_ncurses._endwin();
 }
 
-raw() => extern_call lib_ncurses._raw();
-noraw() => extern_call lib_ncurses._noraw();
+fn raw() extern_call lib_ncurses._raw();
+fn noraw() extern_call lib_ncurses._noraw();
 
-cbreak() => extern_call lib_ncurses._cbreak();
-nocbreak() => extern_call lib_ncurses._nocbreak();
+fn cbreak() extern_call lib_ncurses._cbreak();
+fn nocbreak() extern_call lib_ncurses._nocbreak();
 
-echo() => extern_call lib_ncurses._echo();
-noecho() => extern_call lib_ncurses._noecho();
+fn echo() extern_call lib_ncurses._echo();
+fn noecho() extern_call lib_ncurses._noecho();
 
-typeahead(ref n : Number) => extern_call lib_ncurses._typeahead(n);
+fn typeahead(ref n: Number) extern_call lib_ncurses._typeahead(n);
 
-halfdelay(ref n : Number) => extern_call lib_ncurses._halfdelay(n);
+fn halfdelay(ref n: Number) extern_call lib_ncurses._halfdelay(n);

@@ -12,18 +12,18 @@ static Color {
 	const BLACK = { "red" : 0x00, "green" : 0x00, "blue" : 0x00, "alpha" : 0xff };
 	const WHITE = { "red" : 0xff, "green" : 0xff, "blue" : 0xff, "alpha" : 0xff };
 
-	`()`(ref r : Number, ref g : Number, ref b : Number) => {
+	fn `()`(ref r: Number, ref g: Number, ref b: Number) {
 		return { "red" : r, "green" : g, "blue" : b, "alpha" : 0xff };
 	}
 
-	`()`(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+	fn `()`(ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 		return { "red" : r, "green" : g, "blue" : b, "alpha" : a };
 	}
 
-	HSL(ref h : Number, ref s : Number, ref l : Number) => HSL(h, s, l, 0xff);
+	fn HSL(ref h: Number, ref s: Number, ref l: Number) HSL(h, s, l, 0xff);
 
-	HSL(ref h : Number, ref s : Number, ref l : Number, ref a : Number) => {
-		hueToRgb(ref p : Number, ref q : Number, t : Number) => {
+	fn HSL(ref h: Number, ref s: Number, ref l: Number, ref a: Number) {
+		fn hueToRgb(ref p: Number, ref q: Number, t: Number) {
 			if t < 0 then {
 				t += 1;
 			} elif t > 1 then {
@@ -152,22 +152,22 @@ static SDL {
 		HIT_TEST
 	}
 
-	poll() => {
+	fn poll() {
 		return (extern_call lib_graphics._event_poll());
 	}
 
-	INIT() => {
+	fn INIT() {
 		extern_call lib_graphics._sdl_init();
 	}
 
-	QUIT() => {
+	fn QUIT() {
 		extern_call lib_graphics._sdl_quit();
 	}
 
 	struct Font {
 		var ptr;
 
-		init(ref path : String, ref sz : Number) => {
+		fn init(ref path: String, ref sz: Number) {
 			ptr = (extern_call lib_graphics._font_init(path, sz));
 		}
 	}
@@ -175,15 +175,15 @@ static SDL {
 	struct Image {
 		var ptr;
 
-		init(ref path : String) => {
+		fn init(ref path: String) {
 			ptr = (extern_call lib_graphics._image_init_nokey(path));
 		}
 
-		init(ref path : String, ref r : Number, ref g : Number, ref b : Number) => {
+		fn init(ref path: String, ref r: Number, ref g: Number, ref b: Number) {
 			ptr = (extern_call lib_graphics._image_init_key(path, r, g, b));
 		}
 
-		init(ref path : String, ref color : Dictionary) => {
+		fn init(ref path: String, ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._image_init_key(path, color["red"], color["green"], color["blue"]));
 		}
 	}
@@ -191,113 +191,113 @@ static SDL {
 	virtual Prototype {
 		var ptr;
 
-		setColor(ref color : Dictionary) => {
+		fn setColor(ref color: Dictionary) {
 			extern_call lib_graphics._shape_setColor(ptr, color["red"], color["green"], color["blue"], color["alpha"]);
 		}
 
-		setColor(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+		fn setColor(ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			extern_call lib_graphics._shape_setColor(ptr, r, g, b, a);
 		}
 
-		setColor(ref r : Number, ref g : Number, ref b : Number) => {
+		fn setColor(ref r: Number, ref g: Number, ref b: Number) {
 			extern_call lib_graphics._shape_setColor(ptr, r, g, b, 0xff);
 		}
 	}
 
-	virtual Sizable : Prototype {
-		setSize(ref width : Number, ref height : Number) => {
+	virtual Sizable: Prototype {
+		fn setSize(ref width: Number, ref height: Number) {
 			extern_call lib_graphics._sizable_setSize(ptr, width, height);
 		}
 
-		setWidth(ref width : Number) => {
+		fn setWidth(ref width: Number) {
 			extern_call lib_graphics._sizable_setWidth(ptr, width);
 		}
 
-		setHeight(ref height : Number) => {
+		fn setHeight(ref height: Number) {
 			extern_call lib_graphics._sizable_setHeight(ptr, height);
 		}
 	}
 
-	virtual Rotatable : Sizable {
-		setAngle(ref angle : Number) => {
+	virtual Rotatable: Sizable {
+		fn setAngle(ref angle: Number) {
 			extern_call lib_graphics._rotatable_setAngle(ptr, angle);
 		}
 
-		pivot(ref x : Number, ref y : Number) => {
+		fn pivot(ref x: Number, ref y: Number) {
 			extern_call lib_graphics._rotatable_setCenter(ptr, x, y);
 		}
 
-		unpivot() => {
+		fn unpivot() {
 			extern_call lib_graphics._rotatable_deCenter(ptr);
 		}
 
-		clip(ref x : Number, ref y : Number, ref width : Number, ref height : Number) => {
+		fn clip(ref x: Number, ref y: Number, ref width: Number, ref height: Number) {
 			extern_call lib_graphics._rotatable_setClip(ptr, x, y, width, height);
 		}
 
-		unclip() => {
+		fn unclip() {
 			extern_call lib_graphics._rotatable_deClip(ptr);
 		}
 	}
 
-	struct Rect : Sizable {
-		init(ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+	struct Rect: Sizable {
+		fn init(ref width: Number, ref height: Number, ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			ptr = (extern_call lib_graphics._rect_init(width, height, r, g, b, a));
 		}
 
-		init(ref width : Number, ref height : Number, ref color : Dictionary) => {
+		fn init(ref width: Number, ref height: Number, ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._rect_init(width, height, color["red"], color["green"], color["blue"], color["alpha"]));
 		}
 	}
 
-	struct Line : Prototype {
-		init(ref x2 : Number, ref y2 : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+	struct Line: Prototype {
+		fn init(ref x2: Number, ref y2: Number, ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			ptr = (extern_call lib_graphics._line_init(x2, y2, r, g, b, a));
 		}
 
-		init(ref x2 : Number, ref y2 : Number, ref color : Dictionary) => {
+		fn init(ref x2: Number, ref y2: Number, ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._line_init(x2, y2, color["red"], color["green"], color["blue"], color["alpha"]));
 		}
 	}
 
-	struct Point : Prototype {
-		init(ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+	struct Point: Prototype {
+		fn init(ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			ptr = (extern_call lib_graphics._point_init(r, g, b, a));
 		}
 
-		init(ref color : Dictionary) => {
+		fn init(ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._point_init(color["red"], color["green"], color["blue"], color["alpha"]));
 		}
 	}
 
-	struct Text : Prototype {
-		init(ref font : SDL.Font, ref s : String, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+	struct Text: Prototype {
+		fn init(ref font: SDL.Font, ref s: String, ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			ptr = (extern_call lib_graphics._text_init(font.ptr, s, r, g, b, a));
 		}
 
-		init(ref font : SDL.Font, ref s : String, ref color : Dictionary) => {
+		fn init(ref font: SDL.Font, ref s: String, ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._text_init(font.ptr, s, color["red"], color["green"], color["blue"], color["alpha"]));
 		}
 
-		setText(ref s : String) => {
+		fn setText(ref s: String) {
 			extern_call lib_graphics._text_setText(ptr, s);
 		}
 	}
 
-	struct Texture : Rotatable {
-		init(ref img : SDL.Image, ref width : Number, ref height : Number) => {
+	struct Texture: Rotatable {
+		fn init(ref img: SDL.Image, ref width: Number, ref height: Number) {
 			ptr = (extern_call lib_graphics._texture_init(img.ptr, width, height, 0xff, 0xff, 0xff));
 		}
 
-		init(ref img : SDL.Image, ref width : Number, ref height : Number, ref r : Number, ref g : Number, ref b : Number, ref a : Number) => {
+		fn init(ref img: SDL.Image, ref width: Number, ref height: Number, ref r: Number, ref g: Number, ref b: Number, ref a: Number) {
 			ptr = (extern_call lib_graphics._texture_init(img.ptr, width, height, r, g, b, a));
 		}
 
-		init(ref img : SDL.Image, ref width : Number, ref height : Number, ref color : Dictionary) => {
+		fn init(ref img: SDL.Image, ref width: Number, ref height: Number, ref color: Dictionary) {
 			ptr = (extern_call lib_graphics._texture_init(img.ptr, width, height, color["red"], color["green"], color["blue"], color["alpha"]));
 		}
 
-		setImage(ref img : SDL.Image) => {
+		fn setImage(ref img: SDL.Image) {
 			extern_call lib_graphics._texture_setImage(ptr, img.ptr);
 		}
 	}
@@ -306,39 +306,39 @@ static SDL {
 		struct Renderer {
 			var ptr;
 
-			init(ref ptr : Pointer) => {
+			fn init(ref ptr: Pointer) {
 				this.ptr = ptr;
 			}
 
-			put(ref shape : SDL.Prototype, ref x : Number, ref y : Number) => {
+			fn put(ref shape: SDL.Prototype, ref x: Number, ref y: Number) {
 				extern_call lib_graphics._renderer_draw(ptr, shape.ptr, x, y);
 				refer shape;
 			}
 
-			clear() => extern_call lib_graphics._renderer_clear(ptr);
+			fn clear() extern_call lib_graphics._renderer_clear(ptr);
 
-			update() => extern_call lib_graphics._renderer_update(ptr);
+			fn update() extern_call lib_graphics._renderer_update(ptr);
 
-			flush() => extern_call lib_graphics._renderer_flush(ptr);
+			fn flush() extern_call lib_graphics._renderer_flush(ptr);
 		}
 
 		var ptr, windowID, renderer;
 
-		init(ref title : String, ref width : Number, ref height : Number) => {
+		fn init(ref title: String, ref width: Number, ref height: Number) {
 			data := (extern_call lib_graphics._window_init(title, width, height));
 			ptr = data[0];
 			windowID = data[1];
 			extern_call lib_graphics._window_register(windowID, ptr);
 		}
 
-		getRenderer() => {
+		fn getRenderer() {
 			if renderer == nil then {
 				renderer = new Renderer(extern_call lib_graphics._window_getRenderer(ptr));
 			}
 			return renderer;
 		}
 
-		close() => {
+		fn close() {
 			ptr = nil;
 			renderer = nil;
 		}

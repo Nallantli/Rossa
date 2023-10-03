@@ -1,124 +1,124 @@
 struct Test {
-	init() => {
+	fn init() {
 		putln("CONSTRUCTOR CALLED");
 	}
 
-	`+`(ref a) => {
+	fn `+`(ref a) {
 		putln("ADD: " ++ (a -> String));
 	}
 
-	`-`(ref a) => {
+	fn `-`(ref a) {
 		putln("SUB: " ++ (a -> String));
 	}
 
-	`*`(ref a) => {
+	fn `*`(ref a) {
 		putln("MUL: " ++ (a -> String));
 	}
 
-	`/`(ref a) => {
+	fn `/`(ref a) {
 		putln("DIV: " ++ (a -> String));
 	}
 
-	`%`(ref a) => {
+	fn `%`(ref a) {
 		putln("MOD: " ++ (a -> String));
 	}
 
-	`**`(ref a) => {
+	fn `**`(ref a) {
 		putln("POW: " ++ (a -> String));
 	}
 
-	`<`(ref a) => {
+	fn `<`(ref a) {
 		putln("LESS: " ++ (a -> String));
 		return false;
 	}
 
-	`>`(ref a) => {
+	fn `>`(ref a) {
 		putln("MORE: " ++ (a -> String));
 		return false;
 	}
 
-	`<=`(ref a) => {
+	fn `<=`(ref a) {
 		putln("ELESS: " ++ (a -> String));
 		return false;
 	}
 
-	`>=`(ref a) => {
+	fn `>=`(ref a) {
 		putln("EMORE: " ++ (a -> String));
 		return false;
 	}
 
-	`==`(ref a) => {
+	fn `==`(ref a) {
 		putln("EQUALS: " ++ (a -> String));
 		return false;
 	}
 
-	`!=`(ref a) => {
+	fn `!=`(ref a) {
 		putln("NEQUALS: " ++ (a -> String));
 		return false;
 	}
 
-	`[]`(ref a) => {
+	fn `[]`(ref a) {
 		putln("INDEX: " ++ (a -> String));
 	}
 
-	`()`(ref a, ref b) => {
+	fn `()`(ref a, ref b) {
 		putln("CALL: " ++ (a -> String) ++ ", " ++ (b -> String));
 	}
 
-	`=`(ref a) => {
+	fn `=`(ref a) {
 		putln("SET: " ++ (a -> String));
 	}
 
-	`&`(ref a) => {
+	fn `&`(ref a) {
 		putln("B_AND: " ++ (a -> String));
 	}
 
-	`|`(ref a) => {
+	fn `|`(ref a) {
 		putln("B_OR: " ++ (a -> String));
 	}
 
-	`^`(ref a) => {
+	fn `^`(ref a) {
 		putln("B_XOR: " ++ (a -> String));
 	}
 
-	`<<`(ref a) => {
+	fn `<<`(ref a) {
 		putln("B_SH_L: " ++ (a -> String));
 	}
 
-	`>>`(ref a) => {
+	fn `>>`(ref a) {
 		putln("B_SH_R: " ++ (a -> String));
 	}
 
-	`->String`() => {
+	fn `->String`() {
 		putln("TO_STRING");
 		return "test";
 	}
 
-	`->Number`() => {
+	fn `->Number`() {
 		putln("TO_NUMBER");
 		return 0;
 	}
 
-	`->Boolean`() => {
+	fn `->Boolean`() {
 		putln("TO_BOOLEAN");
 		return false;
 	}
 
-	`->Array`() => {
+	fn `->Array`() {
 		putln("TO_VECTOR");
 		return [];
 	}
 
-	`->Dictionary`() => {
+	fn `->Dictionary`() {
 		putln("TO_DICTIONARY");
 		return {};
 	}
 
-	len() => {
+	fn len() {
 		return 1;
 	}
 
-	rem() => {
+	fn rem() {
 		putln("DELETER CALLED");
 	}
 }

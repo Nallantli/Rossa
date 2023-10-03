@@ -2,26 +2,26 @@ extern "lib_standard";
 
 # CONSOLE
 
-puts(ref s) => extern_call lib_standard._puts(s -> String);
+fn puts(ref s) extern_call lib_standard._puts(s -> String);
 
-puts(...) => {
+fn puts(...) {
 	for s in _ do {
 		extern_call lib_standard._puts(s -> String);
 	}
 }
 
-putln(ref s) => extern_call lib_standard._puts((s -> String) ++ "\n");
+fn putln(ref s) extern_call lib_standard._puts((s -> String) ++ "\n");
 
-putln(...) => {
+fn putln(...) {
 	for s in _ do {
 		extern_call lib_standard._puts(s -> String);
 	}
 	extern_call lib_standard._puts("\n");
 }
 
-putln() => puts("\n");
+fn putln() puts("\n");
 
-system(ref s : String) => extern_call lib_standard._system_call(s);
+fn system(ref s: String) extern_call lib_standard._system_call(s);
 
 static cons {
 	static decor {
@@ -66,25 +66,25 @@ static cons {
 		const RESET = "0";
 	}
 
-	setDecor(ref s : String) => puts("\u001B[" ++ s ++ "m");
+	fn setDecor(ref s: String) puts("\u001B[" ++ s ++ "m");
 
-	setDecor(ref n : Number) => setDecor(n -> String);
+	fn setDecor(ref n: Number) setDecor(n -> String);
 
-	setDecor(ref v : Array) => {
+	fn setDecor(ref v: Array) {
 		for c in v do {
 			setDecor(c);
 		}
 	}
 
-	setForeColor(ref r : Number, ref g : Number, ref b : Number) => {
+	fn setForeColor(ref r: Number, ref g: Number, ref b: Number) {
 		setDecor("38;5;" ++ ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
 	}
 
-	setBackColor(ref r : Number, ref g : Number, ref b : Number) => {
+	fn setBackColor(ref r: Number, ref g: Number, ref b: Number) {
 		setDecor("48;5;" ++ ((16 + 36 * math.floor(5 * r / 255) + 6 * math.floor(5 * g / 255) + math.floor(5 * b / 255)) -> String));
 	}
 
-	moveCursor(ref x : Number, ref y : Number) => {
+	fn moveCursor(ref x: Number, ref y: Number) {
 		s := "";
 		if x < 0 then {
 			s ++= "\u001B[" ++ (math.abs(x) -> String) ++ "D";
@@ -99,19 +99,19 @@ static cons {
 		puts(s);
 	}
 
-	setCursor(ref x : Number, ref y : Number) => puts("\u001B[" ++ (y -> String) ++ ";" ++ (x -> String) ++ "H");
+	fn setCursor(ref x: Number, ref y: Number) puts("\u001B[" ++ (y -> String) ++ ";" ++ (x -> String) ++ "H");
 }
 
 static input {
-	line() => extern_call lib_standard._input_line();
+	fn line() extern_call lib_standard._input_line();
 
-	token() => extern_call lib_standard._input_token();
+	fn token() extern_call lib_standard._input_token();
 
-	char() => extern_call lib_standard._input_char();
+	fn char() extern_call lib_standard._input_char();
 }
 
 # SYSTEM
 
-exit() => extern_call lib_standard._exit(0);
+fn exit() extern_call lib_standard._exit(0);
 
-exit(ref n : Number) => extern_call lib_standard._exit(n);
+fn exit(ref n: Number) extern_call lib_standard._exit(n);

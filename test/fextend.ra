@@ -1,7 +1,7 @@
-static isPrime : Function {
+static isPrime: Function {
 	data := {};
 
-	`()`(ref n : Number) => {
+	fn `()`(ref n: Number) {
 		if n < 2 then {
 			return false;
 		} elif data[n -> String] != nil then {
@@ -18,7 +18,7 @@ static isPrime : Function {
 	}
 }
 
-pfact(ref n : Number) => {
+fn pfact(ref n: Number) {
 	if n < 2 then {
 		return [];
 	}
@@ -31,6 +31,6 @@ pfact(ref n : Number) => {
 }
 
 putln([0 <> 100]
-	.map((v) => ([v, pfact(v)]))
-	.sort((a, b) => a[1].len() > b[1].len())
-	.map((e) => e[0]));
+	.map(fn(v) ([v, pfact(v)]))
+	.sort(fn(a, b) a[1].len() > b[1].len())
+	.map(fn(e) e[0]));

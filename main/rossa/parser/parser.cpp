@@ -71,8 +71,8 @@ const std::map<std::string, signed int> parser_t::bOperators = {
 	{"-", 11},
 	{"<<", 10},
 	{">>", 10},
-	{"..", 0}, //undef
-	{"<>", 0}, //undef
+	{"..", 0}, // undef
+	{"<>", 0}, // undef
 	{">", 8},
 	{"<", 8},
 	{">=", 8},
@@ -81,8 +81,8 @@ const std::map<std::string, signed int> parser_t::bOperators = {
 	{"==", 7},
 	{"!==", 7},
 	{"!=", 7},
-	{"!", 0}, //undef
-	{".", 0}, //undef
+	{"!", 0}, // undef
+	{".", 0}, // undef
 	{"&", 6},
 	{"^", 5},
 	{"|", 4},
@@ -369,6 +369,8 @@ const int parser_t::getToken(
 			return TOK_EACH;
 		else if (ID_STRING == KEYWORD_WHERE)
 			return TOK_WHERE;
+		else if (ID_STRING == KEYWORD_DEF)
+			return TOK_DEF;
 		else if (ID_STRING == "inf")
 		{
 			NUM_VALUE = number_t::Double(INFINITY);
@@ -452,8 +454,6 @@ const int parser_t::getToken(
 		}
 
 		ID_STRING = opStr;
-		if (ID_STRING == "=>")
-			return TOK_DEF;
 		if (ID_STRING == ".")
 			return TOK_INNER;
 		if (ID_STRING == "..")
@@ -655,6 +655,8 @@ const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const s
 	std::string ID_STRING;
 	number_t NUM_VALUE;
 
+	bool in_sig = false;
+
 	while (true)
 	{
 		int token = getToken(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE);
@@ -663,54 +665,47 @@ const std::vector<token_t> parser_t::lexString(const std::string &INPUT, const s
 		if (token == '#')
 			continue;
 		token_t t = {filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token};
-
 		if (t.type == TOK_DEF)
 		{
-			std::vector<token_t> temp;
-			while (tokens.back().type != '(')
-			{
-				if (tokens.back().valueString == ">>")
-				{
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
-				}
-				else if (tokens.back().valueString == "<<")
-				{
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
-				}
-				else if (tokens.back().valueString == "<>")
-				{
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, "<", tokens.back().valueNumber, '<'});
-					temp.push_back({tokens.back().filename, tokens.back().line, tokens.back().lineNumber, tokens.back().distance, ">", tokens.back().valueNumber, '>'});
-				}
-				else
-				{
-					temp.push_back(tokens.back());
-				}
-				tokens.pop_back();
-			}
-			temp.push_back(tokens.back());
-			tokens.pop_back();
-			if (!tokens.empty() && (tokens.back().type == TOK_IDF || tokens.back().type == TOK_CHARN || tokens.back().type == TOK_CHARS || tokens.back().type == TOK_LENGTH || tokens.back().type == TOK_ALLOC || tokens.back().type == TOK_PARSE))
-			{
-				temp.push_back(tokens.back());
-				tokens.pop_back();
-				tokens.push_back(t);
-			}
-			else
-			{
-				tokens.push_back({filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, TOK_LAMBDA});
-			}
-			while (!temp.empty())
-			{
-				tokens.push_back(temp.back());
-				temp.pop_back();
-			}
+			in_sig = true;
+			tokens.push_back(t);
 		}
 		else
 		{
-			tokens.push_back(t);
+			if (in_sig)
+			{
+				if (t.type == '(' && tokens.back().type == TOK_DEF)
+				{
+					tokens.back().type = TOK_LAMBDA;
+				}
+				if (t.type != TOK_IDF && t.valueString == ">>")
+				{
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
+				}
+				else if (t.type != TOK_IDF && t.valueString == "<<")
+				{
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
+				}
+				else if (t.type != TOK_IDF && t.valueString == "<>")
+				{
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
+				}
+				else
+				{
+					tokens.push_back(t);
+				}
+				if (tokens.back().type == ')')
+				{
+					in_sig = false;
+				}
+			}
+			else
+			{
+				tokens.push_back(t);
+			}
 		}
 	}
 

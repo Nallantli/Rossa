@@ -1,35 +1,35 @@
 extern "lib_Arbitrary";
 
-struct Arbitrary : Number {
+struct Arbitrary: Number {
 	var ptr;
 
-	init() => {
+	fn init() {
 		ptr = (extern_call lib_Arbitrary._arbitrary_init());
 	}
 
-	init(ref v : Number) => {
+	fn init(ref v: Number) {
 		ptr = (extern_call lib_Arbitrary._arbitrary_init());
 		extern_call lib_Arbitrary._arbitrary_set_number(ptr, v);
 	}
 
-	init(ref v : Arbitrary) => {
+	fn init(ref v: Arbitrary) {
 		ptr = (extern_call lib_Arbitrary._arbitrary_init());
 		extern_call lib_Arbitrary._arbitrary_set_arbitrary(ptr, v.ptr);
 	}
 
-	init(ref ptr : Pointer) => {
+	fn init(ref ptr: Pointer) {
 		this.ptr = ptr;
 	}
 
-	`->Number`() => {
+	fn `->Number`() {
 		return (extern_call lib_Arbitrary._arbitrary_to_number(ptr));
 	}
 
-	`->String`() => {
+	fn `->String`() {
 		return (extern_call lib_Arbitrary._arbitrary_to_string(ptr));
 	}
 
-	`..`(ref b) => {
+	fn `..`(ref b) {
 		list := [];
 		temp := this + 0;
 		while temp < b do {
@@ -39,7 +39,7 @@ struct Arbitrary : Number {
 		return list;
 	}
 
-	`..`(ref b, ref step) => {
+	fn `..`(ref b, ref step) {
 		list := [];
 		temp := this + 0;
 		while temp < b do {
@@ -49,7 +49,7 @@ struct Arbitrary : Number {
 		return list;
 	}
 
-	`<>`(ref b) => {
+	fn `<>`(ref b) {
 		list := [];
 		temp := this + 0;
 		while temp <= b do {
@@ -59,7 +59,7 @@ struct Arbitrary : Number {
 		return list;
 	}
 
-	`<>`(ref b, ref step) => {
+	fn `<>`(ref b, ref step) {
 		list := [];
 		temp := this + 0;
 		while temp <= b do {
@@ -69,177 +69,177 @@ struct Arbitrary : Number {
 		return list;
 	}
 
-	`-`() => {
+	fn `-`() {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_mul_number(ptr, -1));
 	}
 
-	`+`(ref b : Number) => {
+	fn `+`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_add_number(ptr, b));
 	}
 
-	`+`(ref b : Arbitrary) => {
+	fn `+`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_add_arbitrary(ptr, b.ptr));
 	}
 
-	`-`(ref b : Number) => {
+	fn `-`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_sub_number(ptr, b));
 	}
 
-	`-`(ref b : Arbitrary) => {
+	fn `-`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_sub_arbitrary(ptr, b.ptr));
 	}
 
-	`*`(ref b : Number) => {
+	fn `*`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_mul_number(ptr, b));
 	}
 
-	`*`(ref b : Arbitrary) => {
+	fn `*`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_mul_arbitrary(ptr, b.ptr));
 	}
 
-	`/`(ref b : Number) => {
+	fn `/`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_div_number(ptr, b));
 	}
 
-	`/`(ref b : Arbitrary) => {
+	fn `/`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_div_arbitrary(ptr, b.ptr));
 	}
 
-	`%`(ref b : Number) => {
+	fn `%`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_mod_number(ptr, b));
 	}
 
-	`%`(ref b : Arbitrary) => {
+	fn `%`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_mod_arbitrary(ptr, b.ptr));
 	}
 
-	`**`(ref b : Number) => {
+	fn `**`(ref b: Number) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_pow_number(ptr, b));
 	}
 
-	`**`(ref b : Arbitrary) => {
+	fn `**`(ref b: Arbitrary) {
 		return new Arbitrary(extern_call lib_Arbitrary._arbitrary_pow_arbitrary(ptr, b.ptr));
 	}
 
-	`<`(ref b : Number) => {
+	fn `<`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_less_number(ptr, b));
 	}
 
-	`<`(ref b : Arbitrary) => {
+	fn `<`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_less_arbitrary(ptr, b.ptr));
 	}
 
-	`>`(ref b : Number) => {
+	fn `>`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_more_number(ptr, b));
 	}
 
-	`>`(ref b : Arbitrary) => {
+	fn `>`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_more_arbitrary(ptr, b.ptr));
 	}
 
-	`<=`(ref b : Number) => {
+	fn `<=`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_eless_number(ptr, b));
 	}
 
-	`<=`(ref b : Arbitrary) => {
+	fn `<=`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_eless_arbitrary(ptr, b.ptr));
 	}
 
-	`>=`(ref b : Number) => {
+	fn `>=`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_emore_number(ptr, b));
 	}
 
-	`>=`(ref b : Arbitrary) => {
+	fn `>=`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_emore_arbitrary(ptr, b.ptr));
 	}
 
-	`==`(ref b : Number) => {
+	fn `==`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_equals_number(ptr, b));
 	}
 
-	`==`(ref b : Arbitrary) => {
+	fn `==`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_equals_arbitrary(ptr, b.ptr));
 	}
 
-	`!=`(ref b : Number) => {
+	fn `!=`(ref b: Number) {
 		return (extern_call lib_Arbitrary._arbitrary_nequals_number(ptr, b));
 	}
 
-	`!=`(ref b : Arbitrary) => {
+	fn `!=`(ref b: Arbitrary) {
 		return (extern_call lib_Arbitrary._arbitrary_nequals_arbitrary(ptr, b.ptr));
 	}
 
-	`=`(ref b : Number) => {
+	fn `=`(ref b: Number) {
 		extern_call lib_Arbitrary._arbitrary_set_number(ptr, b);
 	}
 
-	`=`(ref b : Arbitrary) => {
+	fn `=`(ref b: Arbitrary) {
 		extern_call lib_Arbitrary._arbitrary_set_arbitrary(ptr, b.ptr);
 	}
 }
 
-`=`(ref a, ref b : Arbitrary) => a = ($a == $Arbitrary ? b : (new Arbitrary() = b));
+fn `=`(ref a, ref b: Arbitrary) a = ($a == $Arbitrary ? b : (new Arbitrary() = b));
 
-`+`(ref a : Number, ref b : Arbitrary) => {
+fn `+`(ref a: Number, ref b: Arbitrary) {
 	return a + (b -> Number);
 }
 
-`-`(ref a : Number, ref b : Arbitrary) => {
+fn `-`(ref a: Number, ref b: Arbitrary) {
 	return a - (b -> Number);
 }
 
-`*`(ref a : Number, ref b : Arbitrary) => {
+fn `*`(ref a: Number, ref b: Arbitrary) {
 	return a * (b -> Number);
 }
 
-`/`(ref a : Number, ref b : Arbitrary) => {
+fn `/`(ref a: Number, ref b: Arbitrary) {
 	return a / (b -> Number);
 }
 
-`%`(ref a : Number, ref b : Arbitrary) => {
+fn `%`(ref a: Number, ref b: Arbitrary) {
 	return a % (b -> Number);
 }
 
-`**`(ref a : Number, ref b : Arbitrary) => {
+fn `**`(ref a: Number, ref b: Arbitrary) {
 	return a ** (b -> Number);
 }
 
-`<`(ref a : Number, ref b : Arbitrary) => {
+fn `<`(ref a: Number, ref b: Arbitrary) {
 	return a < (b -> Number);
 }
 
-`>`(ref a : Number, ref b : Arbitrary) => {
+fn `>`(ref a: Number, ref b: Arbitrary) {
 	return a > (b -> Number);
 }
 
-`<=`(ref a : Number, ref b : Arbitrary) => {
+fn `<=`(ref a: Number, ref b: Arbitrary) {
 	return a <= (b -> Number);
 }
 
-`>=`(ref a : Number, ref b : Arbitrary) => {
+fn `>=`(ref a: Number, ref b: Arbitrary) {
 	return a >= (b -> Number);
 }
 
-`==`(ref a : Number, ref b : Arbitrary) => {
+fn `==`(ref a: Number, ref b: Arbitrary) {
 	return a == (b -> Number);
 }
 
-`!=`(ref a : Number, ref b : Arbitrary) => {
+fn `!=`(ref a: Number, ref b: Arbitrary) {
 	return a != (b -> Number);
 }
 
-`..`(ref a : Number, ref b : Arbitrary) => {
+fn `..`(ref a: Number, ref b: Arbitrary) {
 	return a .. (b -> Number);
 }
 
-`<>`(ref a : Number, ref b : Arbitrary) => {
+fn `<>`(ref a: Number, ref b: Arbitrary) {
 	return a <> (b -> Number);
 }
 
-`..`(ref a : Number, ref b : Arbitrary, ref step : Number) => {
+fn `..`(ref a: Number, ref b: Arbitrary, ref step: Number) {
 	return a .. (b -> Number) : step;
 }
 
-`<>`(ref a : Number, ref b : Arbitrary, ref step : Number) => {
+fn `<>`(ref a: Number, ref b: Arbitrary, ref step: Number) {
 	return a <> (b -> Number) : step;
 }

@@ -17,7 +17,7 @@ for x in 0 .. 16 do {
 	}
 }
 
-randomize() => {
+fn randomize() {
 	for x in 0 .. 16 do {
 		for y in 0 .. 16 do {
 			r.put(tiles[rand.nexti(0, 255)], x * 32, y * 32);

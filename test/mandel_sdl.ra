@@ -13,8 +13,8 @@ scale := 1;
 window := new SDL.Window("Mandelbrot", WIDTH * WINDOW_SCALE, HEIGHT * WINDOW_SCALE);
 renderer := window.getRenderer();
 
-cache := alloc(WIDTH).map((e) => alloc(HEIGHT));
-buffer := alloc(WIDTH).map((e) => alloc(HEIGHT));
+cache := alloc(WIDTH).map(fn(e) alloc(HEIGHT));
+buffer := alloc(WIDTH).map(fn(e) alloc(HEIGHT));
 
 for x in 0 .. WIDTH do {
 	for y in 0 .. HEIGHT do {
@@ -27,7 +27,7 @@ for x in 0 .. WIDTH do {
 static mandel {
 	const PRECISION = 64;
 
-	mandelConverger(ref real : Number, ref imag : Number) => {
+	fn mandelConverger(ref real: Number, ref imag: Number) {
 		zReal := real;
 		zImag := imag;
 		var r2, i2;
@@ -45,7 +45,7 @@ static mandel {
 		return PRECISION;
 	}
 
-	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref WIDTH : Number, ref HEIGHT : Number) => {
+	fn draw(ref start_x: Number, ref start_y: Number, ref end_x: Number, ref end_y: Number, ref WIDTH: Number, ref HEIGHT: Number) {
 		dx := (end_x - start_x) / (WIDTH - 1);
 		dy := (end_y - start_y) / (HEIGHT - 1);
 		for i in 0 .. WIDTH do {

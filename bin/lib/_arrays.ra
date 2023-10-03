@@ -1,6 +1,6 @@
 # ARRAY
 
-join(ref a : Array) => {
+fn join(ref a: Array) {
 	s := "";
 	for e in a do {
 		s ++= (e -> String);
@@ -8,15 +8,15 @@ join(ref a : Array) => {
 	return s;
 }
 
-push(ref a : Array, ref value) => {
+fn push(ref a: Array, ref value) {
 	refer a ++= [value];
 }
 
-unshift(ref a : Array, ref value) => {
+fn unshift(ref a: Array, ref value) {
 	refer a = [value] ++ a;
 }
 
-pop(ref a : Array, ref count : Number) => {
+fn pop(ref a: Array, ref count: Number) {
 	nv := alloc(len(a) - count);
 	for i in 0 .. (len(a) - count) do {
 		nv[i] = a[i];
@@ -24,7 +24,7 @@ pop(ref a : Array, ref count : Number) => {
 	refer a = nv;
 }
 
-shift(ref a : Array, ref count : Number) => {
+fn shift(ref a: Array, ref count: Number) {
 	nv := alloc(len(a) - count);
 	for i in count .. len(a) do {
 		nv[i - count] = a[i];
@@ -32,33 +32,33 @@ shift(ref a : Array, ref count : Number) => {
 	refer a = nv;
 }
 
-tail(ref a : Array, ref count : Number) => {
+fn tail(ref a: Array, ref count: Number) {
 	nv := a;
 	return nv.shift(count);
 }
 
-tail(ref a : Array) => {
+fn tail(ref a: Array) {
 	return a.tail(1);
 }
 
-head(ref a : Array, ref count : Number) => {
+fn head(ref a: Array, ref count: Number) {
 	nv := a;
 	return nv.pop(count);
 }
 
-head(ref a : Array) => {
+fn head(ref a: Array) {
 	return a.pop(1);
 }
 
-pop(ref a : Array) => {
+fn pop(ref a: Array) {
 	refer pop(a, 1);
 }
 
-shift(ref a : Array) => {
+fn shift(ref a: Array) {
 	refer shift(a, 1);
 }
 
-map(ref a : Array, ref f : Function<Any>) => {
+fn map(ref a: Array, ref f: Function<Any>) {
 	nv := alloc(len(a));
 	for i in 0 .. len(nv) do {
 		nv[i] = f(a[i]);
@@ -66,7 +66,7 @@ map(ref a : Array, ref f : Function<Any>) => {
 	return nv;
 }
 
-map(ref a : Array, ref f : Function<Any, Number>) => {
+fn map(ref a: Array, ref f: Function<Any, Number>) {
 	nv := alloc(len(a));
 	for i in 0 .. len(nv) do {
 		nv[i] = f(a[i], i);
@@ -74,7 +74,7 @@ map(ref a : Array, ref f : Function<Any, Number>) => {
 	return nv;
 }
 
-filter(ref a : Array, ref f : Function<Any>) => {
+fn filter(ref a: Array, ref f: Function<Any>) {
 	nv := [];
 	for e in a do {
 		if f(e) then {
@@ -84,7 +84,7 @@ filter(ref a : Array, ref f : Function<Any>) => {
 	return nv;
 }
 
-filter(ref a : Array, ref f : Function<Any, Number>) => {
+fn filter(ref a: Array, ref f: Function<Any, Number>) {
 	nv := [];
 	for i in 0 .. a.len() do {
 		if f(a[i], i) then {
@@ -94,7 +94,7 @@ filter(ref a : Array, ref f : Function<Any, Number>) => {
 	return nv;
 }
 
-erase(ref a : Array, ref value) => {
+fn erase(ref a: Array, ref value) {
 	nv := [];
 	for e in a do {
 		if e != value then {
@@ -105,7 +105,7 @@ erase(ref a : Array, ref value) => {
 	refer a;
 }
 
-contains(ref a : Array, ref value) => {
+fn contains(ref a: Array, ref value) {
 	for e in a do {
 		if e == value then {
 			return true;
@@ -114,7 +114,7 @@ contains(ref a : Array, ref value) => {
 	return false;
 }
 
-reverse(ref a : Array) => {
+fn reverse(ref a: Array) {
 	nv := alloc(len(a));
 	for i in 0 .. len(a) do {
 		nv[i] = a[len(a) - i - 1];
@@ -122,15 +122,15 @@ reverse(ref a : Array) => {
 	return nv;
 }
 
-back(ref a : Array) => {
+fn back(ref a: Array) {
 	refer a[len(a) - 1];
 }
 
-empty(ref a : Array) => {
+fn empty(ref a: Array) {
 	return len(a) == 0;
 }
 
-sort(ref a : Array, ref comp : Function<Any, Any>) => {
+fn sort(ref a: Array, ref comp: Function<Any, Any>) {
 	if a.len() < 2 then {
 		return a;
 	}
@@ -149,14 +149,14 @@ sort(ref a : Array, ref comp : Function<Any, Any>) => {
 	return sort(left, comp) ++ [ pivot ] ++ sort(right, comp);
 }
 
-sort(ref a : Array) => {
+fn sort(ref a: Array) {
 	return a.sort(`<`);
 }
 
-first(ref a : Array) => {
+fn first(ref a: Array) {
 	refer a[0];
 }
 
-second(ref a : Array) => {
+fn second(ref a: Array) {
 	refer a[1];
 }

@@ -83,7 +83,7 @@ for x in 0 .. WIDTH do {
 font := new SDL.Font("test/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.WHITE);
 
-refresh() => {
+fn refresh() {
 	for x in 0 .. WIDTH do {
 		var sideDistX, sideDistY, stepX, stepY, side, wDist;
 
@@ -153,7 +153,7 @@ refresh() => {
 	r.flush();
 }
 
-evaluateMovement(ref lapse : Number) => {
+fn evaluateMovement(ref lapse: Number) {
 	rotSpeed := 0;
 	if keys["a"] == true then {
 		rotSpeed += -0.0025 * lapse;
@@ -195,7 +195,7 @@ evaluateMovement(ref lapse : Number) => {
 	}
 }
 
-evaluateInput() => {
+fn evaluateInput() {
 	e := SDL.poll();
 	if e["type"] == SDL.Event.QUIT then {
 		SDL.QUIT();

@@ -55,5 +55,6 @@
 #define KEYWORD_CONST "const"
 #define KEYWORD_WHERE "where"
 #define KEYWORD_EACH "each"
+#define KEYWORD_DEF "fn"
 
 #endif

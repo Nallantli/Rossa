@@ -21,7 +21,7 @@ static snake_game {
 
 	speed := 80;
 
-	refresh() => {
+	fn refresh() {
 		if !LOST then {
 			direction = newDir;
 
@@ -67,7 +67,7 @@ static snake_game {
 		r.update();
 	}
 
-	setApple() => {
+	fn setApple() {
 		scoreText.setText("Score: {0}" & [snakeSize - 1]);
 		free := [
 			each i in 0 .. (width * height)
@@ -78,7 +78,7 @@ static snake_game {
 		cache[free[i][0]][free[i][1]] = -1;
 	}
 
-	reset() => {
+	fn reset() {
 		paused = false;
 		LOST = false;
 		direction = 0;
@@ -94,7 +94,7 @@ static snake_game {
 		setApple();
 	}
 
-	evaluateInput() => {
+	fn evaluateInput() {
 		e := SDL.poll();
 		if e["type"] == SDL.Event.QUIT then {
 			SDL.QUIT();
@@ -131,7 +131,7 @@ static snake_game {
 		}
 	}
 
-	`()`(ref width : Number, ref height : Number, ref scale : Number) => {
+	fn `()`(ref width: Number, ref height: Number, ref scale: Number) {
 		SDL.INIT();
 
 		this.width = width;
@@ -140,8 +140,8 @@ static snake_game {
 
 		rand = new Random();
 
-		cache = alloc(width).map((e) => alloc(height));
-		buffer = alloc(width).map((e) => alloc(height));
+		cache = alloc(width).map(fn(e) alloc(height));
+		buffer = alloc(width).map(fn(e) alloc(height));
 
 		w = new SDL.Window("Snake", width * scale, height * scale);
 		r = w.getRenderer();

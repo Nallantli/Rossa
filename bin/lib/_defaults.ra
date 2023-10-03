@@ -1,66 +1,66 @@
 # BASIC
 
-alloc := ((ref x) => alloc(x));
+alloc := (fn(ref x) alloc(x));
 
-alloc := ((ref x, ref y) => alloc(x, y));
+alloc := (fn(ref x, ref y) alloc(x, y));
 
-len := ((ref x) => len(x));
+len := (fn(ref x) len(x));
 
-codes := ((ref x) => codes(x));
+codes := (fn(ref x) codes(x));
 
-chars := ((ref x) => chars(x));
+chars := (fn(ref x) chars(x));
 
-parse := ((ref x) => parse(x));
+parse := (fn(ref x) parse(x));
 
 # OPERATOR LITERALS
 
-`[]`(ref a, ref b) => _call_op 0 (a, b);
-`..`(ref a, ref b) => _call_op 1 (a, b);
-`..`(ref a, ref b, ref c) => _call_op 2 (a, b, c);
-`<>`(ref a, ref b) => _call_op 3 (a, b);
-`<>`(ref a, ref b, ref c) => _call_op 4 (a, b, c);
+fn `[]`(ref a, ref b) _call_op 0 (a, b);
+fn `..`(ref a, ref b) _call_op 1 (a, b);
+fn `..`(ref a, ref b, ref c) _call_op 2 (a, b, c);
+fn `<>`(ref a, ref b) _call_op 3 (a, b);
+fn `<>`(ref a, ref b, ref c) _call_op 4 (a, b, c);
 
-`+`(ref a, ref b) => _call_op 5 (a, b);
-`-`(ref a, ref b) => _call_op 6 (a, b);
-`*`(ref a, ref b) => _call_op 7 (a, b);
-`/`(ref a, ref b) => _call_op 8 (a, b);
-`//`(ref a, ref b) => _call_op 28 (a, b);
-`%`(ref a, ref b) => _call_op 9 (a, b);
-`**`(ref a, ref b) => _call_op 10 (a, b);
+fn `+`(ref a, ref b) _call_op 5 (a, b);
+fn `-`(ref a, ref b) _call_op 6 (a, b);
+fn `*`(ref a, ref b) _call_op 7 (a, b);
+fn `/`(ref a, ref b) _call_op 8 (a, b);
+fn `//`(ref a, ref b) _call_op 28 (a, b);
+fn `%`(ref a, ref b) _call_op 9 (a, b);
+fn `**`(ref a, ref b) _call_op 10 (a, b);
 
-`<`(ref a, ref b) => _call_op 11 (a, b);
-`>`(ref a, ref b) => _call_op 12 (a, b);
-`<=`(ref a, ref b) => _call_op 13 (a, b);
-`>=`(ref a, ref b) => _call_op 14 (a, b);
+fn `<`(ref a, ref b) _call_op 11 (a, b);
+fn `>`(ref a, ref b) _call_op 12 (a, b);
+fn `<=`(ref a, ref b) _call_op 13 (a, b);
+fn `>=`(ref a, ref b) _call_op 14 (a, b);
 
-`|`(ref a, ref b) => _call_op 15 (a, b);
-`^`(ref a, ref b) => _call_op 16 (a, b);
-`&`(ref a, ref b) => _call_op 17 (a, b);
-`<<`(ref a, ref b) => _call_op 18 (a, b);
-`>>`(ref a, ref b) => _call_op 19 (a, b);
+fn `|`(ref a, ref b) _call_op 15 (a, b);
+fn `^`(ref a, ref b) _call_op 16 (a, b);
+fn `&`(ref a, ref b) _call_op 17 (a, b);
+fn `<<`(ref a, ref b) _call_op 18 (a, b);
+fn `>>`(ref a, ref b) _call_op 19 (a, b);
 
-`++`(ref a, ref b) => _call_op 25 (a, b);
+fn `++`(ref a, ref b) _call_op 25 (a, b);
 
-`()`(ref a, ref b : Array) => _call_op 20 (a, b);
+fn `()`(ref a, ref b: Array) _call_op 20 (a, b);
 
-`~`(ref a) => _call_op 21 (a);
+fn `~`(ref a) _call_op 21 (a);
 
-`+`(ref a) => _call_op 22 (a);
-`-`(ref a) => _call_op 23 (a);
-`!`(ref a) => _call_op 24 (a);
+fn `+`(ref a) _call_op 22 (a);
+fn `-`(ref a) _call_op 23 (a);
+fn `!`(ref a) _call_op 24 (a);
 
-`delete`(ref a, ref b) => _call_op 26 (a, b);
+fn `delete`(ref a, ref b) _call_op 26 (a, b);
 
-`@`(ref a) => _call_op 27 (a);
+fn `@`(ref a) _call_op 27 (a);
 
-`==`(ref a, ref b) => a === b;
-`!=`(ref a, ref b) => a !== b;
+fn `==`(ref a, ref b) a === b;
+fn `!=`(ref a, ref b) a !== b;
 
 # CASTING
 
-`->Number`(ref a) => a -> Number;
-`->Boolean`(ref a) => a -> Boolean;
-`->String`(ref a) => a -> String;
-`->Array`(ref a) => a -> Array;
-`->Dictionary`(ref a) => a -> Dictionary;
-`->Type`(ref a) => a -> Type;
+fn `->Number`(ref a) a -> Number;
+fn `->Boolean`(ref a) a -> Boolean;
+fn `->String`(ref a) a -> String;
+fn `->Array`(ref a) a -> Array;
+fn `->Dictionary`(ref a) a -> Dictionary;
+fn `->Type`(ref a) a -> Type;

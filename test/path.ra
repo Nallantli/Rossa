@@ -7,19 +7,19 @@ scale := 10;
 
 rand := new Random();
 
-board := alloc(width).map((e) => alloc(height));
+board := alloc(width).map(fn(e) alloc(height));
 graph := [];
 
 struct Node {
 	var x, y, traversable;
 
-	init(ref x : Number, ref y : Number, ref traversable : Boolean) => {
+	fn init(ref x: Number, ref y: Number, ref traversable: Boolean) {
 		this.x = x;
 		this.y = y;
 		this.traversable = traversable;
 	}
 
-	`->String`() => {
+	fn `->String`() {
 		return "({0}, {1}, {2})" & [x -> String, y -> String, traversable -> String];
 	}
 }
@@ -34,7 +34,7 @@ for x in 0 .. width do {
 board[0][height / 2].traversable = true;
 board[width - 1][height / 2].traversable = true;
 
-getNeighbors(n : Node) => {
+fn getNeighbors(n: Node) {
 	neighbors := [];
 
 	if n.x > 0 && board[n.x - 1][n.y].traversable then {
@@ -77,7 +77,7 @@ getNeighbors(n : Node) => {
 	return neighbors;
 }
 
-astar(ref start : Node, ref end : Node, ref heuristic : Function<Node, Node>) => {
+fn astar(ref start: Node, ref end: Node, ref heuristic: Function<Node, Node>) {
 	gScore := new HashMap();
 	fScore := new HashMap();
 	prev := new HashMap();
@@ -126,11 +126,11 @@ astar(ref start : Node, ref end : Node, ref heuristic : Function<Node, Node>) =>
 	return path.reverse();
 }
 
-eucDist(ref a : Node, ref b : Node) => {
+fn eucDist(ref a: Node, ref b: Node) {
 	return ((a.x - b.x) ** 2 + (a.y - b.y) ** 2) ** 0.5;
 }
 
-manDist(ref a : Node, ref b : Node) => {
+fn manDist(ref a: Node, ref b: Node) {
 	return math.abs(a.x - b.x) + math.abs(a.y - b.y);
 }
 

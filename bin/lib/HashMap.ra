@@ -2,11 +2,11 @@ struct HashMap {
 	struct Bucket {
 		var data;
 
-		init() => {
+		fn init() {
 			data = [];
 		}
 
-		push(ref key, ref value) => {
+		fn push(ref key, ref value) {
 			data ++= [ [key, value] ];
 			refer data[data.len() - 1][1];
 		}
@@ -14,15 +14,15 @@ struct HashMap {
 
 	var buckets;
 
-	init() => {
-		buckets = alloc(32).map((e) => new Bucket());
+	fn init() {
+		buckets = alloc(32).map(fn(e) new Bucket());
 	}
 
-	init(ref size : Number) => {
-		buckets = alloc(size).map((e) => new Bucket());
+	fn init(ref size: Number) {
+		buckets = alloc(size).map(fn(e) new Bucket());
 	}
 
-	`[]`(ref key) => {
+	fn `[]`(ref key) {
 		key_hash := @key % buckets.len();
 		bucket := buckets[key_hash];
 		index := nil;
@@ -39,7 +39,7 @@ struct HashMap {
 		}
 	}
 
-	erase(ref key) => {
+	fn erase(ref key) {
 		key_hash := @key % buckets.len();
 		bucket := buckets[key_hash];
 		index := nil;

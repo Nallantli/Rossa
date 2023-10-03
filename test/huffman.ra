@@ -2,13 +2,13 @@ static huffman {
 	struct Node {
 		var left, right, value, count, key;
 
-		init(ref value : String, ref count : Number) => {
+		fn init(ref value: String, ref count: Number) {
 			this.value = value;
 			this.count = count;
 			key = "";
 		}
 
-		init(ref left : huffman.Node, ref right : huffman.Node) => {
+		fn init(ref left: huffman.Node, ref right: huffman.Node) {
 			this.left = left;
 			this.right = right;
 			this.count = left.count + right.count;
@@ -17,7 +17,7 @@ static huffman {
 			right.pushRight();
 		}
 
-		pushLeft() => {
+		fn pushLeft() {
 			if key == nil then {
 				left.pushLeft();
 				right.pushLeft();
@@ -26,7 +26,7 @@ static huffman {
 			}
 		}
 
-		pushRight() => {
+		fn pushRight() {
 			if key == nil then {
 				left.pushRight();
 				right.pushRight();
@@ -35,7 +35,7 @@ static huffman {
 			}
 		}
 
-		getKey() => {
+		fn getKey() {
 			if key == nil then {
 				a := left.getKey();
 				b := right.getKey();
@@ -49,14 +49,14 @@ static huffman {
 			return d;
 		}
 
-		`<`(ref n : huffman.Node) => {
+		fn `<`(ref n: huffman.Node) {
 			if count == n.count then {
 				return value < n.value;
 			}
 			return count < n.count;
 		}
 
-		`->String`() => {
+		fn `->String`() {
 			if key == nil then {
 				return "(" ++ (left -> String) ++ ", " ++ (right -> String) ++ ")";
 			}
@@ -64,7 +64,7 @@ static huffman {
 		}
 	}
 
-	encode(ref data : String) => {
+	fn encode(ref data: String) {
 		freq := {};
 		for c in data -> Array do {
 			if freq[c] == nil then {
@@ -99,7 +99,7 @@ static huffman {
 		return { decoder : decoder, data : enc };
 	}
 
-	decode(ref data : String, ref decoder : Dictionary) => {
+	fn decode(ref data: String, ref decoder: Dictionary) {
 		dec := "";
 		curr := "";
 		for c in data -> Array do {

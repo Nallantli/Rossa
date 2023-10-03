@@ -25,7 +25,7 @@ static mandel {
 		" "
 	];
 
-	mandelConverger(ref real : Number, ref imag : Number, ref precision : Number) => {
+	fn mandelConverger(ref real: Number, ref imag: Number, ref precision: Number) {
 		zReal := real;
 		zImag := imag;
 		var r2, i2;
@@ -43,7 +43,7 @@ static mandel {
 		return precision - 1;
 	}
 
-	draw(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
+	fn draw(ref start_x: Number, ref start_y: Number, ref end_x: Number, ref end_y: Number, ref width: Number, ref height: Number) {
 		dx := (end_x - start_x) / (width - 1);
 		dy := (end_y - start_y) / (height - 1);
 		s := "";
@@ -58,7 +58,7 @@ static mandel {
 		putln("`Z` to Exit");
 	}
 
-	print(ref start_x : Number, ref start_y : Number, ref end_x : Number, ref end_y : Number, ref width : Number, ref height : Number) => {
+	fn print(ref start_x: Number, ref start_y: Number, ref end_x: Number, ref end_y: Number, ref width: Number, ref height: Number) {
 		image := bitmap.allocate(height, width);
 
 		dx := (end_x - start_x) / (width - 1);
