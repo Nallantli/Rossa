@@ -1,3 +1,5 @@
+load "Thread";
+
 for i in 0 .. 10 do {
 	clock.timeout(
 		()[i] => putln("Delayed Call: {0}" & [i]),

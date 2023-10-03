@@ -6,6 +6,4 @@ static clock {
 	sleep(ref ms : Number) => extern_call lib_standard._sleep(ms);
 
 	format(ref s : String, ref time : Number) => extern_call lib_standard._clock_format(time, s);
-
-	timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { sleep(ms); f(); })).detach();
 }

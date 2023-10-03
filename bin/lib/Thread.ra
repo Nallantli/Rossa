@@ -15,3 +15,5 @@ struct Thread {
 		detach();
 	}
 }
+
+timeout(ref f : Function, ref ms : Number) => (new Thread(()[f, ms] => { clock.sleep(ms); f(); })).detach();
