@@ -8,19 +8,14 @@ rand := new Random();
 
 spritesheet := new SDL.Image("test/res/curses12x12.png", Color.MAGENTA);
 
-tiles := alloc(256);
-
-for x in 0 .. 16 do {
-	for y in 0 .. 16 do {
-		tiles[x * 16 + y] = new SDL.Texture(spritesheet, 32, 32);
-		tiles[x * 16 + y].clip(x * 12, y * 12, 12, 12);
-	}
-}
-
 fn randomize() {
 	for x in 0 .. 16 do {
 		for y in 0 .. 16 do {
-			r.put(tiles[rand.nexti(0, 255)], x * 32, y * 32);
+			t := new SDL.Texture(spritesheet, 32, 32);
+            randomTile := rand.nexti(0, 255);
+            t.clip((randomTile // 16) * 12, (randomTile % 16) * 12, 12, 12);
+			t.setColor(rand.nexti(0, 255), rand.nexti(0, 255), rand.nexti(0, 255));
+			r.put(t, x * 32, y * 32);
 		}
 	}
 	r.flush();

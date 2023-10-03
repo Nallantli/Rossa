@@ -1,0 +1,280 @@
+load "graphics";
+
+enum TileState {
+	HIDDEN,
+	SHOWN,
+	MARKED
+}
+
+enum GameState {
+	UNSTARTED,
+	STARTED,
+	LOST,
+	WON
+}
+
+const SCALE = 32;
+const WIDTH = 16;
+const HEIGHT = 16;
+const BOMB_COUNT = 40;
+
+SDL.INIT();
+window := new SDL.Window("Minesweeper", WIDTH * SCALE, HEIGHT * SCALE + SCALE);
+renderer := window.getRenderer();
+random := new Random();
+spritesheet := new SDL.Image("test/res/curses12x12.png", Color.MAGENTA);
+
+# ------------------------------------------------------------------------------------
+
+fn randomize(ref x, ref y, ref valueMap) {
+	coords := [];
+	for i in 0 .. WIDTH do {
+		for j in 0 .. HEIGHT do {
+			if x == i && y == j then {
+				continue;
+			} 
+			coords.push([i, j, random.nextf()]);
+		}
+	}
+	coords = coords.sort(fn(a, b) a[2] < b[2]);
+
+	for i in 0 .. BOMB_COUNT do {
+		coord := coords[i];
+		valueMap[coord[0]][coord[1]][1] = -1;
+	}
+}
+
+fn getNeighborBombCount(ref x, ref y, ref valueMap) {
+	c := 0;
+	for i in (x - 1) <> (x + 1) do {
+		for j in (y - 1) <> (y + 1) do {
+			if i == x && j == y then {
+				continue;
+			}
+			if i >= 0 && j >= 0 && i < WIDTH && j < HEIGHT && valueMap[i][j][1] == -1 then {
+				c += 1;
+			} 
+		}
+	}
+	return c;
+}
+
+fn renderInfo(ref numberGlypths, ref markedTiles) {
+	remainingBombs := BOMB_COUNT - markedTiles;
+	is := (remainingBombs -> String -> Array).map(`->Number`);
+	if remainingBombs < 10 then {
+		is = [0, 0] ++ is;
+	} elif remainingBombs < 100 then {
+		is = [0] ++ is;
+	}
+	for i in 0 .. 3 do {
+		renderer.put(numberGlypths[is[i]], i * SCALE, 0);
+	}
+}
+
+fn renderMap(ref valueMap, ref tileMap, ref mouseX, ref mouseY, ref gameState) {
+	for i in 0 .. WIDTH do {
+		for j in 0 .. HEIGHT do {
+			backTile := new SDL.Rect(SCALE, SCALE, mouseX == i && mouseY == j ? Color.WHITE : Color.BLACK);
+			switch valueMap[i][j][0] of {
+				case TileState.HIDDEN do {
+					tileMap[i][j].clip(14 * 12, 15 * 12, 12, 12);
+					tileMap[i][j].setColor(0, 0, 0);
+					tileMap[i][j].setColor(50, 50, 50);
+				}
+				case TileState.MARKED do {
+					if gameState == GameState.WON then {
+						tileMap[i][j].clip(9 * 12, 0, 12, 12);
+						tileMap[i][j].setColor(0, 0, 0);
+						tileMap[i][j].setColor(175, 200, 150);
+					} else {
+						tileMap[i][j].clip(1 * 12, 2 * 12, 12, 12);
+						tileMap[i][j].setColor(0, 0, 0);
+						tileMap[i][j].setColor(200, 175, 150);
+					}
+				}
+				case TileState.SHOWN do {
+					if valueMap[i][j][1] == -1 then {
+						tileMap[i][j].clip(15 * 12, 0, 12, 12);
+						tileMap[i][j].setColor(0, 0, 0);
+						backTile.setColor(Color.RED);
+					} else {
+						switch getNeighborBombCount(i, j, valueMap) of {
+							case 0 do {
+								tileMap[i][j].clip(15 * 12, 2 * 12, 12, 12);
+								tileMap[i][j].setColor(50, 50, 50);
+							}
+							case 1 do {
+								tileMap[i][j].clip(1 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(50, 50, 255);
+							}
+							case 2 do {
+								tileMap[i][j].clip(2 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(50, 255, 50);
+							}
+							case 3 do {
+								tileMap[i][j].clip(3 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(255, 50, 50);
+							}
+							case 4 do {
+								tileMap[i][j].clip(4 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(255, 50, 255);
+							}
+							case 5 do {
+								tileMap[i][j].clip(5 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(255, 255, 50);
+							}
+							case 6 do {
+								tileMap[i][j].clip(6 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(50, 255, 255);
+							}
+							case 7 do {
+								tileMap[i][j].clip(7 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(200, 200, 200);
+							}
+							case 8 do {
+								tileMap[i][j].clip(8 * 12, 3 * 12, 12, 12);
+								tileMap[i][j].setColor(255, 255, 255);
+							}
+						}
+					}
+				}
+			}
+			renderer.put(backTile, i * SCALE, j * SCALE + SCALE);
+			renderer.put(tileMap[i][j], i * SCALE, j * SCALE + SCALE);
+		}
+	}
+	renderer.flush();
+}
+
+fn showTile(ref x, ref y, ref valueMap) {
+	valueMap[x][y][0] = TileState.SHOWN;
+	if getNeighborBombCount(x, y, valueMap) > 0 then {
+		return nil;
+	}
+	for i in (x - 1) <> (x + 1) do {
+		for j in (y - 1) <> (y + 1) do {
+			if i == x && j == y then {
+				continue;
+			}
+			if i >= 0 && j >= 0 && i < WIDTH && j < HEIGHT
+				&& getNeighborBombCount(i, j, valueMap) >= 0
+				&& valueMap[i][j][0] == TileState.HIDDEN then {
+				showTile(i, j, valueMap);
+			}
+		}
+	}
+}
+
+fn checkWin(ref valueMap) {
+	for i in 0 .. WIDTH do {
+		for j in 0 .. HEIGHT do {
+			if valueMap[i][j][0] != TileState.MARKED && valueMap[i][j][1] == -1 then {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+fn resetValueMap(ref valueMap) {
+	valueMap = alloc(WIDTH, alloc(HEIGHT, [TileState.HIDDEN, 0]));
+}
+
+# ------------------------------------------------------------------------------------
+
+numberGlypths := [];
+for i in 0 .. 10 do {
+	t := new SDL.Texture(spritesheet, SCALE, SCALE);
+	t.setColor(Color.RED);
+	t.clip(i * 12, 3 * 12, 12, 12);
+	numberGlypths.push(t);
+}
+
+tileMap := alloc(WIDTH).map(fn(_) alloc(HEIGHT).map(fn(_) new SDL.Texture(spritesheet, SCALE, SCALE)));
+valueMap := [];
+
+mouseX := 0;
+mouseY := 0;
+gameState := GameState.UNSTARTED;
+
+markedTiles := 0;
+
+fn evaluateInput() {
+	e := SDL.poll();
+	if e["type"] == SDL.Event.QUIT then {
+		SDL.QUIT();
+		exit();
+	} elif e["type"] == SDL.Event.KEYDOWN then {
+		switch e["keysym"]["sym"] of {
+			case ' ' do {
+				if gameState == GameState.WON || gameState == GameState.LOST then {
+					resetValueMap(valueMap);
+					gameState = GameState.UNSTARTED;
+					markedTiles = 0;
+				}
+			}
+		}
+	} elif e["type"] == SDL.Event.MOUSEMOTION then {
+		mouseX = e["x"] // SCALE;
+		mouseY = (e["y"] - SCALE) // SCALE;
+	} elif e["type"] == SDL.Event.MOUSEBUTTONUP then {
+		if gameState != GameState.LOST && gameState != GameState.WON then {
+			switch e["button"] of {
+				case 1 do {
+					if valueMap[mouseX][mouseY][0] == TileState.HIDDEN then {
+						if gameState == GameState.UNSTARTED then {
+							gameState = GameState.STARTED;
+							randomize(mouseX, mouseY, valueMap);
+						}
+						if valueMap[mouseX][mouseY][1] == -1 then {
+							gameState = GameState.LOST;
+							for i in 0 .. WIDTH do {
+								for j in 0 .. HEIGHT do {
+									if valueMap[i][j][1] == -1 then {
+										valueMap[i][j][0] = TileState.SHOWN;
+									}
+								}
+							}
+						} else {
+							showTile(mouseX, mouseY, valueMap);
+						}
+					}
+				}
+				case 3 do {
+					if valueMap[mouseX][mouseY][0] == TileState.HIDDEN && markedTiles < BOMB_COUNT then {
+						valueMap[mouseX][mouseY][0] = TileState.MARKED;
+						markedTiles += 1;
+						if markedTiles == BOMB_COUNT && gameState == GameState.STARTED && checkWin(valueMap) then {
+							gameState = GameState.WON;
+							for i in 0 .. WIDTH do {
+								for j in 0 .. HEIGHT do {
+									if valueMap[i][j][1] != -1 then {
+										valueMap[i][j][0] = TileState.SHOWN;
+									}
+								}
+							}
+						}
+					} elif valueMap[mouseX][mouseY][0] == TileState.MARKED then {
+						valueMap[mouseX][mouseY][0] = TileState.HIDDEN;
+						markedTiles -= 1;
+					}
+				}
+			}
+		}
+	}
+}
+
+renderDelta := 33; # ~30fps, you don't need more for minesweeper
+
+resetValueMap(valueMap);
+
+start := clock.milliseconds();
+while true do {
+	evaluateInput();
+	if (lapse := clock.milliseconds()) - start > renderDelta then {
+		start = lapse;
+		renderInfo(numberGlypths, markedTiles);
+		renderMap(valueMap, tileMap, mouseX, mouseY, gameState);
+	}
+}
