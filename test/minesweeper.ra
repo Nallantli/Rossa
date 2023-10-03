@@ -79,17 +79,14 @@ fn renderMap(ref valueMap, ref tileMap, ref mouseX, ref mouseY, ref gameState) {
 			switch valueMap[i][j][0] of {
 				case TileState.HIDDEN do {
 					tileMap[i][j].clip(14 * 12, 15 * 12, 12, 12);
-					tileMap[i][j].setColor(0, 0, 0);
 					tileMap[i][j].setColor(50, 50, 50);
 				}
 				case TileState.MARKED do {
 					if gameState == GameState.WON then {
 						tileMap[i][j].clip(9 * 12, 0, 12, 12);
-						tileMap[i][j].setColor(0, 0, 0);
 						tileMap[i][j].setColor(175, 200, 150);
 					} else {
 						tileMap[i][j].clip(1 * 12, 2 * 12, 12, 12);
-						tileMap[i][j].setColor(0, 0, 0);
 						tileMap[i][j].setColor(200, 175, 150);
 					}
 				}
