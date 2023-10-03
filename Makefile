@@ -18,6 +18,7 @@ LIB_FS_FLAGS=-lzip
 LIB_SDL_FLAGS=-lmingw32 -lgdi32 -lSDL2main -lSDL2 -lSDL2_image -lSDL2_ttf
 LIB_NCURSES_FLAGS=-lncurses
 LIB_ARBITRARY_FLAGS=-lgmp -lgmpxx
+LIB_THREAD_FLAGS=
 
 DIR=build/win/$(locale)
 
@@ -39,7 +40,7 @@ else
 LIB_EXT=.so
 
 CFLAGS=-ldl -pthread
-LFLAGS=-fPIC -shared -ldl -pthread
+LFLAGS=-fPIC -shared -ldl
 OFLAGS=-fPIC $(CFLAGS)
 
 LIB_NET_FLAGS=-lboost_system
@@ -47,6 +48,7 @@ LIB_FS_FLAGS=-lzip
 LIB_SDL_FLAGS=-lSDL2 -lSDL2_image -lSDL2_ttf
 LIB_NCURSES_FLAGS=-lncurses
 LIB_ARBITRARY_FLAGS=-lgmp -lgmpxx
+LIB_THREAD_FLAGS=-pthread
 
 DIR=build/nix/$(locale)
 
@@ -67,7 +69,7 @@ endif
 
 dirs: $(DIR)
 
-libs: lib_standard lib_fs lib_net lib_graphics lib_SDL lib_ncurses lib_Arbitrary
+libs: lib_standard lib_fs lib_net lib_graphics lib_SDL lib_ncurses lib_Arbitrary lib_Thread
 
 lib_standard: bin/lib/lib_standard$(LIB_EXT)
 
@@ -83,26 +85,31 @@ lib_ncurses: bin/lib/lib_ncurses$(LIB_EXT)
 
 lib_Arbitrary: bin/lib/lib_Arbitrary$(LIB_EXT)
 
-bin/lib/lib_standard$(LIB_EXT): lib_standard/lib_standard.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_standard/lib_standard.cpp $(DIR)/librossa.a $(LFLAGS)
+lib_Thread: bin/lib/lib_Thread$(LIB_EXT)
 
-bin/lib/lib_fs$(LIB_EXT): lib_fs/lib_fs.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_fs/lib_fs.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_FS_FLAGS)
+bin/lib/lib_standard$(LIB_EXT): lib_standard/lib_standard.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_standard/lib_standard.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS)
 
-bin/lib/lib_net$(LIB_EXT): lib_net/lib_net.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_net/lib_net.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_NET_FLAGS)
+bin/lib/lib_fs$(LIB_EXT): lib_fs/lib_fs.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_fs/lib_fs.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_FS_FLAGS)
 
-bin/lib/lib_graphics$(LIB_EXT): lib_graphics/lib_graphics.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_graphics/lib_graphics.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_SDL_FLAGS)
+bin/lib/lib_net$(LIB_EXT): lib_net/lib_net.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_net/lib_net.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_NET_FLAGS)
 
-bin/lib/lib_SDL$(LIB_EXT): lib_SDL/lib_SDL.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_SDL/lib_SDL.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_SDL_FLAGS)
+bin/lib/lib_graphics$(LIB_EXT): lib_graphics/lib_graphics.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_graphics/lib_graphics.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_SDL_FLAGS)
 
-bin/lib/lib_ncurses$(LIB_EXT): lib_ncurses/lib_ncurses.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_ncurses/lib_ncurses.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_NCURSES_FLAGS)
+bin/lib/lib_SDL$(LIB_EXT): lib_SDL/lib_SDL.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_SDL/lib_SDL.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_SDL_FLAGS)
 
-bin/lib/lib_Arbitrary$(LIB_EXT): lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/librossa.a
-	$(CC) -o $@ lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_ARBITRARY_FLAGS)
+bin/lib/lib_ncurses$(LIB_EXT): lib_ncurses/lib_ncurses.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_ncurses/lib_ncurses.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_NCURSES_FLAGS)
+
+bin/lib/lib_Arbitrary$(LIB_EXT): lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/mediator.o $(DIR)/number.o
+	$(CC) -o $@ lib_Arbitrary/lib_Arbitrary.cpp $(DIR)/mediator.o $(DIR)/number.o $(LFLAGS) $(LIB_ARBITRARY_FLAGS)
+
+bin/lib/lib_Thread$(LIB_EXT): lib_Thread/lib_Thread.cpp $(DIR)/librossa.a
+	$(CC) -o $@ lib_Thread/lib_Thread.cpp $(DIR)/librossa.a $(LFLAGS) $(LIB_THREAD_FLAGS)
 
 bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
@@ -110,8 +117,8 @@ bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 bin/rossa: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/number.o
-	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/number.o
+$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o
+	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o
 
 $(DIR)/parser.o: main/rossa/parser/parser.cpp
 	$(CC) -o $@ main/rossa/parser/parser.cpp -c $(OFLAGS)
@@ -158,5 +165,8 @@ $(DIR)/wrapper.o: main/rossa/wrapper/wrapper.cpp
 $(DIR)/rossa_error.o: main/rossa/rossa_error/rossa_error.cpp
 	$(CC) -o $@ main/rossa/rossa_error/rossa_error.cpp -c $(OFLAGS)
 
-$(DIR)/number.o: main/rossa/number/number.cpp
-	$(CC) -o $@ main/rossa/number/number.cpp -c $(OFLAGS)
+$(DIR)/number.o: main/number/number.cpp
+	$(CC) -o $@ main/number/number.cpp -c $(OFLAGS)
+
+$(DIR)/mediator.o: main/mediator/mediator.cpp
+	$(CC) -o $@ main/mediator/mediator.cpp -c $(OFLAGS)

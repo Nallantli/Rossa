@@ -183,11 +183,11 @@ const number_t &symbol_t::getNumber(const token_t *token, trace_t &stack_trace) 
 	return std::get<number_t>(d->value);
 }
 
-void *symbol_t::getPointer(const token_t *token, trace_t &stack_trace) const
+const std::shared_ptr<void> symbol_t::getPointer(const token_t *token, trace_t &stack_trace) const
 {
 	if (d->type != value_type_enum::POINTER)
 		throw rossa_error_t(_NOT_POINTER_, *token, stack_trace);
-	return std::get<std::shared_ptr<void>>(d->value).get();
+	return std::get<std::shared_ptr<void>>(d->value);
 }
 
 std::map<const std::string, const symbol_t> &symbol_t::getDictionary(const token_t *token, trace_t &stack_trace) const

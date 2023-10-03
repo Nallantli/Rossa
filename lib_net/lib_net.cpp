@@ -1,122 +1,98 @@
-#include "../main/rossa/rossa.h"
-#include "../main/rossa/symbol/symbol.h"
-#include "../main/rossa/rossa_error/rossa_error.h"
-#include "../main/rossa/function/function.h"
-
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <iostream>
 #include "encode.h"
+#include "../main/mediator/mediator.h"
 
-ROSSA_EXT_SIG(_service_init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_service_init, args)
 {
 	auto service = std::make_shared<boost::asio::io_service>();
-	return symbol_t::Pointer(service);
+	return MAKE_POINTER(service);
 }
 
-ROSSA_EXT_SIG(_socket_init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_socket_init, args)
 {
-	auto io_service_object = COERCE_PTR(
-		args[2].getPointer(token, stack_trace),
-		boost::asio::io_service);
+	auto io_service_object = COERCE_POINTER(args[2], boost::asio::io_service);
 
 	auto sock = std::make_shared<boost::asio::ip::tcp::socket>(*io_service_object);
 	boost::system::error_code ec;
 	if (sock->connect(
 			boost::asio::ip::tcp::endpoint(
-				boost::asio::ip::address::from_string(args[0].getString(token, stack_trace)),
-				args[1].getNumber(token, stack_trace).getLong()),
+				boost::asio::ip::address::from_string(COERCE_STRING(args[0])),
+				COERCE_NUMBER(args[1]).getLong()),
 			ec))
 		if (ec)
-			throw rossa_error_t(ec.message(), *token, stack_trace);
-	return symbol_t::Pointer(sock);
+			throw library_error_t(ec.message());
+	return MAKE_POINTER(sock);
 }
 
-ROSSA_EXT_SIG(_socket_send, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_socket_send, args)
 {
-	auto sock = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::asio::ip::tcp::socket);
+	auto sock = COERCE_POINTER(args[0], boost::asio::ip::tcp::socket);
 
-	std::string content = args[1].getString(token, stack_trace);
+	std::string content = COERCE_STRING(args[1]);
 	boost::asio::write(*sock, boost::asio::buffer(content));
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_socket_read, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_socket_read, args)
 {
-	auto sock = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::asio::ip::tcp::socket);
+	auto sock = COERCE_POINTER(args[0], boost::asio::ip::tcp::socket);
 
 	boost::asio::streambuf sb;
 	boost::system::error_code ec;
 	boost::asio::read(*sock, sb, ec);
 	std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
-	return symbol_t::String(str);
+	return MAKE_STRING(str);
 }
 
-ROSSA_EXT_SIG(_socket_read_until, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_socket_read_until, args)
 {
-	auto sock = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::asio::ip::tcp::socket);
+	auto sock = COERCE_POINTER(args[0], boost::asio::ip::tcp::socket);
 
 	boost::asio::streambuf sb;
-	if (boost::asio::read_until(*sock, sb, args[1].getString(token, stack_trace)))
+	if (boost::asio::read_until(*sock, sb, COERCE_STRING(args[1])))
 	{
 		std::string str(boost::asio::buffers_begin(sb.data()), boost::asio::buffers_begin(sb.data()) + sb.data().size());
-		return symbol_t::String(str);
+		return MAKE_STRING(str);
 	}
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_socket_close, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_socket_close, args)
 {
-	auto sock = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::asio::ip::tcp::socket);
+	auto sock = COERCE_POINTER(args[0], boost::asio::ip::tcp::socket);
 
 	boost::system::error_code ec;
 	sock->close(ec);
 	if (ec)
-		return symbol_t::String(ec.message());
-	return symbol_t();
+		return MAKE_STRING(ec.message());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_server_init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_server_init, args)
 {
-	auto io_service_object = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		boost::asio::io_service);
+	auto io_service_object = COERCE_POINTER(args[1], boost::asio::io_service);
 
-	auto acc = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_service_object, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), args[0].getNumber(token, stack_trace).getLong()));
-	return symbol_t::Pointer(acc);
+	auto acc = std::make_shared<boost::asio::ip::tcp::acceptor>(*io_service_object, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), COERCE_NUMBER(args[0]).getLong()));
+	return MAKE_POINTER(acc);
 }
 
-ROSSA_EXT_SIG(_server_accept, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_server_accept, args)
 {
-	auto acc = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::asio::ip::tcp::acceptor);
-
-	auto io_service_object = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		boost::asio::io_service);
+	auto acc = COERCE_POINTER(args[0], boost::asio::ip::tcp::acceptor);
+	auto io_service_object = COERCE_POINTER(args[1], boost::asio::io_service);
 
 	auto sock = std::make_shared<boost::asio::ip::tcp::socket>(*io_service_object);
 	acc->accept(*sock);
-	return symbol_t::Pointer(sock);
+	return MAKE_POINTER(sock);
 }
 
-ROSSA_EXT_SIG(_tcp_stream_init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_tcp_stream_init, args)
 {
-	const std::string address = args[0].getString(token, stack_trace);
-	const std::string port = std::to_string(args[1].getNumber(token, stack_trace).getLong());
-
-	auto io_service_object = COERCE_PTR(
-		args[2].getPointer(token, stack_trace),
-		boost::asio::io_service);
+	const std::string address = COERCE_STRING(args[0]);
+	const std::string port = std::to_string(COERCE_NUMBER(args[1]).getLong());
+	auto io_service_object = COERCE_POINTER(args[2], boost::asio::io_service);
 
 	boost::asio::ip::tcp::resolver resolver(*io_service_object);
 	auto results = resolver.resolve(address, port);
@@ -125,24 +101,22 @@ ROSSA_EXT_SIG(_tcp_stream_init, args, token, hash, stack_trace)
 	boost::system::error_code ec;
 	tcpstream->connect(results);
 
-	return symbol_t::Pointer(tcpstream);
+	return MAKE_POINTER(tcpstream);
 }
 
-ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_tcp_stream_request, args)
 {
-	const std::string target = args[0].getString(token, stack_trace);
-	const int version = args[1].getNumber(token, stack_trace).getLong();
-	const auto params = args[2].getDictionary(token, stack_trace);
+	const std::string target = COERCE_STRING(args[0]);
+	const int version = COERCE_NUMBER(args[1]).getLong();
+	const auto params = COERCE_DICTIONARY(args[2]);
 
-	auto tcpstream = COERCE_PTR(
-		args[3].getPointer(token, stack_trace),
-		boost::beast::tcp_stream);
+	auto tcpstream = COERCE_POINTER(args[3], boost::beast::tcp_stream);
 
 	boost::beast::http::request<boost::beast::http::string_body> req(boost::beast::http::verb::get, target, version);
 
 	for (auto &p : params)
 	{
-		req.set(p.first, p.second.getString(token, stack_trace));
+		req.set(p.first, COERCE_STRING(p.second));
 	}
 
 	boost::beast::http::write(*tcpstream, req);
@@ -150,39 +124,41 @@ ROSSA_EXT_SIG(_tcp_stream_request, args, token, hash, stack_trace)
 	boost::beast::http::response<boost::beast::http::string_body> res;
 	boost::beast::http::read(*tcpstream, buff, res);
 
-	std::map<const std::string, const symbol_t> ret;
+	std::map<const std::string, const mediator_t> ret;
 
 	for (auto &r : res)
 	{
-		ret.insert({r.name_string().to_string(), symbol_t::String(r.value().to_string())});
+#if BOOST_VERSION > 108000
+		ret.insert({r.name_string(), MAKE_STRING(r.value())});
+#else
+		ret.insert({r.name_string().to_string(), MAKE_STRING(r.value().to_string())});
+#endif
 	}
 
-	ret.insert({"CONTENT", symbol_t::String(res.body())});
+	ret.insert({"CONTENT", MAKE_STRING(res.body())});
 
-	return symbol_t::Dictionary(ret);
+	return MAKE_DICTIONARY(ret);
 }
 
-ROSSA_EXT_SIG(_tcp_stream_close, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_tcp_stream_close, args)
 {
-	auto tcpstream = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		boost::beast::tcp_stream);
+	auto tcpstream = COERCE_POINTER(args[0], boost::beast::tcp_stream);
 
 	tcpstream->close();
 
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_encodeURI, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_encodeURI, args)
 {
-	const std::string s = args[0].getString(token, stack_trace);
-	return symbol_t::String(encodeURIComponent(s));
+	const std::string s = COERCE_STRING(args[0]);
+	return MAKE_STRING(encodeURIComponent(s));
 }
 
-ROSSA_EXT_SIG(_decodeURI, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_decodeURI, args)
 {
-	const std::string s = args[0].getString(token, stack_trace);
-	return symbol_t::String(decodeURIComponent(s));
+	const std::string s = COERCE_STRING(args[0]);
+	return MAKE_STRING(decodeURIComponent(s));
 }
 
 EXPORT_FUNCTIONS(lib_net)

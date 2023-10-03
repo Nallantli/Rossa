@@ -1,12 +1,11 @@
-#include "../main/rossa/rossa.h"
-#include "../main/rossa/symbol/symbol.h"
-#include "../main/rossa/function/function.h"
+#include "../main/mediator/mediator.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include <algorithm>
 
+/*
 namespace lib_SDL
 {
 	struct capture_t
@@ -31,183 +30,186 @@ namespace lib_SDL
 		capture_t *capture = reinterpret_cast<capture_t *>(userdata);
 		std::vector<symbol_t> v = {
 			capture->data,
-			symbol_t::String(name),
-			symbol_t::String(oldValue),
-			symbol_t::String(newValue)};
+			MAKE_STRING(name),
+			MAKE_STRING(oldValue),
+			MAKE_STRING(newValue)};
 		capture->f.call(v, &capture->token, capture->stack_trace);
 	}
 };
+*/
 
-ROSSA_EXT_SIG(_lib_Init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_Init, args)
 {
-	return symbol_t::Number(number_t::Long(SDL_Init(args[0].getNumber(token, stack_trace).getLong())));
+	return MAKE_NUMBER(number_t::Long(SDL_Init(COERCE_NUMBER(args[0]).getLong())));
 }
 
-ROSSA_EXT_SIG(_lib_InitSubSystem, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_InitSubSystem, args)
 {
-	return symbol_t::Number(number_t::Long(SDL_InitSubSystem(args[0].getNumber(token, stack_trace).getLong())));
+	return MAKE_NUMBER(number_t::Long(SDL_InitSubSystem(COERCE_NUMBER(args[0]).getLong())));
 }
 
-ROSSA_EXT_SIG(_lib_Quit, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_Quit, args)
 {
 	SDL_Quit();
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_QuitSubSystem, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_QuitSubSystem, args)
 {
-	SDL_QuitSubSystem(args[0].getNumber(token, stack_trace).getLong());
-	return symbol_t();
+	SDL_QuitSubSystem(COERCE_NUMBER(args[0]).getLong());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_SetMainReady, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_SetMainReady, args)
 {
 	SDL_SetMainReady();
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_WasInit, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_WasInit, args)
 {
-	return symbol_t::Number(number_t::Long(SDL_WasInit(args[0].getNumber(token, stack_trace).getLong())));
+	return MAKE_NUMBER(number_t::Long(SDL_WasInit(COERCE_NUMBER(args[0]).getLong())));
 }
 
-ROSSA_EXT_SIG(_lib_AddHintCallback, args, token, hash, stack_trace)
+/*
+ROSSA_EXT_SIG(_lib_AddHintCallback, args)
 {
 	SDL_AddHintCallback(
-		args[0].getString(token, stack_trace).c_str(),
+		COERCE_STRING(args[0]).c_str(),
 		&lib_SDL::hint_callback,
 		new lib_SDL::capture_t(
 			args[1],
 			*token,
 			stack_trace,
 			args[2]));
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_DelHintCallback, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_DelHintCallback, args)
 {
 	SDL_DelHintCallback(
-		args[0].getString(token, stack_trace).c_str(),
+		COERCE_STRING(args[0]).c_str(),
 		&lib_SDL::hint_callback,
 		new lib_SDL::capture_t(
 			args[1],
 			*token,
 			stack_trace,
 			args[2]));
-	return symbol_t();
+	return mediator_t();
 }
+*/
 
-ROSSA_EXT_SIG(_lib_ClearHints, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_ClearHints, args)
 {
 	SDL_ClearHints();
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_GetHint, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_GetHint, args)
 {
-	return symbol_t::String(SDL_GetHint(args[0].getString(token, stack_trace).c_str()));
+	return MAKE_STRING(SDL_GetHint(COERCE_STRING(args[0]).c_str()));
 }
 
-ROSSA_EXT_SIG(_lib_GetHintBoolean, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_GetHintBoolean, args)
 {
-	return symbol_t::Boolean(SDL_GetHintBoolean(args[0].getString(token, stack_trace).c_str(), args[1].getBool(token, stack_trace) ? SDL_TRUE : SDL_FALSE) == SDL_TRUE);
+	return MAKE_BOOLEAN(SDL_GetHintBoolean(COERCE_STRING(args[0]).c_str(), COERCE_BOOLEAN(args[1]) ? SDL_TRUE : SDL_FALSE) == SDL_TRUE);
 }
 
-ROSSA_EXT_SIG(_lib_SetHint, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_SetHint, args)
 {
-	return symbol_t::Boolean(SDL_SetHint(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str()) == SDL_TRUE);
+	return MAKE_BOOLEAN(SDL_SetHint(COERCE_STRING(args[0]).c_str(), COERCE_STRING(args[1]).c_str()) == SDL_TRUE);
 }
 
-ROSSA_EXT_SIG(_lib_SetHintWithPriority, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_SetHintWithPriority, args)
 {
-	return symbol_t::Boolean(SDL_SetHintWithPriority(args[0].getString(token, stack_trace).c_str(), args[1].getString(token, stack_trace).c_str(), static_cast<SDL_HintPriority>(args[2].getNumber(token, stack_trace).getLong())) == SDL_TRUE);
+	return MAKE_BOOLEAN(SDL_SetHintWithPriority(COERCE_STRING(args[0]).c_str(), COERCE_STRING(args[1]).c_str(), static_cast<SDL_HintPriority>(COERCE_NUMBER(args[2]).getLong())) == SDL_TRUE);
 }
 
-ROSSA_EXT_SIG(_lib_ClearError, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_ClearError, args)
 {
 	SDL_ClearError();
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_GetError, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_GetError, args)
 {
-	return symbol_t::String(SDL_GetError());
+	return MAKE_STRING(SDL_GetError());
 }
 
-ROSSA_EXT_SIG(_lib_SetError, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_SetError, args)
 {
-	return symbol_t::Number(number_t::Long(SDL_SetError(args[0].getString(token, stack_trace).c_str())));
+	return MAKE_NUMBER(number_t::Long(SDL_SetError(COERCE_STRING(args[0]).c_str())));
 }
 
-ROSSA_EXT_SIG(_lib_Log, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_Log, args)
 {
-	SDL_Log(args[0].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_Log(COERCE_STRING(args[0]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogCritical, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogCritical, args)
 {
-	SDL_LogCritical(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogCritical(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogDebug, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogDebug, args)
 {
-	SDL_LogDebug(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogDebug(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogError, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogError, args)
 {
-	SDL_LogError(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogError(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogGetPriority, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogGetPriority, args)
 {
-	return symbol_t::Number(number_t::Long(SDL_LogGetPriority(args[0].getNumber(token, stack_trace).getLong())));
+	return MAKE_NUMBER(number_t::Long(SDL_LogGetPriority(COERCE_NUMBER(args[0]).getLong())));
 }
 
-ROSSA_EXT_SIG(_lib_LogInfo, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogInfo, args)
 {
-	SDL_LogInfo(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogInfo(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogMessage, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogMessage, args)
 {
-	SDL_LogMessage(args[0].getNumber(token, stack_trace).getLong(), static_cast<SDL_LogPriority>(args[1].getNumber(token, stack_trace).getLong()), args[2].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogMessage(COERCE_NUMBER(args[0]).getLong(), static_cast<SDL_LogPriority>(COERCE_NUMBER(args[1]).getLong()), COERCE_STRING(args[2]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogResetPriorities, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogResetPriorities, args)
 {
 	SDL_LogResetPriorities();
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogSetAllPriority, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogSetAllPriority, args)
 {
-	SDL_LogSetAllPriority(static_cast<SDL_LogPriority>(args[0].getNumber(token, stack_trace).getLong()));
-	return symbol_t();
+	SDL_LogSetAllPriority(static_cast<SDL_LogPriority>(COERCE_NUMBER(args[0]).getLong()));
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogSetPriority, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogSetPriority, args)
 {
-	SDL_LogSetPriority(args[0].getNumber(token, stack_trace).getLong(), static_cast<SDL_LogPriority>(args[1].getNumber(token, stack_trace).getLong()));
-	return symbol_t();
+	SDL_LogSetPriority(COERCE_NUMBER(args[0]).getLong(), static_cast<SDL_LogPriority>(COERCE_NUMBER(args[1]).getLong()));
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogVerbose, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogVerbose, args)
 {
-	SDL_LogVerbose(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogVerbose(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_lib_LogWarn, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_lib_LogWarn, args)
 {
-	SDL_LogWarn(args[0].getNumber(token, stack_trace).getLong(), args[1].getString(token, stack_trace).c_str());
-	return symbol_t();
+	SDL_LogWarn(COERCE_NUMBER(args[0]).getLong(), COERCE_STRING(args[1]).c_str());
+	return mediator_t();
 }
 
 EXPORT_FUNCTIONS(lib_SDL)
@@ -238,6 +240,6 @@ EXPORT_FUNCTIONS(lib_SDL)
 	ADD_EXT(_lib_LogSetPriority);
 	ADD_EXT(_lib_LogVerbose);
 	ADD_EXT(_lib_LogWarn);
-	ADD_EXT(_lib_AddHintCallback);
-	ADD_EXT(_lib_DelHintCallback);
+	// ADD_EXT(_lib_AddHintCallback);
+	// ADD_EXT(_lib_DelHintCallback);
 }

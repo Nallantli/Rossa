@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "../rossa.h"
+#include "../global/global.h"
 
 #include "../object/object.h"
 #include "../rossa_error/rossa_error.h"

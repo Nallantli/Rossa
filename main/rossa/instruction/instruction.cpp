@@ -3,7 +3,6 @@
 #include "../rossa_error/rossa_error.h"
 #include "../parameter/parameter.h"
 #include "../operation/operation.h"
-#include "../global/global.h"
 #include "../node/node.h"
 #include "../node_parser/node_parser.h"
 #include "../parser/parser.h"
@@ -769,7 +768,20 @@ ExternI::ExternI(const std::string &libname, const std::string &fname, const ptr
 
 const symbol_t ExternI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
-	return f(a->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, parser_t::MAIN_HASH, stack_trace);
+	auto evalA = a->evaluate(scope, stack_trace);
+	std::vector<mediator_t> mv;
+	for (auto &e : evalA.getVector(&token, stack_trace))
+	{
+		mv.push_back(global::convertToMediator(e, &token, stack_trace));
+	}
+	try
+	{
+		return global::convertToSymbol(f(mv));
+	}
+	catch (const library_error_t &e)
+	{
+		throw rossa_error_t(e.what(), token, stack_trace);
+	}
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

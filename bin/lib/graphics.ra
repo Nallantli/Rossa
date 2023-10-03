@@ -328,7 +328,7 @@ static SDL {
 			data := (extern_call lib_graphics._window_init(title, width, height));
 			ptr = data[0];
 			windowID = data[1];
-			extern_call lib_graphics._window_register(windowID, this);
+			extern_call lib_graphics._window_register(windowID, ptr);
 		}
 
 		getRenderer() => {

@@ -189,3 +189,89 @@ const std::string global::format(const std::string &fmt, std::vector<std::string
 	out += in;
 	return out;
 }
+
+const mediator_t global::convertToMediator(const symbol_t &s, const token_t *token, trace_t &stack_trace)
+{
+	switch (s.getValueType())
+	{
+	case NIL:
+		return mediator_t();
+	case BOOLEAN_D:
+		return mediator_t(
+			MEDIATOR_BOOLEAN_D,
+			std::make_shared<bool>(s.getBool(token, stack_trace)));
+	case NUMBER:
+		return mediator_t(
+			MEDIATOR_NUMBER,
+			std::make_shared<number_t>(s.getNumber(token, stack_trace)));
+	case STRING:
+		return mediator_t(
+			MEDIATOR_STRING,
+			std::make_shared<std::string>(s.getString(token, stack_trace)));
+	case POINTER:
+		return mediator_t(
+			MEDIATOR_POINTER,
+			s.getPointer(token, stack_trace));
+	case FUNCTION:
+		return MAKE_POINTER(s.getFunction({}, token, stack_trace));
+	case ARRAY:
+	{
+		std::vector<mediator_t> mv;
+		for (auto &e : s.getVector(token, stack_trace))
+		{
+			mv.push_back(convertToMediator(e, token, stack_trace));
+		}
+		return mediator_t(
+			MEDIATOR_ARRAY,
+			std::make_shared<std::vector<mediator_t>>(mv));
+	}
+	case DICTIONARY:
+	{
+		std::map<const std::string, const mediator_t> md;
+		for (auto &e : s.getDictionary(token, stack_trace))
+		{
+			md.insert({e.first, convertToMediator(e.second, token, stack_trace)});
+		}
+		return MAKE_DICTIONARY(md);
+	}
+	default:
+		throw rossa_error_t("[this shouldn't happen] Improper symbol_t to mediator_t conversion: " + s.toCodeString(), *token, stack_trace);
+	}
+}
+
+const symbol_t global::convertToSymbol(const mediator_t &m)
+{
+	switch (m.getType())
+	{
+	case MEDIATOR_NIL:
+		return symbol_t();
+	case MEDIATOR_BOOLEAN_D:
+		return symbol_t::Boolean(COERCE_BOOLEAN(m));
+	case MEDIATOR_NUMBER:
+		return symbol_t::Number(COERCE_NUMBER(m));
+	case MEDIATOR_STRING:
+		return symbol_t::String(COERCE_STRING(m));
+	case MEDIATOR_POINTER:
+		return symbol_t::Pointer(COERCE_POINTER(m, void));
+	case MEDIATOR_ARRAY:
+	{
+		std::vector<symbol_t> sv;
+		for (auto &e : COERCE_ARRAY(m))
+		{
+			sv.push_back(convertToSymbol(e));
+		}
+		return symbol_t::Array(sv);
+	}
+	case DICTIONARY:
+	{
+		std::map<const std::string, const symbol_t> sd;
+		for (auto &e : COERCE_DICTIONARY(m))
+		{
+			sd.insert({e.first, convertToSymbol(e.second)});
+		}
+		return symbol_t::Dictionary(sd);
+	}
+	default:
+		return symbol_t();
+	}
+}

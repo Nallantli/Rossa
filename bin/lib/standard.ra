@@ -4,7 +4,6 @@ load "_arrays";
 load "_strings";
 load "_math";
 load "_clock";
-load "_Thread";
 load "_functions";
 
 load "regex";

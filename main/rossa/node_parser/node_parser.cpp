@@ -1,8 +1,8 @@
 #include "node_parser.h"
 #include <fstream>
 
+#include "../../number/number.h"
 #include "../node/node.h"
-#include "../number/number.h"
 #include "../symbol/symbol.h"
 #include "../parameter/parameter.h"
 #include "../global/global.h"

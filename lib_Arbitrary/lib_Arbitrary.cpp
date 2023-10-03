@@ -1,356 +1,254 @@
-#include "../main/rossa/rossa.h"
-#include "../main/rossa/symbol/symbol.h"
-#include "../main/rossa/function/function.h"
+#include "../main/mediator/mediator.h"
 
 #include <gmpxx.h>
 
-ROSSA_EXT_SIG(_arbitrary_init, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_init, args)
 {
 	std::shared_ptr<mpz_class> x = std::make_shared<mpz_class>(0);
-	return symbol_t::Pointer(x);
+	return MAKE_POINTER(x);
 }
 
-ROSSA_EXT_SIG(_arbitrary_set_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_set_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	*a = (long)args[1].getNumber(token, stack_trace).getLong();
-	return symbol_t();
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	*a = (long)COERCE_NUMBER(args[1]).getLong();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_arbitrary_set_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_set_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	*a = *b;
-	return symbol_t();
+	return mediator_t();
 }
 
-ROSSA_EXT_SIG(_arbitrary_to_string, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_to_string, args)
 {
-	auto x = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::String(x->get_str());
+	auto x = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_STRING(x->get_str());
 }
 
-ROSSA_EXT_SIG(_arbitrary_to_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_to_number, args)
 {
-	auto x = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Number(number_t::Long(x->get_si()));
+	auto x = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_NUMBER(number_t::Long(x->get_si()));
 }
 
-ROSSA_EXT_SIG(_arbitrary_add_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_add_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a + (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a + (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_add_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_add_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a + *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_sub_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_sub_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a - (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a - (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_sub_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_sub_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a - *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_mul_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_mul_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a * (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a * (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_mul_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_mul_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a * *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_div_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_div_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a / (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a / (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_div_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_div_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a / *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_mod_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_mod_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a % (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a % (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_mod_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_mod_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a % *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_less_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_less_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a < (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a < (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_less_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_less_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a < *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a < *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_more_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_more_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a > (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a > (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_more_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_more_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a > *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a > *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_eless_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_eless_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a <= (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a <= (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_eless_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_eless_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a <= *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a <= *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_emore_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_emore_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a >= (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a >= (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_emore_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_emore_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a >= *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a >= *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_equals_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_equals_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a == (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a == (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_equals_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_equals_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a == *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a == *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_nequals_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_nequals_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a != (long)args[1].getNumber(token, stack_trace).getLong());
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	return MAKE_BOOLEAN(*a != (long)COERCE_NUMBER(args[1]).getLong());
 }
 
-ROSSA_EXT_SIG(_arbitrary_nequals_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_nequals_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	return symbol_t::Boolean(*a != *b);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	return MAKE_BOOLEAN(*a != *b);
 }
 
-ROSSA_EXT_SIG(_arbitrary_band_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_band_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a & (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a & (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_band_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_band_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a & *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_bor_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_bor_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a | (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a | (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_bor_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_bor_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a | *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_bxor_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_bxor_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a ^ (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a ^ (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_bxor_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_bxor_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>(*a ^ *b);
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_pow_number, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_pow_number, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
+	auto a = COERCE_POINTER(args[0], mpz_class);
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>();
-	mpz_pow_ui(c->get_mpz_t(), a->get_mpz_t(), (long)args[1].getNumber(token, stack_trace).getLong());
-	return symbol_t::Pointer(c);
+	mpz_pow_ui(c->get_mpz_t(), a->get_mpz_t(), (long)COERCE_NUMBER(args[1]).getLong());
+	return MAKE_POINTER(c);
 }
 
-ROSSA_EXT_SIG(_arbitrary_pow_arbitrary, args, token, hash, stack_trace)
+ROSSA_EXT_SIG(_arbitrary_pow_arbitrary, args)
 {
-	auto a = COERCE_PTR(
-		args[0].getPointer(token, stack_trace),
-		mpz_class);
-	auto b = COERCE_PTR(
-		args[1].getPointer(token, stack_trace),
-		mpz_class);
-	// why is there no power function for mpz_t mpz_t?
+	auto a = COERCE_POINTER(args[0], mpz_class);
+	auto b = COERCE_POINTER(args[1], mpz_class);
+	// why is there no power function for mpz_t mpzt?_
 	std::shared_ptr<mpz_class> c = std::make_shared<mpz_class>();
 	mpz_pow_ui(c->get_mpz_t(), a->get_mpz_t(), b->get_ui());
-	return symbol_t::Pointer(c);
+	return MAKE_POINTER(c);
 }
 
 EXPORT_FUNCTIONS(lib_Arbitrary)

@@ -3,6 +3,8 @@
 
 #include "../rossa.h"
 
+#include "../../mediator/mediator.h"
+
 namespace dir
 {
 	extern std::vector<std::filesystem::path> loaded;
@@ -22,6 +24,9 @@ namespace global
 	const std::string deHashVec(const std::vector<node_scope_t> &);
 
 	const std::string format(const std::string &, std::vector<std::string>);
+
+	const mediator_t convertToMediator(const symbol_t &, const token_t *, trace_t &);
+	const symbol_t convertToSymbol(const mediator_t &);
 }
 
 #endif

@@ -54,7 +54,7 @@ public:
 	const type_t getSymbolType() const;
 	void setSymbolType(const type_t &);
 	const number_t &getNumber(const token_t *, trace_t &) const;
-	void *getPointer(const token_t *, trace_t &) const;
+	const std::shared_ptr<void> getPointer(const token_t *, trace_t &) const;
 	std::map<const std::string, const symbol_t> &getDictionary(const token_t *, trace_t &) const;
 	const symbol_t &indexVector(const size_t &, const token_t *, trace_t &) const;
 	const std::vector<symbol_t> &getVector(const token_t *, trace_t &) const;

@@ -13,7 +13,7 @@
 
 <div align="center">
 
-![standard](https://github.com/Nallantli/Rossa/workflows/standard/badge.svg) ![fs](https://github.com/Nallantli/Rossa/workflows/fs/badge.svg) ![net](https://github.com/Nallantli/Rossa/workflows/net/badge.svg) ![graphics](https://github.com/Nallantli/Rossa/workflows/graphics/badge.svg) ![SDL](https://github.com/Nallantli/Rossa/workflows/SDL/badge.svg) ![ncurses](https://github.com/Nallantli/Rossa/workflows/ncurses/badge.svg) ![Arbitrary](https://github.com/Nallantli/Rossa/workflows/Arbitrary/badge.svg)
+![standard](https://github.com/Nallantli/Rossa/workflows/standard/badge.svg) ![fs](https://github.com/Nallantli/Rossa/workflows/fs/badge.svg) ![net](https://github.com/Nallantli/Rossa/workflows/net/badge.svg) ![graphics](https://github.com/Nallantli/Rossa/workflows/graphics/badge.svg) ![SDL](https://github.com/Nallantli/Rossa/workflows/SDL/badge.svg) ![ncurses](https://github.com/Nallantli/Rossa/workflows/ncurses/badge.svg) ![Arbitrary](https://github.com/Nallantli/Rossa/workflows/Arbitrary/badge.svg) ![thread](https://github.com/Nallantli/Rossa/workflows/thread/badge.svg)
 
 </div>
 
@@ -107,6 +107,8 @@ io.close();
 Threading:
 
 ```ra
+load "Thread"
+
 f(ref x : Number, ref id : Number) => {
 	for i in 0 .. x do {
 		putln("Thread {0} says {1}" & [id, i]);

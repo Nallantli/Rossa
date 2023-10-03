@@ -1,7 +1,7 @@
 #ifndef ROSSA_H
 #define ROSSA_H
 
-#include "number/number.h"
+#include "../number/number.h"
 #include "Locale.h"
 
 #include <memory>
@@ -12,25 +12,20 @@
 #include <filesystem>
 #include <algorithm>
 
-#define _ROSSA_VERSION_ "v1.16.6-alpha"
-#define COERCE_PTR(v, t) reinterpret_cast<t *>(v)
+#define _ROSSA_VERSION_ "v1.17.0-alpha"
+
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
 #define ROSSA_HASH(x) parser_t::MAIN_HASH.hashValue(x)
-
-#define ROSSA_EXT_SIG(name, args, token, hash, stack_trace) inline const symbol_t name(const std::vector<symbol_t> &args, const token_t *token, Hash &hash, trace_t &stack_trace)
-#define ADD_EXT(name) fmap[#name] = name
 
 #ifndef _WIN32
 #include <limits.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #define colorASCII(c) "\033[" + std::to_string(c) + "m"
-#define EXPORT_FUNCTIONS(name) extern "C" void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#define EXPORT_FUNCTIONS(name) extern "C" __declspec(dllexport) void name##_rossaExportFunctions(std::map<std::string, extf_t> &fmap)
 #endif
 
 struct token_t;
@@ -62,8 +57,6 @@ typedef std::shared_ptr<function_t> ptr_function_t;
 typedef std::vector<std::pair<token_t, function_t>> trace_t;
 typedef std::vector<type_sll> aug_type_t;
 
-typedef const symbol_t (*extf_t)(const std::vector<symbol_t> &, const token_t *, Hash &, trace_t &);
-typedef void (*export_fns_t)(std::map<std::string, extf_t> &);
 typedef std::string (*cm_fns_t)();
 
 struct node_scope_t

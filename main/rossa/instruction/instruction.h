@@ -6,6 +6,7 @@
 #include "../object/object.h"
 #include "../signature/signature.h"
 #include "../function/function.h"
+#include "../global/global.h"
 
 class Instruction
 {

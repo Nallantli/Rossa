@@ -158,14 +158,14 @@ SDL_SetMainReady() => extern_call lib_SDL._lib_SetMainReady();
 SDL_WasInit(ref flags : Number) => extern_call lib_SDL._lib_WasInit(flags);
 
 # SDL_hints.h
-# 100% (7/7)
+# 100% (5/7)
 SDL_ClearHints() => extern_call lib_SDL._lib_ClearHints();
 SDL_GetHint(ref s : String) => extern_call lib_SDL._lib_GetHint(s);
 SDL_GetHintBoolean(ref a : String, ref b : Boolean) => extern_call lib_SDL._lib_GetHintBoolean(a, b);
 SDL_SetHint(ref a : String, ref b : String) => extern_call lib_SDL._lib_SetHint(a, b);
 SDL_SetHintWithPriority(ref a : String, ref b : String, ref n : Number) => extern_call lib_SDL._lib_SetHintWithPriority(a, b, n);
-SDL_AddHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_AddHintCallback(a, f, data);
-SDL_DelHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_DelHintCallback(a, f, data);
+# SDL_AddHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_AddHintCallback(a, f, data);
+# SDL_DelHintCallback(ref a : String, ref f : Function<Any, String, String, String>, ref data) => extern_call lib_SDL._lib_DelHintCallback(a, f, data);
 
 # SDL_error.h
 # 100% (3/3)

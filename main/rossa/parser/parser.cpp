@@ -6,7 +6,6 @@
 #include "../function/function.h"
 #include "../instruction/instruction.h"
 #include "../node_parser/node_parser.h"
-#include "../global/global.h"
 
 Hash parser_t::MAIN_HASH = Hash();
 
