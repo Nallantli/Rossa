@@ -13,7 +13,7 @@
 
 <div align="center">
 
-![standard](https://github.com/Nallantli/Rossa/workflows/standard/badge.svg) ![fs](https://github.com/Nallantli/Rossa/workflows/fs/badge.svg) ![net](https://github.com/Nallantli/Rossa/workflows/net/badge.svg) ![graphics](https://github.com/Nallantli/Rossa/workflows/graphics/badge.svg) ![SDL](https://github.com/Nallantli/Rossa/workflows/SDL/badge.svg) ![ncurses](https://github.com/Nallantli/Rossa/workflows/ncurses/badge.svg) ![Arbitrary](https://github.com/Nallantli/Rossa/workflows/Arbitrary/badge.svg) ![thread](https://github.com/Nallantli/Rossa/workflows/thread/badge.svg)
+![standard](https://github.com/Nallantli/Rossa/workflows/standard/badge.svg) ![fs](https://github.com/Nallantli/Rossa/workflows/fs/badge.svg) ![net](https://github.com/Nallantli/Rossa/workflows/net/badge.svg) ![graphics](https://github.com/Nallantli/Rossa/workflows/graphics/badge.svg) ![SDL](https://github.com/Nallantli/Rossa/workflows/SDL/badge.svg) ![ncurses](https://github.com/Nallantli/Rossa/workflows/ncurses/badge.svg) ![Arbitrary](https://github.com/Nallantli/Rossa/workflows/Arbitrary/badge.svg) ![Thread](https://github.com/Nallantli/Rossa/workflows/Thread/badge.svg)
 
 </div>
 
