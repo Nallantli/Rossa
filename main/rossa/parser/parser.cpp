@@ -55,7 +55,7 @@ parser_t::parser_t(const std::vector<std::string> &args)
 	for (auto &s : args)
 		argv.push_back(symbol_t::String(s));
 	scopes.push_back({ROSSA_HASH("<*>")});
-	consts.push_back({{ROSSA_HASH("<*>"), ROSSA_HASH("_args")}, symbol_t::Array(argv)});
+	consts.push_back({{ROSSA_HASH("<*>"), ROSSA_HASH("__args__")}, symbol_t::Array(argv)});
 }
 
 const std::map<std::string, signed int> parser_t::bOperators = {

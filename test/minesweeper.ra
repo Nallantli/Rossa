@@ -39,7 +39,7 @@ SDL.INIT();
 window := new SDL.Window("Minesweeper", WIDTH * SCALE, HEIGHT * SCALE + SCALE);
 renderer := window.getRenderer();
 random := new Random();
-spritesheet := new SDL.Image("test/res/curses12x12.png", Color.MAGENTA);
+spritesheet := new SDL.Image(__dir__ ++ "/res/curses12x12.png", Color.MAGENTA);
 
 # ------------------------------------------------------------------------------------
 

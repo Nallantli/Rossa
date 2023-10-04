@@ -146,7 +146,7 @@ static snake_game {
 		w = new SDL.Window("Snake", width * scale, height * scale);
 		r = w.getRenderer();
 
-		font = new SDL.Font("test/res/unifont.ttf", 16);
+		font = new SDL.Font(__dir__ ++ "/res/unifont.ttf", 16);
 		scoreText = new SDL.Text(font, "Score: 0", Color.WHITE);
 
 		for x in 0 .. width do {

@@ -42,8 +42,8 @@ fn test(ref MAX: Number) {
 	putln("Total Time: ", time, "ms");
 }
 
-if _args.len() == 1 then {
-	test(_args[0] -> Number);
+if __args__.len() == 1 then {
+	test(__args__[0] -> Number);
 } else {
 	putln("Usage requires numerical argument");
 }

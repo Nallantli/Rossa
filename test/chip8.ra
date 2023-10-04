@@ -425,8 +425,8 @@ scale := 10;
 
 chip := new Chip();
 
-if _args.len() == 1 then {
-	chip.loadFile(_args[0]);
+if __args__.len() == 1 then {
+	chip.loadFile(__args__[0]);
 } else {
 	putln("Usage requires rom path");
 	exit(1);
@@ -437,7 +437,7 @@ SDL.INIT();
 w := new SDL.Window("Chip-8 Emulator", 64 * scale, 32 * scale);
 r := w.getRenderer();
 
-font := new SDL.Font("test/res/unifont.ttf", 16);
+font := new SDL.Font(__dir__ ++ "/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.RED);
 
 buffer := alloc(64).map(fn(e) alloc(32));

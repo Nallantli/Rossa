@@ -799,6 +799,24 @@ ptr_node_t node_parser_t::parseBaseNode(std::vector<node_scope_t> *scopes)
 	case TOK_NUM:
 		return parseNumNode(scopes);
 	case TOK_IDF:
+		if (currentToken.valueString == "__file__")
+		{
+			ret = std::make_shared<ContainerNode>(
+				*scopes,
+				symbol_t::String(std::filesystem::absolute(currentToken.filename).string()),
+				currentToken);
+			nextToken();
+			return ret;
+		}
+		if (currentToken.valueString == "__dir__")
+		{
+			ret = std::make_shared<ContainerNode>(
+				*scopes,
+				symbol_t::String(std::filesystem::absolute(currentToken.filename.parent_path()).string()),
+				currentToken);
+			nextToken();
+			return ret;
+		}
 		return parseIDNode(scopes);
 	case TOK_STR_LIT:
 		ret = std::make_shared<ContainerNode>(*scopes, symbol_t::String(currentToken.valueString), currentToken);

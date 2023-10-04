@@ -80,7 +80,7 @@ for x in 0 .. WIDTH do {
 	cache[x] = new SDL.Rect(1, HEIGHT, Color.WHITE);
 }
 
-font := new SDL.Font("test/res/unifont.ttf", 16);
+font := new SDL.Font(__dir__ ++ "/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.WHITE);
 
 fn refresh() {

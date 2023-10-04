@@ -5,7 +5,7 @@ SDL.INIT();
 w := new SDL.Window("Image Test", 800, 600);
 r := w.getRenderer();
 
-image1 := new SDL.Image("test/res/suki.png");
+image1 := new SDL.Image(__dir__ ++ "/res/suki.png");
 t1 := new SDL.Texture(image1, 200, 200);
 t2 := new SDL.Texture(image1, 200, 200);
 t3 := new SDL.Texture(image1, 200, 200);
@@ -21,7 +21,7 @@ r1 := 0;
 r2 := 0;
 r3 := 0;
 
-font := new SDL.Font("test/res/unifont.ttf", 16);
+font := new SDL.Font(__dir__ ++ "/res/unifont.ttf", 16);
 fpsText := new SDL.Text(font, "", Color.WHITE);
 r.put(fpsText, 0, 0);
 

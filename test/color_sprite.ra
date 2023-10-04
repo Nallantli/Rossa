@@ -6,7 +6,7 @@ w := new SDL.Window("Sprite Clipping", 512, 512);
 r := w.getRenderer();
 rand := new Random();
 
-spritesheet := new SDL.Image("test/res/curses12x12.png", Color.MAGENTA);
+spritesheet := new SDL.Image(__dir__ ++ "/res/curses12x12.png", Color.MAGENTA);
 
 fn randomize() {
 	for x in 0 .. 16 do {
