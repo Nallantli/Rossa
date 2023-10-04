@@ -76,7 +76,7 @@ const symbol_t operation::callWithInner(const object_t *scope, const ptr_instruc
 	}
 }
 
-const symbol_t operation::untilstep(const object_t *scope, const bool &inclusive, const symbol_t &evalA, const symbol_t &evalB, const symbol_t &step, const token_t *token, trace_t &stack_trace)
+const symbol_t operation::untilstep_inclusive(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const symbol_t &step, const token_t *token, trace_t &stack_trace)
 {
 	switch (COMP(evalA.getValueType(), evalB.getValueType()))
 	{
@@ -86,33 +86,27 @@ const symbol_t operation::untilstep(const object_t *scope, const bool &inclusive
 		const number_t &numB = evalB.getNumber(token, stack_trace);
 		const number_t &numStep = step.getNumber(token, stack_trace);
 		std::vector<symbol_t> nv;
-		if (inclusive)
+		for (; numA <= numB; numA += numStep)
 		{
-			for (; numA <= numB; numA += numStep)
-				nv.push_back(symbol_t::Number(numA));
-		}
-		else
-		{
-			for (; numA < numB; numA += numStep)
-				nv.push_back(symbol_t::Number(numA));
+			nv.push_back(symbol_t::Number(numA));
 		}
 		return symbol_t::Array(nv);
 	}
 	case value_type_enum::OBJECT:
 	{
 		const auto &o = evalA.getObject(token, stack_trace);
-		if (o->hasValue(parser_t::HASH_RANGE))
-			return o->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({evalB, step}, token, stack_trace);
+		if (o->hasValue(parser_t::HASH_RANGE_INC))
+			return o->getVariable(parser_t::HASH_RANGE_INC, token, stack_trace).call({evalB, step}, token, stack_trace);
 	}
 	default:
 		if (scope != NULL)
-			return scope->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({evalA, evalB, step}, token, stack_trace);
+			return scope->getVariable(parser_t::HASH_RANGE_INC, token, stack_trace).call({evalA, evalB, step}, token, stack_trace);
 	}
 
 	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"<>"}), *token, stack_trace);
 }
 
-const symbol_t operation::untilnostep(const object_t *scope, const bool &inclusive, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
+const symbol_t operation::untilnostep_inclusive(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
 {
 	switch (COMP(evalA.getValueType(), evalB.getValueType()))
 	{
@@ -122,27 +116,81 @@ const symbol_t operation::untilnostep(const object_t *scope, const bool &inclusi
 		const number_t &numB = evalB.getNumber(token, stack_trace);
 		const number_t &numStep = number_t::Long(1);
 		std::vector<symbol_t> nv;
-		if (inclusive)
+		for (; numA <= numB; numA += numStep)
 		{
-			for (; numA <= numB; numA += numStep)
-				nv.push_back(symbol_t::Number(numA));
-		}
-		else
-		{
-			for (; numA < numB; numA += numStep)
-				nv.push_back(symbol_t::Number(numA));
+			nv.push_back(symbol_t::Number(numA));
 		}
 		return symbol_t::Array(nv);
 	}
 	case value_type_enum::OBJECT:
 	{
 		const auto &o = evalA.getObject(token, stack_trace);
-		if (o->hasValue(parser_t::HASH_RANGE))
-			return o->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({evalB}, token, stack_trace);
+		if (o->hasValue(parser_t::HASH_RANGE_INC))
+			return o->getVariable(parser_t::HASH_RANGE_INC, token, stack_trace).call({evalB}, token, stack_trace);
 	}
 	default:
 		if (scope != NULL)
-			return scope->getVariable(parser_t::HASH_RANGE, token, stack_trace).call({evalA, evalB}, token, stack_trace);
+			return scope->getVariable(parser_t::HASH_RANGE_INC, token, stack_trace).call({evalA, evalB}, token, stack_trace);
+	}
+
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {"<>"}), *token, stack_trace);
+}
+
+const symbol_t operation::untilstep_exclusive(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const symbol_t &step, const token_t *token, trace_t &stack_trace)
+{
+	switch (COMP(evalA.getValueType(), evalB.getValueType()))
+	{
+	case COMP(value_type_enum::NUMBER, value_type_enum::NUMBER):
+	{
+		number_t numA = evalA.getNumber(token, stack_trace);
+		const number_t &numB = evalB.getNumber(token, stack_trace);
+		const number_t &numStep = step.getNumber(token, stack_trace);
+		std::vector<symbol_t> nv;
+		for (; numA < numB; numA += numStep)
+		{
+			nv.push_back(symbol_t::Number(numA));
+		}
+		return symbol_t::Array(nv);
+	}
+	case value_type_enum::OBJECT:
+	{
+		const auto &o = evalA.getObject(token, stack_trace);
+		if (o->hasValue(parser_t::HASH_RANGE_EXC))
+			return o->getVariable(parser_t::HASH_RANGE_EXC, token, stack_trace).call({evalB, step}, token, stack_trace);
+	}
+	default:
+		if (scope != NULL)
+			return scope->getVariable(parser_t::HASH_RANGE_EXC, token, stack_trace).call({evalA, evalB, step}, token, stack_trace);
+	}
+
+	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {".."}), *token, stack_trace);
+}
+
+const symbol_t operation::untilnostep_exclusive(const object_t *scope, const symbol_t &evalA, const symbol_t &evalB, const token_t *token, trace_t &stack_trace)
+{
+	switch (COMP(evalA.getValueType(), evalB.getValueType()))
+	{
+	case COMP(value_type_enum::NUMBER, value_type_enum::NUMBER):
+	{
+		number_t numA = evalA.getNumber(token, stack_trace);
+		const number_t &numB = evalB.getNumber(token, stack_trace);
+		const number_t &numStep = number_t::Long(1);
+		std::vector<symbol_t> nv;
+		for (; numA < numB; numA += numStep)
+		{
+			nv.push_back(symbol_t::Number(numA));
+		}
+		return symbol_t::Array(nv);
+	}
+	case value_type_enum::OBJECT:
+	{
+		const auto &o = evalA.getObject(token, stack_trace);
+		if (o->hasValue(parser_t::HASH_RANGE_EXC))
+			return o->getVariable(parser_t::HASH_RANGE_EXC, token, stack_trace).call({evalB}, token, stack_trace);
+	}
+	default:
+		if (scope != NULL)
+			return scope->getVariable(parser_t::HASH_RANGE_EXC, token, stack_trace).call({evalA, evalB}, token, stack_trace);
 	}
 
 	throw rossa_error_t(global::format(_UNDECLARED_OPERATOR_ERROR_, {".."}), *token, stack_trace);

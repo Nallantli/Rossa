@@ -120,10 +120,25 @@ public:
 };
 
 /**
+ * If-Then Instruction
+ * `if <EXPR> then { <SEQ> } (elif <EXPR> then { <SEQ> })*`
+ */
+class IfThenI : public Instruction
+{
+protected:
+	const ptr_instruction_t ifs;
+	const ptr_instruction_t body;
+
+public:
+	IfThenI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
+/**
  * If-Then-Else Instruction
  * `if <EXPR> then { <SEQ> } (elif <EXPR> then { <SEQ> })* (else { <SEQ> })`
  */
-class IfElseI : public Instruction
+class IfThenElseI : public Instruction
 {
 protected:
 	const ptr_instruction_t ifs;
@@ -131,7 +146,7 @@ protected:
 	const ptr_instruction_t elses;
 
 public:
-	IfElseI(const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	IfThenElseI(const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 
@@ -564,6 +579,7 @@ class AllocI : public UnaryI
 {
 private:
 	const ptr_instruction_t setall;
+
 public:
 	AllocI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
@@ -572,17 +588,42 @@ public:
 /**
  * Range [a ... b)
  * `<EXPR> .. <EXPR>`
- *  or [a ... b]
- * `<EXPR> .+ <EXPR>`
  */
-class UntilI : public BinaryI
+class UntilStepExcI : public BinaryI
 {
 protected:
 	const ptr_instruction_t step;
-	const bool inclusive;
+	
+public:
+	UntilStepExcI(const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
+class UntilNoStepExcI : public BinaryI
+{
+public:
+	UntilNoStepExcI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
+/**
+ *  Range [a ... b]
+ * `<EXPR> .+ <EXPR>`
+ */
+class UntilStepIncI : public BinaryI
+{
+protected:
+	const ptr_instruction_t step;
 
 public:
-	UntilI(const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const bool &, const token_t &);
+	UntilStepIncI(const ptr_instruction_t &, const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
+class UntilNoStepIncI : public BinaryI
+{
+public:
+	UntilNoStepIncI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 

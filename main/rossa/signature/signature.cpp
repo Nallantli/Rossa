@@ -18,7 +18,9 @@ signature_t::signature_t(const std::vector<parameter_t> &values)
 const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &stack_trace) const
 {
 	if (values.size() == 0)
+	{
 		return 1;
+	}
 
 	size_t v = 0;
 	for (size_t i = 0; i < values.size(); i++)
@@ -30,20 +32,32 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 		{
 			auto base = values_i.getBase();
 			if (base == vt.getBase())
+			{
 				v += 3;
+			}
 			else if (base[0] > 0 && vt.getBase()[0] == value_type_enum::NIL)
+			{
 				v += 2;
+			}
 			else if (base[0] == value_type_enum::ANY)
+			{
 				v += 1;
+			}
 			else if (check[0].getValueType() == value_type_enum::OBJECT)
 			{
 				if (base[0] == value_type_enum::OBJECT || check_i.getObject(NULL, stack_trace)->extendsObject(base))
+				{
 					v += 2;
+				}
 				else
+				{
 					return 0;
+				}
 			}
 			else
+			{
 				return 0;
+			}
 		}
 		else
 		{
@@ -53,9 +67,13 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 			if (it == fo.end())
 			{
 				if (check_i.hasVarg(NULL, stack_trace))
+				{
 					v += 1;
+				}
 				else
+				{
 					return 0;
+				}
 			}
 			else
 			{
@@ -69,20 +87,30 @@ const size_t signature_t::validity(const std::vector<symbol_t> &check, trace_t &
 						{
 							flag = val;
 							if (val == 3)
+							{
 								break;
+							}
 						}
 					}
 					if (flag == 3)
+					{
 						break;
+					}
 				}
 				if (flag > 0)
+				{
 					v += flag;
+				}
 				else
 				{
 					if (check_i.hasVarg(NULL, stack_trace))
+					{
 						v += 1;
+					}
 					else
+					{
 						return 0;
+					}
 				}
 			}
 		}
@@ -97,7 +125,9 @@ const std::string signature_t::toCodeString() const
 	for (auto &v : values)
 	{
 		if (i++ > 0)
+		{
 			s += ", ";
+		}
 		s += v.toCodeString();
 	}
 	return s + "}";
@@ -110,7 +140,9 @@ const std::string signature_t::toString() const
 	for (auto &v : values)
 	{
 		if (i++ > 0)
+		{
 			s += ", ";
+		}
 		s += v.toString();
 	}
 	return s;

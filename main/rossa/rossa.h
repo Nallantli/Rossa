@@ -1,6 +1,8 @@
 #ifndef ROSSA_H
 #define ROSSA_H
 
+#define RECORD_TIME
+
 #include "../number/number.h"
 #include "Locale.h"
 
@@ -17,6 +19,12 @@
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
 #define ROSSA_HASH(x) parser_t::MAIN_HASH.hashValue(x)
+
+#ifdef RECORD_TIME
+#include <chrono>
+#define START_RECORDING auto _START_TIME_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+#define END_RECORDING(key) parser_t::postRecording(key, std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::system_clock::now().time_since_epoch()) - _START_TIME_).count());
+#endif
 
 #ifndef _WIN32
 #include <limits.h>
@@ -177,7 +185,8 @@ enum instruction_type_enum
 	DECLARE,
 	INDEX,
 	INNER,
-	IFELSE,
+	IF_THEN_ELSE,
+	IF_THEN,
 	WHILE,
 	DEFINE,
 	VARG_DEFINE,
@@ -189,7 +198,10 @@ enum instruction_type_enum
 	CAST_TO_I,
 	POW_I,
 	ALLOC_I,
-	UNTIL_I,
+	UNTIL_STEP_EXC_I,
+	UNTIL_NO_STEP_EXC_I,
+	UNTIL_STEP_INC_I,
+	UNTIL_NO_STEP_INC_I,
 	SCOPE_I,
 	REFER_I,
 	MAP_I,

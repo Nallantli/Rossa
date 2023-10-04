@@ -658,7 +658,8 @@ ptr_instruction_t CallNode::genParser() const
 	std::vector<ptr_instruction_t> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
-	if (fcallee->getType() == INNER) {
+	if (fcallee->getType() == INNER)
+	{
 		return std::make_shared<CallWithInnerI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
 	}
 	return std::make_shared<CallI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
@@ -858,7 +859,9 @@ void CallBuiltNode::printTree(std::string indent, bool last) const
 	printc(global::deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL_BUILT : " << std::to_string(t) << "\n";
 	for (size_t i = 0; i < args.size(); i++)
+	{
 		args[i]->printTree(indent, i == args.size() - 1);
+	}
 }
 
 const ptr_node_t CallBuiltNode::fold(const std::vector<std::pair<std::vector<hash_ull>, symbol_t>> &consts) const
@@ -874,7 +877,9 @@ const ptr_node_t CallBuiltNode::fold(const std::vector<std::pair<std::vector<has
 
 	std::vector<ptr_node_t> nargs;
 	for (auto &c : args)
+	{
 		nargs.push_back(c->fold(consts));
+	}
 
 	return std::make_shared<CallBuiltNode>(path, t, nargs, token);
 }
@@ -1443,18 +1448,26 @@ void IfElseNode::setElse(const ptr_node_t &elses)
 ptr_instruction_t IfElseNode::genParser() const
 {
 	if (elses)
-		return std::make_shared<IfElseI>(ifs->genParser(), body->genParser(), elses->genParser(), token);
-	return std::make_shared<IfElseI>(ifs->genParser(), body->genParser(), nullptr, token);
+	{
+		return std::make_shared<IfThenElseI>(ifs->genParser(), body->genParser(), elses->genParser(), token);
+	}
+	return std::make_shared<IfThenI>(ifs->genParser(), body->genParser(), token);
 }
 
 bool IfElseNode::isConst() const
 {
 	if (!ifs->isConst())
+	{
 		return false;
+	}
 	if (!body->isConst())
+	{
 		return false;
+	}
 	if (elses != nullptr && !elses->isConst())
+	{
 		return false;
+	}
 	return true;
 }
 
@@ -1519,7 +1532,9 @@ ptr_instruction_t WhileNode::genParser() const
 {
 	std::vector<ptr_instruction_t> is;
 	for (auto &e : this->body)
+	{
 		is.push_back(e->genParser());
+	}
 
 	return std::make_shared<WhileI>(whiles->genParser(), is, token);
 }
@@ -1576,7 +1591,9 @@ ptr_instruction_t ForNode::genParser() const
 {
 	std::vector<ptr_instruction_t> is;
 	for (auto &e : this->body)
+	{
 		is.push_back(e->genParser());
+	}
 
 	return std::make_shared<ForI>(id, fors->genParser(), is, token);
 }
@@ -1633,10 +1650,17 @@ UntilNode::UntilNode(
 
 ptr_instruction_t UntilNode::genParser() const
 {
+	if (inclusive)
+	{
+		if (step == nullptr)
+			return std::make_shared<UntilNoStepIncI>(a->genParser(), b->genParser(), token);
+		else
+			return std::make_shared<UntilStepIncI>(a->genParser(), b->genParser(), step->genParser(), token);
+	}
 	if (step == nullptr)
-		return std::make_shared<UntilI>(a->genParser(), b->genParser(), nullptr, inclusive, token);
+		return std::make_shared<UntilNoStepExcI>(a->genParser(), b->genParser(), token);
 	else
-		return std::make_shared<UntilI>(a->genParser(), b->genParser(), step->genParser(), inclusive, token);
+		return std::make_shared<UntilStepExcI>(a->genParser(), b->genParser(), step->genParser(), token);
 }
 
 bool UntilNode::isConst() const

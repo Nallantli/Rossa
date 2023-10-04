@@ -1,6 +1,10 @@
 extern "lib_standard";
 
 static clock {
+	fn nanoseconds() extern_call lib_standard._timeNanoS();
+
+	fn microseconds() extern_call lib_standard._timeMicroS();
+
 	fn milliseconds() extern_call lib_standard._timeMS();
 
 	fn sleep(ref ms: Number) extern_call lib_standard._sleep(ms);

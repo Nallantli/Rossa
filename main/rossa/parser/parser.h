@@ -53,7 +53,8 @@ public:
 	static const hash_ull HASH_NEQUALS;
 	static const hash_ull HASH_SET;
 	static const hash_ull HASH_CALL;
-	static const hash_ull HASH_RANGE;
+	static const hash_ull HASH_RANGE_INC;
+	static const hash_ull HASH_RANGE_EXC;
 	static const hash_ull HASH_VAR_ARGS;
 	static const hash_ull HASH_LENGTH;
 	static const hash_ull HASH_NOT;

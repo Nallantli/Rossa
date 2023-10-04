@@ -1152,7 +1152,7 @@ ptr_node_t node_parser_t::parseUnitNode(std::vector<node_scope_t> *scopes)
 		return parseEachNode(scopes);
 	case '(':
 		nextToken();
-		if (ret = parseEquNode(scopes))
+		if ((ret = parseEquNode(scopes)))
 		{
 			if (currentToken.type != ')')
 				return logErrorN(global::format(_EXPECTED_ERROR_, {")"}), currentToken);

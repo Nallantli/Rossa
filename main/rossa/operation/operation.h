@@ -8,8 +8,6 @@ namespace operation
 	const symbol_t index(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t call(const object_t *, const ptr_instruction_t &, const std::vector<symbol_t> &, const token_t *, trace_t &);
 	const symbol_t callWithInner(const object_t *, const ptr_instruction_t &, const std::vector<symbol_t> &, const token_t *, trace_t &);
-	const symbol_t untilstep(const object_t *, const bool &, const symbol_t &, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
-	const symbol_t untilnostep(const object_t *, const bool &, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t cct(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t del(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 	// Arithmetic
@@ -37,6 +35,11 @@ namespace operation
 	const symbol_t neg(const object_t *, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t unot(const object_t *, const symbol_t &, const token_t *, trace_t &);
 	const symbol_t hash(const object_t *, const symbol_t &, const token_t *, trace_t &);
+	
+	const symbol_t untilstep_exclusive(const object_t *, const symbol_t &, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
+	const symbol_t untilnostep_exclusive(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
+	const symbol_t untilstep_inclusive(const object_t *, const symbol_t &, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
+	const symbol_t untilnostep_inclusive(const object_t *, const symbol_t &, const symbol_t &, const token_t *, trace_t &);
 }
 
 #endif

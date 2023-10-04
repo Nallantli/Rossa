@@ -32,6 +32,22 @@ ROSSA_EXT_SIG(_timeMS, args)
 		std::make_shared<number_t>(number_t::Long(ms.count())));
 }
 
+ROSSA_EXT_SIG(_timeMicroS, args)
+{
+	auto ms = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch());
+	return mediator_t(
+		MEDIATOR_NUMBER,
+		std::make_shared<number_t>(number_t::Long(ms.count())));
+}
+
+ROSSA_EXT_SIG(_timeNanoS, args)
+{
+	auto ms = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch());
+	return mediator_t(
+		MEDIATOR_NUMBER,
+		std::make_shared<number_t>(number_t::Long(ms.count())));
+}
+
 ROSSA_EXT_SIG(_math_rand, args)
 {
 	return mediator_t(
@@ -391,6 +407,8 @@ EXPORT_FUNCTIONS(lib_standard)
 	ADD_EXT(_tan);
 	ADD_EXT(_tanh);
 	ADD_EXT(_timeMS);
+	ADD_EXT(_timeMicroS);
+	ADD_EXT(_timeNanoS);
 	ADD_EXT(_string_size);
 	// ADD_EXT(_function_split);
 	ADD_EXT(_input_token);

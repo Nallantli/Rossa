@@ -53,24 +53,10 @@ public:
 	static const symbol_t allocateAs(const size_t &, const symbol_t *, const token_t *, trace_t &);
 	const type_t getSymbolType() const;
 	void setSymbolType(const type_t &);
-	const number_t &getNumber(const token_t *, trace_t &) const;
 	const std::shared_ptr<void> getPointer(const token_t *, trace_t &) const;
-	std::map<const std::string, const symbol_t> &getDictionary(const token_t *, trace_t &) const;
-	const symbol_t &indexVector(const size_t &, const token_t *, trace_t &) const;
-	const std::vector<symbol_t> &getVector(const token_t *, trace_t &) const;
-	const std::string getString(const token_t *, trace_t &) const;
-	const bool getBool(const token_t *, trace_t &) const;
 	const bool hasVarg(const token_t *, trace_t &) const;
-	object_t *getObject(const token_t *, trace_t &) const;
 	const value_type_enum getValueType() const;
 	const parameter_t getAugValueType() const;
-	const parameter_t getTypeName(const token_t *, trace_t &) const;
-	const ptr_function_t getFunction(const std::vector<symbol_t> &, const token_t *, trace_t &) const;
-	const ptr_function_t &getVARGFunction(const token_t *, trace_t &) const;
-	const symbol_t &indexDict(const std::string &) const;
-	const bool hasDictionaryKey(const std::string &) const;
-	const size_t vectorSize() const;
-	const size_t dictionarySize(const token_t *, trace_t &) const;
 	const std::string toString(const token_t *, trace_t &) const;
 	const std::string toCodeString() const;
 	const symbol_t call(const std::vector<symbol_t> &, const token_t *, trace_t &) const;
@@ -88,6 +74,21 @@ public:
 	void shift() const;
 
 	const symbol_t clone() const;
+	
+	const size_t vectorSize() const;
+	const size_t dictionarySize(const token_t *, trace_t &) const;
+	const symbol_t &indexDict(const std::string &) const;
+	const bool hasDictionaryKey(const std::string &) const;
+	const ptr_function_t getFunction(const std::vector<symbol_t> &, const token_t *, trace_t &) const;
+	const ptr_function_t &getVARGFunction(const token_t *, trace_t &) const;
+	const parameter_t getTypeName(const token_t *, trace_t &) const;
+	object_t *getObject(const token_t *, trace_t &) const;
+	const std::string getString(const token_t *, trace_t &) const;
+	const bool getBool(const token_t *, trace_t &) const;
+	std::map<const std::string, const symbol_t> &getDictionary(const token_t *, trace_t &) const;
+	const number_t &getNumber(const token_t *, trace_t &) const;
+	const symbol_t &indexVector(const size_t &, const token_t *, trace_t &) const;
+	const std::vector<symbol_t> &getVector(const token_t *, trace_t &) const;
 };
 
 #endif

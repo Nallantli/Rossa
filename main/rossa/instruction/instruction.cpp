@@ -143,38 +143,63 @@ const symbol_t SequenceI::evaluate(const object_t *scope, trace_t &stack_trace) 
 	std::vector<symbol_t> evals;
 	for (const ptr_instruction_t &e : children)
 	{
-		if (e->getType() == UNTIL_I || e->getType() == EACH_I)
+		switch (e->getType())
+		{
+		case UNTIL_STEP_EXC_I:
+		case UNTIL_NO_STEP_EXC_I:
+		case UNTIL_STEP_INC_I:
+		case UNTIL_NO_STEP_INC_I:
+		case EACH_I:
 		{
 			std::vector<symbol_t> v = e->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-			evals.insert(evals.end(), std::make_move_iterator(v.begin()), std::make_move_iterator(v.end()));
+			for (auto &&ve : v)
+			{
+				evals.push_back(ve);
+			}
+			break;
 		}
-		else
-		{
+		default:
 			evals.push_back(e->evaluate(scope, stack_trace));
+			break;
 		}
 	}
 	return symbol_t::Array(evals);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class IFElseI                                                                                          */
+/*class IfThenElseI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-IfElseI::IfElseI(const ptr_instruction_t &ifs, const ptr_instruction_t &body, const ptr_instruction_t &elses, const token_t &token)
-	: Instruction(IFELSE, token), ifs{ifs}, body{body}, elses{elses}
+IfThenElseI::IfThenElseI(const ptr_instruction_t &ifs, const ptr_instruction_t &body, const ptr_instruction_t &elses, const token_t &token)
+	: Instruction(IF_THEN_ELSE, token), ifs{ifs}, body{body}, elses{elses}
 {
 }
 
-const symbol_t IfElseI::evaluate(const object_t *scope, trace_t &stack_trace) const
+const symbol_t IfThenElseI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	const object_t newScope(scope, 0);
 	if (ifs->evaluate(&newScope, stack_trace).getBool(&token, stack_trace))
 	{
 		return body->evaluate(&newScope, stack_trace);
 	}
-	else if (elses)
+	return elses->evaluate(&newScope, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class IfThenI                                                                                          */
+/*-------------------------------------------------------------------------------------------------------*/
+
+IfThenI::IfThenI(const ptr_instruction_t &ifs, const ptr_instruction_t &body, const token_t &token)
+	: Instruction(IF_THEN, token), ifs{ifs}, body{body}
+{
+}
+
+const symbol_t IfThenI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const object_t newScope(scope, 0);
+	if (ifs->evaluate(&newScope, stack_trace).getBool(&token, stack_trace))
 	{
-		return elses->evaluate(&newScope, stack_trace);
+		return body->evaluate(&newScope, stack_trace);
 	}
 	return symbol_t();
 }
@@ -192,7 +217,7 @@ const symbol_t WhileI::evaluate(const object_t *scope, trace_t &stack_trace) con
 {
 	while (whiles->evaluate(scope, stack_trace).getBool(&token, stack_trace))
 	{
-		const object_t newScope(scope, 0);
+		const object_t newScope(scope, OBJECT_WEAK);
 		for (const ptr_instruction_t &i : body)
 		{
 			const symbol_t temp = i->evaluate(&newScope, stack_trace);
@@ -229,12 +254,12 @@ ForI::ForI(const hash_ull &id, const ptr_instruction_t &fors, const std::vector<
 const symbol_t ForI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	const std::vector<symbol_t> evalFor = fors->evaluate(scope, stack_trace).getVector(&token, stack_trace);
-	for (const symbol_t &e : evalFor)
+	for (auto &&e : evalFor)
 	{
-		const object_t newScope(scope, 0);
+		const object_t newScope(scope, OBJECT_WEAK);
 		newScope.createVariable(id, e, &token);
 		bool cflag = false;
-		for (const ptr_instruction_t &i : body)
+		for (auto &&i : body)
 		{
 			const symbol_t temp = i->evaluate(&newScope, stack_trace);
 			switch (temp.getSymbolType())
@@ -1068,7 +1093,7 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 		{
 			const std::map<const std::string, const symbol_t> dict = evalA.getDictionary(&token, stack_trace);
 			std::vector<symbol_t> nv;
-			for (const std::pair<const std::string, symbol_t> &e : dict)
+			for (auto &&e : dict)
 			{
 				std::vector<symbol_t> l = {symbol_t::String(e.first), e.second};
 				nv.push_back(symbol_t::Array(l));
@@ -1143,23 +1168,71 @@ const symbol_t AllocI::evaluate(const object_t *scope, trace_t &stack_trace) con
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-/*class UntilI                                                                                           */
+/*class UntilStepExcI                                                                                       */
 /*-------------------------------------------------------------------------------------------------------*/
 
-UntilI::UntilI(const ptr_instruction_t &a, const ptr_instruction_t &b, const ptr_instruction_t &step, const bool &inclusive, const token_t &token)
-	: BinaryI(UNTIL_I, a, b, token), step(step), inclusive{inclusive}
+UntilStepExcI::UntilStepExcI(const ptr_instruction_t &a, const ptr_instruction_t &b, const ptr_instruction_t &step, const token_t &token)
+	: BinaryI(UNTIL_STEP_EXC_I, a, b, token), step(step)
 {
 }
 
-const symbol_t UntilI::evaluate(const object_t *scope, trace_t &stack_trace) const
+const symbol_t UntilStepExcI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	const symbol_t evalA = a->evaluate(scope, stack_trace);
 	const symbol_t evalB = b->evaluate(scope, stack_trace);
 
-	if (step == nullptr)
-		return operation::untilnostep(scope, inclusive, evalA, evalB, &token, stack_trace);
-	else
-		return operation::untilstep(scope, inclusive, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
+	return operation::untilstep_exclusive(scope, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class UntilNoStepExcI                                                                                     */
+/*-------------------------------------------------------------------------------------------------------*/
+
+UntilNoStepExcI::UntilNoStepExcI(const ptr_instruction_t &a, const ptr_instruction_t &b, const token_t &token)
+	: BinaryI(UNTIL_NO_STEP_EXC_I, a, b, token)
+{
+}
+
+const symbol_t UntilNoStepExcI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const symbol_t evalA = a->evaluate(scope, stack_trace);
+	const symbol_t evalB = b->evaluate(scope, stack_trace);
+
+	return operation::untilnostep_exclusive(scope, evalA, evalB, &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class UntilStepIncI                                                                                       */
+/*-------------------------------------------------------------------------------------------------------*/
+
+UntilStepIncI::UntilStepIncI(const ptr_instruction_t &a, const ptr_instruction_t &b, const ptr_instruction_t &step, const token_t &token)
+	: BinaryI(UNTIL_STEP_INC_I, a, b, token), step(step)
+{
+}
+
+const symbol_t UntilStepIncI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const symbol_t evalA = a->evaluate(scope, stack_trace);
+	const symbol_t evalB = b->evaluate(scope, stack_trace);
+
+	return operation::untilstep_inclusive(scope, evalA, evalB, step->evaluate(scope, stack_trace), &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class UntilNoStepIncI                                                                                     */
+/*-------------------------------------------------------------------------------------------------------*/
+
+UntilNoStepIncI::UntilNoStepIncI(const ptr_instruction_t &a, const ptr_instruction_t &b, const token_t &token)
+	: BinaryI(UNTIL_NO_STEP_INC_I, a, b, token)
+{
+}
+
+const symbol_t UntilNoStepIncI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	const symbol_t evalA = a->evaluate(scope, stack_trace);
+	const symbol_t evalB = b->evaluate(scope, stack_trace);
+
+	return operation::untilnostep_inclusive(scope, evalA, evalB, &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1194,7 +1267,7 @@ MapI::MapI(const std::map<std::string, ptr_instruction_t> &children, const token
 const symbol_t MapI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	std::map<const std::string, const symbol_t> evals;
-	for (const std::pair<std::string, ptr_instruction_t> &e : children)
+	for (auto &&e : children)
 	{
 		const symbol_t eval = e.second->evaluate(scope, stack_trace);
 		if (eval.getValueType() == value_type_enum::NIL)
@@ -1241,7 +1314,7 @@ const symbol_t SwitchI::evaluate(const object_t *scope, trace_t &stack_trace) co
 	}
 	else if (!cases_unsolved.empty())
 	{
-		for (const std::pair<const ptr_instruction_t, const size_t> &e : cases_unsolved)
+		for (auto &&e : cases_unsolved)
 		{
 			const symbol_t evalE = e.first->evaluate(&newScope, stack_trace);
 			if (evalE.equals(&eval, &token, stack_trace))
@@ -1349,7 +1422,7 @@ const symbol_t CharNI::evaluate(const object_t *scope, trace_t &stack_trace) con
 {
 	const std::string evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 	std::vector<symbol_t> nv;
-	for (const unsigned char &c : evalA)
+	for (auto &&c : evalA)
 		nv.push_back(symbol_t::Number(number_t::Long(c)));
 	return symbol_t::Array(nv);
 }
@@ -1472,31 +1545,27 @@ const symbol_t CallOpI::evaluate(const object_t *scope, trace_t &stack_trace) co
 								children[1]->evaluate(scope, stack_trace),
 								&token, stack_trace);
 	case 1:
-		return operation::untilnostep(NULL,
-									  false,
-									  children[0]->evaluate(scope, stack_trace),
-									  children[1]->evaluate(scope, stack_trace),
-									  &token, stack_trace);
+		return operation::untilnostep_exclusive(NULL,
+												children[0]->evaluate(scope, stack_trace),
+												children[1]->evaluate(scope, stack_trace),
+												&token, stack_trace);
 	case 2:
-		return operation::untilstep(NULL,
-									false,
-									children[0]->evaluate(scope, stack_trace),
-									children[1]->evaluate(scope, stack_trace),
-									children[2]->evaluate(scope, stack_trace),
-									&token, stack_trace);
+		return operation::untilstep_exclusive(NULL,
+											  children[0]->evaluate(scope, stack_trace),
+											  children[1]->evaluate(scope, stack_trace),
+											  children[2]->evaluate(scope, stack_trace),
+											  &token, stack_trace);
 	case 3:
-		return operation::untilnostep(NULL,
-									  true,
-									  children[0]->evaluate(scope, stack_trace),
-									  children[1]->evaluate(scope, stack_trace),
-									  &token, stack_trace);
+		return operation::untilnostep_inclusive(NULL,
+												children[0]->evaluate(scope, stack_trace),
+												children[1]->evaluate(scope, stack_trace),
+												&token, stack_trace);
 	case 4:
-		return operation::untilstep(NULL,
-									true,
-									children[0]->evaluate(scope, stack_trace),
-									children[1]->evaluate(scope, stack_trace),
-									children[2]->evaluate(scope, stack_trace),
-									&token, stack_trace);
+		return operation::untilstep_inclusive(NULL,
+											  children[0]->evaluate(scope, stack_trace),
+											  children[1]->evaluate(scope, stack_trace),
+											  children[2]->evaluate(scope, stack_trace),
+											  &token, stack_trace);
 	case 5:
 		return operation::add(NULL,
 							  children[0]->evaluate(scope, stack_trace),

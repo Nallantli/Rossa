@@ -17,18 +17,26 @@ scope_t::scope_t(scope_t *parent, const aug_type_t &name_trace, const std::vecto
 void scope_t::traceName(const hash_ull &key)
 {
 	if (parent != NULL)
+	{
 		name_trace = parent->name_trace;
+	}
 	if (key != 0)
+	{
 		name_trace.push_back(key);
+	}
 }
 
 const symbol_t &scope_t::getVariable(const hash_ull &key, const token_t *token, trace_t &stack_trace) const
 {
 	const auto it = values.find(key);
 	if (it != values.end())
+	{
 		return it->second;
+	}
 	if (parent != NULL)
+	{
 		return parent->getVariable(key, token, stack_trace);
+	}
 
 	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, {ROSSA_DEHASH(key)}), *token, stack_trace);
 }
@@ -64,9 +72,13 @@ const unsigned int scope_t::hash() const
 const symbol_t scope_t::getThis(const token_t *token, trace_t &stack_trace)
 {
 	if (type != scope_type_enum::SCOPE_BOUNDED)
+	{
 		return symbol_t::Object(object_t(this, object_type_enum::OBJECT_STRONG));
+	}
 	if (parent != NULL)
+	{
 		return parent->getThis(token, stack_trace);
+	}
 
 	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, {KEYWORD_THIS}), *token, stack_trace);
 }

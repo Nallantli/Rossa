@@ -36,7 +36,8 @@ const hash_ull parser_t::HASH_EQUALS = ROSSA_HASH("==");
 const hash_ull parser_t::HASH_NEQUALS = ROSSA_HASH("!=");
 const hash_ull parser_t::HASH_SET = ROSSA_HASH("=");
 const hash_ull parser_t::HASH_CALL = ROSSA_HASH("()");
-const hash_ull parser_t::HASH_RANGE = ROSSA_HASH("..");
+const hash_ull parser_t::HASH_RANGE_INC = ROSSA_HASH("<>");
+const hash_ull parser_t::HASH_RANGE_EXC = ROSSA_HASH("..");
 const hash_ull parser_t::HASH_NOT = ROSSA_HASH("!");
 const hash_ull parser_t::HASH_VAR_ARGS = ROSSA_HASH("_");
 const hash_ull parser_t::HASH_LENGTH = ROSSA_HASH("len");
@@ -53,7 +54,9 @@ parser_t::parser_t(const std::vector<std::string> &args)
 #endif
 	std::vector<symbol_t> argv;
 	for (auto &s : args)
+	{
 		argv.push_back(symbol_t::String(s));
+	}
 	scopes.push_back({ROSSA_HASH("<*>")});
 	consts.push_back({{ROSSA_HASH("<*>"), ROSSA_HASH("__args__")}, symbol_t::Array(argv)});
 }
@@ -140,7 +143,9 @@ const symbol_t parser_t::runCode(const ptr_node_t &entry, const bool &tree)
 			for (auto &p : c.first)
 			{
 				if (i++ > 0)
+				{
 					printc(".", CYAN_TEXT);
+				}
 				printc(ROSSA_DEHASH(p), CYAN_TEXT);
 			}
 			std::cout << " = ";
@@ -168,12 +173,18 @@ void parser_t::printError(const rossa_error_t &e)
 
 		std::string ret = "";
 		for (size_t i = 0; i < e.getToken().distance - e.getToken().valueString.size() + lineInfoRaw.size(); i++)
+		{
 			ret += " ";
+		}
 		ret += "^";
 
 		if (e.getToken().valueString.size() > 0)
+		{
 			for (size_t i = 0; i < e.getToken().valueString.size() - 1; i++)
+			{
 				ret += "~";
+			}
+		}
 		printc(ret + "\n", RED_TEXT);
 	}
 
@@ -192,14 +203,18 @@ void parser_t::printError(const rossa_error_t &e)
 		printc(" ^ ", BLUE_TEXT);
 		std::string ret = "";
 		if (e.second.getParent().getKey() != "")
+		{
 			ret += e.second.getParent().getKey() + ".";
+		}
 		ret += ROSSA_DEHASH(e.second.key);
 		printc(ret + "(", BRIGHT_BLACK_TEXT);
 		size_t i = 0;
 		for (auto &p : e.second.params)
 		{
 			if (i++ > 0)
+			{
 				printc(", ", RESET_TEXT);
+			}
 			switch (p.first)
 			{
 			case TOK_REF:
@@ -242,7 +257,9 @@ const char parser_t::peekChar(
 	const size_t &INPUT_INDEX)
 {
 	if (INPUT_INDEX + i < INPUT.size())
+	{
 		return INPUT[INPUT_INDEX + i];
+	}
 	return 0;
 }
 
