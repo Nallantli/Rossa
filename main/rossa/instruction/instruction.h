@@ -237,6 +237,17 @@ public:
 };
 
 /**
+ * Call function
+ * `<EXPR> ( <EXPR> (, <EXPR>)* )`
+ */
+class CallWithInnerI : public BinaryI
+{
+public:
+	CallWithInnerI(const ptr_instruction_t &, const ptr_instruction_t &, const token_t &);
+	const symbol_t evaluate(const object_t *, trace_t &) const override;
+};
+
+/**
  * Addition
  * `<EXPR> + <EXPR>`
  */

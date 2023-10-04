@@ -233,7 +233,9 @@ enum instruction_type_enum
 	SET_INDEX_I,
 	HASH_I,
 	EACH_I,
-	FDIV_I
+	FDIV_I,
+	CALL_I,
+	CALL_INNER_I
 };
 
 #ifndef _WIN32

@@ -658,6 +658,9 @@ ptr_instruction_t CallNode::genParser() const
 	std::vector<ptr_instruction_t> fargs;
 	for (auto &c : args)
 		fargs.push_back(c->genParser());
+	if (fcallee->getType() == INNER) {
+		return std::make_shared<CallWithInnerI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
+	}
 	return std::make_shared<CallI>(fcallee, std::make_shared<SequenceI>(fargs, token), token);
 }
 

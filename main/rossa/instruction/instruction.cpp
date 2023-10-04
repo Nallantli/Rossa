@@ -366,13 +366,27 @@ const symbol_t InnerI::evaluate(const object_t *scope, trace_t &stack_trace) con
 /*-------------------------------------------------------------------------------------------------------*/
 
 CallI::CallI(const ptr_instruction_t &a, const ptr_instruction_t &b, const token_t &token)
-	: BinaryI(INDEX, a, b, token)
+	: BinaryI(CALL_I, a, b, token)
 {
 }
 
 const symbol_t CallI::evaluate(const object_t *scope, trace_t &stack_trace) const
 {
 	return operation::call(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
+}
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*class CallWithInnerI                                                                                   */
+/*-------------------------------------------------------------------------------------------------------*/
+
+CallWithInnerI::CallWithInnerI(const ptr_instruction_t &a, const ptr_instruction_t &b, const token_t &token)
+	: BinaryI(CALL_INNER_I, a, b, token)
+{
+}
+
+const symbol_t CallWithInnerI::evaluate(const object_t *scope, trace_t &stack_trace) const
+{
+	return operation::callWithInner(scope, a, b->evaluate(scope, stack_trace).getVector(&token, stack_trace), &token, stack_trace);
 }
 
 /*-------------------------------------------------------------------------------------------------------*/

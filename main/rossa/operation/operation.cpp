@@ -38,46 +38,41 @@ const symbol_t operation::index(const object_t *scope, const symbol_t &evalA, co
 
 const symbol_t operation::call(const object_t *scope, const ptr_instruction_t &a, const std::vector<symbol_t> &args, const token_t *token, trace_t &stack_trace)
 {
-	switch (a->getType())
-	{
-	case instruction_type_enum::INNER:
-	{
-		const symbol_t evalA = reinterpret_cast<const InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
-		if (evalA.getValueType() == value_type_enum::OBJECT)
-		{
-			const symbol_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
-			return evalB.call(args, token, stack_trace);
-		}
-		else
-		{
-			const symbol_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
-			std::vector<symbol_t> params;
-			params.push_back(evalA);
-			params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
+	const symbol_t evalA = a->evaluate(scope, stack_trace);
 
-			if (evalB.getValueType() == value_type_enum::OBJECT)
-			{
-				const auto &o = evalB.getObject(token, stack_trace);
-				if (o->hasValue(parser_t::HASH_CALL))
-					return o->getVariable(parser_t::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
-			}
-
-			return evalB.call(params, token, stack_trace);
-		}
+	if (evalA.getValueType() == value_type_enum::OBJECT)
+	{
+		const auto &o = evalA.getObject(token, stack_trace);
+		if (o->hasValue(parser_t::HASH_CALL))
+			return o->getVariable(parser_t::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 	}
-	default:
-	{
-		const symbol_t evalA = a->evaluate(scope, stack_trace);
 
-		if (evalA.getValueType() == value_type_enum::OBJECT)
+	return evalA.call(args, token, stack_trace);
+}
+
+const symbol_t operation::callWithInner(const object_t *scope, const ptr_instruction_t &a, const std::vector<symbol_t> &args, const token_t *token, trace_t &stack_trace)
+{
+	const symbol_t evalA = reinterpret_cast<const InnerI *>(a.get())->getA()->evaluate(scope, stack_trace);
+	if (evalA.getValueType() == value_type_enum::OBJECT)
+	{
+		const symbol_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(evalA.getObject(token, stack_trace), stack_trace);
+		return evalB.call(args, token, stack_trace);
+	}
+	else
+	{
+		const symbol_t evalB = reinterpret_cast<const InnerI *>(a.get())->getB()->evaluate(scope, stack_trace);
+		std::vector<symbol_t> params;
+		params.push_back(evalA);
+		params.insert(params.end(), std::make_move_iterator(args.begin()), std::make_move_iterator(args.end()));
+
+		if (evalB.getValueType() == value_type_enum::OBJECT)
 		{
-			const auto &o = evalA.getObject(token, stack_trace);
+			const auto &o = evalB.getObject(token, stack_trace);
 			if (o->hasValue(parser_t::HASH_CALL))
 				return o->getVariable(parser_t::HASH_CALL, token, stack_trace).call(args, token, stack_trace);
 		}
 
-		return evalA.call(args, token, stack_trace);
-	}
+		return evalB.call(params, token, stack_trace);
 	}
 }
 
