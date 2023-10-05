@@ -12,6 +12,9 @@
 object_t::object_t(scope_t *scope, const object_type_enum &type)
 	: scope{scope}, type{type}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 	if (type == OBJECT_STRONG)
 		scope->references++;
 }
@@ -19,21 +22,33 @@ object_t::object_t(scope_t *scope, const object_type_enum &type)
 object_t::object_t()
 	: scope{NULL}, type{OBJECT_STRONG}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 }
 
 object_t::object_t(const hash_ull &key)
 	: scope{new scope_t(scope_type_enum::SCOPE_BOUNDED, NULL, nullptr, key)}, type{OBJECT_STRONG}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 }
 
 object_t::object_t(const object_t *parent, const hash_ull &key)
 	: scope{new scope_t(scope_type_enum::SCOPE_BOUNDED, parent->scope, nullptr, key)}, type{OBJECT_STRONG}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 }
 
 object_t::object_t(const object_t *parent, const scope_type_enum &type, const ptr_instruction_t &body, const hash_ull &key, const object_t *ex, const std::vector<aug_type_t> &extensions)
 	: scope{new scope_t(type, parent->scope, body, key)}, type{OBJECT_STRONG}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 	if (ex != NULL)
 	{
 		this->scope->extensions = ex->scope->extensions;
@@ -48,14 +63,16 @@ object_t::object_t(const object_t *parent, const scope_type_enum &type, const pt
 object_t::object_t(scope_t *parent, const aug_type_t &name_trace, const std::vector<aug_type_t> &extensions)
 	: scope{new scope_t(parent, name_trace, extensions)}, type{OBJECT_STRONG}
 {
+#ifdef DEBUG
+	parser_t::object_count++;
+#endif
 }
 
 object_t::object_t(const object_t &s)
 	: scope{s.scope}, type{OBJECT_STRONG}
 {
 #ifdef DEBUG
-	std::cout << "&object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
-	std::cout << (s.scope == NULL ? "NULL" : s.getKey()) << ")\n";
+	parser_t::object_count++;
 #endif
 	if (this->scope != NULL)
 		this->scope->references++;
@@ -64,7 +81,7 @@ object_t::object_t(const object_t &s)
 object_t::~object_t()
 {
 #ifdef DEBUG
-	std::cout << "~object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\n";
+	parser_t::object_count--;
 #endif
 	if (scope != NULL && type == OBJECT_STRONG)
 	{
@@ -76,10 +93,6 @@ object_t::~object_t()
 
 void object_t::operator=(const object_t &b)
 {
-#ifdef DEBUG
-	std::cout << "=object_t\t" << (scope == NULL ? "NULL" : getKey()) << "\t(";
-	std::cout << (b.scope == NULL ? "NULL" : b.getKey()) << ")\n";
-#endif
 	if (this->scope != NULL && type == OBJECT_STRONG)
 	{
 		this->scope->references--;

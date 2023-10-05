@@ -113,3 +113,10 @@ const unsigned int value_t::hash() const
 		return 0;
 	}
 }
+
+value_t::~value_t()
+{
+#ifdef DEBUG
+	std::cout << "~value_t\t" << std::to_string(type) << "\n";
+#endif
+}

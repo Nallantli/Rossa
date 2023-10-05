@@ -160,3 +160,17 @@ fn first(ref a: Array) {
 fn second(ref a: Array) {
 	refer a[1];
 }
+
+fn foldr(a : Array, o, f : Function) {
+	if len(a) == 0 then {
+		return o;
+	}
+	return f(a[0], foldr(a.shift(), o, f));
+}
+
+fn foldl(a : Array, o, f : Function) {
+	if len(a) == 0 then {
+		return o;
+	}
+	return f(foldl((+a).pop(), o, f), a[a.len() - 1]);
+}

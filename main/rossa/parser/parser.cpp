@@ -7,6 +7,11 @@
 #include "../instruction/instruction.h"
 #include "../node_parser/node_parser.h"
 
+#ifdef DEBUG
+long long parser_t::symbol_count = 0;
+long long parser_t::object_count = 0;
+#endif
+
 Hash parser_t::MAIN_HASH = Hash();
 
 const hash_ull parser_t::HASH_INIT = ROSSA_HASH(KEYWORD_INIT);

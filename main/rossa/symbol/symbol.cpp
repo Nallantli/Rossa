@@ -11,61 +11,97 @@
 symbol_t::symbol_t()
 	: d{new value_t()}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const type_t &type)
 	: d{new value_t()}, type{type}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const std::shared_ptr<void> &valuePointer)
 	: d{new value_t(valuePointer)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const parameter_t &valueType)
 	: d{new value_t(valueType)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const number_t &valueNumber)
 	: d{new value_t(valueNumber)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const bool &valueBool)
 	: d{new value_t(valueBool)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const std::vector<symbol_t> &valueVector)
 	: d{new value_t(valueVector)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const object_t &valueObject)
 	: d{new value_t(valueObject)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const signature_t &ftype, const ptr_function_t &valueFunction)
 	: d{new value_t(ftype, valueFunction)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const ptr_function_t &valueFunction)
 	: d{new value_t(valueFunction)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const std::string &valueString)
 	: d{new value_t(valueString)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 }
 
 symbol_t::symbol_t(const std::map<const std::string, const symbol_t> &valueDictionary)
 	: d{new value_t(valueDictionary)}, type{ID_CASUAL}
 {
+#ifdef DEBUG
+	parser_t::symbol_count--;
+#endif
 }
 
 const symbol_t symbol_t::Pointer(const std::shared_ptr<void> &v)
@@ -121,11 +157,17 @@ const symbol_t symbol_t::Dictionary(const std::map<const std::string, const symb
 symbol_t::symbol_t(const symbol_t &s)
 	: d{s.d}, type{s.type}
 {
+#ifdef DEBUG
+	parser_t::symbol_count++;
+#endif
 	this->d->references++;
 }
 
 symbol_t::~symbol_t()
 {
+#ifdef DEBUG
+	parser_t::symbol_count--;
+#endif
 	d->references--;
 	if (d->references == 0)
 		delete d;
@@ -610,7 +652,6 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 	}
 	default:
 		d->value = b->d->value;
-		d->references++;
 		break;
 	}
 	d->type = b->d->type;

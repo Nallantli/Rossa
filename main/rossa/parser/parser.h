@@ -70,6 +70,11 @@ public:
 	static const std::vector<token_t> lexString(const std::string &, const std::filesystem::path &);
 
 	~parser_t();
+
+#ifdef DEBUG
+	static long long symbol_count;
+	static long long object_count;
+#endif
 };
 
 #endif

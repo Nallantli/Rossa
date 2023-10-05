@@ -123,6 +123,10 @@ int main(int argc, char const *argv[])
 			{
 				parser_t::printError(e);
 			}
+#ifdef DEBUG
+	std::cout << "\t(SYMBOL COUNT: " << parser_t::symbol_count << ")\n";
+	std::cout << "\t(OBJECT COUNT: " << parser_t::object_count << ")\n";
+#endif
 		}
 	}
 	else

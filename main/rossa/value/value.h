@@ -34,6 +34,7 @@ private:
 
 	refc_ull references = 1;
 
+	~value_t();
 	value_t();
 	value_t(const parameter_t &);
 	value_t(const bool &);

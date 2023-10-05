@@ -1,8 +1,6 @@
 #ifndef ROSSA_H
 #define ROSSA_H
 
-#define RECORD_TIME
-
 #include "../number/number.h"
 #include "Locale.h"
 
@@ -19,12 +17,6 @@
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
 #define ROSSA_HASH(x) parser_t::MAIN_HASH.hashValue(x)
-
-#ifdef RECORD_TIME
-#include <chrono>
-#define START_RECORDING auto _START_TIME_ = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-#define END_RECORDING(key) parser_t::postRecording(key, std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::system_clock::now().time_since_epoch()) - _START_TIME_).count());
-#endif
 
 #ifndef _WIN32
 #include <limits.h>
