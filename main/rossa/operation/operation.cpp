@@ -832,7 +832,7 @@ const symbol_t operation::cct(const object_t *scope, const symbol_t &evalA, cons
 	case COMP(value_type_enum::ARRAY, value_type_enum::ARRAY):
 	{
 		std::vector<symbol_t> valA = evalA.getVector(token, stack_trace);
-		const std::vector<symbol_t> valB = evalB.getVector(token, stack_trace);
+		const std::vector<symbol_t> &valB = evalB.getVector(token, stack_trace);
 		valA.insert(valA.end(), std::make_move_iterator(valB.begin()), std::make_move_iterator(valB.end()));
 		return symbol_t::Array(valA);
 	}

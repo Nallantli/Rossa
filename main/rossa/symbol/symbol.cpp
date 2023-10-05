@@ -119,9 +119,8 @@ const symbol_t symbol_t::Dictionary(const std::map<const std::string, const symb
 }
 
 symbol_t::symbol_t(const symbol_t &s)
+	: d{s.d}, type{s.type}
 {
-	this->d = s.d;
-	this->type = s.type;
 	this->d->references++;
 }
 
@@ -150,15 +149,13 @@ const unsigned int symbol_t::hash() const
 
 const symbol_t symbol_t::allocate(const size_t &size)
 {
-	std::vector<symbol_t> v;
-	v.resize(size);
+	std::vector<symbol_t> v(size);
 	return symbol_t(v);
 }
 
 const symbol_t symbol_t::allocateAs(const size_t &size, const symbol_t *value, const token_t *token, trace_t &stack_trace)
 {
-	std::vector<symbol_t> v;
-	v.resize(size);
+	std::vector<symbol_t> v(size);
 	for (auto e : v)
 	{
 		e.set(value, token, stack_trace);
@@ -210,7 +207,7 @@ const symbol_t &symbol_t::indexVector(const size_t &i, const token_t *token, tra
 	{
 		throw rossa_error_t(global::format(_INDEX_OUT_OF_BOUNDS_, {std::to_string(v.size()), std::to_string(i)}), *token, stack_trace);
 	}
-	return v[i];
+	return v.at(i);
 }
 
 const std::vector<symbol_t> &symbol_t::getVector(const token_t *token, trace_t &stack_trace) const
@@ -586,12 +583,11 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 		break;
 	case value_type_enum::ARRAY:
 	{
-		std::vector<symbol_t> nv;
-		auto v = std::get<std::vector<symbol_t>>(b->d->value);
-		nv.resize(v.size());
-		for (size_t i = 0; i < v.size(); i++)
+		auto v = &std::get<std::vector<symbol_t>>(b->d->value);
+		std::vector<symbol_t> nv(v->size());
+		for (size_t i = 0; i < v->size(); i++)
 		{
-			nv[i].set(&v[i], token, stack_trace);
+			nv[i].set(&v->at(i), token, stack_trace);
 		}
 		d->value = nv;
 		break;
@@ -599,8 +595,8 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 	case value_type_enum::DICTIONARY:
 	{
 		d->value = std::map<const std::string, const symbol_t>();
-		auto v = std::get<std::map<const std::string, const symbol_t>>(b->d->value);
-		for (auto &e : v)
+		auto v = &std::get<std::map<const std::string, const symbol_t>>(b->d->value);
+		for (auto &e : *v)
 		{
 			if (e.second.d->type == value_type_enum::NIL)
 			{
@@ -614,6 +610,7 @@ void symbol_t::set(const symbol_t *b, const token_t *token, trace_t &stack_trace
 	}
 	default:
 		d->value = b->d->value;
+		d->references++;
 		break;
 	}
 	d->type = b->d->type;

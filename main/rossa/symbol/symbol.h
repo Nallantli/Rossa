@@ -74,7 +74,7 @@ public:
 	void shift() const;
 
 	const symbol_t clone() const;
-	
+
 	const size_t vectorSize() const;
 	const size_t dictionarySize(const token_t *, trace_t &) const;
 	const symbol_t &indexDict(const std::string &) const;
