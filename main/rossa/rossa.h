@@ -12,7 +12,7 @@
 #include <filesystem>
 #include <algorithm>
 
-#define _ROSSA_VERSION_ "v1.18.1-alpha"
+#define _ROSSA_VERSION_ "v1.18.2-alpha"
 
 
 #define ROSSA_DEHASH(x) parser_t::MAIN_HASH.deHash(x)
