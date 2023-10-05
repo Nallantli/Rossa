@@ -1,0 +1,93 @@
+var start, time, a;
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+c := [0 .. 10000];
+
+time = clock.milliseconds() - start;
+
+putln("(0) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = [];
+
+for i in c do {}
+
+time = clock.milliseconds() - start;
+
+putln("(1) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = [];
+
+for i in c do {
+	c ++ a;
+}
+
+time = clock.milliseconds() - start;
+
+putln("(2) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = [];
+b := 0;
+
+for i in c do {
+	b += 1;
+}
+
+time = clock.milliseconds() - start;
+
+putln("(3) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = [];
+
+for i in c do {
+	a.push(i);
+}
+
+time = clock.milliseconds() - start;
+
+putln("(4) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = [];
+
+for i in c do {
+	a ++= [i];
+}
+
+time = clock.milliseconds() - start;
+
+putln("(5) Total Time: ", time, "ms");
+
+# ---------------------------------------------------
+
+start = clock.milliseconds();
+
+a = alloc(len(c));
+
+for i in c do {
+	a[i] = i;
+}
+
+time = clock.milliseconds() - start;
+
+putln("(6) Total Time: ", time, "ms");
