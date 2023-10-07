@@ -1,6 +1,9 @@
 #include "util.h"
 
-#ifdef _WIN32
+#ifndef _WIN32
+#include <limits.h>
+#include <unistd.h>
+#else
 #include <libloaderapi.h>
 #endif
 

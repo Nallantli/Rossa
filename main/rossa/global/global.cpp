@@ -33,7 +33,7 @@ void global::loadLibrary(const std::filesystem::path &currentDir, const std::str
 		if (library == NULL)
 		{
 			trace_t stack_trace;
-			throw rossa_error_t(format(_EXTERNAL_LIBRARY_NOT_EXIST_, {libname}), *token, stack_trace);
+			throw rossa_error_t(util::format(_EXTERNAL_LIBRARY_NOT_EXIST_, {libname}), *token, stack_trace);
 		}
 		auto f = dlsym(library, (rawlibname + "_rossaExportFunctions").c_str());
 #else
