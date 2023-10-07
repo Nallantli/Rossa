@@ -3,6 +3,7 @@
 
 #include "../rossa.h"
 #include "../parameter/parameter.h"
+#include "../rossa_error/rossa_error.h"
 
 struct signature_t
 {

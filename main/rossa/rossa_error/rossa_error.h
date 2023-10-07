@@ -4,6 +4,9 @@
 #include <stdexcept>
 
 #include "../rossa.h"
+#include "../tokenizer/tokenizer.h"
+
+typedef std::vector<std::pair<token_t, function_t>> trace_t;
 
 class rossa_error_t : public std::runtime_error
 {

@@ -1,7 +1,7 @@
 #include "scope.h"
 
 #include "../parser/parser.h"
-#include "../global/global.h"
+#include "../util/util.h"
 
 scope_t::scope_t(const scope_type_enum &type, scope_t *parent, const ptr_instruction_t &body, const hash_ull &key)
 	: type{type}, parent{parent}, body{body}
@@ -38,7 +38,7 @@ const symbol_t &scope_t::getVariable(const hash_ull &key, const token_t *token, 
 		return parent->getVariable(key, token, stack_trace);
 	}
 
-	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, {ROSSA_DEHASH(key)}), *token, stack_trace);
+	throw rossa_error_t(util::format(_UNDECLARED_VARIABLE_ERROR_, {ROSSA_DEHASH(key)}), *token, stack_trace);
 }
 
 const symbol_t &scope_t::createVariable(const hash_ull &key, const token_t *token)
@@ -80,7 +80,7 @@ const symbol_t scope_t::getThis(const token_t *token, trace_t &stack_trace)
 		return parent->getThis(token, stack_trace);
 	}
 
-	throw rossa_error_t(global::format(_UNDECLARED_VARIABLE_ERROR_, {KEYWORD_THIS}), *token, stack_trace);
+	throw rossa_error_t(util::format(_UNDECLARED_VARIABLE_ERROR_, {KEYWORD_THIS}), *token, stack_trace);
 }
 
 scope_t::~scope_t()

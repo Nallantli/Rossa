@@ -5,7 +5,7 @@
 #include "../scope/scope.h"
 #include "../parser/parser.h"
 
-function_t::function_t(const hash_ull &key, scope_t *parent, const std::vector<std::pair<token_type_enum, hash_ull>> &params, const ptr_instruction_t &body, const std::map<const hash_ull, const symbol_t> &captures)
+function_t::function_t(const hash_ull &key, scope_t *parent, const std::vector<std::pair<bool, hash_ull>> &params, const ptr_instruction_t &body, const std::map<const hash_ull, const symbol_t> &captures)
 	: key{key}, parent{parent}, params{params}, body{body}, captures{captures}, isVargs{false}
 {
 }
@@ -26,17 +26,11 @@ const symbol_t function_evaluate(const ptr_function_t &function, const std::vect
 
 	for (size_t i = 0; i < function->params.size(); i++)
 	{
-		switch (function->params[i].first)
-		{
-		case TOK_REF:
+		if (function->params[i].first) {
 			newScope.createVariable(function->params[i].second, paramValues[i], token);
-			break;
-		default:
-		{
+		} else {
 			const symbol_t &temp = newScope.createVariable(function->params[i].second, token);
 			temp.set(&paramValues[i], token, stack_trace);
-			break;
-		}
 		}
 	}
 

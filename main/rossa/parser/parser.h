@@ -4,8 +4,6 @@
 #include <filesystem>
 
 #include "../rossa.h"
-#include "../global/global.h"
-
 #include "../object/object.h"
 #include "../rossa_error/rossa_error.h"
 
@@ -14,15 +12,9 @@ class parser_t
 private:
 	std::vector<std::pair<std::vector<hash_ull>, symbol_t>> consts;
 	std::vector<node_scope_t> scopes;
-	static const int getToken(const std::string &, size_t &, size_t &, size_t &, std::string &, number_t &);
-	static const char peekChar(const size_t &, const std::string &, const size_t &);
-	static const char nextChar(const std::string &, size_t &, size_t &, size_t &);
 
 public:
 	object_t main;
-
-	static const std::map<std::string, signed int> bOperators;
-	static const std::map<std::string, signed int> uOperators;
 
 	static Hash MAIN_HASH;
 
@@ -63,11 +55,9 @@ public:
 	static const hash_ull HASH_HASH;
 
 	parser_t(const std::vector<std::string> &);
-	static void loadStandardFunctions(std::map<std::string, extf_t> &fmap);
 	const ptr_node_t compileCode(const std::string &, const std::filesystem::path &);
 	const symbol_t runCode(const ptr_node_t &, const bool &);
 	static void printError(const rossa_error_t &);
-	static const std::vector<token_t> lexString(const std::string &, const std::filesystem::path &);
 
 	~parser_t();
 

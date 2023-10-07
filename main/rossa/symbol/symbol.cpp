@@ -6,7 +6,7 @@
 #include "../function/function.h"
 #include "../wrapper/wrapper.h"
 #include "../signature/signature.h"
-#include "../global/global.h"
+#include "../util/util.h"
 
 symbol_t::symbol_t()
 	: d{new value_t()}, type{ID_CASUAL}
@@ -247,7 +247,7 @@ const symbol_t &symbol_t::indexVector(const size_t &i, const token_t *token, tra
 	auto &v = std::get<std::vector<symbol_t>>(d->value);
 	if (i >= v.size())
 	{
-		throw rossa_error_t(global::format(_INDEX_OUT_OF_BOUNDS_, {std::to_string(v.size()), std::to_string(i)}), *token, stack_trace);
+		throw rossa_error_t(util::format(_INDEX_OUT_OF_BOUNDS_, {std::to_string(v.size()), std::to_string(i)}), *token, stack_trace);
 	}
 	return v.at(i);
 }

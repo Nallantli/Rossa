@@ -142,12 +142,12 @@ class DefineNode : public Node
 private:
 	const hash_ull key;
 	const signature_t ftype;
-	const std::vector<std::pair<token_type_enum, hash_ull>> params;
+	const std::vector<std::pair<bool, hash_ull>> params;
 	const ptr_node_t body;
 	const std::vector<hash_ull> captures;
 
 public:
-	DefineNode(const std::vector<node_scope_t> &, const hash_ull &, const signature_t &, const std::vector<std::pair<token_type_enum, hash_ull>> &, const ptr_node_t &, const std::vector<hash_ull> &, const token_t &);
+	DefineNode(const std::vector<node_scope_t> &, const hash_ull &, const signature_t &, const std::vector<std::pair<bool, hash_ull>> &, const ptr_node_t &, const std::vector<hash_ull> &, const token_t &);
 	ptr_instruction_t genParser() const override;
 	bool isConst() const override;
 	void printTree(std::string, bool) const override;

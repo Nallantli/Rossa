@@ -117,11 +117,14 @@ bin/rossa.exe: main/Main.cpp $(DIR)/librossa.a
 bin/rossa: main/Main.cpp $(DIR)/librossa.a
 	$(CC) -o $@ main/Main.cpp $(DIR)/librossa.a $(CFLAGS)
 
-$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o
-	ar rcs $@ $(DIR)/parser.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o
+$(DIR)/librossa.a: $(DIR)/parser.o $(DIR)/tokenizer.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o $(DIR)/util.o
+	ar rcs $@ $(DIR)/parser.o $(DIR)/tokenizer.o $(DIR)/function.o $(DIR)/instruction.o $(DIR)/global.o $(DIR)/node.o $(DIR)/node_parser.o $(DIR)/object.o $(DIR)/operation.o $(DIR)/parameter.o $(DIR)/scope.o $(DIR)/signature.o $(DIR)/symbol.o $(DIR)/value.o $(DIR)/wrapper.o $(DIR)/rossa_error.o $(DIR)/mediator.o $(DIR)/number.o $(DIR)/util.o
 
 $(DIR)/parser.o: main/rossa/parser/parser.cpp
 	$(CC) -o $@ main/rossa/parser/parser.cpp -c $(OFLAGS)
+
+$(DIR)/tokenizer.o: main/rossa/tokenizer/tokenizer.cpp
+	$(CC) -o $@ main/rossa/tokenizer/tokenizer.cpp -c $(OFLAGS)
 
 $(DIR)/function.o: main/rossa/function/function.cpp
 	$(CC) -o $@ main/rossa/function/function.cpp -c $(OFLAGS)
@@ -170,3 +173,6 @@ $(DIR)/number.o: main/number/number.cpp
 
 $(DIR)/mediator.o: main/mediator/mediator.cpp
 	$(CC) -o $@ main/mediator/mediator.cpp -c $(OFLAGS)
+
+$(DIR)/util.o: main/rossa/util/util.cpp
+	$(CC) -o $@ main/rossa/util/util.cpp -c $(OFLAGS)

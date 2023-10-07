@@ -2,6 +2,7 @@
 #define OPERATION_H
 
 #include "../rossa.h"
+#include "../rossa_error/rossa_error.h"
 
 namespace operation
 {

@@ -1,8 +1,9 @@
 #include "node.h"
 
 #include "../instruction/instruction.h"
-#include "../global/global.h"
+#include "../util/util.h"
 #include "../object/object.h"
+#include "../global/global.h"
 #include "../parser/parser.h"
 
 Node::Node(const std::vector<node_scope_t> &path, const type_t &type, const token_t &token)
@@ -351,7 +352,7 @@ DefineNode::DefineNode(
 	const std::vector<node_scope_t> &path,
 	const hash_ull &key,
 	const signature_t &ftype,
-	const std::vector<std::pair<token_type_enum, hash_ull>> &params,
+	const std::vector<std::pair<bool, hash_ull>> &params,
 	const ptr_node_t &body,
 	const std::vector<hash_ull> &captures,
 	const token_t &token) : Node(path, DEFINE_NODE,
@@ -796,38 +797,38 @@ ptr_instruction_t CallBuiltNode::genParser() const
 	case TOK_LENGTH:
 		if (args.size() > 1)
 		{
-			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_LENGTH}), token, stack_trace);
+			throw rossa_error_t(util::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_LENGTH}), token, stack_trace);
 		}
 		return std::make_shared<LengthI>(args[0]->genParser(), token);
 	case TOK_ALLOC:
 		if (args.size() > 2)
 		{
-			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_ALLOC}), token, stack_trace);
+			throw rossa_error_t(util::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_ALLOC}), token, stack_trace);
 		}
 		return std::make_shared<AllocI>(args[0]->genParser(), args.size() > 1 ? args[1]->genParser() : nullptr, token);
 	case TOK_PARSE:
 		if (args.size() > 1)
 		{
-			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_PARSE}), token, stack_trace);
+			throw rossa_error_t(util::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_PARSE}), token, stack_trace);
 		}
 		return std::make_shared<ParseI>(args[0]->genParser(), token);
 	case TOK_CHARN:
 		if (args.size() > 1)
 		{
-			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_N}), token, stack_trace);
+			throw rossa_error_t(util::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_N}), token, stack_trace);
 		}
 		return std::make_shared<CharNI>(args[0]->genParser(), token);
 	case TOK_CHARS:
 		if (args.size() > 1)
 		{
-			throw rossa_error_t(global::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_S}), token, stack_trace);
+			throw rossa_error_t(util::format(_TOO_MANY_ARGUMENTS_, {KEYWORD_CHAR_S}), token, stack_trace);
 		}
 		return std::make_shared<CharSI>(args[0]->genParser(), token);
 	default:
 		break;
 	}
 
-	throw rossa_error_t(global::format(_UNKNOWN_BUILT_CALL_, {std::to_string(t)}), token, stack_trace);
+	throw rossa_error_t(util::format(_UNKNOWN_BUILT_CALL_, {std::to_string(t)}), token, stack_trace);
 	return nullptr;
 }
 
@@ -1067,7 +1068,7 @@ ptr_instruction_t BinOpNode::genParser() const
 	if (op == "delete")
 		return std::make_shared<DeleteI>(a->genParser(), b->genParser(), token);
 
-	throw rossa_error_t(global::format(_UNKNOWN_BINARY_OP_, {op}), token, stack_trace);
+	throw rossa_error_t(util::format(_UNKNOWN_BINARY_OP_, {op}), token, stack_trace);
 }
 
 const std::string &BinOpNode::getOp() const
@@ -1227,7 +1228,7 @@ ptr_instruction_t UnOpNode::genParser() const
 		return std::make_shared<HashI>(a->genParser(), token);
 
 	trace_t stack_trace;
-	throw rossa_error_t(global::format(_UNKNOWN_UNARY_OP_, {op}), token, stack_trace);
+	throw rossa_error_t(util::format(_UNKNOWN_UNARY_OP_, {op}), token, stack_trace);
 	return nullptr;
 }
 

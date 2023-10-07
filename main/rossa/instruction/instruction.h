@@ -7,6 +7,7 @@
 #include "../signature/signature.h"
 #include "../function/function.h"
 #include "../global/global.h"
+#include "../rossa_error/rossa_error.h"
 
 class Instruction
 {
@@ -81,12 +82,12 @@ class DefineI : public Instruction
 protected:
 	const hash_ull key;
 	const signature_t ftype;
-	const std::vector<std::pair<token_type_enum, hash_ull>> params;
+	const std::vector<std::pair<bool, hash_ull>> params;
 	const ptr_instruction_t body;
 	const std::vector<hash_ull> captures;
 
 public:
-	DefineI(const hash_ull &, const signature_t &, const std::vector<std::pair<token_type_enum, hash_ull>> &, const ptr_instruction_t &, const std::vector<hash_ull> &, const token_t &);
+	DefineI(const hash_ull &, const signature_t &, const std::vector<std::pair<bool, hash_ull>> &, const ptr_instruction_t &, const std::vector<hash_ull> &, const token_t &);
 	const symbol_t evaluate(const object_t *, trace_t &) const override;
 };
 

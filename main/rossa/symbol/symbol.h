@@ -2,6 +2,7 @@
 #define SYMBOL_H
 
 #include "../rossa.h"
+#include "../rossa_error/rossa_error.h"
 
 struct symbol_t
 {

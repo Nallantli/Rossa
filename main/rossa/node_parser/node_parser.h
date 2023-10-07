@@ -2,6 +2,7 @@
 #define NODE_PARSER_H
 
 #include "../rossa.h"
+#include "../tokenizer/tokenizer.h"
 
 class node_parser_t
 {
@@ -31,7 +32,7 @@ private:
 	ptr_node_t parseWhileNode(std::vector<node_scope_t> *);
 	ptr_node_t parseForNode(std::vector<node_scope_t> *);
 	ptr_node_t parseEachNode(std::vector<node_scope_t> *);
-	std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> parseSigNode(std::vector<node_scope_t> *);
+	std::pair<signature_t, std::vector<std::pair<bool, hash_ull>>> parseSigNode(std::vector<node_scope_t> *);
 	ptr_node_t parseDefineNode(std::vector<node_scope_t> *);
 	ptr_node_t parseLambdaNode(std::vector<node_scope_t> *);
 	ptr_node_t parseNPLambdaNode(std::vector<node_scope_t> *);
@@ -56,7 +57,7 @@ private:
 
 	ptr_node_t logErrorN(const std::string &, const token_t &);
 	parameter_t logErrorPT(const std::string &, const token_t &);
-	std::pair<signature_t, std::vector<std::pair<token_type_enum, hash_ull>>> logErrorSN(const std::string &, const token_t &);
+	std::pair<signature_t, std::vector<std::pair<bool, hash_ull>>> logErrorSN(const std::string &, const token_t &);
 
 public:
 	node_parser_t(const std::vector<token_t> &, const std::filesystem::path &);

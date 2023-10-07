@@ -1,11 +1,11 @@
 #include "instruction.h"
 
-#include "../rossa_error/rossa_error.h"
 #include "../parameter/parameter.h"
 #include "../operation/operation.h"
 #include "../node/node.h"
 #include "../node_parser/node_parser.h"
 #include "../parser/parser.h"
+#include "../util/util.h"
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*class Instruction                                                                                      */
@@ -85,7 +85,7 @@ const symbol_t ContainerI::evaluate(const object_t *scope, trace_t &stack_trace)
 /*class DefineI                                                                                      */
 /*-------------------------------------------------------------------------------------------------------*/
 
-DefineI::DefineI(const hash_ull &key, const signature_t &ftype, const std::vector<std::pair<token_type_enum, hash_ull>> &params, const ptr_instruction_t &body, const std::vector<hash_ull> &captures, const token_t &token)
+DefineI::DefineI(const hash_ull &key, const signature_t &ftype, const std::vector<std::pair<bool, hash_ull>> &params, const ptr_instruction_t &body, const std::vector<hash_ull> &captures, const token_t &token)
 	: Instruction(DEFINE, token), key{key}, ftype{ftype}, params{params}, body{body}, captures{captures}
 {
 }
@@ -975,7 +975,7 @@ const symbol_t CastToI::evaluate(const object_t *scope, trace_t &stack_trace) co
 			}
 			catch (const std::invalid_argument &e)
 			{
-				throw rossa_error_t(global::format(_FAILURE_STR_TO_NUM_, {evalA.getString(&token, stack_trace)}), token, stack_trace);
+				throw rossa_error_t(util::format(_FAILURE_STR_TO_NUM_, {evalA.getString(&token, stack_trace)}), token, stack_trace);
 			}
 		case value_type_enum::STRING:
 			return evalA;
@@ -1486,7 +1486,7 @@ const symbol_t ParseI::evaluate(const object_t *scope, trace_t &stack_trace) con
 {
 	const std::string evalA = a->evaluate(scope, stack_trace).getString(&token, stack_trace);
 
-	const std::vector<token_t> tokens = parser_t::lexString(evalA, std::filesystem::current_path() / KEYWORD_NIL);
+	const std::vector<token_t> tokens = lexString(evalA, std::filesystem::current_path() / KEYWORD_NIL);
 	node_parser_t np(tokens, std::filesystem::current_path() / KEYWORD_NIL);
 
 	std::vector<std::pair<std::vector<hash_ull>, symbol_t>> consts;

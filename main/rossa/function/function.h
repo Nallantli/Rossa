@@ -2,17 +2,18 @@
 #define FUNCTION_H
 
 #include "../rossa.h"
+#include "../rossa_error/rossa_error.h"
 
 struct function_t : public std::enable_shared_from_this<function_t>
 {
 	const hash_ull key;
 	scope_t *parent;
-	const std::vector<std::pair<token_type_enum, hash_ull>> params;
+	const std::vector<std::pair<bool, hash_ull>> params;
 	const ptr_instruction_t body;
 	const std::map<const hash_ull, const symbol_t> captures;
 	const bool isVargs;
 
-	function_t(const hash_ull &, scope_t *, const std::vector<std::pair<token_type_enum, hash_ull>> &, const ptr_instruction_t &, const std::map<const hash_ull, const symbol_t> &);
+	function_t(const hash_ull &, scope_t *, const std::vector<std::pair<bool, hash_ull>> &, const ptr_instruction_t &, const std::map<const hash_ull, const symbol_t> &);
 	function_t(const hash_ull &, scope_t *, const ptr_instruction_t &, const std::map<const hash_ull, const symbol_t> &);
 	const object_t getParent() const;
 	void shift();

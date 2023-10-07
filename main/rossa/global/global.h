@@ -2,6 +2,7 @@
 #define GLOBAL_H
 
 #include "../rossa.h"
+#include "../rossa_error/rossa_error.h"
 
 #include "../../mediator/mediator.h"
 
@@ -9,7 +10,6 @@ namespace dir
 {
 	extern std::vector<std::filesystem::path> loaded;
 
-	const std::filesystem::path getRuntimePath();
 	const std::filesystem::path findFile(const std::filesystem::path &, const std::string &, const token_t *token);
 }
 
@@ -22,8 +22,6 @@ namespace global
 
 	const std::string getTypeString(const aug_type_t &);
 	const std::string deHashVec(const std::vector<node_scope_t> &);
-
-	const std::string format(const std::string &, std::vector<std::string>);
 
 	const mediator_t convertToMediator(const symbol_t &, const token_t *, trace_t &);
 	const symbol_t convertToSymbol(const mediator_t &);
