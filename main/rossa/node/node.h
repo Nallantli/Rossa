@@ -5,6 +5,9 @@
 
 #include "../signature/signature.h"
 #include "../symbol/symbol.h"
+#include "../node_parser/node_parser.h"
+
+const std::string deHashVec(const std::vector<node_scope_t> &);
 
 class Node
 {

@@ -168,7 +168,7 @@ const int getToken(
 			NUM_VALUE = number_t::Double(NAN);
 			return TOK_NUM;
 		}
-		else if (bOperators.find(ID_STRING) != bOperators.end() || uOperators.find(ID_STRING) != uOperators.end())
+		else if (BINARY_OPERATORS.find(ID_STRING) != BINARY_OPERATORS.end() || UNARY_OPERATORS.find(ID_STRING) != UNARY_OPERATORS.end())
 			return TOK_OPR;
 
 		return TOK_IDF;
@@ -231,10 +231,10 @@ const int getToken(
 	}
 	else if (last == EOF || last == 0)
 		return TOK_EOF;
-	else if (bOperators.find(std::string(1, last)) != bOperators.end())
+	else if (BINARY_OPERATORS.find(std::string(1, last)) != BINARY_OPERATORS.end())
 	{
 		std::string opStr = std::string(1, last);
-		while (bOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != bOperators.end())
+		while (BINARY_OPERATORS.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != BINARY_OPERATORS.end())
 		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;
@@ -255,10 +255,10 @@ const int getToken(
 			return ':';
 		return TOK_OPR;
 	}
-	else if (uOperators.find(std::string(1, last)) != uOperators.end())
+	else if (UNARY_OPERATORS.find(std::string(1, last)) != UNARY_OPERATORS.end())
 	{
 		std::string opStr = std::string(1, last);
-		while (uOperators.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != uOperators.end())
+		while (UNARY_OPERATORS.find(opStr + peekChar(0, INPUT, INPUT_INDEX)) != UNARY_OPERATORS.end())
 		{
 			last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 			opStr += last;

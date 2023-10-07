@@ -6,6 +6,7 @@
 #include "../rossa.h"
 #include "../object/object.h"
 #include "../rossa_error/rossa_error.h"
+#include "../node_parser/node_parser.h"
 
 class parser_t
 {

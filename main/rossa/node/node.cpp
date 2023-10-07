@@ -3,8 +3,28 @@
 #include "../instruction/instruction.h"
 #include "../util/util.h"
 #include "../object/object.h"
-#include "../global/global.h"
 #include "../parser/parser.h"
+
+const std::string deHashVec(const std::vector<node_scope_t> &t)
+{
+	std::string ret = "";
+	int j = 0;
+	for (auto &i : t)
+	{
+		if (j++ > 0)
+			ret += ".";
+		ret += ROSSA_DEHASH(i.id) + "[";
+		int k = 0;
+		for (auto &v : i.var_ids)
+		{
+			if (k++ > 0)
+				ret += ", ";
+			ret += ROSSA_DEHASH(v);
+		}
+		ret += "]";
+	}
+	return ret;
+}
 
 Node::Node(const std::vector<node_scope_t> &path, const type_t &type, const token_t &token)
 	: path(path), type(type), token(token)
@@ -51,7 +71,7 @@ void ContainerNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CONTAINER : " << s.toCodeString() << "\n";
 }
 
@@ -105,7 +125,7 @@ void VectorNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "ARRAY : " << scoped << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		if (args[i] != nullptr)
@@ -167,7 +187,7 @@ void BreakNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "BREAK\n";
 }
 
@@ -208,7 +228,7 @@ void ContinueNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CONTINUE\n";
 }
 
@@ -258,7 +278,7 @@ void IDNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "ID : " << ROSSA_DEHASH(key) << "\n";
 }
 
@@ -337,7 +357,7 @@ void BIDNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "BID : " << key << "\n";
 }
 
@@ -388,7 +408,7 @@ void DefineNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << ", " << ftype.toString() << "\n";
 	body->printTree(indent, true);
 }
@@ -445,7 +465,7 @@ void VargDefineNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "DEFINE : " << (key > 0 ? ROSSA_DEHASH(key) : "<LAMBDA>") << "\n";
 	body->printTree(indent, true);
 }
@@ -501,7 +521,7 @@ void NewNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "NEW\n";
 	object->printTree(indent, false);
 	params->printTree(indent, true);
@@ -577,7 +597,7 @@ void ClassNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CLASS : " << ROSSA_DEHASH(key) << ", " << std::to_string(type) << "\n";
 	if (extends != nullptr)
 		extends->printTree(indent, false);
@@ -631,7 +651,7 @@ void VarNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "VAR : " << keys.size() << "\n";
 }
 
@@ -694,7 +714,7 @@ void CallNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL\n";
 	callee->printTree(indent, args.empty());
 	for (size_t i = 0; i < args.size(); i++)
@@ -751,7 +771,7 @@ void ExternCallNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "EXTERN_CALL : " << libname << "::" << fname << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i]->printTree(indent, i == args.size() - 1);
@@ -857,7 +877,7 @@ void CallBuiltNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL_BUILT : " << std::to_string(t) << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 	{
@@ -919,7 +939,7 @@ void ReturnNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "RETURN\n";
 	a->printTree(indent, true);
 }
@@ -963,7 +983,7 @@ void ReferNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "REFER\n";
 	a->printTree(indent, true);
 }
@@ -1128,7 +1148,7 @@ void BinOpNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "BINOP : " << op << "\n";
 	a->printTree(indent, false);
 	b->printTree(indent, true);
@@ -1250,7 +1270,7 @@ void UnOpNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "UNOP : " << op << "\n";
 	a->printTree(indent, true);
 }
@@ -1304,7 +1324,7 @@ void ParenNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "PAREN\n";
 	a->printTree(indent, true);
 }
@@ -1360,7 +1380,7 @@ void InsNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "INS\n";
 	callee->printTree(indent, false);
 	arg->printTree(indent, true);
@@ -1485,7 +1505,7 @@ void IfElseNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "IF_ELSE\n";
 	ifs->printTree(indent, false);
 	body->printTree(indent, elses == nullptr);
@@ -1558,7 +1578,7 @@ void WhileNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "WHILE\n";
 	whiles->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
@@ -1617,7 +1637,7 @@ void ForNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "FOR : " << ROSSA_DEHASH(id) << "\n";
 	fors->printTree(indent, false);
 	for (size_t i = 0; i < body.size(); i++)
@@ -1682,7 +1702,7 @@ void UntilNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "UNTIL\n";
 	a->printTree(indent, false);
 	b->printTree(indent, step == nullptr);
@@ -1740,7 +1760,7 @@ void MapNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "MAP\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i].second->printTree(indent, i == args.size() - 1);
@@ -1830,7 +1850,7 @@ void SwitchNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "SWITCH\n";
 	switchs->printTree(indent, gotos.empty() && cases.empty());
 	size_t i = 0;
@@ -1909,7 +1929,7 @@ void TryCatchNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "TRY_CATCH : " << ROSSA_DEHASH(key) << "\n";
 	trys->printTree(indent, false);
 	catchs->printTree(indent, true);
@@ -1953,7 +1973,7 @@ void ThrowNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "THROW\n";
 	throws->printTree(indent, true);
 }
@@ -2002,7 +2022,7 @@ void CallOpNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "CALL_OP : " << id << "\n";
 	for (size_t i = 0; i < args.size(); i++)
 		args[i]->printTree(indent, i == args.size() - 1);
@@ -2057,7 +2077,7 @@ void EachNode::printTree(std::string indent, bool last) const
 		std::cout << "├─";
 		indent += "│ ";
 	}
-	printc(global::deHashVec(path) + " ", RED_TEXT);
+	printc(deHashVec(path) + " ", RED_TEXT);
 	std::cout << "FOR : " << ROSSA_DEHASH(id) << "\n";
 	eachs->printTree(indent, wheres == nullptr && body == nullptr);
 	if (wheres)

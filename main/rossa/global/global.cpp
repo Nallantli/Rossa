@@ -129,27 +129,6 @@ const std::string global::getTypeString(const aug_type_t &t)
 	return ret;
 }
 
-const std::string global::deHashVec(const std::vector<node_scope_t> &t)
-{
-	std::string ret = "";
-	int j = 0;
-	for (auto &i : t)
-	{
-		if (j++ > 0)
-			ret += ".";
-		ret += ROSSA_DEHASH(i.id) + "[";
-		int k = 0;
-		for (auto &v : i.var_ids)
-		{
-			if (k++ > 0)
-				ret += ", ";
-			ret += ROSSA_DEHASH(v);
-		}
-		ret += "]";
-	}
-	return ret;
-}
-
 const mediator_t global::convertToMediator(const symbol_t &s, const token_t *token, trace_t &stack_trace)
 {
 	switch (s.getValueType())

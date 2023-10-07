@@ -719,7 +719,7 @@ ptr_node_t node_parser_t::parseBinOpNode(std::vector<node_scope_t> *scopes, cons
 	ptr_node_t current = a;
 	int pastPrec = 999;
 
-	while (currentToken.type != NULL_TOK && bOperators.find(currentToken.valueString) != bOperators.end())
+	while (currentToken.type != NULL_TOK && BINARY_OPERATORS.find(currentToken.valueString) != BINARY_OPERATORS.end())
 	{
 		std::string opStr = currentToken.valueString;
 
@@ -728,7 +728,7 @@ ptr_node_t node_parser_t::parseBinOpNode(std::vector<node_scope_t> *scopes, cons
 			scopes->back().var_ids.push_back(ROSSA_HASH(a->getToken().valueString));
 		}*/
 
-		int prec = bOperators.at(opStr);
+		int prec = BINARY_OPERATORS.at(opStr);
 
 		auto marker = currentToken;
 
@@ -755,7 +755,7 @@ ptr_node_t node_parser_t::parseBinOpNode(std::vector<node_scope_t> *scopes, cons
 					auto oldOp = bon->getOp();
 					auto bon_b = bon->getB();
 
-					if (!(std::abs(bOperators.at(oldOp) < std::abs(prec) || (std::abs(bOperators.at(oldOp)) == std::abs(prec) && bOperators.at(oldOp) < 0))))
+					if (!(std::abs(BINARY_OPERATORS.at(oldOp) < std::abs(prec) || (std::abs(BINARY_OPERATORS.at(oldOp)) == std::abs(prec) && BINARY_OPERATORS.at(oldOp) < 0))))
 					{
 						reinterpret_cast<BinOpNode *>(parent.get())->setB(std::make_shared<BinOpNode>(*scopes, opStr, n, b, marker));
 						break;
@@ -772,7 +772,7 @@ ptr_node_t node_parser_t::parseBinOpNode(std::vector<node_scope_t> *scopes, cons
 					parent = n;
 					n = bon_b;
 				}
-				pastPrec = bOperators.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
+				pastPrec = BINARY_OPERATORS.at(reinterpret_cast<BinOpNode *>(current.get())->getOp());
 			}
 		}
 		else
@@ -885,7 +885,7 @@ ptr_node_t node_parser_t::parseUnOpNode(std::vector<node_scope_t> *scopes)
 	std::string opStr = currentToken.valueString;
 	auto marker = currentToken;
 	nextToken();
-	if (uOperators.find(opStr) != uOperators.end())
+	if (UNARY_OPERATORS.find(opStr) != UNARY_OPERATORS.end())
 	{
 		if (auto a = parseUnitNode(scopes))
 			return std::make_shared<UnOpNode>(*scopes, opStr, a, marker);

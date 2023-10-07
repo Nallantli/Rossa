@@ -33,7 +33,6 @@ struct parameter_t;
 struct signature_t;
 struct object_t;
 struct wrapper_t;
-struct node_scope_t;
 
 class Hash;
 class Instruction;
@@ -55,12 +54,6 @@ typedef std::shared_ptr<function_t> ptr_function_t;
 typedef std::vector<type_sll> aug_type_t;
 
 typedef std::string (*cm_fns_t)();
-
-struct node_scope_t
-{
-	hash_ull id;
-	std::vector<hash_ull> var_ids;
-};
 
 enum value_type_enum
 {
@@ -90,79 +83,6 @@ enum scope_type_enum
 	SCOPE_STATIC,
 	SCOPE_INSTANCE,
 	SCOPE_VIRTUAL
-};
-
-enum instruction_type_enum
-{
-	CONTAINER,
-	VARIABLE,
-	SEQUENCE,
-	DECLARE,
-	INDEX,
-	INNER,
-	IF_THEN_ELSE,
-	IF_THEN,
-	WHILE,
-	DEFINE,
-	VARG_DEFINE,
-	RETURN,
-	EXTERN,
-	LENGTH,
-	CLASS_I,
-	NEW_I,
-	CAST_TO_I,
-	POW_I,
-	ALLOC_I,
-	UNTIL_STEP_EXC_I,
-	UNTIL_NO_STEP_EXC_I,
-	UNTIL_STEP_INC_I,
-	UNTIL_NO_STEP_INC_I,
-	SCOPE_I,
-	REFER_I,
-	MAP_I,
-	SWITCH_I,
-	TRY_CATCH_I,
-	THROW_I,
-	CHARS_I,
-	CHARN_I,
-	FOR,
-	SET,
-	ADD,
-	SUB,
-	MUL,
-	DIV,
-	MOD,
-	LESS,
-	MORE,
-	ELESS,
-	EMORE,
-	EQUALS,
-	NEQUALS,
-	PURE_EQUALS,
-	PURE_NEQUALS,
-	AND,
-	OR,
-	B_AND,
-	B_OR,
-	B_XOR,
-	B_SH_L,
-	B_SH_R,
-	DECLARE_VARS_I,
-	B_NOT_I,
-	TYPE_I,
-	CALL_OP_I,
-	GET_THIS_I,
-	DELETE_I,
-	UN_ADD_I,
-	NEG_I,
-	NOT_I,
-	CONCAT_I,
-	SET_INDEX_I,
-	HASH_I,
-	EACH_I,
-	FDIV_I,
-	CALL_I,
-	CALL_INNER_I
 };
 
 #ifndef _WIN32

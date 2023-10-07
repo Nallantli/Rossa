@@ -4,6 +4,12 @@
 #include "../rossa.h"
 #include "../tokenizer/tokenizer.h"
 
+struct node_scope_t
+{
+	hash_ull id;
+	std::vector<hash_ull> var_ids;
+};
+
 class node_parser_t
 {
 private:

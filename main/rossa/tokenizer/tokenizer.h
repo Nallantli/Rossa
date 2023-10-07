@@ -80,7 +80,7 @@ enum token_type_enum
 	TOK_WHERE = -63
 };
 
-const std::map<std::string, signed int> bOperators = {
+const std::map<std::string, signed int> BINARY_OPERATORS = {
 	{"[]", 999},
 	{"->", 14},
 	{"**", -13},
@@ -134,7 +134,7 @@ const std::map<std::string, signed int> bOperators = {
 	{"=>", 0},
 	{"|>", 0}};
 
-const std::map<std::string, signed int> uOperators = {
+const std::map<std::string, signed int> UNARY_OPERATORS = {
 	{"-", -1},
 	{"+", -1},
 	{"!", -1},
