@@ -2,6 +2,7 @@
 #include "../main/rossa/function/function.h"
 #include "../main/rossa/parser/parser.h"
 #include "../main/rossa/symbol/symbol.h"
+#include "../main/mediator/mediator.h"
 
 #include <thread>
 #include <memory>
