@@ -4,7 +4,6 @@
 #include <filesystem>
 #include <map>
 #include <vector>
-#include "../../number/number.h"
 
 enum token_type_enum
 {
@@ -149,7 +148,6 @@ struct token_t
 	size_t lineNumber;
 	size_t distance;
 	std::string valueString;
-	number_t valueNumber;
 	int type = NULL_TOK;
 };
 
@@ -169,8 +167,7 @@ const int getToken(
 	size_t &,
 	size_t &,
 	size_t &,
-	std::string &,
-	number_t &);
+	std::string &);
 
 const std::vector<token_t> lexString(
     const std::string &,

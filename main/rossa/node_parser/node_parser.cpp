@@ -26,7 +26,42 @@ void node_parser_t::nextToken()
 
 ptr_node_t node_parser_t::parseNumNode(std::vector<node_scope_t> *scopes)
 {
-	const ptr_node_t n = std::make_shared<ContainerNode>(*scopes, symbol_t::Number(currentToken.valueNumber), currentToken);
+	number_t numValue;
+	std::string numStr = currentToken.valueString;
+	if (numStr.size() > 2 && isalpha(currentToken.valueString[1]))
+	{
+		switch (numStr[1])
+		{
+		case 'b':
+		case 'B':
+			numValue = number_t::Long(std::stoll(numStr.substr(2), nullptr, 2));
+			break;
+		default:
+			numValue = number_t::Long(std::stoll(numStr, nullptr, 0));
+			break;
+		}
+	}
+	else if (numStr == "inf")
+	{
+		numValue = number_t::Double(INFINITY);
+	}
+	else if (numStr == "nan")
+	{
+		numValue = number_t::Double(NAN);
+	}
+	else if (numStr.find('.') != std::string::npos)
+	{
+		numValue = number_t::Double(std::stod(numStr));
+	}
+	else if (numStr.length() == 1 && !isdigit(numStr[0]))
+	{
+		numValue = number_t::Long(static_cast<unsigned char>(numStr[0]));
+	}
+	else
+	{
+		numValue = number_t::Long(std::stoll(numStr, nullptr, 10));
+	}
+	const ptr_node_t n = std::make_shared<ContainerNode>(*scopes, symbol_t::Number(numValue), currentToken);
 	nextToken();
 	return n;
 }
@@ -223,7 +258,7 @@ ptr_node_t node_parser_t::parseExternCallNode(std::vector<node_scope_t> *scopes)
 ptr_node_t node_parser_t::parseCallOpNode(std::vector<node_scope_t> *scopes)
 {
 	nextToken();
-	size_t id = currentToken.valueNumber.getLong();
+	size_t id = std::stoll(currentToken.valueString);
 	auto marker = currentToken;
 	nextToken();
 

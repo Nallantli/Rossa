@@ -13,7 +13,7 @@ const char peekChar(
 	}
 	return 0;
 }
-
+	
 const char nextChar(
 	const std::string &INPUT,
 	size_t &INPUT_INDEX,
@@ -38,8 +38,7 @@ const int getToken(
 	size_t &INPUT_INDEX,
 	size_t &LINE_INDEX,
 	size_t &TOKEN_DIST,
-	std::string &ID_STRING,
-	number_t &NUM_VALUE)
+	std::string &ID_STRING)
 {
 	static int last;
 	while (isspace(last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST)))
@@ -160,12 +159,10 @@ const int getToken(
 			return TOK_DEF;
 		else if (ID_STRING == "inf")
 		{
-			NUM_VALUE = number_t::Double(INFINITY);
 			return TOK_NUM;
 		}
 		else if (ID_STRING == "nan")
 		{
-			NUM_VALUE = number_t::Double(NAN);
 			return TOK_NUM;
 		}
 		else if (BINARY_OPERATORS.find(ID_STRING) != BINARY_OPERATORS.end() || UNARY_OPERATORS.find(ID_STRING) != UNARY_OPERATORS.end())
@@ -184,16 +181,6 @@ const int getToken(
 				last = nextChar(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST);
 				numStr += last;
 			}
-			switch (base)
-			{
-			case 'b':
-			case 'B':
-				NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 2));
-				break;
-			default:
-				NUM_VALUE = number_t::Long(std::stoll("0" + std::string(1, base) + numStr, nullptr, 0));
-				break;
-			}
 			ID_STRING = "0" + std::string(1, base) + numStr;
 			return TOK_NUM;
 		}
@@ -211,10 +198,6 @@ const int getToken(
 		}
 
 		ID_STRING = numStr;
-		if (flag)
-			NUM_VALUE = number_t::Double(std::stold(numStr));
-		else
-			NUM_VALUE = number_t::Long(std::stoll(numStr, nullptr, 10));
 		return TOK_NUM;
 	}
 	else if (last == '#')
@@ -359,7 +342,6 @@ const int getToken(
 				if (value.size() < 1)
 					value = std::string(1, 0);
 				ID_STRING = value;
-				NUM_VALUE = number_t::Long(static_cast<unsigned char>(value[0]));
 				return TOK_NUM;
 			}
 			else if (last == '\\')
@@ -440,18 +422,17 @@ const std::vector<token_t> lexString(const std::string &INPUT, const std::filesy
 	size_t LINE_INDEX = 0;
 	size_t TOKEN_DIST = 0;
 	std::string ID_STRING;
-	number_t NUM_VALUE;
 
 	bool in_sig = false;
 
 	while (true)
 	{
-		int token = getToken(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE);
+		int token = getToken(INPUT, INPUT_INDEX, LINE_INDEX, TOKEN_DIST, ID_STRING);
 		if (token == TOK_EOF)
 			break;
 		if (token == '#')
 			continue;
-		token_t t = {filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, NUM_VALUE, token};
+		token_t t = {filename, LINES[LINE_INDEX], LINE_INDEX, TOKEN_DIST, ID_STRING, token};
 		if (t.type == TOK_DEF)
 		{
 			in_sig = true;
@@ -467,18 +448,18 @@ const std::vector<token_t> lexString(const std::string &INPUT, const std::filesy
 				}
 				if (t.type != TOK_IDF && t.valueString == ">>")
 				{
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", '>'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", '>'});
 				}
 				else if (t.type != TOK_IDF && t.valueString == "<<")
 				{
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", '<'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", '<'});
 				}
 				else if (t.type != TOK_IDF && t.valueString == "<>")
 				{
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", t.valueNumber, '<'});
-					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", t.valueNumber, '>'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, "<", '<'});
+					tokens.push_back({t.filename, t.line, t.lineNumber, t.distance, ">", '>'});
 				}
 				else
 				{
